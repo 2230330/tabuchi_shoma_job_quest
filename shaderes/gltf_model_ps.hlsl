@@ -134,7 +134,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         N = normalize((normal_factor.x * T) + (normal_factor.y * B) + (normal_factor.z * N));
     }
 
-    float3 diffuse = 0.1f;
+    float3 diffuse = 0.125f;
     float3 specular = 0;
 
 	// Loop for shading process for each light

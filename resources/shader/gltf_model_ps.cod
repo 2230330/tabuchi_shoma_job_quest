@@ -401,7 +401,7 @@ if_nz r0.z
 endif 
 
 #line 137
-mov r4.yzw, l(0,0.100000,0.100000,0.100000)  // r4.y <- diffuse.x; r4.z <- diffuse.y; r4.w <- diffuse.z
+mov r4.yzw, l(0,0.125000,0.125000,0.125000)  // r4.y <- diffuse.x; r4.z <- diffuse.y; r4.w <- diffuse.z
 
 #line 138
 itof r9.xyz, l(0, 0, 0, 0)  // r9.x <- specular.x; r9.y <- specular.y; r9.z <- specular.z

@@ -19,6 +19,8 @@
 #include"../resource_manager.h"
 #include"../entity/entity_manager.h"
 #include"../component/component_editor.h"
+#include"../system/update_system_manager.h"
+#include"../system/render_system_manager.h"
 
 class SceneTest :public Scene
 {
@@ -61,12 +63,7 @@ private:
         //DirectX::XMFLOAT3 scale{ 0.05f,0.05f,0.05f };
         //DirectX::XMFLOAT4X4 world;
         //DirectX::XMFLOAT4 color{ 1,1,1,1 };
-        int pos_id;
-        int rot_id;
-        int scale_id;
-        int world_id;
-        int col_id;
-        int gltf_id;
+
 
         int entity;
         std::shared_ptr<GltfModel> gltf_mesh = nullptr;
@@ -77,6 +74,8 @@ private:
     std::unique_ptr<ResourceManager>rsc_mng;
     std::unique_ptr<EntityManager>enti_mng;
     std::unique_ptr<ComponentEditor>comp_edit;
+    std::unique_ptr<UpdateSystemManager>update_sys_mng;
+    std::unique_ptr<RenderSystemManager>render_sys_mng;
 };
 
 #endif // !PART2_SCENE_TEST_H

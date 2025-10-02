@@ -242,8 +242,12 @@
     <ClInclude Include="headers\sprite.h" />
     <ClInclude Include="headers\sprite_batch.h" />
     <ClInclude Include="headers\static_mesh.h" />
-    <ClInclude Include="headers\system\i_system.h" />
-    <ClInclude Include="headers\system\system_manager.h" />
+    <ClInclude Include="headers\system\i_render_system.h" />
+    <ClInclude Include="headers\system\i_update_system.h" />
+    <ClInclude Include="headers\system\render_system.h" />
+    <ClInclude Include="headers\system\render_system_manager.h" />
+    <ClInclude Include="headers\system\transform_system.h" />
+    <ClInclude Include="headers\system\update_system_manager.h" />
     <ClInclude Include="headers\texture.h" />
   </ItemGroup>
   <ItemGroup>
@@ -271,7 +275,10 @@
     <ClCompile Include="sources\sprite.cpp" />
     <ClCompile Include="sources\sprite_batch.cpp" />
     <ClCompile Include="sources\static_mesh.cpp" />
-    <ClCompile Include="sources\system\system_manager.cpp" />
+    <ClCompile Include="sources\system\render_system.cpp" />
+    <ClCompile Include="sources\system\render_system_manager.cpp" />
+    <ClCompile Include="sources\system\update_system_manager.cpp" />
+    <ClCompile Include="sources\system\transform_system.cpp" />
     <ClCompile Include="sources\texture.cpp" />
   </ItemGroup>
   <ItemGroup>

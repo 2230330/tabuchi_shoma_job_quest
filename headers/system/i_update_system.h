@@ -1,8 +1,8 @@
 #pragma once
 
-class ISystem
+class IUpdateSystem
 {
 public :
-    virtual ~ISystem() = default;
+    virtual ~IUpdateSystem() = default;
     virtual void Update(float elapsed_time) = 0;
 };

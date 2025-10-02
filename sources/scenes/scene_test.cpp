@@ -19,6 +19,8 @@ SceneTest::SceneTest()
         rsc_mng = std::make_unique<ResourceManager>();
         enti_mng = std::make_unique<EntityManager>();
         comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *enti_mng);
+        update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
+        render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
     }
 
     //レンダリングオブジェクト宣言
@@ -119,27 +121,28 @@ SceneTest::SceneTest()
             device,
             ".\\resources\\model\\gltf\\knife.glb"
         );
-        gltf_model.gltf_id = comp_mng->Add<ComponentGltf>(gltf_model.entity,gltf);
+        comp_mng->Add<ComponentGltf>(gltf_model.entity,gltf);
         ComponentPosition pos;
         pos.value={0.f, 0.f, 0.f};
-        gltf_model.pos_id=comp_mng->Add<ComponentPosition>(gltf_model.entity,pos);
+        comp_mng->Add<ComponentPosition>(gltf_model.entity,pos);
         ComponentRotation ros;
         ros.value = { 0.f,0.f,0.f };
-        gltf_model.rot_id=comp_mng->Add<ComponentRotation>(gltf_model.entity,ros);
+        comp_mng->Add<ComponentRotation>(gltf_model.entity,ros);
         ComponentScale scale;
         scale.value = { 1.f,1.f,1.f };
-        gltf_model.scale_id=comp_mng->Add<ComponentScale>(gltf_model.entity,scale);
+        comp_mng->Add<ComponentScale>(gltf_model.entity,scale);
         ComponentLocalToWorld world;
         DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
-        gltf_model.world_id=comp_mng->Add(gltf_model.entity,world);
+        comp_mng->Add(gltf_model.entity,world);
         ComponentColor col;
         col.value = { 1,1,1,1 };
-        gltf_model.col_id=comp_mng->Add(gltf_model.entity,col);
+        comp_mng->Add(gltf_model.entity,col);
     }
 }
 
 void SceneTest::Update(float elapsed_time)
 {
+    update_sys_mng->UpdateAll(elapsed_time);
 }
 
 void SceneTest::Render(float elapsed_time)
@@ -207,17 +210,6 @@ void SceneTest::Render(float elapsed_time)
         }
         //3dオブジェクト描画
         {
-            //DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(model.scale.x, model.scale.y, model.scale.z);
-            //DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(model.rotation.x, model.rotation.y, model.rotation.z);
-            //DirectX::XMMATRIX position = DirectX::XMMatrixTranslation(model.position.x, model.position.y, model.position.z);
-            DirectX::XMFLOAT3 gltf_scale = comp_mng->GetByEntity<ComponentScale>(gltf_model.entity).value;
-            DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(gltf_scale.x, gltf_scale.y, gltf_scale.z);
-            DirectX::XMFLOAT3 gltf_rotation = comp_mng->GetByEntity<ComponentRotation>(gltf_model.entity).value;
-            DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(gltf_rotation.x, gltf_rotation.y, gltf_rotation.z);
-            DirectX::XMFLOAT3 gltf_position = comp_mng->GetByEntity<ComponentPosition>(gltf_model.entity).value;
-            DirectX::XMMATRIX position = DirectX::XMMatrixTranslation(gltf_position.x, gltf_position.y, gltf_position.z);
-            DirectX::XMStoreFloat4x4(&model.world, scale * rotation * position);
-            DirectX::XMStoreFloat4x4(&comp_mng->GetByEntity<ComponentLocalToWorld>(gltf_model.entity).value, scale * rotation * position);
 
             //アニメーションキーフレームの更新
             //int clip_index = 0;
@@ -253,10 +245,10 @@ void SceneTest::Render(float elapsed_time)
 
             //gltf_model.gltf_mesh->UpdateAnimation(elapsed_time);
             //this->gltf_model.gltf_mesh->Render(dc,comp_mng->Get<ComponentLocalToWorld>(gltf_model.world_id).value );
-            comp_mng->GetByEntity<ComponentGltf>(gltf_model.entity).model
-                ->UpdateAnimation(elapsed_time);
-            comp_mng->GetByEntity<ComponentGltf>(gltf_model.entity).model
-                ->Render(dc, comp_mng->GetByEntity<ComponentLocalToWorld>(gltf_model.entity).value);
+            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
+            //    ->UpdateAnimation(elapsed_time);
+
+            render_sys_mng->RenderAll();
         }
         framebuffers_[0]->Deactivate(dc);
     }
