@@ -210,6 +210,8 @@
     <ClInclude Include="external\imgui\imstb_rectpack.h" />
     <ClInclude Include="external\imgui\imstb_textedit.h" />
     <ClInclude Include="external\imgui\imstb_truetype.h" />
+    <ClInclude Include="headers\archetype\archetype.h" />
+    <ClInclude Include="headers\archetype\archetype_manager.h" />
     <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\component\component_color.h" />
     <ClInclude Include="headers\component\component_editor.h" />
@@ -222,6 +224,7 @@
     <ClInclude Include="headers\component\i_component.h" />
     <ClInclude Include="headers\entity\entity.h" />
     <ClInclude Include="headers\entity\entity_manager.h" />
+    <ClInclude Include="headers\entity\entity_record.h" />
     <ClInclude Include="headers\framebuffer.h" />
     <ClInclude Include="headers\framework.h" />
     <ClInclude Include="headers\fullscreen_quad.h" />
@@ -249,6 +252,7 @@
     <ClInclude Include="headers\system\transform_system.h" />
     <ClInclude Include="headers\system\update_system_manager.h" />
     <ClInclude Include="headers\texture.h" />
+    <ClInclude Include="headers\world\world.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\imgui\imgui.cpp" />
@@ -257,6 +261,8 @@
     <ClCompile Include="external\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="external\imgui\imgui_ja_gryph_ranges.cpp" />
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="sources\archetype\archetype.cpp" />
+    <ClCompile Include="sources\archetype\archetype_manager.cpp" />
     <ClCompile Include="sources\camera.cpp" />
     <ClCompile Include="sources\component\component_editor.cpp" />
     <ClCompile Include="sources\entity\entity_manager.cpp" />

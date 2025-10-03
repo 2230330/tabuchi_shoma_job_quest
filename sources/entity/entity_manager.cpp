@@ -27,3 +27,23 @@ const std::vector<Entity>& EntityManager::GetArray() const
 {
     return entities_;
 }
+
+//EntityRecordへの登録
+void EntityManager::RegisterEntity(uint32_t entity_id, Archetype* archetype, uint32_t index_in_chunk)
+{
+    entity_records_[entity_id] = EntityRecord{ archetype,index_in_chunk };
+}
+
+//EntityRecordのゲッター
+EntityRecord EntityManager::GetRecord(uint32_t entity_id) const
+{
+    auto it = entity_records_.find(entity_id);
+    if (it != entity_records_.end())
+    {
+        return it->second;
+    }
+
+    //見つからなかった場合、デフォルト値(nullptr,無効インデックス)を返す
+    return EntityRecord{ nullptr,static_cast<uint32_t>(-1) };
+    return EntityRecord();
+}

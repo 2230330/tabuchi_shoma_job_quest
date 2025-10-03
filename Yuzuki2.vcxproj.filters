@@ -36,6 +36,15 @@
     <Filter Include="sources\system">
       <UniqueIdentifier>{13f7a2e9-de57-44f9-bb95-3d216872c9b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="headers\archetype">
+      <UniqueIdentifier>{b28aada2-aba1-4ff8-b565-fdf65b0be3ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\archetype">
+      <UniqueIdentifier>{49c7d7cc-5d78-45ae-8990-ce7f69f7e44b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers\world">
+      <UniqueIdentifier>{d26189f7-d26c-409f-af8d-699f178fdd97}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\geometric_primitive.h">
@@ -179,6 +188,18 @@
     <ClInclude Include="headers\system\i_render_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\archetype\archetype.h">
+      <Filter>headers\archetype</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\archetype\archetype_manager.h">
+      <Filter>headers\archetype</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\entity\entity_record.h">
+      <Filter>headers\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\world\world.h">
+      <Filter>headers\world</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -267,6 +288,12 @@
     </ClCompile>
     <ClCompile Include="sources\system\render_system_manager.cpp">
       <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\archetype\archetype.cpp">
+      <Filter>sources\archetype</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\archetype\archetype_manager.cpp">
+      <Filter>sources\archetype</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
