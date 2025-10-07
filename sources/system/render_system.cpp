@@ -1,8 +1,8 @@
 #include"../../headers/system/render_system.h"
 #include"../../headers/graphics.h"
 
-RenderSystem::RenderSystem(ComponentManager& comp_mng)
-    :comp_mng_(comp_mng)
+RenderSystem::RenderSystem(ComponentManager& comp_mng,World&world)
+    :comp_mng_(comp_mng),world_(world)
 {
 }
 

@@ -45,6 +45,12 @@
     <Filter Include="headers\world">
       <UniqueIdentifier>{d26189f7-d26c-409f-af8d-699f178fdd97}</UniqueIdentifier>
     </Filter>
+    <Filter Include="headers\importer">
+      <UniqueIdentifier>{7bd56912-3e5f-400f-a7ff-0d7b1468f26f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\importer">
+      <UniqueIdentifier>{95523fd2-6d91-4743-a442-8d2f33d258c3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\geometric_primitive.h">
@@ -200,6 +206,27 @@
     <ClInclude Include="headers\world\world.h">
       <Filter>headers\world</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_mesh.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_material.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_texture.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\importer\gltf_importer.h">
+      <Filter>headers\importer</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\importer\i_importer.h">
+      <Filter>headers\importer</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_primitive.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\draw_primitive.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -294,6 +321,9 @@
     </ClCompile>
     <ClCompile Include="sources\archetype\archetype_manager.cpp">
       <Filter>sources\archetype</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\importer\gltf_importer.cpp">
+      <Filter>sources\importer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

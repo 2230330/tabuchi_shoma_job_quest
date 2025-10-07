@@ -21,6 +21,7 @@
 #include"../component/component_editor.h"
 #include"../system/update_system_manager.h"
 #include"../system/render_system_manager.h"
+#include"../world/world.h"
 
 class SceneTest :public Scene
 {
@@ -76,6 +77,7 @@ private:
     std::unique_ptr<ComponentEditor>comp_edit;
     std::unique_ptr<UpdateSystemManager>update_sys_mng;
     std::unique_ptr<RenderSystemManager>render_sys_mng;
+    std::unique_ptr<World>world;
 };
 
 #endif // !PART2_SCENE_TEST_H

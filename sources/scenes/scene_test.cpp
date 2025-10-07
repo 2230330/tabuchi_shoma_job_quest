@@ -18,9 +18,10 @@ SceneTest::SceneTest()
         comp_mng = std::make_unique<ComponentManager>();
         rsc_mng = std::make_unique<ResourceManager>();
         enti_mng = std::make_unique<EntityManager>();
-        comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *enti_mng);
+        world = std::make_unique<World>();
+        comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
-        render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
+        render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng,*world);
     }
 
     //レンダリングオブジェクト宣言
@@ -114,7 +115,7 @@ SceneTest::SceneTest()
     //コンポーネントの設定(仮)
     {
         ID3D11Device* device = Graphics::Instance().GetDevice();
-        gltf_model.entity = enti_mng->Add();
+        gltf_model.entity = world->GetEntityManager()->Add();
 
         ComponentGltf gltf;
         gltf.model = rsc_mng->LoadGltfModel(

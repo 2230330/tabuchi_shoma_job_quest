@@ -1,6 +1,8 @@
 #include"../headers/resource_manager.h"
 #include<d3dcompiler.h>
+#include<iostream>
 #include"../headers/texture.h"
+#include"../headers/misc.h"
 
 std::shared_ptr<GltfModel> ResourceManager::LoadGltfModel(ID3D11Device* device, const std::string& filename)
 {
@@ -66,3 +68,4 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> ResourceManager::LoadPixelShader(ID3D1
     pixel_shaders_.emplace(filename, shader);
     return shader;
 }
+

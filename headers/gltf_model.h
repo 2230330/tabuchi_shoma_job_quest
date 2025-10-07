@@ -32,47 +32,6 @@ public:
 
 		DirectX::XMFLOAT4X4 global_transform{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 	};
-	struct Animation
-	{
-		std::string name;
-		float duration{ 0.0f };
-
-		struct Channel
-		{
-			int sampler{ -1 }; // required
-			int target_node{ -1 }; // required (index of the node to target)
-			std::string target_path; // required in ["translation", "rotation", "scale", "weights"]
-		};
-		std::vector<Channel> channels;
-
-		struct Sampler
-		{
-			int input{ -1 };
-			int output{ -1 };
-			std::string interpolation;
-		};
-		std::vector<Sampler> samplers;
-
-		std::unordered_map<int/*sampler.input*/, std::vector<float>> timelines;
-		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT3>> scales;
-		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT4>> rotations;
-		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT3>> translations;
-	};
-
-	GltfModel(ID3D11Device* device, const std::string& filename);
-	virtual ~GltfModel() = default;
-
-	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world);
-	void Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes);
-	void UpdateAnimation(float elapsed_time);
-	const std::vector<GltfModel::Node>& GetNodes()const;
-	const std::vector<GltfModel::Animation>& GetAnimations()const;
-private:
-	struct Scene
-	{
-		std::string name;
-		std::vector<int> nodes; // Array of 'root' nodes
-	};
 	struct BufferView
 	{
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
@@ -93,7 +52,7 @@ private:
 			bool has(const char* attribute) const
 			{
 				return vertex_buffer_views.find(attribute) !=
-					vertex_buffer_views.end() 
+					vertex_buffer_views.end()
 					&& vertex_buffer_views.at(attribute).buffer > -1;
 			}
 		};
@@ -142,6 +101,50 @@ private:
 		};
 		Cbuffer data;
 	};
+	struct Animation
+	{
+		std::string name;
+		float duration{ 0.0f };
+
+		struct Channel
+		{
+			int sampler{ -1 }; // required
+			int target_node{ -1 }; // required (index of the node to target)
+			std::string target_path; // required in ["translation", "rotation", "scale", "weights"]
+		};
+		std::vector<Channel> channels;
+
+		struct Sampler
+		{
+			int input{ -1 };
+			int output{ -1 };
+			std::string interpolation;
+		};
+		std::vector<Sampler> samplers;
+
+		std::unordered_map<int/*sampler.input*/, std::vector<float>> timelines;
+		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT3>> scales;
+		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT4>> rotations;
+		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT3>> translations;
+	};
+
+	GltfModel(ID3D11Device* device, const std::string& filename);
+	virtual ~GltfModel() = default;
+
+	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world);
+	void Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes);
+	void UpdateAnimation(float elapsed_time);
+	const std::vector<GltfModel::Node>& GetNodes()const;
+	const std::vector<GltfModel::Mesh>& GetMeshes()const;
+	const std::vector<GltfModel::Material>& GetMaterials()const;
+	const std::vector<GltfModel::Animation>& GetAnimations()const;
+
+	struct Scene
+	{
+		std::string name;
+		std::vector<int> nodes; // Array of 'root' nodes
+	};
+
 	struct Texture
 	{
 		std::string name;

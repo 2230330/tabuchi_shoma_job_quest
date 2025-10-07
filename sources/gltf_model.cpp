@@ -469,9 +469,22 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 
 				if (primitive.index_buffer_view.count > 0)
 				{
+					if (primitive.index_buffer_view.format == DXGI_FORMAT_R8_UINT)
+					{
+						immediate_context->IASetIndexBuffer(
+							buffers_.at(primitive.index_buffer_view.buffer).Get(),
+							DXGI_FORMAT_R16_UINT, static_cast<UINT>(primitive.index_buffer_view.byte_offset));
+
+					}
+					else
+					{
+
 					immediate_context->IASetIndexBuffer(
 						buffers_.at(primitive.index_buffer_view.buffer).Get(),
 						primitive.index_buffer_view.format, static_cast<UINT>(primitive.index_buffer_view.byte_offset));
+					
+					}
+
 					immediate_context->DrawIndexed(static_cast<UINT>(primitive.index_buffer_view.count), 0, 0);
 				}
 				else
@@ -789,6 +802,16 @@ void GltfModel::UpdateAnimation(float elapsed_time)
 const std::vector<GltfModel::Node>& GltfModel::GetNodes() const
 {
 	return nodes_;
+}
+
+const std::vector<GltfModel::Mesh>& GltfModel::GetMeshes() const
+{
+	return meshes_;
+}
+
+const std::vector<GltfModel::Material>& GltfModel::GetMaterials() const
+{
+	return materials_;
 }
 
 const std::vector<GltfModel::Animation>& GltfModel::GetAnimations() const

@@ -1,10 +1,11 @@
 #include"../../headers/system/render_system_manager.h"
 #include"../../headers/system/render_system.h"
 
-RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
+RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng,World&world)
     :comp_mng_(comp_mng)
+    ,world_(world)
 {
-    AddSystem(std::make_unique<RenderSystem>(comp_mng_));
+    AddSystem(std::make_unique<RenderSystem>(comp_mng_,world_));
 }
 
 void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)

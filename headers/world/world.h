@@ -4,12 +4,16 @@
 
 class World
 {
-public:
-    World() :archetype_manager_(&entity_manager_)
-    {
-    };
-
 private:
     EntityManager entity_manager_;
     ArchetypeManager archetype_manager_;
+
+public:
+    World() :archetype_manager_(&entity_manager_)
+    {
+    }
+
+    EntityManager* GetEntityManager() { return &entity_manager_; }
+    ArchetypeManager* GetArcheTypeManager() { return &archetype_manager_; }
+
 };

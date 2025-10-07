@@ -10,6 +10,10 @@
 #include "component_local_to_world.h"
 #include "component_color.h"
 #include "component_gltf.h"
+#include "component_mesh.h"
+#include "component_primitive.h"
+#include "component_material.h"
+#include "component_texture.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -23,6 +27,10 @@ public:
         registerContainer<ComponentLocalToWorld>(l2ws_);
         registerContainer<ComponentColor>(colors_);
         registerContainer<ComponentGltf>(gltfs_);
+        registerContainer<ComponentMesh>(meshes_);
+        registerContainer<ComponentPrimitive>(primitives_);
+        registerContainer<ComponentMaterial>(materials_);
+        registerContainer<ComponentTexture>(textures_);
     }
 
     template<typename T>
@@ -137,4 +145,8 @@ private:
     std::vector<ComponentLocalToWorld> l2ws_;
     std::vector<ComponentColor> colors_;
     std::vector<ComponentGltf> gltfs_;
+    std::vector<ComponentMesh>meshes_;
+    std::vector<ComponentPrimitive>primitives_;
+    std::vector<ComponentMaterial>materials_;
+    std::vector<ComponentTexture>textures_;
 };
