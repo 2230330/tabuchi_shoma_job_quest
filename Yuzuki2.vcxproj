@@ -301,6 +301,7 @@
     <None Include="shaderes\geometric_primitive.hlsli" />
     <None Include="shaderes\gltf_model.hlsli" />
     <None Include="shaderes\image_based_lighting.hlsli" />
+    <None Include="shaderes\shading_functions.hlsli" />
     <None Include="shaderes\skinned_mesh.hlsli" />
     <None Include="shaderes\sprite.hlsli" />
     <None Include="shaderes\static_mesh.hlsli" />

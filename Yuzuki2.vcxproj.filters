@@ -351,6 +351,9 @@
     <None Include="shaderes\image_based_lighting.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaderes\shading_functions.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">

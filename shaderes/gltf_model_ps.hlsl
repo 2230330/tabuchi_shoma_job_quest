@@ -60,7 +60,8 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     const float GAMMA = 2.2;
 
     const material_constants m = materials[material];
-
+    
+    //ベースカラーの取得
     float4 basecolor_factor = m.pbr_metallic_roughness.basecolor_factor;
     const int basecolor_texture = m.pbr_metallic_roughness.basecolor_texture.index;
     if (basecolor_texture > -1)
@@ -69,10 +70,11 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         sampled.rgb = pow(sampled.rgb, GAMMA);
         basecolor_factor *= sampled;
     }
-#if 1
-    clip(basecolor_factor.a - 0.25);
-#endif
+    
+    //透明度調整
+    clip(basecolor_factor.a - 0.01f);
 
+    //自己発光色を取得
     float3 emmisive_factor = m.emissive_factor;
     const int emissive_texture = m.emissive_texture.index;
     if (emissive_texture > -1)
@@ -82,6 +84,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         emmisive_factor *= sampled.rgb;
     }
 
+    //金属質/粗さを取得
     float roughness_factor = m.pbr_metallic_roughness.roughness_factor;
     float metallic_factor = m.pbr_metallic_roughness.metallic_factor;
     const int metallic_roughness_texture = m.pbr_metallic_roughness.metallic_roughness_texture.index;
@@ -92,6 +95,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         metallic_factor *= sampled.b;
     }
 
+    //光の遮断値を取得
     float occlusion_factor = 1.0;
     const int occlusion_texture = m.occlusion_texture.index;
     if (occlusion_texture > -1)
@@ -101,9 +105,11 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     }
     const float occlusion_strength = m.occlusion_texture.strength;
 
-    const float3 f0 = lerp(0.04, basecolor_factor.rgb, metallic_factor);
+    //垂直反射じのフレネル反射率
+    const float3 f0 = lerp(0.04f, basecolor_factor.rgb, metallic_factor);
     const float3 f90 = 1.0;
     const float alpha_roughness = roughness_factor * roughness_factor;
+    //入射光のうち拡散反射になる割合
     const float3 c_diff = lerp(basecolor_factor.rgb, 0.0, metallic_factor);
 
     const float3 P = pin.w_position.xyz;
@@ -114,7 +120,8 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     float sigma = has_tangent ? pin.w_tangent.w : 1.0;
     T = normalize(T - N * dot(N, T));
     float3 B = normalize(cross(N, T) * sigma);
-#if 1
+
+    //背面描画の時はひっくり返す
 	// For a back-facing surface, the tangential basis vectors are negated.
     if (is_front_face == false)
     {
@@ -122,8 +129,9 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         B = -B;
         N = -N;
     }
-#endif
 
+
+    //法線マッピング
     const int normal_texture = m.normal_texture.index;
     if (normal_texture > -1)
     {
@@ -134,7 +142,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         N = normalize((normal_factor.x * T) + (normal_factor.y * B) + (normal_factor.z * N));
     }
 
-    float3 diffuse = 0.125f;
+    float3 diffuse = 0;
     float3 specular = 0;
 
 	// Loop for shading process for each light
