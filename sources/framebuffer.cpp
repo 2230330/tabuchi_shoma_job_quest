@@ -97,11 +97,11 @@ void FrameBuffer::Clear(
 	float depth, 
 	uint8_t stencil)
 {
-	if (flags & usage::color && render_target_view_) // UNIT.99
+	if (flags & usage::color && render_target_view_) 
 	{
 		immediate_context->ClearRenderTargetView(render_target_view_.Get(), reinterpret_cast<const FLOAT*>(&color));
 	}
-	if (flags & usage::depth_stencil && depth_stencil_view_) // UNIT.99
+	if (flags & usage::depth_stencil && depth_stencil_view_) 
 	{
 		immediate_context->ClearDepthStencilView(depth_stencil_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, depth, stencil);
 	}

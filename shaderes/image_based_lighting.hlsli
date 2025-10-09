@@ -6,15 +6,17 @@ TextureCube diffuse_iem : register(t33);
 TextureCube specular_pmrem : register(t34);
 Texture2D lut_ggx : register(t35);
 
-#define POINT 0
-#define LINEAR 1
-#define ANISOTROPIC 2
-SamplerState sampler_states[3] : register(s0);
+#define POINT_WRAP 0
+#define POINT_CLAMP 1
+#define LINEAR_WRAP 2
+#define LINEAR_CLAMP 3
+#define ANISOTROPIC 4
+SamplerState sampler_states[5] : register(s0);
 
 
 float4 sample_lut_ggx(float2 brdf_sample_point)
 {
-	return lut_ggx.Sample(sampler_states[LINEAR], brdf_sample_point);
+	return lut_ggx.Sample(sampler_states[LINEAR_CLAMP], brdf_sample_point);
 }
 float4 sample_skybox(float3 v, float roughness)
 {
@@ -28,11 +30,11 @@ float4 sample_skybox(float3 v, float roughness)
 	float2 sample_point;
 	sample_point.x = (atan2(v.z, v.x) + PI) / (PI * 2.0);
 	sample_point.y = 1.0 - ((asin(v.y) + PI * 0.5) / PI);
-	return skybox.SampleLevel(sampler_states[LINEAR], sample_point, lod);
+	return skybox.SampleLevel(sampler_states[LINEAR_CLAMP], sample_point, lod);
 }
 float4 sample_diffuse_iem(float3 v)
 {
-	return diffuse_iem.Sample(sampler_states[LINEAR], v);
+	return diffuse_iem.Sample(sampler_states[LINEAR_CLAMP], v);
 }
 float4 sample_specular_pmrem(float3 v, float roughness)
 {
@@ -41,6 +43,6 @@ float4 sample_specular_pmrem(float3 v, float roughness)
 
 	float lod = roughness * float(number_of_levels - 1);
 
-	return specular_pmrem.SampleLevel(sampler_states[LINEAR], v, lod);
+	return specular_pmrem.SampleLevel(sampler_states[LINEAR_CLAMP], v, lod);
 }
 #endif // __IMAGE_BASED_LIGHTING__

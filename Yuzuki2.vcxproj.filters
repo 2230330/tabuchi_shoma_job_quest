@@ -51,6 +51,12 @@
     <Filter Include="sources\importer">
       <UniqueIdentifier>{95523fd2-6d91-4743-a442-8d2f33d258c3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="headers\post_process">
+      <UniqueIdentifier>{d00e35c1-ff1d-41a3-91cc-32f47bf06ffc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\post_process">
+      <UniqueIdentifier>{b953fa68-1cc3-4d31-abdd-9f82a6cc4404}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\geometric_primitive.h">
@@ -227,6 +233,12 @@
     <ClInclude Include="headers\system\draw_primitive.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\post_process\bloom.h">
+      <Filter>headers\post_process</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\post_process\post_process_manager.h">
+      <Filter>headers\post_process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -325,6 +337,12 @@
     <ClCompile Include="sources\importer\gltf_importer.cpp">
       <Filter>sources\importer</Filter>
     </ClCompile>
+    <ClCompile Include="sources\post_process\bloom.cpp">
+      <Filter>sources\post_process</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\post_process\post_process_manager.cpp">
+      <Filter>sources\post_process</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaderes\geometric_primitive.hlsli">
@@ -349,6 +367,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\image_based_lighting.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\bloom.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -393,6 +414,24 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\gltf_model_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\glow_extraction_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\downsample_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\bloom_upsample_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gaussian_blur_horizontal_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gaussian_blur_vertical_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\synthesis_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

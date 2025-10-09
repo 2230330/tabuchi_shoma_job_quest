@@ -11,6 +11,7 @@ enum class SamplerState
     point_clamp,
     linear_wrap,
     linear_clamp,
+    anisotropic,
 
     enum_count
 };

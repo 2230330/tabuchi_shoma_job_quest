@@ -31,6 +31,9 @@ cbuffer SCENE_CONSTANT_BUFFER : register(b1)
     row_major float4x4 view_projection;
     float4 light_direction;
     float4 camera_position;
+    float4 light_color;
+    float light_intensity;
+    float3 dummy;
 };
 
 static const uint PRIMITIVE_MAX_JOINTS = 512;

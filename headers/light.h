@@ -7,6 +7,7 @@ struct DirectionLight
 {
     DirectX::XMFLOAT4    direction{ 1,1,-1,1 };
     DirectX::XMFLOAT4    color{ 1,1,1,1 };
+    float intensity{ 1.0f };
 };
 
 class SceneLightManager

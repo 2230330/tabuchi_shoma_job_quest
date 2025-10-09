@@ -8,11 +8,11 @@
 
 
 //'fullscreen_quad' dose not have pixel shader and sampler state. you have to make and set pixel shader and sampler state by yourself.
-class fullscreen_quad
+class FullscreenQuad
 {
 public:
-	fullscreen_quad(ID3D11Device* device);
-	virtual ~fullscreen_quad() = default;
+	FullscreenQuad(ID3D11Device* device);
+	virtual ~FullscreenQuad() = default;
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> embedded_vertex_shader;

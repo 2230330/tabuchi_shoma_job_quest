@@ -22,6 +22,7 @@
 #include"../system/update_system_manager.h"
 #include"../system/render_system_manager.h"
 #include"../world/world.h"
+#include"../post_process/post_process_manager.h"
 
 class SceneTest :public Scene
 {
@@ -46,7 +47,7 @@ private:
     std::unique_ptr<GeometricPrimitive>  geometric_primitives_[8];
     std::unique_ptr<StaticMesh>          static_meshes_[8];
     std::unique_ptr<FrameBuffer>         framebuffers_[2];
-    std::unique_ptr<fullscreen_quad>     bit_block_transfer_;
+    std::unique_ptr<FullscreenQuad>     bit_block_transfer_;
 
     struct Model {
         DirectX::XMFLOAT3 position{ 0,0,0 };
@@ -78,6 +79,7 @@ private:
     std::unique_ptr<UpdateSystemManager>update_sys_mng;
     std::unique_ptr<RenderSystemManager>render_sys_mng;
     std::unique_ptr<World>world;
+    std::unique_ptr<PostProcessManager>post_pro_mng;
 };
 
 #endif // !PART2_SCENE_TEST_H

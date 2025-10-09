@@ -22,6 +22,12 @@ SceneTest::SceneTest()
         comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng,*world);
+
+        uint32_t w = static_cast<uint32_t>(Graphics::Instance().GetScreenWidth());
+        uint32_t h = static_cast<uint32_t>(Graphics::Instance().GetScreenHeight());
+        post_pro_mng = std::make_unique<PostProcessManager>(
+            Graphics::Instance().GetDevice(),
+            w,h,rsc_mng.get());
     }
 
     //レンダリングオブジェクト宣言
@@ -79,7 +85,7 @@ SceneTest::SceneTest()
         }
         //
         {
-            bit_block_transfer_ = std::make_unique<fullscreen_quad>(device);
+            bit_block_transfer_ = std::make_unique<FullscreenQuad>(device);
         }
     }
     //定数バッファ用意
@@ -110,6 +116,7 @@ SceneTest::SceneTest()
         DirectionLight light;
         light.direction = { 0,0,1,0 };
         light.color = { 1,1,1,1 };
+        light.intensity = 2.0f;
         light_manager_.SetDirectionLight(light);
     }
     //コンポーネントの設定(仮)
@@ -166,6 +173,12 @@ void SceneTest::Render(float elapsed_time)
         dc->PSSetSamplers(1, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::linear_wrap);
         dc->PSSetSamplers(2, 1, sampler_state.GetAddressOf());
+        sampler_state = render_state->GetSamplerState(SamplerState::linear_clamp);
+        dc->PSSetSamplers(3, 1, sampler_state.GetAddressOf());
+        sampler_state = render_state->GetSamplerState(SamplerState::anisotropic);
+        dc->PSSetSamplers(4, 1, sampler_state.GetAddressOf());
+
+
     }
     //レンダーステート設定
     {
@@ -189,6 +202,8 @@ void SceneTest::Render(float elapsed_time)
         SceneConstants data{};
         DirectX::XMStoreFloat4x4(&data.view_projection, V * P);
         data.light_direction = light_manager_.GetDirectionLight().direction;
+        data.light_color = light_manager_.GetDirectionLight().color;
+        data.light_intensity = light_manager_.GetDirectionLight().intensity;
         data.camera_position = { camera_.GetEye().x,camera_.GetEye().y,camera_.GetEye().z,1.0f };
         dc->UpdateSubresource(constant_buffer_.Get(), 0, 0, &data, 0, 0);
         dc->VSSetConstantBuffers(1, 1, constant_buffer_.GetAddressOf());
@@ -255,14 +270,7 @@ void SceneTest::Render(float elapsed_time)
     }
     //ポストエフェクト
     {
-        framebuffers_[1]->Clear(dc);
-        framebuffers_[1]->Activate(dc);
-        bit_block_transfer_->blit(dc, framebuffers_[0]->GetShaderResourceView(0).GetAddressOf(), 0, 1, pixel_shaders_[0].Get());
-        framebuffers_[1]->Deactivate(dc);
-
-        ID3D11ShaderResourceView* shader_resource_views[2]
-        { framebuffers_[0]->GetShaderResourceView(0).Get(),framebuffers_[1]->GetShaderResourceView(0).Get() };
-        bit_block_transfer_->blit(dc, shader_resource_views, 0, 2, pixel_shaders_[1].Get());
+        post_pro_mng->PostProcess(dc, framebuffers_[0]->GetShaderResourceView(0).Get());
     }
 }
 
@@ -270,12 +278,12 @@ void SceneTest::DrawGui()
 {
     float screen_width = Graphics::Instance().GetScreenWidth();
     float screen_height = Graphics::Instance().GetScreenHeight();
-    float imgui_window_size_x = 400.f;
-    float imgui_window_pos_x = 0.f;
-    float imgui_alpha = 0.75f;
+    float imgui_window_size_x = screen_width*0.1f;
+    float imgui_window_size_h = screen_height*0.1f;
+    float imgui_alpha = 0.5f;
 
-    ImGui::SetNextWindowPos({ imgui_window_pos_x,0 }, ImGuiSetCond_Always);
-    ImGui::SetNextWindowSize({ imgui_window_size_x,screen_height }, ImGuiSetCond_Always);
+    ImGui::SetNextWindowPos({ 0,0 }, ImGuiSetCond_Always);
+    ImGui::SetNextWindowSize({ imgui_window_size_x*3.f,imgui_window_size_h*5.0f }, ImGuiSetCond_Always);
     ImGui::SetNextWindowBgAlpha(imgui_alpha);
     ImGui::Begin("scene_test");
     {
@@ -301,6 +309,10 @@ void SceneTest::DrawGui()
             {
                 light_flag = true;
             }
+            if (ImGui::SliderFloat("light_intensity", &light.intensity, 0.1f, 10.f))
+            {
+                light_flag=true;
+            }
             if (light_flag)
             {
                 light_manager_.SetDirectionLight(light);
@@ -321,5 +333,15 @@ void SceneTest::DrawGui()
     }
     ImGui::End();
 
+    //ポストエフェク
+    ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);
+    ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h * 5.0f }, ImGuiSetCond_Always);
+    ImGui::SetNextWindowBgAlpha(imgui_alpha);
+    post_pro_mng->PostImgui();
+
+    //コンポーネントマネージャ
+    ImGui::SetNextWindowPos({ imgui_window_size_x*7,0 }, ImGuiSetCond_Always);
+    ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h*10.0f }, ImGuiSetCond_Always);
+    ImGui::SetNextWindowBgAlpha(imgui_alpha);
     comp_edit->DrawImgui();
 }

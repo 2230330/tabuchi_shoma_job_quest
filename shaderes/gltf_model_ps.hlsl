@@ -47,9 +47,11 @@ StructuredBuffer<material_constants> materials : register(t0);
 #define OCCLUSION_TEXTURE 4
 Texture2D<float4> material_textures[5] : register(t1);
 
-#define POINT 0
-#define LINEAR 1
-#define ANISOTROPIC 2
+#define POINT_WRAP 0
+#define POINT_CLAMP 1
+#define LINEAR_WRAP 2
+#define LINEAR_CLAMP 3
+#define ANISOTROPIC 4
 //SamplerState sampler_states[3] : register(s0);
 
 #include"bidirectional_reflectance_distribution_function.hlsli"
@@ -87,7 +89,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     const int metallic_roughness_texture = m.pbr_metallic_roughness.metallic_roughness_texture.index;
     if (metallic_roughness_texture > -1)
     {
-        float4 sampled = material_textures[METALLIC_ROUGHNESS_TEXTURE].Sample(sampler_states[LINEAR], pin.texcoord);
+        float4 sampled = material_textures[METALLIC_ROUGHNESS_TEXTURE].Sample(sampler_states[LINEAR_CLAMP], pin.texcoord);
         roughness_factor *= sampled.g;
         metallic_factor *= sampled.b;
     }
@@ -96,7 +98,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     const int occlusion_texture = m.occlusion_texture.index;
     if (occlusion_texture > -1)
     {
-        float4 sampled = material_textures[OCCLUSION_TEXTURE].Sample(sampler_states[LINEAR], pin.texcoord);
+        float4 sampled = material_textures[OCCLUSION_TEXTURE].Sample(sampler_states[LINEAR_CLAMP], pin.texcoord);
         occlusion_factor *= sampled.r;
     }
     const float occlusion_strength = m.occlusion_texture.strength;
@@ -127,14 +129,14 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     const int normal_texture = m.normal_texture.index;
     if (normal_texture > -1)
     {
-        float4 sampled = material_textures[NORMAL_TEXTURE].Sample(sampler_states[LINEAR], pin.texcoord);
+        float4 sampled = material_textures[NORMAL_TEXTURE].Sample(sampler_states[LINEAR_CLAMP], pin.texcoord);
         float3 normal_factor = sampled.xyz;
         normal_factor = (normal_factor * 2.0) - 1.0;
         normal_factor = normalize(normal_factor * float3(m.normal_texture.scale, m.normal_texture.scale, 1.0));
         N = normalize((normal_factor.x * T) + (normal_factor.y * B) + (normal_factor.z * N));
     }
 
-    float3 diffuse = 0.125f;
+    float3 diffuse = 0;
     float3 specular = 0;
 
 	// Loop for shading process for each light
@@ -164,6 +166,13 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     specular = lerp(specular, specular * occlusion_factor, occlusion_strength);
 
 
-    float3 Lo = diffuse + specular + emmisive;
+    float3 Lo = (diffuse + specular + emmisive)*light_intensity;
+    
+    //êFâ¡éZ
+    Lo.x *= light_color.x;
+    Lo.y *= light_color.y;
+    Lo.z *= light_color.z;
+    
+    
     return float4(Lo, basecolor_factor.a);
 }
