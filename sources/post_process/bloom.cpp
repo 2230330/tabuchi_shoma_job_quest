@@ -160,7 +160,7 @@ void Bloom::DrawImgui()
 	if (ImGui::TreeNode("bloom"))
 	{
 
-		ImGui::SliderFloat("extraction_threshold", &bloom_constant_.bloom_extraction_threshold, 0.f, 10.f);
+		ImGui::SliderFloat("extraction_threshold", &bloom_constant_.bloom_extraction_threshold, 0.f, 1.f);
 		ImGui::SliderFloat("intensity", &bloom_constant_.bloom_intensity, 0.f, 10.f);
 		ImGui::SliderFloat("soft_knee", &bloom_constant_.bloom_soft_knee, 0.f, 1.f);
 

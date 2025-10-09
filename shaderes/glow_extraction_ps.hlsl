@@ -15,8 +15,10 @@ float4 main(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARG
     float3 hdrColor = hdr_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord).rgb;
 
     // 最大輝度成分を使用（高速で自然）
-    float brightness = max(hdrColor, float3(0.2126f,0.7152f,0.0722f));
+    //float brightness = max(hdrColor, float3(0.2126f, 0.7152f, 0.0722f));
+    float brightness = dot(hdrColor, float3(0.2126f, 0.7152f, 0.0722f));
 
+    
     // ソフトニー（soft-knee）による滑らかなしきい値遷移
     float knee = bloom_extraction_threshold * bloom_soft_knee + 1e-4;
     float soft = smoothstep(bloom_extraction_threshold - knee,

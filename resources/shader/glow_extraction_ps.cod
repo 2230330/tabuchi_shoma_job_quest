@@ -57,14 +57,14 @@ dcl_temps 2
 sample_indexable(texture2d)(float,float,float,float) r0.xyz, v1.xyxx, t0.xyzw, s3
 mov r0.xyz, r0.xyzx  // r0.x <- hdrColor.x; r0.y <- hdrColor.y; r0.z <- hdrColor.z
 
-#line 18
-max r0.w, r0.x, l(0.212600)  // r0.w <- brightness
+#line 19
+dp3 r0.w, r0.xyzx, l(0.212600, 0.715200, 0.072200, 0.000000)  // r0.w <- brightness
 
-#line 21
+#line 23
 mul r1.x, cb8[0].z, cb8[0].x
 add r1.x, r1.x, l(0.000100)  // r1.x <- knee
 
-#line 22
+#line 24
 mov r1.y, -r1.x
 add r1.y, r1.y, cb8[0].x
 add r1.z, r1.x, cb8[0].x
@@ -80,21 +80,21 @@ add r1.z, r1.z, l(3.000000)
 mul r1.y, r1.y, r1.y
 mul r1.y, r1.y, r1.z  // r1.y <- soft
 
-#line 27
+#line 29
 mov r1.z, -cb8[0].x
 add r0.w, r0.w, r1.z
 div r0.w, r0.w, r1.x
 max r0.w, r0.w, l(0.000000)
 min r0.w, r0.w, l(1.000000)  // r0.w <- bloomMask
 
-#line 28
+#line 30
 max r0.w, r0.w, r1.y
 
-#line 31
+#line 33
 mul r0.xyz, r0.wwww, r0.xyzx
 mul r0.xyz, r0.xyzx, cb8[0].yyyy  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
 
-#line 33
+#line 35
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 
