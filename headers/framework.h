@@ -67,7 +67,7 @@ private:
 
 private:
     std::unique_ptr<Scene>          scene_;
-
+    float wheel{ 0 }; //マウスホイール
 
 };
 

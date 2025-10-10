@@ -238,7 +238,7 @@
     <ClInclude Include="headers\high_resolution_timer.h" />
     <ClInclude Include="headers\importer\gltf_importer.h" />
     <ClInclude Include="headers\importer\i_importer.h" />
-    <ClInclude Include="headers\light.h" />
+    <ClInclude Include="headers\light_manager.h" />
     <ClInclude Include="headers\misc.h" />
     <ClInclude Include="headers\model.h" />
     <ClInclude Include="headers\post_process\bloom.h" />
@@ -247,7 +247,6 @@
     <ClInclude Include="headers\resource_manager.h" />
     <ClInclude Include="headers\scene\scene.h" />
     <ClInclude Include="headers\scene\scene_test.h" />
-    <ClInclude Include="headers\scene_constants.h" />
     <ClInclude Include="headers\shader.h" />
     <ClInclude Include="headers\skinned_mesh.h" />
     <ClInclude Include="headers\sprite.h" />
@@ -282,11 +281,13 @@
     <ClCompile Include="sources\gltf_model.cpp" />
     <ClCompile Include="sources\graphics.cpp" />
     <ClCompile Include="sources\importer\gltf_importer.cpp" />
+    <ClCompile Include="sources\light_manager.cpp" />
     <ClCompile Include="sources\main.cpp" />
     <ClCompile Include="sources\post_process\bloom.cpp" />
     <ClCompile Include="sources\post_process\post_process_manager.cpp" />
     <ClCompile Include="sources\render_state.cpp" />
     <ClCompile Include="sources\resource_manager.cpp" />
+    <ClCompile Include="sources\scenes\scene.cpp" />
     <ClCompile Include="sources\scenes\scene_test.cpp" />
     <ClCompile Include="sources\shader.cpp" />
     <ClCompile Include="sources\skinned_mesh.cpp" />
@@ -302,10 +303,15 @@
   <ItemGroup>
     <None Include="shaderes\bidirectional_reflectance_distribution_function.hlsli" />
     <None Include="shaderes\bloom.hlsli" />
+    <None Include="shaderes\forward_light.hlsli" />
     <None Include="shaderes\fullscreen_quad.hlsli" />
+    <None Include="shaderes\gbuffer.hlsli" />
     <None Include="shaderes\geometric_primitive.hlsli" />
     <None Include="shaderes\gltf_model.hlsli" />
+    <None Include="shaderes\gltf_model_gbuffer.hlsli" />
     <None Include="shaderes\image_based_lighting.hlsli" />
+    <None Include="shaderes\light.hlsli" />
+    <None Include="shaderes\scene_constant_buffer.hlsli" />
     <None Include="shaderes\skinned_mesh.hlsli" />
     <None Include="shaderes\sprite.hlsli" />
     <None Include="shaderes\static_mesh.hlsli" />
@@ -352,6 +358,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_gbuffer_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\gltf_model_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

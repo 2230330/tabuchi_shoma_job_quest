@@ -45,6 +45,21 @@ public:
     //レンダーステート取得
     RenderState* GetRenderState() { return this->render_state_.get(); }
 
+    //コンスタントバッファビュー設定
+    void SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers);
+    //シェーダーリソースビュー設定
+    void SetShaderResource(int start_slot, int num, ID3D11ShaderResourceView* const* shader_resources);
+    //サンプラーステート設定
+    void SetSampler(int start_slot, int num, ID3D11SamplerState* const* sampler_state);
+    //シェーダー解錠
+    void ClearShaderSlots();
+    //コンスタントバッファビューの解除
+    void ClearConstantBuffers(int start_slot = 0, int num = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT);
+    //シェーダーリソースビューの解除
+    void ClearShaderResourceViews(int start_slot=0, int num = D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT);
+    //サンプラーステートの解除
+    void ClearSampler(int start_slot = 0, int num = D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT);
+
 private:
     //メンバ変数
     HWND                                            hwnd_ = nullptr;

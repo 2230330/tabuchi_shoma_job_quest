@@ -155,3 +155,76 @@ void Graphics::Present(UINT sync_interval)
 {
     swap_chain_->Present(sync_interval, DXGI_PRESENT_ALLOW_TEARING);
 }
+
+void Graphics::SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers)
+{
+    immediate_context_->VSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->HSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->DSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->GSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->PSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->CSSetConstantBuffers(start_slot, num, constant_buffers);
+}
+
+void Graphics::SetShaderResource(int start_slot, int num, ID3D11ShaderResourceView* const* shader_resources)
+{
+    immediate_context_->VSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->HSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->DSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->GSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->PSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->CSSetShaderResources(start_slot, num, shader_resources);
+}
+
+void Graphics::SetSampler(int start_slot, int num, ID3D11SamplerState* const* sampler_state)
+{
+    immediate_context_->VSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->HSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->DSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->GSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->PSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->CSSetSamplers(start_slot, num, sampler_state);
+}
+
+void Graphics::ClearShaderSlots()
+{
+    immediate_context_->VSSetShader(nullptr, nullptr, 0);
+    immediate_context_->HSSetShader(nullptr, nullptr, 0);
+    immediate_context_->DSSetShader(nullptr, nullptr, 0);
+    immediate_context_->GSSetShader(nullptr, nullptr, 0);
+    immediate_context_->PSSetShader(nullptr, nullptr, 0);
+    immediate_context_->CSSetShader(nullptr, nullptr, 0);
+}
+
+void Graphics::ClearConstantBuffers(int start_slot, int num)
+{
+    ID3D11Buffer* clear_constant_bufferes[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
+    immediate_context_->VSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->HSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->DSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->GSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->PSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->CSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+}
+
+void Graphics::ClearShaderResourceViews(int start_slot, int num)
+{
+    ID3D11ShaderResourceView* clear_shader_resource_view[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
+    immediate_context_->VSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->HSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->DSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->GSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->PSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->CSSetShaderResources(start_slot, num, clear_shader_resource_view);
+}
+
+void Graphics::ClearSampler(int start_slot, int num)
+{
+    ID3D11SamplerState* clear_sampler[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT]{};
+    immediate_context_->VSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->HSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->DSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->GSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->PSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->CSSetSamplers(start_slot, num, clear_sampler);
+}

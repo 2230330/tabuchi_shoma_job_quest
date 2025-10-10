@@ -5,9 +5,8 @@
 #include<d3d11.h>
 
 #include"scene.h"
-#include"../scene_constants.h"
 #include"../camera.h"
-#include"../light.h"
+#include"../light_manager.h"
 #include"../sprite_batch.h"
 #include"../geometric_primitive.h"
 #include"../static_mesh.h"
@@ -27,19 +26,21 @@
 class SceneTest :public Scene
 {
 public:
-    SceneTest();
+    SceneTest(const HWND hwnd);
     ~SceneTest()override = default;
 
+
+private:
+    bool InitializeCore()override;
+    bool UninitializeCore()override;
     //XVˆ—
-    void Update(float elapsed_time)override;
+    void UpdateCore(float elapsed_time)override;
     //•`‰æˆ—
-    void Render(float elapsed_time)override;
+    void RenderCore(float elapsed_time)override;
     //GUI•`‰æˆ—
     void DrawGui()override;
 
-private:
     Camera                               camera_;
-    SceneLightManager                    light_manager_;
     Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shaders_[8];
 
@@ -80,6 +81,7 @@ private:
     std::unique_ptr<RenderSystemManager>render_sys_mng;
     std::unique_ptr<World>world;
     std::unique_ptr<PostProcessManager>post_pro_mng;
+    std::unique_ptr<LightManager>light_manager_;
 };
 
 #endif // !PART2_SCENE_TEST_H

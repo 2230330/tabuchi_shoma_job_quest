@@ -89,7 +89,7 @@
     <ClInclude Include="headers\render_state.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="headers\light.h">
+    <ClInclude Include="headers\light_manager.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="headers\camera.h">
@@ -100,9 +100,6 @@
     </ClInclude>
     <ClInclude Include="headers\scene\scene_test.h">
       <Filter>headers\scenes</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\scene_constants.h">
-      <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="headers\static_mesh.h">
       <Filter>headers</Filter>
@@ -343,6 +340,12 @@
     <ClCompile Include="sources\post_process\post_process_manager.cpp">
       <Filter>sources\post_process</Filter>
     </ClCompile>
+    <ClCompile Include="sources\scenes\scene.cpp">
+      <Filter>sources\scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\light_manager.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaderes\geometric_primitive.hlsli">
@@ -370,6 +373,21 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\bloom.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\gbuffer.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\gltf_model_gbuffer.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\light.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\scene_constant_buffer.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\forward_light.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -432,6 +450,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\synthesis_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_gbuffer_vs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

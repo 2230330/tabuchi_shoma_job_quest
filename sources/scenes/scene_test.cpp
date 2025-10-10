@@ -9,8 +9,15 @@
 #include"../../external/imgui/imgui.h"
 #include"../../headers/shader.h"
 
-SceneTest::SceneTest()
+SceneTest::SceneTest(const HWND hwnd)
+    :Scene(hwnd)
 {
+
+}
+
+bool SceneTest::InitializeCore()
+{
+
     //std::ifstream file("C:/Users/2230330/Desktop/JobQuest/part2/resources/model/fbx/nico/nico.fbx");
 
     //各種マネージャの設定
@@ -22,6 +29,7 @@ SceneTest::SceneTest()
         comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng,*world);
+        light_manager_ = std::make_unique<LightManager>();
 
         uint32_t w = static_cast<uint32_t>(Graphics::Instance().GetScreenWidth());
         uint32_t h = static_cast<uint32_t>(Graphics::Instance().GetScreenHeight());
@@ -92,16 +100,16 @@ SceneTest::SceneTest()
     {
         ID3D11Device* device = Graphics::Instance().GetDevice();
 
-        HRESULT hr{ S_OK };
-        D3D11_BUFFER_DESC buffer_desc{};
-        buffer_desc.ByteWidth = sizeof(SceneConstants);
-        buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-        buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        buffer_desc.CPUAccessFlags = 0;
-        buffer_desc.MiscFlags = 0;
-        buffer_desc.StructureByteStride = 0;
-        hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer_.GetAddressOf());
-        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        //HRESULT hr{ S_OK };
+        //D3D11_BUFFER_DESC buffer_desc{};
+        //buffer_desc.ByteWidth = sizeof(SceneConstants);
+        //buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+        //buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        //buffer_desc.CPUAccessFlags = 0;
+        //buffer_desc.MiscFlags = 0;
+        //buffer_desc.StructureByteStride = 0;
+        //hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer_.GetAddressOf());
+        //_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
     //カメラの設定
     {
@@ -117,7 +125,7 @@ SceneTest::SceneTest()
         light.direction = { 0,0,1,0 };
         light.color = { 1,1,1,1 };
         light.intensity = 2.0f;
-        light_manager_.SetDirectionLight(light);
+        light_manager_->SetDirectionLight(light);
     }
     //コンポーネントの設定(仮)
     {
@@ -146,14 +154,22 @@ SceneTest::SceneTest()
         col.value = { 1,1,1,1 };
         comp_mng->Add(gltf_model.entity,col);
     }
+
+
+    return true;
 }
 
-void SceneTest::Update(float elapsed_time)
+bool SceneTest::UninitializeCore()
+{
+    return true;
+}
+
+void SceneTest::UpdateCore(float elapsed_time)
 {
     update_sys_mng->UpdateAll(elapsed_time);
 }
 
-void SceneTest::Render(float elapsed_time)
+void SceneTest::RenderCore(float elapsed_time)
 {
     HRESULT hr{ S_OK };
 
@@ -192,22 +208,9 @@ void SceneTest::Render(float elapsed_time)
         UINT num_viewports{ 1 };
         dc->RSGetViewports(&num_viewports, &viewport);
 
-        float aspect_ratio{ viewport.Width / viewport.Height };
-        camera_.SetPerspectiveFov(DirectX::XMConvertToRadians(30), aspect_ratio, 0.1f, 100.f);
-        DirectX::XMFLOAT4X4 projection = camera_.GetProjection();
-        DirectX::XMMATRIX P = { XMLoadFloat4x4(&projection) };
-        DirectX::XMFLOAT4X4 view = camera_.GetView();
-        DirectX::XMMATRIX V = { XMLoadFloat4x4(&view) };
 
-        SceneConstants data{};
-        DirectX::XMStoreFloat4x4(&data.view_projection, V * P);
-        data.light_direction = light_manager_.GetDirectionLight().direction;
-        data.light_color = light_manager_.GetDirectionLight().color;
-        data.light_intensity = light_manager_.GetDirectionLight().intensity;
-        data.camera_position = { camera_.GetEye().x,camera_.GetEye().y,camera_.GetEye().z,1.0f };
-        dc->UpdateSubresource(constant_buffer_.Get(), 0, 0, &data, 0, 0);
-        dc->VSSetConstantBuffers(1, 1, constant_buffer_.GetAddressOf());
-        dc->PSSetConstantBuffers(1, 1, constant_buffer_.GetAddressOf());
+        light_manager_->SetForwardLightConstant(2);
+        SetSceneConstant();
     }
     //レンダリングオブジェクト描画
     {
@@ -285,53 +288,8 @@ void SceneTest::DrawGui()
     ImGui::SetNextWindowPos({ 0,0 }, ImGuiSetCond_Always);
     ImGui::SetNextWindowSize({ imgui_window_size_x*3.f,imgui_window_size_h*5.0f }, ImGuiSetCond_Always);
     ImGui::SetNextWindowBgAlpha(imgui_alpha);
-    ImGui::Begin("scene_test");
-    {
-        //カメラ操作
-        {
-            ImGui::Separator();
-            ImGui::Text("camera");
-            DirectX::XMFLOAT3 camera_eye = camera_.GetEye();
-            ImGui::SliderFloat3("eye", &camera_eye.x, -10.0f, 10.f);
-            camera_.SetLookAt(camera_eye, camera_.GetFocus(), camera_.GetUp());
-        }
-        //ライト操作
-        {
-            ImGui::Separator();
-            ImGui::Text("light");
-            DirectionLight light = light_manager_.GetDirectionLight();
-            bool light_flag = false;
-            if (ImGui::SliderFloat4("lihgt_direction", &light.direction.x, -1.f, 1.f))
-            {
-                light_flag = true;
-            }
-            if (ImGui::ColorEdit4("light_color", &light.color.x))
-            {
-                light_flag = true;
-            }
-            if (ImGui::SliderFloat("light_intensity", &light.intensity, 0.1f, 10.f))
-            {
-                light_flag=true;
-            }
-            if (light_flag)
-            {
-                light_manager_.SetDirectionLight(light);
-            }
-        }
-
-        //オブジェクト
-        {
-            float limit;
-            limit = 5.f;
-            //geometric_primitive
-            ImGui::Separator();
-            ImGui::Text("model");
-            ImGui::SliderFloat3("position", &model.position.x, -limit, limit);
-            ImGui::SliderFloat3("rotation", &model.rotation.x, -limit, limit);
-            ImGui::SliderFloat3("scale", &model.scale.x, -limit, limit);
-        }
-    }
-    ImGui::End();
+    //ライトマネージャー
+    light_manager_->DrawImgui();
 
     //ポストエフェク
     ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);

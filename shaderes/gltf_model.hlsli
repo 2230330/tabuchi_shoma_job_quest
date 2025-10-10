@@ -16,6 +16,7 @@ struct VS_OUT
     float4 w_tangent : TANGENT;
     float2 texcoord : TEXCOORD;
 };
+#include"scene_constant_buffer.hlsli"
 
 cbuffer PRIMITIVE_CONSTANT_BUFFER : register(b0)
 {
@@ -26,18 +27,18 @@ cbuffer PRIMITIVE_CONSTANT_BUFFER : register(b0)
     int pad;
 };
 
-cbuffer SCENE_CONSTANT_BUFFER : register(b1)
-{
-    row_major float4x4 view_projection;
-    float4 light_direction;
-    float4 camera_position;
-    float4 light_color;
-    float light_intensity;
-    float3 dummy;
-};
+//cbuffer SCENE_CONSTANT_BUFFER : register(b1)
+//{
+//    row_major float4x4 view_projection;
+//    float4 light_direction;
+//    float4 camera_position;
+//    float4 light_color;
+//    float light_intensity;
+//    float3 dummy;
+//};
 
 static const uint PRIMITIVE_MAX_JOINTS = 512;
-cbuffer PRIMITIVE_JOINT_CONSTANTS : register(b2)
+cbuffer PRIMITIVE_JOINT_CONSTANTS : register(b3)
 {
     row_major float4x4 joint_matrices[PRIMITIVE_MAX_JOINTS];
 };

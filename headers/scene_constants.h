@@ -2,7 +2,6 @@
 #define PART2_SCENE_CONSTANTS_H
 
 #include"camera.h"
-#include"light.h"
 
 #include<DirectXMath.h>
 

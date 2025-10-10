@@ -1,4 +1,6 @@
 #include"../shaderes/gltf_model.hlsli"
+#include "scene_constant_buffer.hlsli"
+#include"forward_light.hlsli"
 
 struct texture_info
 {
@@ -140,7 +142,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     float3 specular = 0;
 
 	// Loop for shading process for each light
-    float3 L = normalize(-light_direction.xyz);
+    float3 L = normalize(-directional_light.direction.xyz);
     float3 Li = float3(1.0, 1.0, 1.0); // Radiance of the light
     const float NoL = max(0.0, dot(N, L));
     const float NoV = max(0.0, dot(N, V));
@@ -166,12 +168,12 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     specular = lerp(specular, specular * occlusion_factor, occlusion_strength);
 
 
-    float3 Lo = (diffuse + specular + emmisive)*light_intensity;
+    float3 Lo = (diffuse + specular + emmisive)*directional_light.intensity;
     
     //êFâ¡éZ
-    Lo.x *= light_color.x;
-    Lo.y *= light_color.y;
-    Lo.z *= light_color.z;
+    Lo.x *= directional_light.color.x;
+    Lo.y *= directional_light.color.y;
+    Lo.z *= directional_light.color.z;
     
     
     return float4(Lo, basecolor_factor.a);
