@@ -1,4 +1,7 @@
 #include"../headers/light_manager.h"
+
+#include<string>
+
 #include"../headers/graphics.h"
 #include"../headers/misc.h"
 #include"../external/imgui/imgui.h"
@@ -25,18 +28,9 @@ LightManager::LightManager()
 	for (int i = 0; i < ForwardLightConstants::light_max; i++)
 	{
 		PointLight point_light;
-		point_light.position = { 0.f,0.f,0.f,0.f };
-		point_light.color = { 0.f,0.f,0.f,0.f };
-		point_light.range = 10.f;
-		point_light.intensity = 1.0f;
-
 		point_lights_.emplace_back(point_light);
 
 		SpotLight spot_light;
-		spot_light.position = { 0.f,0.f,0.f,0.f };
-		spot_light.color = { 0.f,0.f,0.f,0.f };
-		spot_light.range = 10.f;
-		
 		spot_lights_.emplace_back(spot_light);
 	}
 }
@@ -71,15 +65,55 @@ void LightManager::DrawImgui()
 {
 	if (ImGui::Begin("light manager"))
 	{
+		//ディレクションライト
 		if (ImGui::TreeNode("directional light"))
 		{
-			if (ImGui::SliderFloat4("direction", &direction_light_.direction.x, -1.f, 1.f));
+			if (ImGui::SliderFloat4("direction", &direction_light_.direction.x, -5.f, 5.f));
 			if (ImGui::ColorEdit4("color", &direction_light_.color.x));
 			if (ImGui::SliderFloat("intensity", &direction_light_.intensity, 0.1f, 10.f));
 			
 			ImGui::TreePop();
 		}
-
+		//ポイントライト
+		if (ImGui::TreeNode("point_lights"))
+		{
+			int size = point_lights_.size();
+			for (int i = 0; i < size; i++)
+			{
+				PointLight& light = point_lights_[i];
+				std::string name = "point_light" + std::to_string(i);
+				if (ImGui::TreeNode(name.c_str()))
+				{
+					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::ColorEdit4("color", &light.color.x));
+					if (ImGui::SliderFloat("range", &light.range, 0.0f, 20.f));
+					if (ImGui::SliderFloat("intensity", &light.intensity, 0.0f, 10.f));
+				}
+				
+			}
+			ImGui::TreePop();
+		}
+		//スポットライト
+		if (ImGui::TreeNode("spot light"))
+		{
+			int size = spot_lights_.size();
+			for (int i = 0; i < size ; i++)
+			{
+				SpotLight& light = spot_lights_[i];
+				std::string name = "spot light" + std::to_string(i);
+				if (ImGui::TreeNode(name.c_str()))
+				{
+					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::SliderFloat4("direction", &light.direction.x,-10.f,10.f));
+					if (ImGui::ColorEdit4("color", &light.color.x));
+					if (ImGui::SliderFloat("inner_corn", &light.inner_corn,
+						DirectX::XMConvertToRadians(0.f),DirectX::XMConvertToRadians(180)));
+					if (ImGui::SliderFloat("outer_corn", &light.outer_corn,
+						DirectX::XMConvertToRadians(0.f),DirectX::XMConvertToRadians(180)));
+				}
+			}
+			ImGui::TreePop();
+		}
 	ImGui::End();
 	}
 }

@@ -15,7 +15,8 @@ struct point_lights
     float4 position;
     float4 color;
     float range;
-    float3 dummy;
+    float intensity;
+    float2 dummy;
 };
 
 // スポットライト

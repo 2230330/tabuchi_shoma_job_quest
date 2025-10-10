@@ -1,6 +1,7 @@
 #include"../shaderes/gltf_model.hlsli"
 #include "scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
+#include"shading_functions.hlsli"
 
 struct texture_info
 {
@@ -64,7 +65,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     const float GAMMA = 2.2;
 
     const material_constants m = materials[material];
-
+    //ベースカラー
     float4 basecolor_factor = m.pbr_metallic_roughness.basecolor_factor;
     const int basecolor_texture = m.pbr_metallic_roughness.basecolor_texture.index;
     if (basecolor_texture > -1)
@@ -77,6 +78,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     clip(basecolor_factor.a - 0.25);
 #endif
 
+    //自己発光
     float3 emmisive_factor = m.emissive_factor;
     const int emissive_texture = m.emissive_texture.index;
     if (emissive_texture > -1)
@@ -138,43 +140,83 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         N = normalize((normal_factor.x * T) + (normal_factor.y * B) + (normal_factor.z * N));
     }
 
-    float3 diffuse = 0;
-    float3 specular = 0;
 
 	// Loop for shading process for each light
-    float3 L = normalize(-directional_light.direction.xyz);
-    float3 Li = float3(1.0, 1.0, 1.0); // Radiance of the light
-    const float NoL = max(0.0, dot(N, L));
-    const float NoV = max(0.0, dot(N, V));
-    if (NoL > 0.0 || NoV > 0.0)
-    {
-        const float3 R = reflect(-L, N);
-        const float3 H = normalize(V + L);
-		//return sample_specular_pmrem(R, 0.0);
+//	シェーディング
+    float4 color = (float4) 0;
+	{
+		//	環境光
+        float3 ambient = ambient_color.rgb * ambient_color.a;
 
-        const float NoH = max(0.0, dot(N, H));
-        const float HoV = max(0.0, dot(H, V));
+		//	平行光源
+        float3 directional_diffuse = 0, directional_specular = 0;
+		{
+            float3 L = normalize(directional_light.direction.xyz);
+            float3 LC = directional_light.color.rgb * directional_light.color.a;
+            directional_diffuse = CalcLambert(N, L, LC, 1)*directional_light.intensity;
+            directional_specular = CalcPhongSpecular(N, L, V, LC, 1)*directional_light.intensity;
 
-        diffuse += Li * NoL * brdf_lambertian(f0, f90, c_diff, HoV);
-        specular += Li * NoL * brdf_specular_ggx(f0, f90, alpha_roughness, HoV, NoL, NoV, NoH);
+			////	平行光源用シャドウマップ
+   //         float depth = shadow_map.Sample(shadow_sampler_state, pin.shadow_texcoord.xy).r;
+			////	深度値を比較して影かどうかを判定する
+   //         if (pin.shadow_texcoord.z - depth > shadow_bias)
+   //         {
+   //             directional_diffuse *= shadow_attenuation;
+   //             directional_specular *= shadow_attenuation;
+   //         }
+        }
+
+		//	点光源
+        float3 point_diffuse = 0, point_specular = 0;
+        for (int i = 0; i < 8; ++i)
+        {
+            if (i >= light_count.y)
+                break;
+            
+            float3 L = pin.w_position.xyz - point_light[i].position.xyz;
+            float len = length(L);
+            if (len >= point_light[i].range)
+                continue;
+            float attenuateLength = saturate(1.0f - len / point_light[i].range);
+            float attenuation = attenuateLength * attenuateLength;
+            L /= len;
+            float3 LC = point_light[i].color.rgb * point_light[i].color.a;
+            point_diffuse += CalcLambert(N, L, LC, 1) * attenuation*point_light[i].intensity;
+            point_specular += CalcPhongSpecular(N, L, V, LC, 1) * attenuation*point_light[i].intensity;
+        }
+
+		//	スポットライト
+        float3 spot_diffuse = 0, spot_specular = 0;
+        for (int j = 0; j < 8; ++j)
+        {
+            if (j >= light_count.z)
+                break;
+            
+            float3 L = pin.w_position.xyz - spot_light[j].position.xyz;
+            float len = length(L);
+            if (len >= spot_light[j].range)
+                continue;
+            float attenuateLength = saturate(1.0f - len / spot_light[j].range);
+            float attenuation = attenuateLength * attenuateLength;
+            L /= len;
+            float3 spotDirection = normalize(spot_light[j].direction.xyz);
+            float angle = dot(spotDirection, L);
+            float area = spot_light[j].inner_corn - spot_light[j].outer_corn;
+            attenuation *= saturate(1.0f - (spot_light[j].inner_corn - angle) / area);
+            float3 LC = spot_light[j].color.rgb * spot_light[j].color.a;
+            spot_diffuse += CalcLambert(N, L, LC, 1) * attenuation;
+            spot_specular += CalcPhongSpecular(N, L, V, LC, 1) * attenuation;
+        }
+		
+		//	合算
+        color.a = basecolor_factor.a;
+        color.rgb += basecolor_factor.rgb * (ambient + directional_diffuse + point_diffuse + spot_diffuse);
+        color.rgb += directional_specular + spot_specular + point_specular;
     }
-
-    diffuse += ibl_radiance_lambertian(N, V, roughness_factor, c_diff, f0);
-    specular += ibl_radiance_ggx(N, V, roughness_factor, f0);
-
-
-    float3 emmisive = emmisive_factor;
-    diffuse = lerp(diffuse, diffuse * occlusion_factor, occlusion_strength);
-    specular = lerp(specular, specular * occlusion_factor, occlusion_strength);
-
-
-    float3 Lo = (diffuse + specular + emmisive)*directional_light.intensity;
-    
-    //色加算
-    Lo.x *= directional_light.color.x;
-    Lo.y *= directional_light.color.y;
-    Lo.z *= directional_light.color.z;
+	
+	//	自己発光色加算
+    color.rgb += emmisive_factor;
     
     
-    return float4(Lo, basecolor_factor.a);
+    return color;
 }
