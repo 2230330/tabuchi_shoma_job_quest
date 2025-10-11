@@ -10,7 +10,7 @@
 //   float bloom_extraction_threshold;  // Offset:    0 Size:     4
 //   float bloom_intensity;             // Offset:    4 Size:     4
 //   float bloom_soft_knee;             // Offset:    8 Size:     4
-//   float dummy;                       // Offset:   12 Size:     4 [unused]
+//   float bloom_radius;                // Offset:   12 Size:     4 [unused]
 //
 // }
 //

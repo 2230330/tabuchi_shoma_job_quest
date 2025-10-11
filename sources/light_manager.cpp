@@ -88,6 +88,8 @@ void LightManager::DrawImgui()
 					if (ImGui::ColorEdit4("color", &light.color.x));
 					if (ImGui::SliderFloat("range", &light.range, 0.0f, 20.f));
 					if (ImGui::SliderFloat("intensity", &light.intensity, 0.0f, 10.f));
+
+					ImGui::TreePop();
 				}
 				
 			}

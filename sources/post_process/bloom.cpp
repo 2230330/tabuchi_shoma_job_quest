@@ -39,10 +39,7 @@ Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height, ResourceMa
     hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer_.GetAddressOf());
     _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-	//パラメータの初期値
-	bloom_constant_.bloom_extraction_threshold = 0.3f;
-	bloom_constant_.bloom_intensity = 1.5f;
-	bloom_constant_.bloom_soft_knee = 0.5f;
+
 }
 
 void Bloom::Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* color_map)
@@ -72,7 +69,7 @@ void Bloom::Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceVie
 	BloomConstants data{};
 	data.bloom_extraction_threshold = bloom_constant_.bloom_extraction_threshold;
 	data.bloom_intensity = bloom_constant_.bloom_intensity;
-	immediate_context->UpdateSubresource(constant_buffer_.Get(), 0, 0, &data, 0, 0);
+	immediate_context->UpdateSubresource(constant_buffer_.Get(), 0, 0, &bloom_constant_, 0, 0);
 	immediate_context->PSSetConstantBuffers(8, 1, constant_buffer_.GetAddressOf());
 
 	// Extracting bright color
@@ -163,6 +160,7 @@ void Bloom::DrawImgui()
 		ImGui::SliderFloat("extraction_threshold", &bloom_constant_.bloom_extraction_threshold, 0.f, 1.f);
 		ImGui::SliderFloat("intensity", &bloom_constant_.bloom_intensity, 0.f, 10.f);
 		ImGui::SliderFloat("soft_knee", &bloom_constant_.bloom_soft_knee, 0.f, 1.f);
+		ImGui::SliderFloat("radius", &bloom_constant_.bloom_radius, 0.f, 2.f);
 
 		ImGui::TreePop();
 	}

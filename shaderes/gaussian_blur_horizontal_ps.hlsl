@@ -1,4 +1,5 @@
 // BLOOM
+#include"bloom.hlsli"
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
 #define LINEAR_WRAP 2
@@ -8,7 +9,7 @@ SamplerState sampler_states[5] : register(s0);
 
 Texture2D hdr_color_buffer_texture : register(t0);
 
-//‰¡•ûŒü‚Ìò‚µ
+//æ¨ªæ–¹å‘ã®æšˆã—
 float4 main(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARGET
 {
     uint mip_level = 0, width, height, number_of_levels;
@@ -22,8 +23,11 @@ float4 main(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARG
     float4 sampled_color = hdr_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord) * weight[0];
     for (int i = 1; i < 3; i++)
     {
-        sampled_color += hdr_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord + float2(offset[i] / width, 0.0)) * weight[i];
-        sampled_color += hdr_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord - float2(offset[i] / width, 0.0)) * weight[i];
+        //åŠå¾„ã®è¿½åŠ 
+        float scale_offset = offset[i] * bloom_radius;
+        
+        sampled_color += hdr_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord + float2(scale_offset / width, 0.0)) * weight[i];
+        sampled_color += hdr_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord - float2(scale_offset / width, 0.0)) * weight[i];
     }
     return sampled_color;
 }

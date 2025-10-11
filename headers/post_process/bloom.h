@@ -49,10 +49,10 @@ private:
 
     struct BloomConstants
     {
-        float bloom_extraction_threshold;//明るさの閾値
-        float bloom_intensity;          //強度
-        float bloom_soft_knee;          //閾値付近の滑らかさ
-        float dummy;
+        float bloom_extraction_threshold{0.8f};//明るさの閾値
+        float bloom_intensity{1.5f};          //強度
+        float bloom_soft_knee{0.3f};          //閾値付近の滑らかさ
+        float bloom_radius{1.0f}; //広がり
     };
 
     Microsoft::WRL::ComPtr<ID3D11Buffer>constant_buffer_;
