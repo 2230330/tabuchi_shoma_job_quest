@@ -132,6 +132,7 @@ public:
 	virtual ~GltfModel() = default;
 
 	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world);
+	void InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location = 0);
 	void Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes);
 	void UpdateAnimation(float elapsed_time);
 	const std::vector<GltfModel::Node>& GetNodes()const;
@@ -208,8 +209,10 @@ public:
 	std::vector<Microsoft::WRL::ComPtr<ID3D11Buffer>> buffers_;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> material_resource_view_;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertex_shader_;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> instancing_vertex_shader_;//インスタンシング描画
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> input_layout;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> instancing_input_layout;//インスタンシング描画
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_cbuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_joint_cbuffer;
 };

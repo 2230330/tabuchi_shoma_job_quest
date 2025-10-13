@@ -127,7 +127,9 @@ bool SceneTest::InitializeCore()
         light.intensity = 2.0f;
         light_manager_->SetDirectionLight(light);
     }
+    int size = 1000;
     //コンポーネントの設定(仮)
+    for(int i=-size;i<size;i++)
     {
         ID3D11Device* device = Graphics::Instance().GetDevice();
         gltf_model.entity = world->GetEntityManager()->Add();
@@ -135,11 +137,11 @@ bool SceneTest::InitializeCore()
         ComponentGltf gltf;
         gltf.model = rsc_mng->LoadGltfModel(
             device,
-            ".\\resources\\model\\gltf\\knife.glb"
+            ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
         );
         comp_mng->Add<ComponentGltf>(gltf_model.entity,gltf);
         ComponentPosition pos;
-        pos.value={0.f, 0.f, 0.f};
+        pos.value = { static_cast<float>(i%5), 0.f, static_cast<float>(i/5) };
         comp_mng->Add<ComponentPosition>(gltf_model.entity,pos);
         ComponentRotation ros;
         ros.value = { 0.f,0.f,0.f };
@@ -153,7 +155,11 @@ bool SceneTest::InitializeCore()
         ComponentColor col;
         col.value = { 1,1,1,1 };
         comp_mng->Add(gltf_model.entity,col);
+        ComponentInstanced instance;
+        instance.entity_id = gltf_model.entity;
+        comp_mng->Add(gltf_model.entity, instance);
     }
+
 
 
     return true;

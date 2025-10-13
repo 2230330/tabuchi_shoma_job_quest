@@ -236,6 +236,12 @@
     <ClInclude Include="headers\post_process\post_process_manager.h">
       <Filter>headers\post_process</Filter>
     </ClInclude>
+    <ClInclude Include="headers\system\instancing_render_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_instanced.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -345,6 +351,9 @@
     </ClCompile>
     <ClCompile Include="sources\light_manager.cpp">
       <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\instancing_render_system.cpp">
+      <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -456,6 +465,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\gltf_model_gbuffer_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_forward_instancing_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_forward_instancing_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

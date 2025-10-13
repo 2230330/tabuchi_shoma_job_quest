@@ -216,6 +216,7 @@
     <ClInclude Include="headers\component\component_color.h" />
     <ClInclude Include="headers\component\component_editor.h" />
     <ClInclude Include="headers\component\component_gltf.h" />
+    <ClInclude Include="headers\component\component_instanced.h" />
     <ClInclude Include="headers\component\component_local_to_world.h" />
     <ClInclude Include="headers\component\component_manager.h" />
     <ClInclude Include="headers\component\component_material.h" />
@@ -259,6 +260,7 @@
     <ClInclude Include="headers\system\render_system_manager.h" />
     <ClInclude Include="headers\system\transform_system.h" />
     <ClInclude Include="headers\system\update_system_manager.h" />
+    <ClInclude Include="headers\system\instancing_render_system.h" />
     <ClInclude Include="headers\texture.h" />
     <ClInclude Include="headers\world\world.h" />
   </ItemGroup>
@@ -294,6 +296,7 @@
     <ClCompile Include="sources\sprite.cpp" />
     <ClCompile Include="sources\sprite_batch.cpp" />
     <ClCompile Include="sources\static_mesh.cpp" />
+    <ClCompile Include="sources\system\instancing_render_system.cpp" />
     <ClCompile Include="sources\system\render_system.cpp" />
     <ClCompile Include="sources\system\render_system_manager.cpp" />
     <ClCompile Include="sources\system\update_system_manager.cpp" />
@@ -359,6 +362,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_forward_instancing_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_forward_instancing_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\gltf_model_gbuffer_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>

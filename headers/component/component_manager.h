@@ -14,6 +14,7 @@
 #include "component_primitive.h"
 #include "component_material.h"
 #include "component_texture.h"
+#include "component_instanced.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -31,6 +32,7 @@ public:
         registerContainer<ComponentPrimitive>(primitives_);
         registerContainer<ComponentMaterial>(materials_);
         registerContainer<ComponentTexture>(textures_);
+        registerContainer<ComponentInstanced>(instanced_);
     }
 
     template<typename T>
@@ -149,4 +151,5 @@ private:
     std::vector<ComponentPrimitive>primitives_;
     std::vector<ComponentMaterial>materials_;
     std::vector<ComponentTexture>textures_;
+    std::vector<ComponentInstanced>instanced_;
 };

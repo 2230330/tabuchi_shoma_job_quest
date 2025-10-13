@@ -27,6 +27,8 @@ void ComponentEditor::DrawImgui()
     if (ImGui::Begin("Component Editor"))
     {
 
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+
         // エンティティ追加ボタン
         if (ImGui::Button("Add Entity"))
         {

@@ -112,6 +112,8 @@ void LightManager::DrawImgui()
 						DirectX::XMConvertToRadians(0.f),DirectX::XMConvertToRadians(180)));
 					if (ImGui::SliderFloat("outer_corn", &light.outer_corn,
 						DirectX::XMConvertToRadians(0.f),DirectX::XMConvertToRadians(180)));
+
+					ImGui::TreePop();
 				}
 			}
 			ImGui::TreePop();
