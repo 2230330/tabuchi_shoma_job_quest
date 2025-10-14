@@ -1145,30 +1145,30 @@ loop
 #line 192
 endloop 
 
-#line 196
+#line 198
 mul r0.xyz, r3.yyyy, r6.xyzx
 mov r2.xyz, -r6.xyzx
 add r0.xyz, r0.xyzx, r2.xyzx
 mul r0.xyz, r0.xyzx, r4.xxxx
 add r0.xyz, r0.xyzx, r6.xyzx  // r0.x <- total_diffuse.x; r0.y <- total_diffuse.y; r0.z <- total_diffuse.z
 
-#line 197
+#line 199
 mul r2.xyz, r3.yyyy, r7.xyzx
 mov r3.xyz, -r7.xyzx
 add r2.xyz, r2.xyzx, r3.xyzx
 mul r2.xyz, r2.xyzx, r4.xxxx
 add r2.xyz, r2.xyzx, r7.xyzx  // r2.x <- total_specular.x; r2.y <- total_specular.y; r2.z <- total_specular.z
 
-#line 200
+#line 202
 add r0.xyz, r0.xyzx, r2.xyzx
 add r0.xyz, r1.xyzx, r0.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 202
+#line 204
 log r0.xyz, r0.xyzx
 mul r0.xyz, r0.xyzx, l(0.454545, 0.454545, 0.454545, 0.000000)
 exp r0.xyz, r0.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 203
+#line 205
 mov o0.xyz, r0.xyzx
 mov o0.w, r2.w
 ret 

@@ -8,6 +8,7 @@
 //現在は、元々用意していたGlTFモデルの描画を使っていますが、そのうちちゃんと作りたい
 class InstancingRenderSystem :public IRenderSystem
 {
+
 public:
     InstancingRenderSystem(ComponentManager& comp_mng, World& world);
 
@@ -16,6 +17,13 @@ private:
     //幾つか描画方法を作るつもりです
     void DrawPrimitive(ID3D11DeviceContext* context, const GltfModel::Mesh::primitive& primitive, const GltfModel& model);
 
+    struct InstanceBufferInfo {
+        Microsoft::WRL::ComPtr<ID3D11Buffer>buffer;
+        size_t cepasity = 0;
+    };
+
+    std::unordered_map<GltfModel*, InstanceBufferInfo>instance_buffer_pool_;
     ComponentManager& comp_mng_;
     World& world_;
+
 };

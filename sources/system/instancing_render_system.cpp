@@ -38,27 +38,34 @@ void InstancingRenderSystem::Render()
     {
         if (world_matrices.empty()) continue;
 
-        // インスタンス用ワールド行列バッファ作成
-        D3D11_BUFFER_DESC desc = {};
-        desc.Usage = D3D11_USAGE_DEFAULT;
-        desc.ByteWidth =((sizeof(XMFLOAT4X4) * (static_cast<UINT>(world_matrices.size()))));
-        desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        desc.CPUAccessFlags = 0;
-        desc.MiscFlags = 0;
-        desc.StructureByteStride = 0;
+        InstancingRenderSystem::InstanceBufferInfo& buf_info = instance_buffer_pool_[model];
 
-        D3D11_SUBRESOURCE_DATA init_data = {};
-        init_data.pSysMem = world_matrices.data();
+        const UINT required_size = sizeof(XMFLOAT4X4) * static_cast<UINT>(world_matrices.size());
 
-        Microsoft::WRL::ComPtr<ID3D11Buffer> instance_buffer;
-        HRESULT hr = device->CreateBuffer(&desc, &init_data, instance_buffer.GetAddressOf());
-        _ASSERT_EXPR(SUCCEEDED(hr), L"インスタンスバッファの作成に失敗しました");
+        // 必要に応じて再生成（足りないときだけ）
+        if (!buf_info.buffer || buf_info.cepasity < world_matrices.size())
+        {
+            D3D11_BUFFER_DESC desc{};
+            desc.Usage = D3D11_USAGE_DYNAMIC;
+            desc.ByteWidth = std::max(required_size, 16u);
+            desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+            desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+            HRESULT hr = device->CreateBuffer(&desc, nullptr, buf_info.buffer.ReleaseAndGetAddressOf());
+            _ASSERT_EXPR(SUCCEEDED(hr), L"インスタンスバッファの作成に失敗しました");
+            buf_info.cepasity = world_matrices.size();
+        }
+
+        // Map でデータ更新
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        context->Map(buf_info.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+        memcpy(mapped.pData, world_matrices.data(), required_size);
+        context->Unmap(buf_info.buffer.Get(), 0);
 
         // インスタンシング描画呼び出し
         model->InstancingRender(context,
             static_cast<UINT>(world_matrices.size()),
-            instance_buffer.Get(),
+            buf_info.buffer.Get(),
             0);
     }
 }
-

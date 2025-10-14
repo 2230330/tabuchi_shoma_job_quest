@@ -121,15 +121,49 @@ bool SceneTest::InitializeCore()
     }
     //ライトの設定
     {
-        DirectionLight light;
-        light.direction = { 0,0,1,0 };
-        light.color = { 1,1,1,1 };
-        light.intensity = 2.0f;
-        light_manager_->SetDirectionLight(light);
+        //DirectionLight light;
+        //light.direction = { 0,0,1,0 };
+        //light.color = { 1,1,1,1 };
+        //light.intensity = 2.0f;
+        //light_manager_->SetDirectionLight(light);
     }
-    int size = 1000;
+    //int size = 1;
+    ////コンポーネントの設定(仮)
+    //for(int i=-size;i<size;i++)
+    //{
+    //    ID3D11Device* device = Graphics::Instance().GetDevice();
+    //    gltf_model.entity = world->GetEntityManager()->Add();
+    //    ComponentGltf gltf;
+    //    gltf.model = rsc_mng->LoadGltfModel(
+    //        device,
+    //        //".\\resources\\model\\gltf\\cc0__red_spider_lily_lycoris_radiata_0.glb"
+    //        ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
+    //        //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
+    //    );
+    //    comp_mng->Add<ComponentGltf>(gltf_model.entity,gltf);
+    //    ComponentPosition pos;
+    //    int normalize_i = i >= 0 ? i : -i;
+    //    pos.value = { static_cast<float>(i%50), 0.f, static_cast<float>(normalize_i/50) };
+    //    comp_mng->Add<ComponentPosition>(gltf_model.entity,pos);
+    //    ComponentRotation ros;
+    //    ros.value = { 0.f,0.f,0.f };
+    //    comp_mng->Add<ComponentRotation>(gltf_model.entity,ros);
+    //    ComponentScale scale;
+    //    scale.value = { 1.f,1.f,1.f };
+    //    comp_mng->Add<ComponentScale>(gltf_model.entity,scale);
+    //    ComponentLocalToWorld world;
+    //    DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
+    //    comp_mng->Add(gltf_model.entity,world);
+    //    ComponentColor col;
+    //    col.value = { 1,1,1,1 };
+    //    comp_mng->Add(gltf_model.entity,col);
+    //    ComponentInstanced instance;
+    //    instance.entity_id = gltf_model.entity;
+    //    comp_mng->Add(gltf_model.entity, instance);
+    //}
+    int size = 1;
     //コンポーネントの設定(仮)
-    for(int i=-size;i<size;i++)
+    for (int i = -size; i < size; i++)
     {
         ID3D11Device* device = Graphics::Instance().GetDevice();
         gltf_model.entity = world->GetEntityManager()->Add();
@@ -137,29 +171,31 @@ bool SceneTest::InitializeCore()
         ComponentGltf gltf;
         gltf.model = rsc_mng->LoadGltfModel(
             device,
+            //".\\resources\\model\\gltf\\cc0__red_spider_lily_lycoris_radiata_0.glb"
             ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
+            //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
         );
-        comp_mng->Add<ComponentGltf>(gltf_model.entity,gltf);
+        comp_mng->Add<ComponentGltf>(gltf_model.entity, gltf);
         ComponentPosition pos;
-        pos.value = { static_cast<float>(i%5), 0.f, static_cast<float>(i/5) };
-        comp_mng->Add<ComponentPosition>(gltf_model.entity,pos);
+        int normalize_i = i >= 0 ? i : -i;
+        pos.value = { static_cast<float>(i % 50), 0.f, static_cast<float>(normalize_i / 50) };
+        comp_mng->Add<ComponentPosition>(gltf_model.entity, pos);
         ComponentRotation ros;
         ros.value = { 0.f,0.f,0.f };
-        comp_mng->Add<ComponentRotation>(gltf_model.entity,ros);
+        comp_mng->Add<ComponentRotation>(gltf_model.entity, ros);
         ComponentScale scale;
         scale.value = { 1.f,1.f,1.f };
-        comp_mng->Add<ComponentScale>(gltf_model.entity,scale);
+        comp_mng->Add<ComponentScale>(gltf_model.entity, scale);
         ComponentLocalToWorld world;
         DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
-        comp_mng->Add(gltf_model.entity,world);
+        comp_mng->Add(gltf_model.entity, world);
         ComponentColor col;
         col.value = { 1,1,1,1 };
-        comp_mng->Add(gltf_model.entity,col);
+        comp_mng->Add(gltf_model.entity, col);
         ComponentInstanced instance;
         instance.entity_id = gltf_model.entity;
         comp_mng->Add(gltf_model.entity, instance);
     }
-
 
 
     return true;
@@ -237,41 +273,44 @@ void SceneTest::RenderCore(float elapsed_time)
         {
 
             //アニメーションキーフレームの更新
-            //int clip_index = 0;
-            //int frame_index = 0;
-            //static float animation_tick = 0;
-            //auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
-            //{
-            //    frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
-            //    if (frame_index > animation.sequence.size() - 1)
-            //    {
-            //        frame_index = 0;
-            //        animation_tick = 0;
-            //    }
-            //    else
-            //    {
-            //        animation_tick += elapsed_time;
-            //    }
-            //}
-            //Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
+            int clip_index = 0;
+            int frame_index = 0;
+            static float animation_tick = 0;
+            auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
+            {
+                frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
+                if (frame_index > animation.sequence.size() - 1)
+                {
+                    frame_index = 0;
+                    animation_tick = 0;
+                }
+                else
+                {
+                    animation_tick += elapsed_time;
+                }
+            }
+            Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
             //this->model.skinned_mesh->Render(dc, model.world, model.color,&keyframe);
 
-            //static std::vector<GltfModel::Node> animated_nodes{ gltf_model.gltf_mesh->GetNodes()};
+            //static std::vector<GltfModel::Node> animated_nodes{
+            //    comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->animated_nodes_
+            //};
             //static float time{ 0 };
-            //if (this->gltf_model.gltf_mesh->GetAnimations().size() > 0)
+            //if (comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
+            //    ->GetAnimations().size() > 0)
             //{
-            //    this->gltf_model.gltf_mesh->Animate(0, time += elapsed_time, animated_nodes);
-            //    if (this->gltf_model.gltf_mesh->GetAnimations().at(0).duration < time)
+            //    comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->Animate(0, time += elapsed_time, animated_nodes);
+            //    if (comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
+            //        ->GetAnimations().at(0).duration < time)
             //    {
             //        time = 0; // Repeat playback
             //    }
             //}
 
 
-            //gltf_model.gltf_mesh->UpdateAnimation(elapsed_time);
-            //this->gltf_model.gltf_mesh->Render(dc,comp_mng->Get<ComponentLocalToWorld>(gltf_model.world_id).value );
-            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
-            //    ->UpdateAnimation(elapsed_time);
+            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->UpdateAnimation(elapsed_time);
+            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->Render(dc,comp_mng->Get<ComponentLocalToWorld>(gltf_model.entity).value );
+            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->UpdateAnimation(elapsed_time);
 
             render_sys_mng->RenderAll();
         }

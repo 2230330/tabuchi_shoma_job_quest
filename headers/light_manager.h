@@ -8,7 +8,7 @@
 
 struct DirectionLight
 {
-    DirectX::XMFLOAT4    direction{ 1.f,1.f,-1.f,1.f };
+    DirectX::XMFLOAT4    direction{ 0.f,.0f,-1.f,1.f };
     DirectX::XMFLOAT4    color{ 1.f,1.f,1.f,1.f };
     float intensity{ 1.0f };
     DirectX::XMFLOAT3 dummy;
@@ -24,7 +24,7 @@ struct PointLight
 struct SpotLight
 {
     DirectX::XMFLOAT4 position{ 0.f,0.f,0.f,0.f };
-    DirectX::XMFLOAT4 direction{ 0.f,0.f,1.f,0.f };
+    DirectX::XMFLOAT4 direction{ 0.f,0.f,-1.f,0.f };
     DirectX::XMFLOAT4 color{ 1.f,1.f,1.f,1.f };
     float range{ 0.f };
     float inner_corn{ DirectX::XMConvertToRadians(30.f) };

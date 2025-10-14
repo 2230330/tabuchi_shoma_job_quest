@@ -192,6 +192,8 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         }
     }
     
+
+    
     //é’ï¡èàóù
     total_diffuse = lerp(total_diffuse, total_diffuse * occlusion_factor, occlusion_strength);
     total_specular = lerp(total_specular, total_specular * occlusion_factor, occlusion_strength);
