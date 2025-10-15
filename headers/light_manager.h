@@ -10,7 +10,7 @@ struct DirectionLight
 {
     DirectX::XMFLOAT4    direction{ 0.f,.0f,-1.f,1.f };
     DirectX::XMFLOAT4    color{ 1.f,1.f,1.f,1.f };
-    float intensity{ 1.0f };
+    float intensity{ 5.0f };
     DirectX::XMFLOAT3 dummy;
 };
 struct PointLight

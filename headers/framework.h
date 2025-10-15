@@ -29,7 +29,7 @@ extern ImWchar glyphRangesJapanese[];
 const long kScreenWidth{ 1280 };
 const long kScreenHeight{ 720 };
 const bool kFullScreen{ false };
-const LPCWSTR kApplicationName{ L"part2" };
+const LPCWSTR kApplicationName{ L"Yuzuki" };
 
 class Framework
 {
