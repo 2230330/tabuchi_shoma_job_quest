@@ -68,7 +68,7 @@ void LightManager::DrawImgui()
 		//ディレクションライト
 		if (ImGui::TreeNode("directional light"))
 		{
-			if (ImGui::SliderFloat4("direction", &direction_light_.direction.x, -5.f, 5.f));
+			if (ImGui::SliderFloat4("direction", &direction_light_.direction.x, -1.f, 1.f));
 			if (ImGui::ColorEdit4("color", &direction_light_.color.x));
 			if (ImGui::SliderFloat("intensity", &direction_light_.intensity, 0.1f, 10.f));
 			
