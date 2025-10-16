@@ -26,7 +26,7 @@ bool SceneTest::InitializeCore()
         rsc_mng = std::make_unique<ResourceManager>();
         enti_mng = std::make_unique<EntityManager>();
         world = std::make_unique<World>();
-        comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
+        comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager(),*rsc_mng);
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng,*world);
         light_manager_ = std::make_unique<LightManager>();
@@ -46,7 +46,8 @@ bool SceneTest::InitializeCore()
             sprite_batches_[0]
                 = std::make_unique<SpriteBatch>(
                     device,
-                    L".\\resources\\sprite\\mamizo.png",
+                    L".\\resources\\sprite\\eldenRing_Sky_Moon_Stars_1-1.png",
+                    //L".\\resources\\sprite\\mamizo.png",
                     2048);
         }
         //3dオブジェクト宣言
@@ -127,41 +128,7 @@ bool SceneTest::InitializeCore()
         //light.intensity = 2.0f;
         //light_manager_->SetDirectionLight(light);
     }
-    //int size = 1;
-    ////コンポーネントの設定(仮)
-    //for(int i=-size;i<size;i++)
-    //{
-    //    ID3D11Device* device = Graphics::Instance().GetDevice();
-    //    gltf_model.entity = world->GetEntityManager()->Add();
-    //    ComponentGltf gltf;
-    //    gltf.model = rsc_mng->LoadGltfModel(
-    //        device,
-    //        //".\\resources\\model\\gltf\\cc0__red_spider_lily_lycoris_radiata_0.glb"
-    //        ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
-    //        //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
-    //    );
-    //    comp_mng->Add<ComponentGltf>(gltf_model.entity,gltf);
-    //    ComponentPosition pos;
-    //    int normalize_i = i >= 0 ? i : -i;
-    //    pos.value = { static_cast<float>(i%50), 0.f, static_cast<float>(normalize_i/50) };
-    //    comp_mng->Add<ComponentPosition>(gltf_model.entity,pos);
-    //    ComponentRotation ros;
-    //    ros.value = { 0.f,0.f,0.f };
-    //    comp_mng->Add<ComponentRotation>(gltf_model.entity,ros);
-    //    ComponentScale scale;
-    //    scale.value = { 1.f,1.f,1.f };
-    //    comp_mng->Add<ComponentScale>(gltf_model.entity,scale);
-    //    ComponentLocalToWorld world;
-    //    DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
-    //    comp_mng->Add(gltf_model.entity,world);
-    //    ComponentColor col;
-    //    col.value = { 1,1,1,1 };
-    //    comp_mng->Add(gltf_model.entity,col);
-    //    ComponentInstanced instance;
-    //    instance.entity_id = gltf_model.entity;
-    //    comp_mng->Add(gltf_model.entity, instance);
-    //}
-    int size = 1;
+    int size = 10;
     //コンポーネントの設定(仮)
     for (int i = -size; i < size; i++)
     {
@@ -171,7 +138,7 @@ bool SceneTest::InitializeCore()
         ComponentGltf gltf;
         gltf.model = rsc_mng->LoadGltfModel(
             device,
-            //".\\resources\\model\\gltf\\cc0__red_spider_lily_lycoris_radiata_0.glb"
+            //".\\resources\\model\\gltf\\sun.glb"
             ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
             //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
         );
@@ -263,7 +230,7 @@ void SceneTest::RenderCore(float elapsed_time)
             dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_only), 0);
 
             sprite_batches_[0].get()->begin(dc);
-            //sprite_batches_[0].get()->Render(dc, 0, 0, 1280, 720);
+            sprite_batches_[0].get()->Render(dc, 0, 0, 1280, 720);
             sprite_batches_[0].get()->end(dc);
 
             dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);

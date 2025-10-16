@@ -139,7 +139,12 @@ public:
 	const std::vector<GltfModel::Mesh>& GetMeshes()const;
 	const std::vector<GltfModel::Material>& GetMaterials()const;
 	const std::vector<GltfModel::Animation>& GetAnimations()const;
+	const std::string& GetFilename()const
+	{
+		return filename_;
+	}
 
+private:
 	struct Scene
 	{
 		std::string name;

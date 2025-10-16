@@ -606,7 +606,6 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 				immediate_context->VSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
 				immediate_context->PSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
 
-				// UNIT.36
 				const Material& material{ materials_.at(primitive.material) };
 				const int texture_indices[]
 				{
