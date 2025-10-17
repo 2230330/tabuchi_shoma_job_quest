@@ -5,7 +5,7 @@
 
 #include"../headers/misc.h"
 #include"../headers/shader.h"
-#include"../headers/texture.h"
+#include"../headers/resource_manager.h"
 
 /*
 * obj形式ファイルの読み込みと生成
@@ -207,21 +207,25 @@ StaticMesh::StaticMesh(ID3D11Device* device, const wchar_t* obj_filename, bool u
             {
                 if (material[i].texture_filenames[0].size() > 0)
                 {
-                    LoadTexture::LoadTextureFromFile(device, material[i].texture_filenames[0].c_str(),
-                        material[i].shader_resource_views[0].GetAddressOf(),&texture2d_desc);
+                    material[i].shader_resource_views[0]=ResourceManager::Instance().
+                        LoadTextureFromFile(device, material[i].texture_filenames[0].c_str(),
+                        &texture2d_desc);
                 }
                 else
                 {
-                    material[i].shader_resource_views[0]= LoadTexture::MakeDummyTexture(device, 0xFFFFFFFF, 16);
+                    material[i].shader_resource_views[0]= ResourceManager::Instance().
+                        MakeDummyTexture(device, 0xFFFFFFFF, 16);
                 }
                 if (material[i].texture_filenames[1].size() > 0)
                 {
-                    LoadTexture::LoadTextureFromFile(device, material[i].texture_filenames[1].c_str(),
-                        material[i].shader_resource_views[1].GetAddressOf(),&texture2d_desc);
+                    material[i].shader_resource_views[1]=ResourceManager::Instance().
+                        LoadTextureFromFile(device, material[i].texture_filenames[1].c_str(),
+                        &texture2d_desc);
                 }
                 else
                 {
-                    material[i].shader_resource_views[1]= LoadTexture::MakeDummyTexture(device, 0xFFFF7F7F, 16);
+                    material[i].shader_resource_views[1]= ResourceManager::Instance().
+                        MakeDummyTexture(device, 0xFFFF7F7F, 16);
                 }
             }
         }

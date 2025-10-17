@@ -24,10 +24,9 @@ bool SceneTest::InitializeCore()
     //各種マネージャの設定
     {
         comp_mng = std::make_unique<ComponentManager>();
-        rsc_mng = std::make_unique<ResourceManager>();
         enti_mng = std::make_unique<EntityManager>();
         world = std::make_unique<World>();
-        comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager(),*rsc_mng);
+        comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng,*world);
         light_manager_ = std::make_unique<LightManager>();
@@ -36,7 +35,7 @@ bool SceneTest::InitializeCore()
         uint32_t h = static_cast<uint32_t>(Graphics::Instance().GetScreenHeight());
         post_pro_mng = std::make_unique<PostProcessManager>(
             Graphics::Instance().GetDevice(),
-            w,h,rsc_mng.get());
+            w,h);
     }
 
     //レンダリングオブジェクト宣言
@@ -77,9 +76,9 @@ bool SceneTest::InitializeCore()
             //    ".\\resources\\shader\\blur_ps.cso",
             //    pixel_shaders_[1].GetAddressOf());
             pixel_shaders_[0] = 
-                rsc_mng->LoadPixelShader(device, L".\\resources\\shader\\luminance_extraction_ps.cso");
+                ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\luminance_extraction_ps.cso");
             pixel_shaders_[1] =
-                rsc_mng->LoadPixelShader(device, L".\\resources\\shader\\blur_ps.cso");
+                ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\blur_ps.cso");
         }
         //フレームバッファの作成
         {
@@ -165,13 +164,13 @@ bool SceneTest::InitializeCore()
     //}
 
     ID3D11Device*device= Graphics::Instance().GetDevice();
-    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\knife.glb");
-    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\sun.glb");
-    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\moon.glb");
-    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\sword.glb");
-    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\katana.glb");
-    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
-    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
+    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\knife.glb");
+    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\sun.glb");
+    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\moon.glb");
+    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\sword.glb");
+    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\katana.glb");
+    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
+    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
 
     return true;
 }

@@ -7,8 +7,7 @@
 #include"../../headers/constant_buffer_slot.h"
 #include"../../external/imgui/imgui.h"
 
-Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height, ResourceManager* resource_manager)
-    :resource_manager_(resource_manager)
+Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height)
 {
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(device);
 
@@ -18,13 +17,13 @@ Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height, ResourceMa
         gaussian_blur[downsampled_index][0] = std::make_unique<FrameBuffer>(device, width >> downsampled_index, height >> downsampled_index);
         gaussian_blur[downsampled_index][1] = std::make_unique<FrameBuffer>(device, width >> downsampled_index, height >> downsampled_index);
     }
-    glow_extraction_ps_ = resource_manager_->LoadPixelShader(device, L".//resources//shader//glow_extraction_ps.cso");
-    gaussian_blur_downsampling_ps_ = resource_manager_->LoadPixelShader(device, L".//resources//shader//downsample_ps.cso");
-    gaussian_blur_horizontal_ps_ = resource_manager_->LoadPixelShader(device, L".//resources//shader//gaussian_blur_horizontal_ps.cso");
-    gaussian_blur_vertical_ps_ = resource_manager_->LoadPixelShader(device, L".//resources//shader//gaussian_blur_vertical_ps.cso");
-    gaussian_blur_upsampling_ps_ = resource_manager_->LoadPixelShader(device, L".//resources//shader//bloom_upsample_ps.cso");
+    glow_extraction_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//glow_extraction_ps.cso");
+    gaussian_blur_downsampling_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//downsample_ps.cso");
+    gaussian_blur_horizontal_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//gaussian_blur_horizontal_ps.cso");
+    gaussian_blur_vertical_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//gaussian_blur_vertical_ps.cso");
+    gaussian_blur_upsampling_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//bloom_upsample_ps.cso");
 
-    RenderState render_state(device);
+	RenderState render_state(device);
     rasterizer_state_ = render_state.GetRasterizerState(RasterizerState::solid_cull_back);
     depth_stencil_state_ = render_state.GetDepthStencilState(DepthState::no_test_no_write);
     blend_state_ = render_state.GetBlendState(BlendState::transparency);

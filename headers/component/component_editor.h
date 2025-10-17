@@ -10,12 +10,10 @@ class ComponentEditor
 public:
     ComponentEditor(
         ComponentManager& component_manager,
-        EntityManager&entity_manager,
-        ResourceManager&resource_manager);
+        EntityManager&entity_manager);
     //•ÒW—p
     void DrawImgui();
 private:
     ComponentManager& comp_mng_;
     EntityManager& enti_mng_;
-    ResourceManager& rsc_mng_;
 };

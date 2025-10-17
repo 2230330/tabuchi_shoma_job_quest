@@ -74,7 +74,6 @@ private:
     GltfMesh gltf_model;
 
     std::unique_ptr<ComponentManager> comp_mng;
-    std::unique_ptr<ResourceManager>rsc_mng;
     std::unique_ptr<EntityManager>enti_mng;
     std::unique_ptr<ComponentEditor>comp_edit;
     std::unique_ptr<UpdateSystemManager>update_sys_mng;

@@ -4,27 +4,11 @@
 
 ComponentEditor::ComponentEditor(
     ComponentManager& component_manager
-    , EntityManager& entity_manager
-    , ResourceManager& resource_manager)
+    , EntityManager& entity_manager)
     :comp_mng_(component_manager)
     ,enti_mng_(entity_manager)
-    ,rsc_mng_(resource_manager)
 {
 }
-
-//void ComponentEditor::DrawImgui()
-//{
-//    if (ImGui::Begin("Component Editor"))
-//    {
-//        //全エンティティを列挙する
-//        std::vector<Entity>entities = enti_mng_.GetArray();
-//        int size = entities.size();
-//        for (int i = 0; i < size; i++)
-//        {
-//
-//        }
-//    }
-//}
 
 void ComponentEditor::DrawImgui()
 {
@@ -102,7 +86,7 @@ void ComponentEditor::DrawImgui()
                     {
                         if (ImGui::TreeNode("GLTF Model"))
                         {
-                            const auto& models = rsc_mng_.GetGltfs();
+                            const auto& models = ResourceManager::Instance().GetGltfs();
                             //もしGLTFのモデルが空なら
                             if (models.empty())
                             {

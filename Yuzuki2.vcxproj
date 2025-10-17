@@ -225,6 +225,7 @@
     <ClInclude Include="headers\component\component_primitive.h" />
     <ClInclude Include="headers\component\component_rotation.h" />
     <ClInclude Include="headers\component\component_scale.h" />
+    <ClInclude Include="headers\component\component_sky_atmosphere.h" />
     <ClInclude Include="headers\component\component_texture.h" />
     <ClInclude Include="headers\component\i_component.h" />
     <ClInclude Include="headers\constant_buffer_slot.h" />

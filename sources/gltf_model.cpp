@@ -10,8 +10,9 @@
 
 #include"../headers/misc.h"
 #include"../headers/shader.h"
-#include"../headers/texture.h"
+#include"../headers/resource_manager.h"
 #include"../headers/constant_buffer_slot.h"
+#include"../headers/resource_manager.h"
 
 bool NullLoadImageData
 (tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char*, int, void*)
@@ -758,23 +759,23 @@ void GltfModel::FetchTextures(ID3D11Device* device, const tinygltf::Model& gltf_
 			const tinygltf::Buffer& buffer{ gltf_model.buffers.at(buffer_view.buffer) };
 			const byte* data = buffer.data.data() + buffer_view.byteOffset;
 
-			ID3D11ShaderResourceView* texture_resource_view{};
-			hr = LoadTexture::LoadTextureFromMemory(device, data, buffer_view.byteLength, &texture_resource_view);
+			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> texture_resource_view{};
+			texture_resource_view = ResourceManager::Instance().LoadTextureFromMemory(device, data, buffer_view.byteLength);
 			if (hr == S_OK)
 			{
-				texture_resource_views_.emplace_back().Attach(texture_resource_view);
+				texture_resource_views_.emplace_back(texture_resource_view);
 			}
 		}
 		else
 		{
 			const std::filesystem::path path(filename_);
-			ID3D11ShaderResourceView* shader_resource_view{};
+			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_view{};
 			D3D11_TEXTURE2D_DESC texture2d_desc;
 			std::wstring filename{ path.parent_path().concat(L"/").wstring() + std::wstring(gltf_image.uri.begin(), gltf_image.uri.end()) };
-			hr = LoadTexture::LoadTextureFromFile(device, filename.c_str(), &shader_resource_view, &texture2d_desc);
+			shader_resource_view = ResourceManager::Instance().LoadTextureFromFile(device, filename.c_str(), &texture2d_desc);
 			if (hr == S_OK)
 			{
-				texture_resource_views_.emplace_back().Attach(shader_resource_view);
+				texture_resource_views_.emplace_back(shader_resource_view);
 			}
 		}
 	}

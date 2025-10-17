@@ -3,14 +3,13 @@
 #include"../../headers/render_state.h"
 #include"../../external/imgui/imgui.h"
 
-PostProcessManager::PostProcessManager(ID3D11Device* device, uint32_t& width, uint32_t& height, ResourceManager* resource_manager)
-    :resource_manager_(resource_manager)
+PostProcessManager::PostProcessManager(ID3D11Device* device, uint32_t& width, uint32_t& height)
 {
     //ƒŠƒUƒ‹ƒg‚ð•\Ž¦‚·‚é“z
     result_transfer_ = std::make_unique<FullscreenQuad>(device);
-    result_synthesiser_ = resource_manager_->LoadPixelShader(device, L".//resources//shader//synthesis_ps.cso");
+    result_synthesiser_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//synthesis_ps.cso");
 
-    bloom_ = std::make_unique<Bloom>(device, width, height,resource_manager_);
+    bloom_ = std::make_unique<Bloom>(device, width, height);
     RenderState render_state(device);
     blend_state_ = render_state.GetBlendState(BlendState::additive);
 }

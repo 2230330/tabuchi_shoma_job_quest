@@ -15,6 +15,7 @@
 #include "component_material.h"
 #include "component_texture.h"
 #include "component_instanced.h"
+#include "component_sky_atmosphere.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -33,6 +34,7 @@ public:
         registerContainer<ComponentMaterial>(materials_);
         registerContainer<ComponentTexture>(textures_);
         registerContainer<ComponentInstanced>(instanced_);
+        registerContainer<ComponentSkyAtmosphere>(skys_);
     }
 
     template<typename T>
@@ -152,4 +154,5 @@ private:
     std::vector<ComponentMaterial>materials_;
     std::vector<ComponentTexture>textures_;
     std::vector<ComponentInstanced>instanced_;
+    std::vector<ComponentSkyAtmosphere>skys_;
 };

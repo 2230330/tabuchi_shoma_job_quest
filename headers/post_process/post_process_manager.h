@@ -13,15 +13,13 @@
 class PostProcessManager
 {
 public:
-    PostProcessManager(ID3D11Device* device,uint32_t&width,uint32_t&height,
-        ResourceManager* resource_manager);
+    PostProcessManager(ID3D11Device* device,uint32_t&width,uint32_t&height);
 
     void PostProcess(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* color_map);
 
     void PostImgui();
 
 private:
-    ResourceManager* resource_manager_;
     std::unique_ptr<FullscreenQuad> result_transfer_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>result_synthesiser_;
 

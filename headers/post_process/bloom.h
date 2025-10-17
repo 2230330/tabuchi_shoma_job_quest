@@ -11,7 +11,7 @@
 class Bloom
 {
 public:
-    Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height, ResourceManager* resource_manager);
+    Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height);
 
     ~Bloom() = default;
     Bloom(const Bloom&) = delete;
@@ -29,7 +29,6 @@ public:
     void DrawImgui();
 private:
     //リソースマネージャ
-    ResourceManager* resource_manager_;
 
     std::unique_ptr<FullscreenQuad>bit_block_transfer_;
     std::unique_ptr<FrameBuffer>glow_extraction_;

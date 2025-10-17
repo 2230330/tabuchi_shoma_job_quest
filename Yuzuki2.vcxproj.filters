@@ -245,6 +245,9 @@
     <ClInclude Include="headers\constant_buffer_slot.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_sky_atmosphere.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
