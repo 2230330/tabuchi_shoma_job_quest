@@ -21,7 +21,7 @@
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // sampler_states[3]                 sampler      NA          NA             s3      1 
 // hdr_color_buffer_texture          texture  float4          2d             t0      1 
-// BLOOM_CONSTANT_BUFFER             cbuffer      NA          NA            cb8      1 
+// BLOOM_CONSTANT_BUFFER             cbuffer      NA          NA            cb4      1 
 //
 //
 //
@@ -41,7 +41,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB8[1], immediateIndexed
+dcl_constantbuffer CB4[1], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v1.xy
@@ -61,13 +61,13 @@ mov r0.xyz, r0.xyzx  // r0.x <- hdrColor.x; r0.y <- hdrColor.y; r0.z <- hdrColor
 dp3 r0.w, r0.xyzx, l(0.212600, 0.715200, 0.072200, 0.000000)  // r0.w <- brightness
 
 #line 23
-mul r1.x, cb8[0].z, cb8[0].x
+mul r1.x, cb4[0].z, cb4[0].x
 add r1.x, r1.x, l(0.000100)  // r1.x <- knee
 
 #line 24
 mov r1.y, -r1.x
-add r1.y, r1.y, cb8[0].x
-add r1.z, r1.x, cb8[0].x
+add r1.y, r1.y, cb4[0].x
+add r1.z, r1.x, cb4[0].x
 mov r1.y, -r1.y
 add r1.z, r1.y, r1.z
 add r1.y, r0.w, r1.y
@@ -81,7 +81,7 @@ mul r1.y, r1.y, r1.y
 mul r1.y, r1.y, r1.z  // r1.y <- soft
 
 #line 29
-mov r1.z, -cb8[0].x
+mov r1.z, -cb4[0].x
 add r0.w, r0.w, r1.z
 div r0.w, r0.w, r1.x
 max r0.w, r0.w, l(0.000000)
@@ -92,7 +92,7 @@ max r0.w, r0.w, r1.y
 
 #line 33
 mul r0.xyz, r0.wwww, r0.xyzx
-mul r0.xyz, r0.xyzx, cb8[0].yyyy  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
+mul r0.xyz, r0.xyzx, cb4[0].yyyy  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
 
 #line 35
 mov o0.xyz, r0.xyzx

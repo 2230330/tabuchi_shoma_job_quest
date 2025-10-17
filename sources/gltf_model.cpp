@@ -11,6 +11,7 @@
 #include"../headers/misc.h"
 #include"../headers/shader.h"
 #include"../headers/texture.h"
+#include"../headers/constant_buffer_slot.h"
 
 bool NullLoadImageData
 (tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char*, int, void*)
@@ -466,8 +467,8 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 				primitive_data.skin = node.skin;
 				DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
 				immediate_context->UpdateSubresource(primitive_cbuffer.Get(), 0, 0, &primitive_data, 0, 0);
-				immediate_context->VSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
-				immediate_context->PSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
+				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
+				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
 
 				// UNIT.36
 				const Material& material{ materials_.at(primitive.material) };
@@ -603,8 +604,8 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 				primitive_data.world = node.global_transform;
 				//DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
 				immediate_context->UpdateSubresource(primitive_cbuffer.Get(), 0, 0, &primitive_data, 0, 0);
-				immediate_context->VSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
-				immediate_context->PSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
+				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
+				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
 
 				const Material& material{ materials_.at(primitive.material) };
 				const int texture_indices[]

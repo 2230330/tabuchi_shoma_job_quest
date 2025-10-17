@@ -6,7 +6,7 @@
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
-// sampler_states[4]                 sampler      NA          NA             s4      1 
+// sampler_states[3]                 sampler      NA          NA             s3      1 
 // downsampled_textures[0]           texture  float4          2d             t0      1 
 // downsampled_textures[1]           texture  float4          2d             t1      1 
 //
@@ -28,7 +28,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_sampler s4, mode_default
+dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
 dcl_input_ps linear v1.xy
@@ -51,7 +51,7 @@ mov r1.x, l(1.000000)
 div r1.x, l(1.000000), r1.x  // r1.x <- weight
 
 #line 23
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t0.wxyz, s4
+sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t0.wxyz, s3
 mul r1.yzw, r1.xxxx, r1.yyzw
 add r0.xyz, r0.xyzx, r1.yzwy
 
@@ -65,7 +65,7 @@ mul r1.x, r1.y, r1.x
 div r1.x, l(1.000000), r1.x  // r1.x <- weight
 
 #line 23
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t1.wxyz, s4
+sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t1.wxyz, s3
 mul r1.yzw, r1.xxxx, r1.yyzw
 add r0.xyz, r0.xyzx, r1.yzwy
 

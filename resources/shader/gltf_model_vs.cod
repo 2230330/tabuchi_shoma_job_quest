@@ -48,7 +48,7 @@
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
-// PRIMITIVE_JOINT_CONSTANTS         cbuffer      NA          NA            cb3      1 
+// PRIMITIVE_JOINT_CONSTANTS         cbuffer      NA          NA            cb2      1 
 //
 //
 //
@@ -78,7 +78,7 @@ vs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[18], immediateIndexed
 dcl_constantbuffer CB0[5], immediateIndexed
-dcl_constantbuffer CB3[2048], dynamicIndexed
+dcl_constantbuffer CB2[2048], dynamicIndexed
 dcl_input v0.xyz
 dcl_input v1.xyz
 dcl_input v2.xyzw
@@ -114,33 +114,33 @@ if_nz r0.y
 
 #line 12
   imul null, r0.y, v4.x, l(4)
-  mul r1.x, v5.x, cb3[r0.y + 0].x
-  mul r2.x, v5.x, cb3[r0.y + 0].y
-  mul r3.x, v5.x, cb3[r0.y + 0].z
-  mul r4.x, v5.x, cb3[r0.y + 0].w
-  mul r1.y, v5.x, cb3[r0.y + 1].x
-  mul r2.y, v5.x, cb3[r0.y + 1].y
-  mul r3.y, v5.x, cb3[r0.y + 1].z
-  mul r4.y, v5.x, cb3[r0.y + 1].w
-  mul r1.z, v5.x, cb3[r0.y + 2].x
-  mul r2.z, v5.x, cb3[r0.y + 2].y
-  mul r3.z, v5.x, cb3[r0.y + 2].z
-  mul r4.z, v5.x, cb3[r0.y + 2].w
-  mul r5.xyzw, v5.xxxx, cb3[r0.y + 3].xyzw
+  mul r1.x, v5.x, cb2[r0.y + 0].x
+  mul r2.x, v5.x, cb2[r0.y + 0].y
+  mul r3.x, v5.x, cb2[r0.y + 0].z
+  mul r4.x, v5.x, cb2[r0.y + 0].w
+  mul r1.y, v5.x, cb2[r0.y + 1].x
+  mul r2.y, v5.x, cb2[r0.y + 1].y
+  mul r3.y, v5.x, cb2[r0.y + 1].z
+  mul r4.y, v5.x, cb2[r0.y + 1].w
+  mul r1.z, v5.x, cb2[r0.y + 2].x
+  mul r2.z, v5.x, cb2[r0.y + 2].y
+  mul r3.z, v5.x, cb2[r0.y + 2].z
+  mul r4.z, v5.x, cb2[r0.y + 2].w
+  mul r5.xyzw, v5.xxxx, cb2[r0.y + 3].xyzw
   imul null, r0.y, v4.y, l(4)
-  mul r6.x, v5.y, cb3[r0.y + 0].x
-  mul r7.x, v5.y, cb3[r0.y + 0].y
-  mul r8.x, v5.y, cb3[r0.y + 0].z
-  mul r9.x, v5.y, cb3[r0.y + 0].w
-  mul r6.y, v5.y, cb3[r0.y + 1].x
-  mul r7.y, v5.y, cb3[r0.y + 1].y
-  mul r8.y, v5.y, cb3[r0.y + 1].z
-  mul r9.y, v5.y, cb3[r0.y + 1].w
-  mul r6.z, v5.y, cb3[r0.y + 2].x
-  mul r7.z, v5.y, cb3[r0.y + 2].y
-  mul r8.z, v5.y, cb3[r0.y + 2].z
-  mul r9.z, v5.y, cb3[r0.y + 2].w
-  mul r10.xyzw, v5.yyyy, cb3[r0.y + 3].xyzw
+  mul r6.x, v5.y, cb2[r0.y + 0].x
+  mul r7.x, v5.y, cb2[r0.y + 0].y
+  mul r8.x, v5.y, cb2[r0.y + 0].z
+  mul r9.x, v5.y, cb2[r0.y + 0].w
+  mul r6.y, v5.y, cb2[r0.y + 1].x
+  mul r7.y, v5.y, cb2[r0.y + 1].y
+  mul r8.y, v5.y, cb2[r0.y + 1].z
+  mul r9.y, v5.y, cb2[r0.y + 1].w
+  mul r6.z, v5.y, cb2[r0.y + 2].x
+  mul r7.z, v5.y, cb2[r0.y + 2].y
+  mul r8.z, v5.y, cb2[r0.y + 2].z
+  mul r9.z, v5.y, cb2[r0.y + 2].w
+  mul r10.xyzw, v5.yyyy, cb2[r0.y + 3].xyzw
   mov r1.w, r5.x
   mov r6.w, r10.x
   add r1.xyzw, r1.xyzw, r6.xyzw
@@ -154,19 +154,19 @@ if_nz r0.y
   mov r9.w, r10.w
   add r4.xyzw, r4.xyzw, r9.xyzw
   imul null, r0.y, v4.z, l(4)
-  mul r5.x, v5.z, cb3[r0.y + 0].x
-  mul r6.x, v5.z, cb3[r0.y + 0].y
-  mul r7.x, v5.z, cb3[r0.y + 0].z
-  mul r8.x, v5.z, cb3[r0.y + 0].w
-  mul r5.y, v5.z, cb3[r0.y + 1].x
-  mul r6.y, v5.z, cb3[r0.y + 1].y
-  mul r7.y, v5.z, cb3[r0.y + 1].z
-  mul r8.y, v5.z, cb3[r0.y + 1].w
-  mul r5.z, v5.z, cb3[r0.y + 2].x
-  mul r6.z, v5.z, cb3[r0.y + 2].y
-  mul r7.z, v5.z, cb3[r0.y + 2].z
-  mul r8.z, v5.z, cb3[r0.y + 2].w
-  mul r9.xyzw, v5.zzzz, cb3[r0.y + 3].xyzw
+  mul r5.x, v5.z, cb2[r0.y + 0].x
+  mul r6.x, v5.z, cb2[r0.y + 0].y
+  mul r7.x, v5.z, cb2[r0.y + 0].z
+  mul r8.x, v5.z, cb2[r0.y + 0].w
+  mul r5.y, v5.z, cb2[r0.y + 1].x
+  mul r6.y, v5.z, cb2[r0.y + 1].y
+  mul r7.y, v5.z, cb2[r0.y + 1].z
+  mul r8.y, v5.z, cb2[r0.y + 1].w
+  mul r5.z, v5.z, cb2[r0.y + 2].x
+  mul r6.z, v5.z, cb2[r0.y + 2].y
+  mul r7.z, v5.z, cb2[r0.y + 2].z
+  mul r8.z, v5.z, cb2[r0.y + 2].w
+  mul r9.xyzw, v5.zzzz, cb2[r0.y + 3].xyzw
   mov r5.w, r9.x
   add r1.xyzw, r1.xyzw, r5.xyzw
   mov r6.w, r9.y
@@ -176,19 +176,19 @@ if_nz r0.y
   mov r8.w, r9.w
   add r4.xyzw, r4.xyzw, r8.xyzw
   imul null, r0.y, v4.w, l(4)
-  mul r5.x, v5.w, cb3[r0.y + 0].x
-  mul r6.x, v5.w, cb3[r0.y + 0].y
-  mul r7.x, v5.w, cb3[r0.y + 0].z
-  mul r8.x, v5.w, cb3[r0.y + 0].w
-  mul r5.y, v5.w, cb3[r0.y + 1].x
-  mul r6.y, v5.w, cb3[r0.y + 1].y
-  mul r7.y, v5.w, cb3[r0.y + 1].z
-  mul r8.y, v5.w, cb3[r0.y + 1].w
-  mul r5.z, v5.w, cb3[r0.y + 2].x
-  mul r6.z, v5.w, cb3[r0.y + 2].y
-  mul r7.z, v5.w, cb3[r0.y + 2].z
-  mul r8.z, v5.w, cb3[r0.y + 2].w
-  mul r9.xyzw, v5.wwww, cb3[r0.y + 3].xyzw
+  mul r5.x, v5.w, cb2[r0.y + 0].x
+  mul r6.x, v5.w, cb2[r0.y + 0].y
+  mul r7.x, v5.w, cb2[r0.y + 0].z
+  mul r8.x, v5.w, cb2[r0.y + 0].w
+  mul r5.y, v5.w, cb2[r0.y + 1].x
+  mul r6.y, v5.w, cb2[r0.y + 1].y
+  mul r7.y, v5.w, cb2[r0.y + 1].z
+  mul r8.y, v5.w, cb2[r0.y + 1].w
+  mul r5.z, v5.w, cb2[r0.y + 2].x
+  mul r6.z, v5.w, cb2[r0.y + 2].y
+  mul r7.z, v5.w, cb2[r0.y + 2].z
+  mul r8.z, v5.w, cb2[r0.y + 2].w
+  mul r9.xyzw, v5.wwww, cb2[r0.y + 3].xyzw
   mov r5.w, r9.x
   add r1.xyzw, r1.xyzw, r5.xyzw  // r1.x <- skin_matrix._m00; r1.y <- skin_matrix._m10; r1.z <- skin_matrix._m20; r1.w <- skin_matrix._m30
   mov r6.w, r9.y

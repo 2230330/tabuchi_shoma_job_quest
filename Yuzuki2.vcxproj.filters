@@ -242,6 +242,9 @@
     <ClInclude Include="headers\component\component_instanced.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\constant_buffer_slot.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -468,9 +471,6 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\gltf_model_forward_instancing_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gltf_model_forward_instancing_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

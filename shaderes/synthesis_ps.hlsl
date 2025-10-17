@@ -20,7 +20,7 @@ float4 main(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARG
     for (uint i = 0; i < synthesis_count; ++i)
     {
         float weight = 1.0 / pow(2.0, i); // ŠeƒŒƒxƒ‹‚ÌŠñ—^‚ðŒ¸‚ç‚·
-        sampled_color += downsampled_textures[i].Sample(sampler_states[ANISOTROPIC], texcoord).rgb * weight;
+        sampled_color += downsampled_textures[i].Sample(sampler_states[LINEAR_CLAMP], texcoord).rgb * weight;
         total_weight += weight;
     }
 

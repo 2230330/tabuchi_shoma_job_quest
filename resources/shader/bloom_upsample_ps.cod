@@ -26,7 +26,7 @@
 // downsampled_textures[3]           texture  float4          2d             t3      1 
 // downsampled_textures[4]           texture  float4          2d             t4      1 
 // downsampled_textures[5]           texture  float4          2d             t5      1 
-// BLOOM_CONSTANT_BUFFER             cbuffer      NA          NA            cb8      1 
+// BLOOM_CONSTANT_BUFFER             cbuffer      NA          NA            cb4      1 
 //
 //
 //
@@ -46,7 +46,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB8[1], immediateIndexed
+dcl_constantbuffer CB4[1], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
@@ -163,7 +163,7 @@ add r0.w, r0.w, r1.x
 div r0.xyz, r0.xyzx, r0.wwww
 
 #line 29
-mul r0.xyz, r0.xyzx, cb8[0].yyyy
+mul r0.xyz, r0.xyzx, cb4[0].yyyy
 
 #line 31
 mov o0.xyz, r0.xyzx

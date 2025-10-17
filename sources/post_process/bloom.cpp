@@ -4,6 +4,7 @@
 
 #include"../../headers/misc.h"
 #include"../../headers/render_state.h"
+#include"../../headers/constant_buffer_slot.h"
 #include"../../external/imgui/imgui.h"
 
 Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height, ResourceManager* resource_manager)
@@ -26,7 +27,7 @@ Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height, ResourceMa
     RenderState render_state(device);
     rasterizer_state_ = render_state.GetRasterizerState(RasterizerState::solid_cull_back);
     depth_stencil_state_ = render_state.GetDepthStencilState(DepthState::no_test_no_write);
-    blend_state_ = render_state.GetBlendState(BlendState::additive);
+    blend_state_ = render_state.GetBlendState(BlendState::transparency);
 
     HRESULT hr{ S_OK };
     D3D11_BUFFER_DESC buffer_desc{};
@@ -70,7 +71,8 @@ void Bloom::Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceVie
 	data.bloom_extraction_threshold = bloom_constant_.bloom_extraction_threshold;
 	data.bloom_intensity = bloom_constant_.bloom_intensity;
 	immediate_context->UpdateSubresource(constant_buffer_.Get(), 0, 0, &bloom_constant_, 0, 0);
-	immediate_context->PSSetConstantBuffers(8, 1, constant_buffer_.GetAddressOf());
+	immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPostEffect),
+		1, constant_buffer_.GetAddressOf());
 
 	// Extracting bright color
 	glow_extraction_->Clear(immediate_context);
@@ -139,7 +141,7 @@ void Bloom::Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceVie
 	
 
 	// Restore states
-	immediate_context->PSSetConstantBuffers(8, 1, cached_constant_buffer.GetAddressOf());
+	immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPostEffect), 1, cached_constant_buffer.GetAddressOf());
 
 	immediate_context->OMSetDepthStencilState(cached_depth_stencil_state.Get(), 0);
 	immediate_context->RSSetState(cached_rasterizer_state.Get());

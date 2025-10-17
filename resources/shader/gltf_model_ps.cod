@@ -157,7 +157,7 @@
 // material_textures[4]              texture  float4          2d             t5      1 
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
-// FORWARD_LIGHT_CONSTANT_BUFFER     cbuffer      NA          NA            cb2      1 
+// FORWARD_LIGHT_CONSTANT_BUFFER     cbuffer      NA          NA            cb3      1 
 //
 //
 //
@@ -183,7 +183,7 @@ ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[3], immediateIndexed
 dcl_constantbuffer CB0[5], immediateIndexed
-dcl_constantbuffer CB2[61], dynamicIndexed
+dcl_constantbuffer CB3[61], dynamicIndexed
 dcl_sampler s2, mode_default
 dcl_sampler s4, mode_default
 dcl_resource_structured t0, 96
@@ -431,12 +431,12 @@ itof r6.xyz, l(0, 0, 0, 0)  // r6.x <- total_diffuse.x; r6.y <- total_diffuse.y;
 itof r7.xyz, l(0, 0, 0, 0)  // r7.x <- total_specular.x; r7.y <- total_specular.y; r7.z <- total_specular.z
 
 #line 135
-dp3 r1.w, cb2[2].xyzx, cb2[2].xyzx
+dp3 r1.w, cb3[2].xyzx, cb3[2].xyzx
 rsq r1.w, r1.w
-mul r8.xyz, r1.wwww, cb2[2].xyzx  // r8.x <- L.x; r8.y <- L.y; r8.z <- L.z
+mul r8.xyz, r1.wwww, cb3[2].xyzx  // r8.x <- L.x; r8.y <- L.y; r8.z <- L.z
 
 #line 136
-mul r9.xyz, cb2[3].xyzx, cb2[4].xxxx  // r9.x <- LC.x; r9.y <- LC.y; r9.z <- LC.z
+mul r9.xyz, cb3[3].xyzx, cb3[4].xxxx  // r9.x <- LC.x; r9.y <- LC.y; r9.z <- LC.z
 
 #line 137
 nop 
@@ -625,7 +625,7 @@ add r7.xyz, r7.xyzx, r8.xyzx
 mov r1.w, l(0)  // r1.w <- i
 mov r8.xyz, r6.xyzx  // r8.x <- total_diffuse.x; r8.y <- total_diffuse.y; r8.z <- total_diffuse.z
 mov r9.xyz, r7.xyzx  // r9.x <- total_specular.x; r9.y <- total_specular.y; r9.z <- total_specular.z
-mov r3.z, cb2[1].y  // r3.z <- light_count.y
+mov r3.z, cb3[1].y  // r3.z <- light_count.y
 mov r3.w, r1.w  // r3.w <- i
 loop 
   ilt r5.w, r3.w, l(8)
@@ -643,7 +643,7 @@ loop
 
 #line 149
   imul null, r5.w, r3.w, l(3)
-  mov r10.xyz, -cb2[r5.w + 5].xyzx
+  mov r10.xyz, -cb3[r5.w + 5].xyzx
   add r10.xyz, r10.xyzx, v1.xyzx  // r10.x <- L.x; r10.y <- L.y; r10.z <- L.z
 
 #line 150
@@ -652,7 +652,7 @@ loop
 
 #line 151
   imul null, r6.w, r3.w, l(3)
-  ge r6.w, r5.w, cb2[r6.w + 7].x
+  ge r6.w, r5.w, cb3[r6.w + 7].x
   if_nz r6.w
 
 #line 153
@@ -664,7 +664,7 @@ loop
 
 #line 155
   imul null, r6.w, r3.w, l(3)
-  div r6.w, r5.w, cb2[r6.w + 7].x
+  div r6.w, r5.w, cb3[r6.w + 7].x
   mov r6.w, -r6.w
   add r6.w, r6.w, l(1.000000)
   max r6.w, r6.w, l(0.000000)
@@ -679,7 +679,7 @@ loop
 #line 158
   imul null, r5.w, r3.w, l(3)
   imul null, r7.w, r3.w, l(3)
-  mul r11.xyz, cb2[r5.w + 6].xyzx, cb2[r7.w + 7].yyyy  // r11.x <- LC.x; r11.y <- LC.y; r11.z <- LC.z
+  mul r11.xyz, cb3[r5.w + 6].xyzx, cb3[r7.w + 7].yyyy  // r11.x <- LC.x; r11.y <- LC.y; r11.z <- LC.z
 
 #line 161
   nop 
@@ -874,7 +874,7 @@ endloop
 mov r1.w, l(0)  // r1.w <- j
 mov r6.xyz, r8.xyzx  // r6.x <- total_diffuse.x; r6.y <- total_diffuse.y; r6.z <- total_diffuse.z
 mov r7.xyz, r9.xyzx  // r7.x <- total_specular.x; r7.y <- total_specular.y; r7.z <- total_specular.z
-mov r3.z, cb2[1].z  // r3.z <- light_count.z
+mov r3.z, cb3[1].z  // r3.z <- light_count.z
 mov r3.w, r1.w  // r3.w <- j
 loop 
   ilt r5.w, r3.w, l(8)
@@ -892,7 +892,7 @@ loop
 
 #line 173
   imul null, r5.w, r3.w, l(4)
-  mov r10.xyz, -cb2[r5.w + 29].xyzx
+  mov r10.xyz, -cb3[r5.w + 29].xyzx
   add r10.xyz, r10.xyzx, v1.xyzx  // r10.x <- L.x; r10.y <- L.y; r10.z <- L.z
 
 #line 174
@@ -901,7 +901,7 @@ loop
 
 #line 175
   imul null, r6.w, r3.w, l(4)
-  ge r6.w, r5.w, cb2[r6.w + 32].x
+  ge r6.w, r5.w, cb3[r6.w + 32].x
   if_nz r6.w
 
 #line 177
@@ -913,7 +913,7 @@ loop
 
 #line 179
   imul null, r6.w, r3.w, l(4)
-  div r6.w, r5.w, cb2[r6.w + 32].x
+  div r6.w, r5.w, cb3[r6.w + 32].x
   mov r6.w, -r6.w
   add r6.w, r6.w, l(1.000000)
   max r6.w, r6.w, l(0.000000)
@@ -927,9 +927,9 @@ loop
 
 #line 182
   imul null, r5.w, r3.w, l(4)
-  dp3 r7.w, cb2[r5.w + 30].xyzx, cb2[r5.w + 30].xyzx
+  dp3 r7.w, cb3[r5.w + 30].xyzx, cb3[r5.w + 30].xyzx
   rsq r7.w, r7.w
-  mul r11.xyz, r7.wwww, cb2[r5.w + 30].xyzx  // r11.x <- spotDirection.x; r11.y <- spotDirection.y; r11.z <- spotDirection.z
+  mul r11.xyz, r7.wwww, cb3[r5.w + 30].xyzx  // r11.x <- spotDirection.x; r11.y <- spotDirection.y; r11.z <- spotDirection.z
 
 #line 183
   dp3 r5.w, r11.xyzx, r10.xyzx  // r5.w <- angle
@@ -937,13 +937,13 @@ loop
 #line 184
   imul null, r7.w, r3.w, l(4)
   imul null, r8.w, r3.w, l(4)
-  mov r8.w, -cb2[r8.w + 32].z
-  add r7.w, r8.w, cb2[r7.w + 32].y  // r7.w <- area
+  mov r8.w, -cb3[r8.w + 32].z
+  add r7.w, r8.w, cb3[r7.w + 32].y  // r7.w <- area
 
 #line 185
   imul null, r8.w, r3.w, l(4)
   mov r5.w, -r5.w
-  add r5.w, r5.w, cb2[r8.w + 32].y
+  add r5.w, r5.w, cb3[r8.w + 32].y
   div r5.w, r5.w, r7.w
   mov r5.w, -r5.w
   add r5.w, r5.w, l(1.000000)
@@ -954,7 +954,7 @@ loop
 #line 186
   imul null, r6.w, r3.w, l(4)
   imul null, r7.w, r3.w, l(4)
-  mul r11.xyz, cb2[r7.w + 31].wwww, cb2[r6.w + 31].xyzx  // r11.x <- LC.x; r11.y <- LC.y; r11.z <- LC.z
+  mul r11.xyz, cb3[r7.w + 31].wwww, cb3[r6.w + 31].xyzx  // r11.x <- LC.x; r11.y <- LC.y; r11.z <- LC.z
 
 #line 189
   nop 

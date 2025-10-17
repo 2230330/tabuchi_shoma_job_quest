@@ -27,5 +27,6 @@ private:
 
     //以下、ポストプロセス
     std::unique_ptr<Bloom> bloom_;
+    Microsoft::WRL::ComPtr<ID3D11BlendState>blend_state_;
 
 };

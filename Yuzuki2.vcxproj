@@ -227,6 +227,7 @@
     <ClInclude Include="headers\component\component_scale.h" />
     <ClInclude Include="headers\component\component_texture.h" />
     <ClInclude Include="headers\component\i_component.h" />
+    <ClInclude Include="headers\constant_buffer_slot.h" />
     <ClInclude Include="headers\entity\entity.h" />
     <ClInclude Include="headers\entity\entity_manager.h" />
     <ClInclude Include="headers\entity\entity_record.h" />
@@ -358,12 +359,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\glow_extraction_ps.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="shaderes\gltf_model_forward_instancing_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>

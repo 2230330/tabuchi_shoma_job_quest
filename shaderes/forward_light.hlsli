@@ -1,6 +1,6 @@
 #include"light.hlsli"
 
-cbuffer FORWARD_LIGHT_CONSTANT_BUFFER : register(b2)
+cbuffer FORWARD_LIGHT_CONSTANT_BUFFER : register(b3)
 {
     float4 ambient_color;
     uint4 light_count; //	x : 空き, y : ポイントライト数, z : スポットライト数, w : 空き。

@@ -56,7 +56,7 @@ cbuffer PRIMITIVE_CONSTANT_BUFFER : register(b0)
 //};
 
 static const uint PRIMITIVE_MAX_JOINTS = 512;
-cbuffer PRIMITIVE_JOINT_CONSTANTS : register(b3)
+cbuffer PRIMITIVE_JOINT_CONSTANTS : register(b2)
 {
     row_major float4x4 joint_matrices[PRIMITIVE_MAX_JOINTS];
 };

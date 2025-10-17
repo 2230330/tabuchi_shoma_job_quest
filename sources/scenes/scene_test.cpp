@@ -6,8 +6,9 @@
 
 #include"../../headers/graphics.h"
 #include"../../headers/misc.h"
-#include"../../external/imgui/imgui.h"
+#include"../../headers/constant_buffer_slot.h"
 #include"../../headers/shader.h"
+#include"../../external/imgui/imgui.h"
 
 SceneTest::SceneTest(const HWND hwnd)
     :Scene(hwnd)
@@ -130,40 +131,47 @@ bool SceneTest::InitializeCore()
     }
     int size = 10;
     //コンポーネントの設定(仮)
-    for (int i = -size; i < size; i++)
-    {
-        ID3D11Device* device = Graphics::Instance().GetDevice();
-        gltf_model.entity = world->GetEntityManager()->Add();
+    //for (int i = -size; i < size; i++)
+    //{
+    //    ID3D11Device* device = Graphics::Instance().GetDevice();
+    //    gltf_model.entity = world->GetEntityManager()->Add();
+    //    ComponentGltf gltf;
+    //    gltf.model = rsc_mng->LoadGltfModel(
+    //        device,
+    //        ".\\resources\\model\\gltf\\knife.glb"
+    //        //".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
+    //        //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
+    //    );
+    //    comp_mng->Add<ComponentGltf>(gltf_model.entity, gltf);
+    //    ComponentPosition pos;
+    //    int normalize_i = i >= 0 ? i : -i;
+    //    pos.value = { static_cast<float>(i % 50), 0.f, static_cast<float>(normalize_i / 50) };
+    //    comp_mng->Add<ComponentPosition>(gltf_model.entity, pos);
+    //    ComponentRotation ros;
+    //    ros.value = { 0.f,0.f,0.f };
+    //    comp_mng->Add<ComponentRotation>(gltf_model.entity, ros);
+    //    ComponentScale scale;
+    //    scale.value = { 1.f,1.f,1.f };
+    //    comp_mng->Add<ComponentScale>(gltf_model.entity, scale);
+    //    ComponentLocalToWorld world;
+    //    DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
+    //    comp_mng->Add(gltf_model.entity, world);
+    //    ComponentColor col;
+    //    col.value = { 1,1,1,1 };
+    //    comp_mng->Add(gltf_model.entity, col);
+    //    ComponentInstanced instance;
+    //    instance.entity_id = gltf_model.entity;
+    //    comp_mng->Add(gltf_model.entity, instance);
+    //}
 
-        ComponentGltf gltf;
-        gltf.model = rsc_mng->LoadGltfModel(
-            device,
-            //".\\resources\\model\\gltf\\sun.glb"
-            ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
-            //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
-        );
-        comp_mng->Add<ComponentGltf>(gltf_model.entity, gltf);
-        ComponentPosition pos;
-        int normalize_i = i >= 0 ? i : -i;
-        pos.value = { static_cast<float>(i % 50), 0.f, static_cast<float>(normalize_i / 50) };
-        comp_mng->Add<ComponentPosition>(gltf_model.entity, pos);
-        ComponentRotation ros;
-        ros.value = { 0.f,0.f,0.f };
-        comp_mng->Add<ComponentRotation>(gltf_model.entity, ros);
-        ComponentScale scale;
-        scale.value = { 1.f,1.f,1.f };
-        comp_mng->Add<ComponentScale>(gltf_model.entity, scale);
-        ComponentLocalToWorld world;
-        DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
-        comp_mng->Add(gltf_model.entity, world);
-        ComponentColor col;
-        col.value = { 1,1,1,1 };
-        comp_mng->Add(gltf_model.entity, col);
-        ComponentInstanced instance;
-        instance.entity_id = gltf_model.entity;
-        comp_mng->Add(gltf_model.entity, instance);
-    }
-
+    ID3D11Device*device= Graphics::Instance().GetDevice();
+    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\knife.glb");
+    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\sun.glb");
+    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\moon.glb");
+    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\sword.glb");
+    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\katana.glb");
+    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
+    rsc_mng->LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
 
     return true;
 }
@@ -218,8 +226,8 @@ void SceneTest::RenderCore(float elapsed_time)
         dc->RSGetViewports(&num_viewports, &viewport);
 
 
-        light_manager_->SetForwardLightConstant(2);
-        SetSceneConstant();
+        light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kLight));
+        SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame));
     }
     //レンダリングオブジェクト描画
     {
