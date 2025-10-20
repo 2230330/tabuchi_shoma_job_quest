@@ -10,12 +10,11 @@ class InstancingRenderSystem :public IRenderSystem
 {
 
 public:
-    InstancingRenderSystem(ComponentManager& comp_mng, World& world);
+    InstancingRenderSystem(ComponentManager& comp_mng);
 
     void Render()override;
 private:
     //Šô‚Â‚©•`‰æ•û–@‚ğì‚é‚Â‚à‚è‚Å‚·
-    void DrawPrimitive(ID3D11DeviceContext* context, const GltfModel::Mesh::primitive& primitive, const GltfModel& model);
 
     struct InstanceBufferInfo {
         Microsoft::WRL::ComPtr<ID3D11Buffer>buffer;
@@ -24,6 +23,4 @@ private:
 
     std::unordered_map<GltfModel*, InstanceBufferInfo>instance_buffer_pool_;
     ComponentManager& comp_mng_;
-    World& world_;
-
 };

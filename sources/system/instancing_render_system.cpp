@@ -6,9 +6,8 @@
 
 #include"../../headers/graphics.h"
 
-InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng, World& world)
+InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)
-    ,world_(world)
 {
 }
 

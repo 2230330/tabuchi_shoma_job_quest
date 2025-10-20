@@ -8,7 +8,7 @@
 //コンポーネントを回すためのクラス
 class RenderSystemManager {
 public:
-    RenderSystemManager(ComponentManager& comp_mng,World&world);
+    RenderSystemManager(ComponentManager& comp_mng);
     virtual ~RenderSystemManager() = default;
 
     void AddSystem(std::unique_ptr<IRenderSystem> system);
@@ -20,5 +20,4 @@ public:
 private:
     std::vector<std::unique_ptr<IRenderSystem>> systems_;
     ComponentManager& comp_mng_;
-    World& world_;
 };

@@ -20,6 +20,21 @@ public:
         return instance_;
     }
 
+    void Shutdown()
+    {
+        if (immediate_context_) {
+            immediate_context_->ClearState();
+            immediate_context_->Flush();
+        }
+
+        swap_chain_.Reset();
+        render_target_view_.Reset();
+        depth_stencil_view_.Reset();
+        immediate_context_.Reset();
+        device_.Reset();
+
+    }
+
     //‰Šú‰»
     void Initialize(HWND hwnd);
 

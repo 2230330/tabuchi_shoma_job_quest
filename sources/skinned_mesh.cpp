@@ -484,7 +484,9 @@ void SkinnedMesh::CreateComObjects(ID3D11Device* device, const wchar_t* fbx_file
                 path.replace_filename(iterator->second.texture_filenames[texture_index]);
                 D3D11_TEXTURE2D_DESC texture2d_desc;
                 iterator->second.shader_resource_view[texture_index]=ResourceManager::Instance().
-                    LoadTextureFromFile(device, path.c_str(),&texture2d_desc);
+                    LoadTextureFromFile(device, path.c_str());
+                texture2d_desc = ResourceManager::Instance().
+                    Texture2dDesc(iterator->second.shader_resource_view[texture_index].Get());
                 
             }
             else

@@ -208,8 +208,8 @@ StaticMesh::StaticMesh(ID3D11Device* device, const wchar_t* obj_filename, bool u
                 if (material[i].texture_filenames[0].size() > 0)
                 {
                     material[i].shader_resource_views[0]=ResourceManager::Instance().
-                        LoadTextureFromFile(device, material[i].texture_filenames[0].c_str(),
-                        &texture2d_desc);
+                        LoadTextureFromFile(device, material[i].texture_filenames[0].c_str());
+                    texture2d_desc = ResourceManager::Instance().Texture2dDesc(material[i].shader_resource_views[0].Get());
                 }
                 else
                 {
@@ -219,8 +219,8 @@ StaticMesh::StaticMesh(ID3D11Device* device, const wchar_t* obj_filename, bool u
                 if (material[i].texture_filenames[1].size() > 0)
                 {
                     material[i].shader_resource_views[1]=ResourceManager::Instance().
-                        LoadTextureFromFile(device, material[i].texture_filenames[1].c_str(),
-                        &texture2d_desc);
+                        LoadTextureFromFile(device, material[i].texture_filenames[1].c_str());
+                    texture2d_desc = ResourceManager::Instance().Texture2dDesc(material[i].shader_resource_views[1].Get());
                 }
                 else
                 {

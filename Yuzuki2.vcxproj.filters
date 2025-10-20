@@ -227,9 +227,6 @@
     <ClInclude Include="headers\component\component_primitive.h">
       <Filter>headers\component</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\draw_primitive.h">
-      <Filter>headers\system</Filter>
-    </ClInclude>
     <ClInclude Include="headers\post_process\bloom.h">
       <Filter>headers\post_process</Filter>
     </ClInclude>
@@ -247,6 +244,12 @@
     </ClInclude>
     <ClInclude Include="headers\component\component_sky_atmosphere.h">
       <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\sprite_render_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\sky_render_system.h">
+      <Filter>headers\system</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -361,6 +364,12 @@
     <ClCompile Include="sources\system\instancing_render_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
+    <ClCompile Include="sources\system\sprite_render_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\sky_render_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaderes\geometric_primitive.hlsli">
@@ -406,6 +415,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\shading_functions.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\sprite_batch.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -474,6 +486,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\gltf_model_forward_instancing_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_batch_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_batch_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

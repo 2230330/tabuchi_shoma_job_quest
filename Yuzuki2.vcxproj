@@ -146,7 +146,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;USE_IMGUI</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -255,11 +255,12 @@
     <ClInclude Include="headers\sprite.h" />
     <ClInclude Include="headers\sprite_batch.h" />
     <ClInclude Include="headers\static_mesh.h" />
-    <ClInclude Include="headers\system\draw_primitive.h" />
     <ClInclude Include="headers\system\i_render_system.h" />
     <ClInclude Include="headers\system\i_update_system.h" />
     <ClInclude Include="headers\system\render_system.h" />
     <ClInclude Include="headers\system\render_system_manager.h" />
+    <ClInclude Include="headers\system\sky_render_system.h" />
+    <ClInclude Include="headers\system\sprite_render_system.h" />
     <ClInclude Include="headers\system\transform_system.h" />
     <ClInclude Include="headers\system\update_system_manager.h" />
     <ClInclude Include="headers\system\instancing_render_system.h" />
@@ -301,6 +302,8 @@
     <ClCompile Include="sources\system\instancing_render_system.cpp" />
     <ClCompile Include="sources\system\render_system.cpp" />
     <ClCompile Include="sources\system\render_system_manager.cpp" />
+    <ClCompile Include="sources\system\sky_render_system.cpp" />
+    <ClCompile Include="sources\system\sprite_render_system.cpp" />
     <ClCompile Include="sources\system\update_system_manager.cpp" />
     <ClCompile Include="sources\system\transform_system.cpp" />
     <ClCompile Include="sources\texture.cpp" />
@@ -320,6 +323,7 @@
     <None Include="shaderes\shading_functions.hlsli" />
     <None Include="shaderes\skinned_mesh.hlsli" />
     <None Include="shaderes\sprite.hlsli" />
+    <None Include="shaderes\sprite_batch.hlsli" />
     <None Include="shaderes\static_mesh.hlsli" />
   </ItemGroup>
   <ItemGroup>
@@ -411,6 +415,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_batch_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_batch_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\sprite_ps.hlsl">

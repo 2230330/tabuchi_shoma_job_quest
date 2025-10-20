@@ -40,7 +40,7 @@ SpriteBatch::SpriteBatch(ID3D11Device* device, const wchar_t* filename, size_t m
     cso_name = ".\\resources\\shader\\sprite_ps.cso";
     shader_from_cso::CreatePsFromCso(device,cso_name,pixel_shader_[0].GetAddressOf());
 
-    shader_resource_view_=ResourceManager::Instance().LoadTextureFromFile(device, filename, &texture2d_desc_);
+    shader_resource_view_=ResourceManager::Instance().LoadTextureFromFile(device, filename);
     texture2d_desc_ = ResourceManager::Instance().Texture2dDesc(shader_resource_view_.Get());
 }
 

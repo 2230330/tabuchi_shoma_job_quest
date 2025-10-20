@@ -772,7 +772,8 @@ void GltfModel::FetchTextures(ID3D11Device* device, const tinygltf::Model& gltf_
 			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_view{};
 			D3D11_TEXTURE2D_DESC texture2d_desc;
 			std::wstring filename{ path.parent_path().concat(L"/").wstring() + std::wstring(gltf_image.uri.begin(), gltf_image.uri.end()) };
-			shader_resource_view = ResourceManager::Instance().LoadTextureFromFile(device, filename.c_str(), &texture2d_desc);
+			shader_resource_view = ResourceManager::Instance().LoadTextureFromFile(device, filename.c_str());
+			texture2d_desc = ResourceManager::Instance().Texture2dDesc(shader_resource_view.Get());
 			if (hr == S_OK)
 			{
 				texture_resource_views_.emplace_back(shader_resource_view);

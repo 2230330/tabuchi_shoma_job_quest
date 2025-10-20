@@ -9,13 +9,12 @@
 class RenderSystem :public IRenderSystem
 {
 public:
-    RenderSystem(ComponentManager& comp_mng,World&world);
+    RenderSystem(ComponentManager& comp_mng);
 
     void Render()override;
 private:
     //Šô‚Â‚©•`‰æ•û–@‚ğì‚é‚Â‚à‚è‚Å‚·
-    void DrawPrimitive(ID3D11DeviceContext* context, const GltfModel::Mesh::primitive& primitive, const GltfModel& model);
+    //void DrawPrimitive(ID3D11DeviceContext* context, const GltfModel::Mesh::primitive& primitive, const GltfModel& model);
 
     ComponentManager& comp_mng_;
-    World& world_;
 };

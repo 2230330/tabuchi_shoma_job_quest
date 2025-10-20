@@ -73,7 +73,7 @@ bool Framework::Uninitialize()
     if (scene_)
     {
         bool r = scene_->Uninitialize();
-        return r;
+        Graphics::Instance().Shutdown();
     }
 
     return true;

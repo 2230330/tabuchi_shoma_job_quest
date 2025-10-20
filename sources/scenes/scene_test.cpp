@@ -28,7 +28,7 @@ bool SceneTest::InitializeCore()
         world = std::make_unique<World>();
         comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
-        render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng,*world);
+        render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
         light_manager_ = std::make_unique<LightManager>();
 
         uint32_t w = static_cast<uint32_t>(Graphics::Instance().GetScreenWidth());
@@ -129,13 +129,13 @@ bool SceneTest::InitializeCore()
         //light_manager_->SetDirectionLight(light);
     }
     int size = 10;
-    //コンポーネントの設定(仮)
+    ////コンポーネントの設定(仮)
     //for (int i = -size; i < size; i++)
     //{
     //    ID3D11Device* device = Graphics::Instance().GetDevice();
     //    gltf_model.entity = world->GetEntityManager()->Add();
     //    ComponentGltf gltf;
-    //    gltf.model = rsc_mng->LoadGltfModel(
+    //    gltf.model = ResourceManager::Instance().LoadGltfModel(
     //        device,
     //        ".\\resources\\model\\gltf\\knife.glb"
     //        //".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
@@ -171,12 +171,15 @@ bool SceneTest::InitializeCore()
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\katana.glb");
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
+    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\eldenRing_Sky_Moon_Stars_1-1.png");
 
     return true;
 }
 
 bool SceneTest::UninitializeCore()
 {
+    ResourceManager::Instance().Shutdown();
+
     return true;
 }
 

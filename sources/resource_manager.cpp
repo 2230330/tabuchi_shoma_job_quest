@@ -23,7 +23,8 @@ std::shared_ptr<GltfModel> ResourceManager::LoadGltfModel(ID3D11Device* device, 
     return model;
 }
 
-Microsoft::WRL::ComPtr<ID3D11VertexShader> ResourceManager::LoadVertexShader(ID3D11Device* device, const std::wstring& filename)
+Microsoft::WRL::ComPtr<ID3D11VertexShader> ResourceManager::LoadVertexShader(ID3D11Device* device, const std::wstring& filename,
+    ID3D11InputLayout** input_layout, D3D11_INPUT_ELEMENT_DESC* input_element_desc,UINT num_element)
 {
     auto it = vertex_shaders_.find(filename);
     if (it != vertex_shaders_.end())
@@ -38,12 +39,16 @@ Microsoft::WRL::ComPtr<ID3D11VertexShader> ResourceManager::LoadVertexShader(ID3
     if (SUCCEEDED(hr))
     {
         hr = device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
 
-    if (FAILED(hr))
+    if (input_layout)
     {
-        return nullptr;
+        hr = device->CreateInputLayout(input_element_desc, num_element,
+            blob->GetBufferPointer(), blob->GetBufferSize(), input_layout);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
+
 
     vertex_shaders_.emplace(filename, shader);
     return shader;
@@ -74,7 +79,7 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> ResourceManager::LoadPixelShader(ID3D1
     return shader;
 }
 
-Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFromFile(ID3D11Device* device, const wchar_t* filename, D3D11_TEXTURE2D_DESC* texture2d_desc)
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFromFile(ID3D11Device* device, const wchar_t* filename)
 {
         HRESULT hr{ S_OK };
         Microsoft::WRL::ComPtr<ID3D11Resource> resource;
@@ -83,13 +88,11 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFro
         auto it = textures_.find(filename);
         if (it != textures_.end())
         {
-            shader_resource_view = it->second.Get();
-            (shader_resource_view)->AddRef();
+            shader_resource_view = it->second;
             (shader_resource_view)->GetResource(resource.GetAddressOf());
         }
         else
         {
-            // UNIT.31
             std::filesystem::path dds_filename(filename);
             dds_filename.replace_extension("dds");
             if (std::filesystem::exists(dds_filename.c_str()))
@@ -105,11 +108,7 @@ Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFro
             }
             textures_.insert(std::make_pair(filename, shader_resource_view));
         }
-    
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> texture2d;
-        hr = resource.Get()->QueryInterface<ID3D11Texture2D>(texture2d.GetAddressOf());
-        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        texture2d->GetDesc(texture2d_desc);
+   
     
         return shader_resource_view;
 }
