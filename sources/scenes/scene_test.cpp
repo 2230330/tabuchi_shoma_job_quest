@@ -43,12 +43,7 @@ bool SceneTest::InitializeCore()
         ID3D11Device* device = Graphics::Instance().GetDevice();
         //2dスプライト宣言
         {
-            sprite_batches_[0]
-                = std::make_unique<SpriteBatch>(
-                    device,
-                    L".\\resources\\sprite\\eldenRing_Sky_Moon_Stars_1-1.png",
-                    //L".\\resources\\sprite\\mamizo.png",
-                    2048);
+
         }
         //3dオブジェクト宣言
         {
@@ -112,22 +107,6 @@ bool SceneTest::InitializeCore()
         //hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer_.GetAddressOf());
         //_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
-    //カメラの設定
-    {
-        camera_.SetLookAt(
-            { 0.0f,0.0f,-10.f },
-            { 0.0f,0.0f,0.0f },
-            { 0.0f,1.0f,0.0f }
-        );
-    }
-    //ライトの設定
-    {
-        //DirectionLight light;
-        //light.direction = { 0,0,1,0 };
-        //light.color = { 1,1,1,1 };
-        //light.intensity = 2.0f;
-        //light_manager_->SetDirectionLight(light);
-    }
     int size = 10;
     ////コンポーネントの設定(仮)
     //for (int i = -size; i < size; i++)
@@ -172,6 +151,8 @@ bool SceneTest::InitializeCore()
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
     ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\eldenRing_Sky_Moon_Stars_1-1.png");
+    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\incskies_050_16k.png");
+    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mwpan2_Aitoff_2000x1000.jpg");
 
     return true;
 }
@@ -239,9 +220,6 @@ void SceneTest::RenderCore(float elapsed_time)
         {
             dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_only), 0);
 
-            sprite_batches_[0].get()->begin(dc);
-            sprite_batches_[0].get()->Render(dc, 0, 0, 1280, 720);
-            sprite_batches_[0].get()->end(dc);
 
             dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);
 

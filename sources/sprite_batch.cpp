@@ -83,6 +83,8 @@ void SpriteBatch::end(ID3D11DeviceContext* immediate_context)
 
     immediate_context->DrawInstanced(static_cast<UINT>(vertex_count), 1,0,0);
 
+    ID3D11ShaderResourceView* shader_resouce_view[]{ nullptr };
+    immediate_context->PSSetShaderResources(0, 1, shader_resouce_view);
     vertices_.clear();
 }
 

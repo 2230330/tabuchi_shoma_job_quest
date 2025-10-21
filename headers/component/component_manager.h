@@ -121,7 +121,7 @@ public:
     }
     //エンティティがそのコンポーネントを所有しているかの確認
     template<typename T>
-    bool Has(uint32_t entity_id) 
+    inline bool Has(uint32_t entity_id) 
     {
         auto it = entity_to_component_.find(std::type_index(typeid(T)));
         if (it == entity_to_component_.end()) return false;

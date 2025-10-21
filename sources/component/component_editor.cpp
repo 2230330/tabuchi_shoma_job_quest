@@ -36,6 +36,25 @@ void ComponentEditor::DrawImgui()
             comp_mng_.Add(entity, l2w);
         }
 
+        //空の追加
+        if (ImGui::Button("add sky"))
+        {
+            uint32_t entity = enti_mng_.Add();
+
+            //基礎情報の追加
+            ComponentPosition position{};
+            comp_mng_.Add<ComponentPosition>(entity, position);
+            ComponentRotation rotation{};
+            comp_mng_.Add<ComponentRotation>(entity, rotation);
+            ComponentScale scale;
+            scale.value = { 1.f, 1.f, 1.f };
+            comp_mng_.Add(entity, scale);
+            ComponentLocalToWorld l2w{};
+            comp_mng_.Add(entity, l2w);
+            ComponentSkyAtmosphere sky;
+            comp_mng_.Add(entity, sky);
+        }
+
         //生きているエンティティを表示する
         const std::vector<Entity>& entities = enti_mng_.GetArray();
         for (const Entity& entity : entities)
@@ -136,8 +155,7 @@ void ComponentEditor::DrawImgui()
                                 ImGui::TreePop();
                             }
                         }
-                        if (!comp_mng_.Has<ComponentTexture>(entity.entity))
-                        {
+                        if (!comp_mng_.Has<ComponentTexture>(entity.entity)){
                             if (ImGui::TreeNode("Texture"))
                             {
                                 const auto& texs = ResourceManager::Instance().GetTextures();
@@ -165,7 +183,7 @@ void ComponentEditor::DrawImgui()
                                             else
                                             {
                                                 ComponentTexture tex_comp{};
-                                                tex_comp.texture = tex_ptr;
+                                                tex_comp.texture = std::move(tex_ptr);
                                                 tex_comp.name = tex_name;
                                                 comp_mng_.Add(entity.entity, tex_comp);
                                                 break;

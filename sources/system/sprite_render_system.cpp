@@ -69,12 +69,16 @@ void SpriteRenderSystem::Render()
 
     comp_mng_.ForEach<ComponentTexture>([&](uint32_t entity_id, ComponentTexture& tex)
         {
-            auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
-            //auto* texture = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
-
-            if (l2w &&  tex.texture)
+            if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id))
             {
-                texture_to_worlds[tex.texture.Get()].push_back(l2w->value);
+
+
+                auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
+
+                if (l2w && tex.texture)
+                {
+                    texture_to_worlds[tex.texture.Get()].push_back(l2w->value);
+                }
             }
         });
 
@@ -130,6 +134,10 @@ void SpriteRenderSystem::Render()
             6,
             static_cast<UINT>(world_matrices.size()),
             0,0);
+
+        //テクスチャをリセット
+        ID3D11ShaderResourceView* shader_resource_view[] = { nullptr };
+        context->PSSetShaderResources(0, 1, shader_resource_view);
     }
 
     context->VSSetShader(nullptr, nullptr, 0);
