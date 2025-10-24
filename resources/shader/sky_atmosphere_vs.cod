@@ -46,6 +46,7 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float   xyzw
 // TEXCOORD                 0   xy          1     NONE   float   xy  
+// TEXCOORD                 1   xyz         2     NONE   float   xyz 
 //
 vs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
@@ -54,40 +55,46 @@ dcl_input v0.xyz
 dcl_input v1.xy
 dcl_output_siv o0.xyzw, position
 dcl_output o1.xy
-dcl_temps 3
+dcl_output o2.xyz
+dcl_temps 4
 //
 // Initial variable locations:
 //   v0.x <- vin.position.x; v0.y <- vin.position.y; v0.z <- vin.position.z; 
 //   v1.x <- vin.texcoord.x; v1.y <- vin.texcoord.y; 
+//   o2.x <- <main return value>.world_pos.x; o2.y <- <main return value>.world_pos.y; o2.z <- <main return value>.world_pos.z; 
 //   o1.x <- <main return value>.texcoord.x; o1.y <- <main return value>.texcoord.y; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 8 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\sky_atmosphere_vs.hlsl"
-add r0.xyz, v0.xyzx, cb1[2].xyzx  // r0.x <- world_pos.x; r0.y <- world_pos.y; r0.z <- world_pos.z
+#line 9 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\sky_atmosphere_vs.hlsl"
+add r0.xyz, v0.xyzx, cb1[2].xyzx  // r0.x <- dome_pos.x; r0.y <- dome_pos.y; r0.z <- dome_pos.z
 
-#line 10
+#line 11
+mov r0.xyz, r0.xyzx  // r0.x <- vout.world_pos.x; r0.y <- vout.world_pos.y; r0.z <- vout.world_pos.z
+
+#line 14
 mul r1.xyzw, r0.xxxx, cb1[6].xyzw
 mul r2.xyzw, r0.yyyy, cb1[7].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw
-mul r0.xyzw, r0.zzzz, cb1[8].xyzw
-add r0.xyzw, r0.xyzw, r1.xyzw
-mul r1.xyzw, cb1[9].xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
-add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- view_pos.x; r0.y <- view_pos.y; r0.z <- view_pos.z; r0.w <- view_pos.w
-
-#line 11
-mul r1.xyzw, r0.xxxx, cb1[10].xyzw
-mul r2.xyzw, r0.yyyy, cb1[11].xyzw
+mul r2.xyzw, r0.zzzz, cb1[8].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw
-mul r2.xyzw, r0.zzzz, cb1[12].xyzw
-add r1.xyzw, r1.xyzw, r2.xyzw
-mul r0.xyzw, r0.wwww, cb1[13].xyzw
-add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z; r0.w <- vout.position.w
-
-#line 13
-mov r1.xy, v1.xyxx  // r1.x <- vout.texcoord.x; r1.y <- vout.texcoord.y
+mul r2.xyzw, cb1[9].xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
+add r1.xyzw, r1.xyzw, r2.xyzw  // r1.x <- view_pos.x; r1.y <- view_pos.y; r1.z <- view_pos.z; r1.w <- view_pos.w
 
 #line 15
-mov o0.xyzw, r0.xyzw
-mov o1.xy, r1.xyxx
+mul r2.xyzw, r1.xxxx, cb1[10].xyzw
+mul r3.xyzw, r1.yyyy, cb1[11].xyzw
+add r2.xyzw, r2.xyzw, r3.xyzw
+mul r3.xyzw, r1.zzzz, cb1[12].xyzw
+add r2.xyzw, r2.xyzw, r3.xyzw
+mul r1.xyzw, r1.wwww, cb1[13].xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw  // r1.x <- vout.position.x; r1.y <- vout.position.y; r1.z <- vout.position.z; r1.w <- vout.position.w
+
+#line 17
+mov r2.xy, v1.xyxx  // r2.x <- vout.texcoord.x; r2.y <- vout.texcoord.y
+
+#line 19
+mov o0.xyzw, r1.xyzw
+mov o2.xyz, r0.xyzx
+mov o1.xy, r2.xyxx
 ret 
-// Approximately 19 instruction slots used
+// Approximately 21 instruction slots used

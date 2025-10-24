@@ -85,6 +85,8 @@ private:
 	float rotateY{ 0.0f };
 	float wheel{ 0 };
 	float distance{ 20.0f };
+	float min_distance{ 10.f };
+	float max_distance{ 100.f };
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> scene_constant_buffer;
 };

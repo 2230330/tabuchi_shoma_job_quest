@@ -66,7 +66,6 @@ void SpriteRenderSystem::Render()
 {
     std::unordered_map<ID3D11ShaderResourceView*, std::vector<DirectX::XMFLOAT4X4>> texture_to_worlds;
 
-
     comp_mng_.ForEach<ComponentTexture>([&](uint32_t entity_id, ComponentTexture& tex)
         {
             if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id))
@@ -77,7 +76,7 @@ void SpriteRenderSystem::Render()
 
                 if (l2w && tex.texture)
                 {
-                    texture_to_worlds[tex.texture.Get()].push_back(l2w->value);
+                    texture_to_worlds[tex.texture.Get()].emplace_back(l2w->value);
                 }
             }
         });

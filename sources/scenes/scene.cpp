@@ -105,6 +105,7 @@ void Scene::Update(float elapsed_time)
 			if (wheel != 0)	// ÉYÅ[ÉÄ
 			{
 				distance -= static_cast<float>(wheel) * distance * 0.001f;
+				distance = max(min(distance,max_distance), min_distance);
 				wheel = 0;
 			}
 		}

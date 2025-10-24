@@ -183,7 +183,7 @@ void ComponentEditor::DrawImgui()
                                             else
                                             {
                                                 ComponentTexture tex_comp{};
-                                                tex_comp.texture = std::move(tex_ptr);
+                                                tex_comp.texture = tex_ptr;
                                                 tex_comp.name = tex_name;
                                                 comp_mng_.Add(entity.entity, tex_comp);
                                                 break;
@@ -216,7 +216,14 @@ void ComponentEditor::DrawImgui()
                         }
                     }
                     {
-                        
+                        if (!comp_mng_.Has<ComponentColor>(entity.entity))
+                        {
+                            if(ImGui::Button("Color component"))
+                            {
+                                ComponentColor color;
+                                comp_mng_.Add(entity.entity, color);
+                            }
+                        }
                     }
 
                     ImGui::TreePop();

@@ -195,7 +195,9 @@ void Graphics::ClearShaderSlots()
     immediate_context_->PSSetShader(nullptr, nullptr, 0);
     immediate_context_->CSSetShader(nullptr, nullptr, 0);
 }
-
+//コンスタントバッファを消すための関数
+//スロットに要素を入れるときは、必ずナンバーまで記載する事
+//でなければ、範囲外になってしまう場合がある
 void Graphics::ClearConstantBuffers(int start_slot, int num)
 {
     ID3D11Buffer* clear_constant_bufferes[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};

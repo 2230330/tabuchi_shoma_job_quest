@@ -4,5 +4,4 @@
 //これがついてるコンポーネントを天球に使うタグコンポーネント
 struct ComponentSkyAtmosphere :public IComponent
 {
-    bool tag = true;
 };

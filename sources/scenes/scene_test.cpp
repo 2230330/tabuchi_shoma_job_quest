@@ -152,6 +152,8 @@ bool SceneTest::InitializeCore()
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
     ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\eldenRing_Sky_Moon_Stars_1-1.png");
     ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\incskies_050_16k.png");
+    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\incskies_038_16k_c2.png");
+    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mamizo.png");
     ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mwpan2_Aitoff_2000x1000.jpg");
 
     return true;
@@ -214,8 +216,8 @@ void SceneTest::RenderCore(float elapsed_time)
     }
     //レンダリングオブジェクト描画
     {
-        framebuffers_[0]->Clear(dc);
-        framebuffers_[0]->Activate(dc);
+        //framebuffers_[0]->Clear(dc);
+        //framebuffers_[0]->Activate(dc);
         //2Dスプライト描画
         {
             dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_only), 0);
@@ -269,11 +271,11 @@ void SceneTest::RenderCore(float elapsed_time)
 
             render_sys_mng->RenderAll();
         }
-        framebuffers_[0]->Deactivate(dc);
+        //framebuffers_[0]->Deactivate(dc);
     }
     //ポストエフェクト
     {
-        post_pro_mng->PostProcess(dc, framebuffers_[0]->GetShaderResourceView(0).Get());
+        //post_pro_mng->PostProcess(dc, framebuffers_[0]->GetShaderResourceView(0).Get());
     }
 }
 
