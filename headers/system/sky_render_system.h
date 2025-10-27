@@ -24,9 +24,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer>index_buffer_;
 
     // メッシュ生成パラメータ
-    const unsigned int latitude_segments_ = 8;
-    const unsigned int longitude_segments_ = 16;
-    const float radius_ = 100.f;
+    const unsigned int latitude_segments_ = 16;
+    const unsigned int longitude_segments_ = 32;
+    const float radius_ = 1000.f;
     UINT index_count_;
 
     std::vector<SkyVertex> vertices_;
@@ -43,8 +43,8 @@ private:
     {
         //DirectX::XMFLOAT4 sun_parameter{1.0f,1.0f,1.0f,20.f};//xyz:color,a:intensity
 
-        float planet_radius{6360.f};            //地球の半径km
-        float atmosphere_radius{6460.f};        //大気の半径（地球の大気は大体100㎞）km
+        float planet_radius{6360000.f};            //地球の半径m
+        float atmosphere_radius{6460000.f};        //大気の半径（地球の大気は大体100㎞）m
         float height{ 0.f };//自身の高度
 
         float rayleigh_scale_height{8.0f};    //b分子密度の減り具合km

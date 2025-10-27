@@ -68,9 +68,14 @@ void LightManager::DrawImgui()
 		//ディレクションライト
 		if (ImGui::TreeNode("directional light"))
 		{
-			if (ImGui::SliderFloat4("direction", &direction_light_.direction.x, -1.f, 1.f));
-			if (ImGui::ColorEdit4("color", &direction_light_.color.x));
-			if (ImGui::SliderFloat("intensity", &direction_light_.intensity, 0.01f, 10.f));
+			if (ImGui::SliderAngle("azimuth", &azimuth_, -180.0f, 180.0f));
+			if (ImGui::SliderAngle("elevation", &elevation_, -89.0f, 89.0f));
+
+			direction_light_.direction.x = cosf(elevation_) * cosf(azimuth_);
+			direction_light_.direction.y = sinf(elevation_);
+			direction_light_.direction.z = cosf(elevation_) * sinf(azimuth_);
+
+			if (ImGui::SliderFloat("intensity", &direction_light_.intensity, 0.0f, 20.f));
 			
 			ImGui::TreePop();
 		}

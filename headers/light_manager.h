@@ -10,7 +10,7 @@ struct DirectionLight
 {
     DirectX::XMFLOAT4    direction{ 0.f,-1.0f,0.f,1.f };
     DirectX::XMFLOAT4    color{ 1.f,1.f,1.f,1.f };
-    float intensity{ 5.0f };
+    float intensity{ 1.0f };
     DirectX::XMFLOAT3 dummy;
 };
 struct PointLight
@@ -52,6 +52,8 @@ public:
 
 private:
     DirectionLight direction_light_;
+    float azimuth_ = 0.f;//ライトの水平角度
+    float elevation_ = -1.07;//ライトの仰角
 
     std::vector<PointLight>point_lights_;
     std::vector<SpotLight>spot_lights_;
