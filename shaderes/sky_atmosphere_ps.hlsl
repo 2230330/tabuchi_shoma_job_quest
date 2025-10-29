@@ -17,43 +17,37 @@ SamplerState sampler_states[5] : register(s0);
 float3 SigmaRayleigh(float h)
 {
     
-    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / 8400.0);
+    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / 8000.0);
 }
-
-
 //簡易的ミー散乱
 float3 SigmaMie(float h)
 {
-    return float3(3.996e-6, 4.40e-6, 0.0) * exp(-(h) / 1250.0);
+    return float3(3.996e-6, 4.40e-6, 1e-6f) * exp(-(h) / 1200.0);
 }
-
-
 //オゾン吸収係数
 float3 SigmaOzone(float h)
 {
     float3 coeff = float3(0.650e-6, 1.881e-6, 0.085e-6);
-    float ozoneFactor = max(0.0, 1.0 - abs((h - 50000.0) / 10000.0));
+    float ozoneFactor = max(0.0, 1.0 - (abs(h-30000.f)/25000.f));
     return coeff * ozoneFactor;
 }
-
 //フェーズ関数(レイリー散乱)
 float RayleighPhase(float cos_theta)
 {
-    return (3.0f / (16.0 * PI)) * (1.0f + cos_theta * cos_theta);
-
+    return (3.0f * (1.0f + cos_theta * cos_theta))
+            / (16.0 * PI);
+    
+    //return (3.0 / (16.0 * PI)) * (1.0 + pow(cos_theta * 0.5 + 0.5, 2.0));//福井先生のコードより
 }
-
 //フェーズ関数(ミー散乱)
 float MiePhase(float cos_theta,float g)
 {
-    //ヘンリー・グリーンスタイン関数
+    //ヘニエイ・グリーンスタイン関数
     float g2 = g * g;
+    
 
-    return (3.0f / (8.0f * PI)) * ((1.0f - g2) * (1.0f + cos_theta * cos_theta)) /
-       (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.5f) * (2.0f + g2));
-
+    return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
 }
-
 //疑似ランベルト・ベールの法則（透過率）
 float3 TransmittanceNumerical(float3 startPos, float3 endPos, int numSamples)
 {
@@ -66,8 +60,7 @@ float3 TransmittanceNumerical(float3 startPos, float3 endPos, int numSamples)
     {
         float t = (i + 0.5) * stepSize;
         float3 samplePos = startPos + dir * t;
-        float h = length(samplePos) - 6360000.0;
-        h = max(0.0, length(samplePos) - 6360000.0);
+        float h = max(0.0, length(samplePos) - 6360000.0);
         float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
         transmittance *= exp(-sigma_t * stepSize);
     }
@@ -75,82 +68,149 @@ float3 TransmittanceNumerical(float3 startPos, float3 endPos, int numSamples)
     return transmittance;
 }
 
+//距離×平均係数で指数減衰を近似
+float3 TransmittanceApprox(float3 startPos, float3 endPos)
+{
+    float distance = length(endPos - startPos);
+    // 高度に依存した sigma_t_avg を評価するのが理想だが、まずは sample midpoint を使う
+    float3 midPos = (startPos + endPos) * 0.5f;
+    float h = max(0.0f, length(midPos) - 6360000.0f);
+    float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
+    return exp(-sigma_t * distance); // component-wise exp
+}
+
+
 //複数回散乱して入る入散乱の光を計算する
 float3 PrecomputeMultiScattering(float3 position/*地球半径加算済み*/, float3 view_dir, float3 light_dir)
 {
-    float3 sample_pos = position + view_dir * 25000.f;//25Kmくらいを想定
-    const int num_sample = 16;
+    float3 sample_pos = position + (view_dir *0.f);
     
     //高度計算
-    float h = max(0.0f,length(sample_pos) - 6360000.f);//自身の位置-地球半径
-    //高さが0以下の時、推定地面の方向なので切り上げる
-    if (h < -0.01f)
-    {
-        return float3(0, 0, 0);
-    }
+    float h = length(sample_pos) - 6360000.f;//自身の位置-地球半径
+    
+    //100メートル地下ならば、計算する必要はない
+    if(h<-100.f)
+        return float3(0.f, 0.f, 0.f);
     
     //散乱係数
     float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
     float3 sigma_t = sigma_s + SigmaOzone(h);
     
     //太陽光のエネルギー
-    float3 Ei = float3(1.0f, 0.9f, 0.7f);
+    float sun_elevation =clamp(dot(light_dir, float3(0, 1, 0)),0.0f,1.0f); // 太陽の高さ
+    float sun_theta = acos(sun_elevation) * (180.0f / PI);//度に変換
+    //kasten-Young 1989近似
+    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
+    air_mass = min(air_mass, 50.0f); // 極端な値を制限
+
+    float sunset_factor = saturate((air_mass - 1.0f) / 10.f);//1～10を0～1に正規化
+    float3 Ei = lerp(float3(1.0, 1.0, 1.0), float3(1.0, 0.6, 0.3), sunset_factor);
     
     //位相関数(散乱光の内こちらに向く割合)
-    float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f);
-    float phase = RayleighPhase(cos_theta) + min(MiePhase(cos_theta, 0.8f), 0.0005f);
+    float cos_theta = clamp(dot(view_dir, light_dir), 0.0f, 1.0f);
+    float angle_factor = pow(saturate(cos_theta), 2.0f);
+    float phase = min(1.0f, RayleighPhase(cos_theta))
+                + MiePhase(cos_theta, 0.8f) * (0.01f+sunset_factor * 0.05f);
+    
+    ////青空の時は変化が少ないのでサンプル数を減らし、
+    ////変化の多い地平線付近だけ多めにする
+    //const int num_samples = 32;
+    //float horizon_factor = saturate(1.0f - sunset_factor);
+    //float samples_f = lerp(8.0f, (float) num_samples, horizon_factor);
+    //int adaptive_samples = max(1, (int) round(samples_f)); // round() -> float, cast -> int
     
     //太陽方向
-    float3 T1 = TransmittanceNumerical(sample_pos, (sample_pos + light_dir * 30000.f), num_sample);
+    //float3 T1 = TransmittanceNumerical(sample_pos,
+    //(sample_pos + light_dir * 100e3f /*大気の厚さ*/ /** (1.0f+air_mass)*/),
+    //adaptive_samples);
+    float3 T1 = TransmittanceApprox(sample_pos, sample_pos + light_dir * 100e3f);
     //中継点方向
-    float3 T2 = TransmittanceNumerical(position, sample_pos, num_sample);
+    //float3 T2 = TransmittanceNumerical(position, sample_pos, adaptive_samples);
+    float3 T2 = TransmittanceApprox(position, sample_pos);
     
-    //二次入散乱の近似
-    float3 L2 = T1 * sigma_s * phase * Ei;
-    //代表値
+    //光学的厚さ τを簡易的に推定
+    //積分をしたくないので設定
+    float approx_sun_distance = 100e3f;//大気圏厚み
+    float sigma_t_avg = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f;//チャンネル平均
+    float tau_sun = min(sigma_t_avg * approx_sun_distance, 2.0f); //単純近似の光学的深さ
+    
+    //単一散乱寄与
+    //ここでサンプル店の寄与量を調整するために、stepLength  掃討のスケールをかける
+    float step_scale = 10e4f;
+    float3 L2 = T1 * sigma_s * phase * Ei * step_scale;
+    
+    //多重散乱係数f_ms
+    //f_ms=omega_avg*(1-exp(-tau_sun))： τ が大きいほど多重散乱が増える
     float3 omega = sigma_s / max(sigma_t, float3(1e-6, 1e-6, 1e-6)); // アルベド（散乱/全係数）
     float omega_avg = (omega.x + omega.y + omega.z) / 3.0;
-    float f_ms = saturate(omega_avg * 0.9);
+    float f_ms = saturate(omega_avg * (1.0f - exp(-tau_sun)));
+    
+    //F_ms：漸か式近似1/(1-f_ms)
     float F_ms = 1.0 / max(1.0 - f_ms, 1e-3f);
-    F_ms = min(F_ms, 4.0f); // 最大2~4倍程度に制限（経験則）
+    F_ms = min(F_ms * (1.0f+sunset_factor*4.0f), 1.0f+tau_sun); // 最大2~4倍程度に制限（経験則）
 
+    //最終psiに対してT2をかけて視線上の減衰を考慮
     float3 psi_ms = L2 * F_ms * T2;
+
     
     return psi_ms;
 }
 
 //散乱光の計算(シングルスキャッタリング＋その地点までの散乱光)
-float3 ComputeSkyColor(float3 cameraPos, float3 viewDir, float3 lightDir)
+float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
 {
-    const int numSamples = 4;
-    const float atmosphereHeight = 100000.0;
-    float stepSize = atmosphereHeight / numSamples;
-    float3 result = float3(0.0, 0.0, 0.0);
     
-    float cos_theta = clamp(dot(viewDir, lightDir), -1.0f, 1.0f); //視線と太陽の角度
-    float3 Ei = float3(1.0, 0.9, 0.7); //太陽光の色
+    float cos_theta = clamp(dot(view_dir, light_dir), 0.0f, 1.0f); //視線と太陽の角度
+    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
+    float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
+    //kasten-Young 1989近似
+    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
+    air_mass = min(air_mass, 50.0f); // 極端な値を制限
 
-    for (int i = 0; i < numSamples; ++i)
+    float sunset_factor = saturate((air_mass - 1.0f) / 10.0f); //1~10を0～1に正規化
+    float3 Ei = lerp(float3(1.0, 1.0, 1.0), float3(1.0, 0.6, 0.3), sunset_factor);
+    
+    //太陽に近いほど1.0
+    float angle_factor = pow(saturate(cos_theta),2.0f);
+    float phase_rayliegh = min(1.0f, RayleighPhase(cos_theta));
+    //夕焼けを作る際、夕焼けは太陽の傾きによるミー散乱の強化が主な要因の為、
+    //太陽の傾きで強くする
+    float phase_mie = MiePhase(cos_theta, 0.8f) * (0.01f+ sunset_factor*0.05f );
+    
+    //青空の時は変化が少ないのでサンプル数を減らし、
+    //変化の多い地平線付近だけ多めにする
+    const int num_samples = 64;
+    float horizon_factor = saturate(1.0f - sun_elevation);
+    float samples_f = lerp(8.0f, (float) num_samples, horizon_factor);
+    int adaptive_samples = max(1, (int) round(samples_f)); // round() -> float, cast -> int
+
+    const float atmosphere_height = 100000.0;
+    float step_size = atmosphere_height / adaptive_samples;
+    float3 result = float3(0.0, 0.0, 0.0);
+    for (int i = 0; i < adaptive_samples; ++i)
     {
-        float t = i * stepSize;
-        float3 samplePos = cameraPos + viewDir * t;
-        float h = max(0.0f, length(samplePos) - 6360000.0f);
-        if(h<-0.1f)
+        //float t = i * step_size;
+        float u = (i + 0.5f) / adaptive_samples;
+        float t = atmosphere_height * (1.0f - pow(1.0f - u, 2.0f)); // 下層に多く
+
+        float3 sample_pos = camera_pos + view_dir * t;
+        float h =  length(sample_pos) - 6360000.0f;
+
+        //100メートル地下ならば、考慮に入れなくても良い
+        if (h < -100.0f)
         {
             continue;
         }
         
-        float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
+        float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
+                
+        //float3 T1 = TransmittanceNumerical(camera_pos, sample_pos, adaptive_samples);
+        //float3 T2 = TransmittanceNumerical(sample_pos, sample_pos + light_dir * atmosphere_height/* * (1.0f+air_mass)*/,
+        //adaptive_samples);
+        float3 T1 = TransmittanceApprox(camera_pos, sample_pos);
+        float3 T2 = TransmittanceApprox(sample_pos, sample_pos + light_dir * atmosphere_height);
         
-        //太陽に近いほど1.0
-        float angle_factor = saturate(cos_theta);
-        float phase_rayliegh =min(RayleighPhase(cos_theta),0.05f) * angle_factor;
-        float phase_mie = min(MiePhase(cos_theta, 0.8f), 0.0005f);
-        
-        float3 T1 = TransmittanceNumerical(cameraPos, samplePos, numSamples);
-        float3 T2 = TransmittanceNumerical(samplePos, samplePos + lightDir * atmosphereHeight, numSamples);
-        
-        result += T1 * sigma_t * ((phase_rayliegh + phase_mie)) * T2 * Ei * stepSize;
+        result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size * 5.0f;
     }
     
     return result;
@@ -158,7 +218,7 @@ float3 ComputeSkyColor(float3 cameraPos, float3 viewDir, float3 lightDir)
 
 //大気散乱
 float4 main(VS_OUT pin):SV_TARGET
-{
+{    
     float4 color = sky_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord);
   
     //大気散乱    
@@ -171,18 +231,19 @@ float4 main(VS_OUT pin):SV_TARGET
     //カメラの現在位置を地球の半径分押し上げる
     float3 position = camera_position.xyz + float3(0.f, 6360000.f, 0.f);
     //カメラから天球の各頂点への方向
-    float3 viewDir = normalize(pin.world_pos.xyz - camera_position.xyz); //camera->頂点まで方向
+    float3 view_dir = normalize(pin.world_pos.xyz - camera_position.xyz); //camera->頂点まで方向
     
     //疑似多重散乱の事前計算
-    float3 multi_scattaring = PrecomputeMultiScattering(position, viewDir, light_dir);
+    float3 multi_scattaring = PrecomputeMultiScattering(position, view_dir, sun_dir);
     
     ////シングルスキャッタリング
     float3 single_scattaring = ComputeSkyColor(
     position,
-    viewDir,
+    view_dir,
     sun_dir);
     
-    sky_color = (multi_scattaring /*+ single_scattaring*/);
+    sky_color += multi_scattaring;
+    sky_color += single_scattaring;
     
     //太陽
     {
@@ -192,7 +253,7 @@ float4 main(VS_OUT pin):SV_TARGET
         float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
         float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
         
-        float cos_theta = clamp(dot(viewDir, light_dir), -1.0f, 1.0f); //視線と太陽の角度
+        float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //視線と太陽の角度
         float3 Ei = float3(1.0, 0.9, 0.7); //太陽光の色
         
         float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
@@ -200,7 +261,7 @@ float4 main(VS_OUT pin):SV_TARGET
         // 太陽のディスク内に視線が入っているときだけ加算
         if (sun_disk > 0.01f) // しきい値で完全に限定
         {
-            sky_color += Lo * 0.04f;
+            sky_color += Lo * 0.4f;
         }
     }
     

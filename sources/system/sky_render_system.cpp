@@ -112,50 +112,57 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng)
 
 void SkyRenderSystem::Render()
 {
-    comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
+    frame_count_++;
+    //if (frame_count_ % 1 == 0)
+    {
+        frame_count_ = 0;
 
-        ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+        comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
 
-        RenderState render_state(Graphics::Instance().GetDevice());
-        // 深度・カリング設定（球の内側を描画）
-        render_state.GetDepthStencilState(DepthState::no_test_no_write);
-        render_state.GetRasterizerState(RasterizerState::solid_cull_none);
-        render_state.GetSamplerState(SamplerState::linear_clamp);
+            ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
-        // シェーダー設定
-        context->VSSetShader(sky_vs_.Get(), nullptr, 0);
-        context->PSSetShader(sky_ps_.Get(), nullptr, 0);
-        context->IASetInputLayout(sky_input_.Get());
+            RenderState render_state(Graphics::Instance().GetDevice());
+            // 深度・カリング設定（球の内側を描画）
+            render_state.GetDepthStencilState(DepthState::no_test_no_write);
+            render_state.GetRasterizerState(RasterizerState::solid_cull_none);
+            render_state.GetSamplerState(SamplerState::linear_clamp);
 
-        // 頂点・インデックスバッファ設定
-        UINT stride = sizeof(DirectX::XMFLOAT3) + sizeof(DirectX::XMFLOAT2); // SkyVertex構造に合わせる
-        UINT offset = 0;
-        context->IASetVertexBuffers(0, 1, vertex_buffer_.GetAddressOf(), &stride, &offset);
-        context->IASetIndexBuffer(index_buffer_.Get(), DXGI_FORMAT_R32_UINT, 0);
-        context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            // シェーダー設定
+            context->VSSetShader(sky_vs_.Get(), nullptr, 0);
+            context->PSSetShader(sky_ps_.Get(), nullptr, 0);
+            context->IASetInputLayout(sky_input_.Get());
 
-        // テクスチャ設定（必要なら）
-        auto* texture = comp_mng_.TryGetByEntity<ComponentTexture>(entity_id);
-        if (texture)
-        {
-         context->PSSetShaderResources(0, 1, texture->texture.GetAddressOf());
-        }
-        //定数バッファの設定
-        RayleighConstants data = rayleigh_constant;
-        context->UpdateSubresource(rayleigh_constant_buffer_.Get(), 0, 0, &data, 0, 0);
-         Graphics::Instance().SetConstantBuffer(
-             static_cast<int>(ConstantBufferSlot::kSkyRayleigh),
-             1, 
-             rayleigh_constant_buffer_.GetAddressOf());
+            // 頂点・インデックスバッファ設定
+            UINT stride = sizeof(DirectX::XMFLOAT3) + sizeof(DirectX::XMFLOAT2); // SkyVertex構造に合わせる
+            UINT offset = 0;
+            context->IASetVertexBuffers(0, 1, vertex_buffer_.GetAddressOf(), &stride, &offset);
+            context->IASetIndexBuffer(index_buffer_.Get(), DXGI_FORMAT_R32_UINT, 0);
+            context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-        // 描画呼び出し
-        context->DrawIndexed(index_count_, 0, 0);
+            // テクスチャ設定（必要なら）
+            auto* texture = comp_mng_.TryGetByEntity<ComponentTexture>(entity_id);
+            if (texture)
+            {
+                context->PSSetShaderResources(0, 1, texture->texture.GetAddressOf());
+            }
+            //定数バッファの設定
+            RayleighConstants data = rayleigh_constant;
+            context->UpdateSubresource(rayleigh_constant_buffer_.Get(), 0, 0, &data, 0, 0);
+            Graphics::Instance().SetConstantBuffer(
+                static_cast<int>(ConstantBufferSlot::kSkyRayleigh),
+                1,
+                rayleigh_constant_buffer_.GetAddressOf());
 
-        // シェーダー解除（任意）
-        context->VSSetShader(nullptr, nullptr, 0);
-        context->PSSetShader(nullptr, nullptr, 0);
-        ID3D11ShaderResourceView* null_shader[]{ nullptr };
-        context->PSSetShaderResources(0, 1, null_shader);
-        Graphics::Instance().ClearConstantBuffers();
-        });
+            // 描画呼び出し
+            context->DrawIndexed(index_count_, 0, 0);
+
+            // シェーダー解除（任意）
+            context->VSSetShader(nullptr, nullptr, 0);
+            context->PSSetShader(nullptr, nullptr, 0);
+            ID3D11ShaderResourceView* null_shader[]{ nullptr };
+            context->PSSetShaderResources(0, 1, null_shader);
+            Graphics::Instance().ClearConstantBuffers();
+            });
+    }
+
 }

@@ -15,6 +15,9 @@ public:
 private:
     ComponentManager& comp_mng_;
 
+    UINT frame_count_{0};//マイフレーム計算は重いので、特定のフレームのみで描画する
+    
+
     //頂点構造
     struct SkyVertex {
         DirectX::XMFLOAT3 position;
@@ -24,8 +27,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer>index_buffer_;
 
     // メッシュ生成パラメータ
-    const unsigned int latitude_segments_ = 16;
-    const unsigned int longitude_segments_ = 32;
+    const unsigned int latitude_segments_ = 64;
+    const unsigned int longitude_segments_ = 128;
     const float radius_ = 1000.f;
     UINT index_count_;
 
