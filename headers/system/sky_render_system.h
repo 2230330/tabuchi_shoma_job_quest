@@ -44,16 +44,10 @@ private:
     //https://speakerdeck.com/fadis/konpiyutagurahuikusunokong?slide=26
     struct RayleighConstants
     {
-        //DirectX::XMFLOAT4 sun_parameter{1.0f,1.0f,1.0f,20.f};//xyz:color,a:intensity
 
-        float planet_radius{6360000.f};            //地球の半径m
-        float atmosphere_radius{6460000.f};        //大気の半径（地球の大気は大体100㎞）m
         float height{ 0.f };//自身の高度
 
-        float rayleigh_scale_height{8.0f};    //b分子密度の減り具合km
-        DirectX::XMFLOAT3 rayleigh_coeff{ 0.000005802f,0.000013558f,0.0000331f};//波長依存係数
-
-        float dummy;
+        DirectX::XMFLOAT3 dummy;
     };
     RayleighConstants rayleigh_constant;
     Microsoft::WRL::ComPtr<ID3D11Buffer>rayleigh_constant_buffer_;

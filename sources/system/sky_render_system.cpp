@@ -146,6 +146,7 @@ void SkyRenderSystem::Render()
                 context->PSSetShaderResources(0, 1, texture->texture.GetAddressOf());
             }
             //定数バッファの設定
+            rayleigh_constant.height = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id)->value.y*1e3f;
             RayleighConstants data = rayleigh_constant;
             context->UpdateSubresource(rayleigh_constant_buffer_.Get(), 0, 0, &data, 0, 0);
             Graphics::Instance().SetConstantBuffer(
