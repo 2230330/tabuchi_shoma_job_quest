@@ -36,8 +36,8 @@ void ComponentEditor::DrawImgui()
             comp_mng_.Add(entity, l2w);
         }
 
-        //空の追加
-        if (ImGui::Button("add sky"))
+        //大気の追加
+        if (ImGui::Button("add atmosphere"))
         {
 
             if (has_sky_<0)
@@ -64,6 +64,36 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.RemoveAllComponents(has_sky_); // すべてのコンポーネントを削除
 
                 has_sky_ = -1;
+            }
+        }
+        //雲の追加
+        if (ImGui::Button("add cloud"))
+        {
+
+            if (has_cloud_ < 0)
+            {
+                uint32_t entity = enti_mng_.Add();
+                //基礎情報の追加
+                ComponentPosition position{};
+                comp_mng_.Add<ComponentPosition>(entity, position);
+                ComponentRotation rotation{};
+                comp_mng_.Add<ComponentRotation>(entity, rotation);
+                ComponentScale scale;
+                scale.value = { 1.f, 1.f, 1.f };
+                comp_mng_.Add(entity, scale);
+                ComponentLocalToWorld l2w{};
+                comp_mng_.Add(entity, l2w);
+                ComponentCloudDome cloud_dome;
+                comp_mng_.Add(entity, cloud_dome);
+
+                has_cloud_ = entity;
+            }
+            else
+            {
+                enti_mng_.Remove(has_cloud_); // alive = false にする
+                comp_mng_.RemoveAllComponents(has_cloud_); // すべてのコンポーネントを削除
+
+                has_cloud_ = -1;
             }
         }
 

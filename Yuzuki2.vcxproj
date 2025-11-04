@@ -213,6 +213,7 @@
     <ClInclude Include="headers\archetype\archetype.h" />
     <ClInclude Include="headers\archetype\archetype_manager.h" />
     <ClInclude Include="headers\camera.h" />
+    <ClInclude Include="headers\component\component_cloud_dome.h" />
     <ClInclude Include="headers\component\component_color.h" />
     <ClInclude Include="headers\component\component_editor.h" />
     <ClInclude Include="headers\component\component_gltf.h" />
@@ -255,6 +256,7 @@
     <ClInclude Include="headers\sprite.h" />
     <ClInclude Include="headers\sprite_batch.h" />
     <ClInclude Include="headers\static_mesh.h" />
+    <ClInclude Include="headers\system\cloud_render_system.h" />
     <ClInclude Include="headers\system\follow_camera_update_system.h" />
     <ClInclude Include="headers\system\i_render_system.h" />
     <ClInclude Include="headers\system\i_update_system.h" />
@@ -300,6 +302,7 @@
     <ClCompile Include="sources\sprite.cpp" />
     <ClCompile Include="sources\sprite_batch.cpp" />
     <ClCompile Include="sources\static_mesh.cpp" />
+    <ClCompile Include="sources\system\cloud_render_system.cpp" />
     <ClCompile Include="sources\system\follow_camera_update_system.cpp" />
     <ClCompile Include="sources\system\instancing_render_system.cpp" />
     <ClCompile Include="sources\system\render_system.cpp" />
@@ -313,6 +316,7 @@
   <ItemGroup>
     <None Include="shaderes\bidirectional_reflectance_distribution_function.hlsli" />
     <None Include="shaderes\bloom.hlsli" />
+    <None Include="shaderes\cloud_dome.hlsli" />
     <None Include="shaderes\forward_light.hlsli" />
     <None Include="shaderes\fullscreen_quad.hlsli" />
     <None Include="shaderes\gbuffer.hlsli" />
@@ -335,6 +339,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_dome_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_dome_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\fullscreen_quad_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

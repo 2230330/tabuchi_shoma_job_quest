@@ -27,8 +27,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer>index_buffer_;
 
     // メッシュ生成パラメータ
-    const unsigned int latitude_segments_ = 64;
-    const unsigned int longitude_segments_ = 128;
+    const unsigned int latitude_segments_ = 16;
+    const unsigned int longitude_segments_ = 32;
     const float radius_ = 1000.f;
     UINT index_count_;
 

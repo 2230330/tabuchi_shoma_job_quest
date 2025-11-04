@@ -254,6 +254,12 @@
     <ClInclude Include="headers\system\follow_camera_update_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\system\cloud_render_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_cloud_dome.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -376,6 +382,9 @@
     <ClCompile Include="sources\system\follow_camera_update_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
+    <ClCompile Include="sources\system\cloud_render_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaderes\geometric_primitive.hlsli">
@@ -427,6 +436,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\sky_atmosphere.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\cloud_dome.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -507,6 +519,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\sky_atmosphere_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_dome_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_dome_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
