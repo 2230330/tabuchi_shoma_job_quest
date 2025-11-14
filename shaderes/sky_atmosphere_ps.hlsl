@@ -274,7 +274,7 @@ float4 main(VS_OUT pin):SV_TARGET
         }
     }
     
-    sky_color *= directional_light.intensity;
+    //sky_color *= directional_light.intensity;
     
 
     return float4(sky_color.xyz, 1.0f);

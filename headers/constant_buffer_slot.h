@@ -9,7 +9,8 @@ enum class ConstantBufferSlot :uint8_t {
     kPostEffect,
 
     kCustomStart = 10,
-    kSkyRayleigh = kCustomStart + 0,
+    kSkyRayleigh = kCustomStart + 1,
+    kCloudDome = kCustomStart + 2,
 
     kCount
 };

@@ -1,9 +1,12 @@
 #include"../../headers/system/render_system_manager.h"
+
+#include"../../headers/graphics.h"
 #include"../../headers/system/render_system.h"
 #include"../../headers/system/instancing_render_system.h"
 #include"../../headers/system/sprite_render_system.h"
 #include"../../headers/system/sky_render_system.h"
 #include"../../headers/system/cloud_render_system.h"
+
 
 RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)

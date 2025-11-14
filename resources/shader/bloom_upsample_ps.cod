@@ -166,7 +166,10 @@ div r0.xyz, r0.xyzx, r0.wwww
 mul r0.xyz, r0.xyzx, cb4[0].yyyy
 
 #line 31
+mov r0.w, l(1.000000)  // r0.w <- alpha
+
+#line 33
 mov o0.xyz, r0.xyzx
-mov o0.w, l(1.000000)
+mov o0.w, r0.w
 ret 
-// Approximately 61 instruction slots used
+// Approximately 62 instruction slots used

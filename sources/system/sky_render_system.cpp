@@ -157,13 +157,10 @@ void SkyRenderSystem::Render()
             // 描画呼び出し
             context->DrawIndexed(index_count_, 0, 0);
 
-            // シェーダー解除（任意）
-            context->VSSetShader(nullptr, nullptr, 0);
-            context->PSSetShader(nullptr, nullptr, 0);
-            ID3D11ShaderResourceView* null_shader[]{ nullptr };
-            context->PSSetShaderResources(0, 1, null_shader);
-            Graphics::Instance().ClearConstantBuffers();
-            });
-    }
+            Graphics::Instance().ClearConstantBuffers(static_cast<int>(ConstantBufferSlot::kSkyRayleigh), 1);
 
+            });
+
+
+    }
 }

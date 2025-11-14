@@ -428,7 +428,7 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 				);
 			}
 			immediate_context->UpdateSubresource(primitive_joint_cbuffer.Get(), 0, 0, &primitive_joint_data, 0, 0);
-			immediate_context->VSSetConstantBuffers(3, 1, primitive_joint_cbuffer.GetAddressOf());
+			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer.GetAddressOf());
 		}
 		if (node.mesh > -1)
 		{
@@ -557,7 +557,7 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 				);
 			}
 			immediate_context->UpdateSubresource(primitive_joint_cbuffer.Get(), 0, 0, &primitive_joint_data, 0, 0);
-			immediate_context->VSSetConstantBuffers(3, 1, primitive_joint_cbuffer.GetAddressOf());
+			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer.GetAddressOf());
 		}
 		if (node.mesh > -1)
 		{

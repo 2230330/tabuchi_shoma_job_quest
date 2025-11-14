@@ -12,7 +12,7 @@ struct VS_OUT
 };
 
 
-cbuffer RAYLEIGH_CONSTANT_BUFFER_ : register(b10)
+cbuffer RAYLEIGH_CONSTANT_BUFFER_ : register(b11)
 {
     //float4 sun_parameter; //xyz:color,a:intensity
     

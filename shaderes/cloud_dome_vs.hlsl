@@ -12,7 +12,7 @@ VS_OUT main(VS_IN vin)
     // 通常のビュー・プロジェクション変換（回転は反映させる）
     float4 view_pos = mul(float4(dome_pos, 1.0f), view_transform);
     vout.position = mul(view_pos, projection_transform);
-
+    
     vout.texcoord = vin.texcoord;
 
     return vout;

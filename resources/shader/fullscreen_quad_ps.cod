@@ -6,7 +6,7 @@
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
-// sampler_states[1]                 sampler      NA          NA             s1      1 
+// sampler_states[3]                 sampler      NA          NA             s3      1 
 // texture_map                       texture  float4          2d             t0      1 
 //
 //
@@ -27,7 +27,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_sampler s1, mode_default
+dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
@@ -37,7 +37,7 @@ dcl_output o0.xyzw
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\fullscreen_quad_ps.hlsl"
-sample_indexable(texture2d)(float,float,float,float) o0.xyzw, v1.xyxx, t0.xyzw, s1
+#line 12 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\fullscreen_quad_ps.hlsl"
+sample_indexable(texture2d)(float,float,float,float) o0.xyzw, v1.xyxx, t0.xyzw, s3
 ret 
 // Approximately 2 instruction slots used

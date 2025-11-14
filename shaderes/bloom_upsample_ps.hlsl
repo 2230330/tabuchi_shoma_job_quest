@@ -28,5 +28,7 @@ float4 main(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARG
     sampled_color /= total_weight; // •½‹Ï‰»
     sampled_color *= bloom_intensity; // ’è”‚Å‘S‘Ì‹­“x‚ğ§Œä
 
-    return float4(sampled_color, 1.0);
+    float alpha = 1.0f;
+    
+    return float4(sampled_color, alpha);
 }

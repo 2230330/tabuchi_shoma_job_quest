@@ -260,6 +260,9 @@
     <ClInclude Include="headers\component\component_cloud_dome.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_intensity.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">

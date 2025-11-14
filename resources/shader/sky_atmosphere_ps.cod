@@ -80,7 +80,7 @@
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
 // FORWARD_LIGHT_CONSTANT_BUFFER     cbuffer      NA          NA            cb3      1 
-// RAYLEIGH_CONSTANT_BUFFER_         cbuffer      NA          NA           cb10      1 
+// RAYLEIGH_CONSTANT_BUFFER_         cbuffer      NA          NA           cb11      1 
 //
 //
 //
@@ -101,7 +101,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB10[1], immediateIndexed
+dcl_constantbuffer CB11[1], immediateIndexed
 dcl_constantbuffer CB1[3], immediateIndexed
 dcl_constantbuffer CB3[5], immediateIndexed
 dcl_input_ps linear v2.xyz
@@ -148,7 +148,7 @@ mov r2.yzw, l(0,0.000000,0.000000,0.000000)  // r2.y <- INV_WAVELENGTH4.x; r2.z 
 itof r3.xyz, l(0, 0, 0, 0)  // r3.x <- sky_color.x; r3.y <- sky_color.y; r3.z <- sky_color.z
 
 #line 235
-add r4.y, r1.y, cb10[0].x  // r4.y <- position.y
+add r4.y, r1.y, cb11[0].x  // r4.y <- position.y
 mov r4.xz, l(0,0,0,0)  // r4.x <- position.x; r4.z <- position.z
 
 #line 236
@@ -1009,11 +1009,8 @@ if_nz r0.w
 #line 274
 endif 
 
-#line 277
-mul r0.xyz, r0.xyzx, cb3[4].xxxx
-
 #line 280
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 
-// Approximately 563 instruction slots used
+// Approximately 562 instruction slots used

@@ -175,7 +175,7 @@ void SceneTest::RenderCore(float elapsed_time)
 {
     HRESULT hr{ S_OK };
 
-    FLOAT color[]{ .5f,.5f,.5f,1.f };
+    FLOAT color[]{ .0f,.0f,.0f,1.f };
 
     ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
     RenderState* render_state = Graphics::Instance().GetRenderState();
