@@ -326,6 +326,7 @@
     <None Include="shaderes\gltf_model_gbuffer.hlsli" />
     <None Include="shaderes\image_based_lighting.hlsli" />
     <None Include="shaderes\light.hlsli" />
+    <None Include="shaderes\noise_functions.hlsli" />
     <None Include="shaderes\scene_constant_buffer.hlsli" />
     <None Include="shaderes\shading_functions.hlsli" />
     <None Include="shaderes\skinned_mesh.hlsli" />

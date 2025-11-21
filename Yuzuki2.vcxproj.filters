@@ -444,6 +444,9 @@
     <None Include="shaderes\cloud_dome.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaderes\noise_functions.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">

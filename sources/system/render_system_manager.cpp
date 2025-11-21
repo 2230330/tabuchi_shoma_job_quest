@@ -28,5 +28,4 @@ void RenderSystemManager::RenderAll()
     for (auto& system : systems_) {
         system->Render();
     }
-
 }

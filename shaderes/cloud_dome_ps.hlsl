@@ -1,103 +1,74 @@
 #include"cloud_dome.hlsli"
 #include"forward_light.hlsli"
-#include"scene_constant_buffer.hlsli"
-#include"shading_functions.hlsli"
+#include "scene_constant_buffer.hlsli"
+#include "noise_functions.hlsli"
 
-Texture2D noise_texture : register(t0);
+static const float PI = 3.14159265359f;
 
-
-
-//簡易雲っぽいノイズ
-
-float SampleCloudNoise(float3 p, float scale)
+// 雲ノイズ（FBM＋Warp）
+float SampleCloudNoise(float3 p)
 {
-    // ワールド空間で雲を動かす
-    p.xz += wind_direction.xz * noise_seed;
+    // 座標をWarpして複雑化
+    p = Warp(p * 0.001f);
 
-    // 低周波ノイズで雲の塊を形成
-    float low_freq = PerlinNoiseFBM(p * 0.001f); // 大きな雲の分布
-    float high_freq = PerlinNoiseFBM(p * scale * 0.01f); // 細かいディテール
-    //float n = low_freq * 0.7 + high_freq * 0.3;
-    float n = low_freq * lerp(0.8f,1.2f,high_freq);
-    n = pow(saturate(n), 1.5f);
-    //ノイズコントラスト
-    n *= noise_intensity;
+    // FBMで雲形状
+    float fbm = FBM(p);
 
-    // 高度による減衰
-    float height_factor = saturate((p.y - cloud_base) / (cloud_top - cloud_base));
-    height_factor = smoothstep(0.2f, 0.8f, height_factor);
-    n *= height_factor;
+    // コントラスト強化
+    fbm = pow(saturate(fbm), 1.5f);
 
-    //return saturate(n - noise_threshold);
-    return n;
+    return fbm;
 }
+
+// 雲密度
 float SampleCloudDensity(float3 pos)
 {
-    // 雲の高さ範囲（例：コンスタントバッファの cloud_base / cloud_top を使用）
     if (pos.y < cloud_base || pos.y > cloud_top)
         return 0.0f;
 
-    // ノイズ空間へ座標をスケール
-    float3 noise_pos = pos * 0.001f + wind_direction.xyz * noise_seed;
+    // 高度フォールオフ
+    float h = saturate((pos.y - cloud_base) / (cloud_top - cloud_base));
+    float bottom = exp(-h * h * 4.0f);
+    float top_fade = 1.0f - smoothstep(0.6f, 1.0f, h);
+    float height_factor = bottom * top_fade;
 
-    // 3Dノイズをサンプリング（Perlin, Worley, Curl など）
-    float base_noise = SampleCloudNoise(pos,1.f);
+    // ノイズで形状
+    float noise = SampleCloudNoise(pos + CurlNoise(pos * 0.01f)*noise_seed);
+    float density = smoothstep(noise_threshold, noise_threshold + 0.2f, noise);
 
-    // 閾値で制御
-    float density = saturate((base_noise - noise_threshold) * noise_intensity);
-
-    // 高さ減衰（上空ほど薄く、下層ほど濃く）
-    float height_factor = saturate((pos.y - cloud_base) / (cloud_top - cloud_base));
-    density *= (1.0f - height_factor);
-
-    return density;
+    return density * height_factor;
 }
 
-//福井先生の奴を参考にしてみた雲生成コード
-float RayMarchCloud(float3 ray_origin, float3 ray_dir, float max_distance, float base_step, int iteration)
-{
-    float total_density = 0.0f;
-    float distance = 0.0f;
-    
-    const float min_step = base_step * 0.25f; //密な個所
-    const float max_step = base_step * 2.0f; //ほぼ空気
-    const float density_threshold = 0.1f; //密度の閾値
-    
-    [loop]
-    for (int i = 0; i < iteration && distance < max_distance; i++)
-    {
-        float3 pos = ray_origin + ray_dir * distance;
-        float density = SampleCloudDensity(pos);
-        
-        //適応ステップ制御
-        float adapt = saturate(density / density_threshold);
-        float adaptive_step = lerp(max_step, min_step, adapt);
-        
-        total_density += density * adaptive_step;
-        
-        //光散乱などの追加処理はここで行う
-        
-        distance += adaptive_step;
-
-    }
-    
-    return total_density;
-}
-
-//フェーズ関数(ミー散乱)
+// Mie散乱フェーズ関数
 float MiePhase(float cos_theta, float g)
 {
-    //ヘニエイ・グリーンスタイン関数
     float g2 = g * g;
-    
-    return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
+    return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.5f) * 4.0f * PI);
 }
 
+// 光透過率（簡易シャドウ）
+float SampleLightTransmittance(float3 rayOrigin, float3 lightDir, float max_dist)
+{
+    const int LIGHT_STEPS = 4;
+    float step = max_dist / LIGHT_STEPS;
+    float t = 0.0f;
+    float T = 1.0f;
+    [unroll]
+    for (int i = 0; i < LIGHT_STEPS; ++i)
+    {
+        float3 p = rayOrigin + lightDir * t;
+        float d = SampleCloudDensity(p);
+        T *= exp(-d * step);
+        if (T < 0.01f)
+            return 0.0f;
+        t += step;
+    }
+    return T;
+}
 
+// メインレンダリング
 float4 main(VS_OUT pin) : SV_TARGET
 {
-    float4 color = 0;
-    
     float2 ndc = (pin.position.xy / viewport_size.xy) * 2.0f - 1.0f;
     ndc.y = -ndc.y;
 
@@ -105,79 +76,52 @@ float4 main(VS_OUT pin) : SV_TARGET
     end_pos /= end_pos.w;
 
     float3 ray_start = camera_position.xyz;
-    float3 ray_position = ray_start;
     float3 ray_dir = normalize(end_pos.xyz - ray_start);
-    
-    
+
     float3 sun_dir = normalize(-directional_light.direction.xyz);
     float cosTheta = dot(ray_dir, sun_dir);
-    float phase = MiePhase(cosTheta, 0.1f); // g=0.8で前方散乱強め
-    
-    float accumulate_alpha = 0.0f;
-    float shaft = 0.f;
-    //レイの方向が最底辺より下なら、描画しない(天球用)
+    float phase = MiePhase(cosTheta, 0.85f); // 強い前方散乱
+
     if (dot(ray_dir, float3(0, 1, 0)) < 0.01f)
-    {
-        return color;
-    }
+        return float4(0, 0, 0, 0);
 
-
-    //アダプティブステップ版
-    float min_step = step_size * 0.01f;
-    float max_step = step_size * 2.0f;
+    float step_size = (cloud_top - cloud_base) / iteration;
     float distance = 0.0f;
-    
-    //ランベルトベール減衰
+
     float transmittance = 1.0f;
-    float step = (cloud_top - cloud_base) / iteration;
+    float3 color = 0;
+
     [loop]
-    for (int i = 0; i < iteration&&distance<max_distance; i++)
+    for (int i = 0; i < iteration && distance < max_distance; i++)
     {
-        ray_position =ray_start+ ray_dir * distance; // 距離関数に基づいて進む
-        float density = SampleCloudDensity(ray_position);
-        
-        if (density > 0.001f) // ヒット
+        float3 ray_position = ray_start + ray_dir * distance;
+
+        if (ray_position.y > cloud_base && ray_position.y < cloud_top)
         {
-            //// 散乱光（太陽方向からの寄与）
-            float light_density = SampleCloudDensity(ray_position + normalize(-directional_light.direction.xyz) * 80.0f);
-            float light_intensity = exp(-light_density * 2.0f); // 雲の厚みによる減衰
-            float scatter = light_intensity * light_scatter_strength * intensity;
+            float density = SampleCloudDensity(ray_position);
 
-            
-            // 光の吸収
-            float absorption = exp(-density * step_size * 0.02f);
-            transmittance *= absorption;
+            if (density > 0.001f)
+            {
+                float tau = density * step_size * intensity;
+                float step_transmittance = exp(-tau);
 
-            // 散乱光の寄与を積分
-            color.rgb += transmittance * scatter * density * phase;
+                float light_t = SampleLightTransmittance(ray_position, sun_dir, cloud_top - cloud_base);
+                float scatter = density * light_t * light_scatter_strength * intensity * phase;
 
-            accumulate_alpha += (1.0f - absorption);
-            if (accumulate_alpha >= 1.f||transmittance < 0.01f)
-                break; //早期終了
+                color += transmittance * scatter * step_size;
+                transmittance *= step_transmittance;
+
+                if (transmittance < 0.01f)
+                    break;
+            }
         }
 
-        //shaft += density * intensity;
-
-        // アダプティブステップ
-        float adapt = saturate(density / 0.1f);
-        float adaptive_step = lerp(max_step, min_step, adapt);
-        distance += adaptive_step;
+        distance += step_size;
     }
-    
-    
-    
-    ////平均化
-    //shaft /= iteration;
-    
-    
-    //光の散乱強度で補正
-    float3 base_color = color.rgb*base_brightness;
-    
-    
-    //shaftの影響を高める
-    float3 final_color = lerp(base_color, float3(1, 1, 1), saturate(shaft * light_scatter_strength));//0.8は調整値
-    
-    
-    //出力の透明度をalpha_scaleで制御
-    return float4(final_color, accumulate_alpha * alpha_scale);
+
+    // トーンマッピング＋空色ブレンド
+    float3 final_color = color / (color + 1.0f); // Reinhardトーンマップ
+
+    float alpha = saturate(1.0f - transmittance) * alpha_scale;
+    return float4(final_color, alpha);
 }

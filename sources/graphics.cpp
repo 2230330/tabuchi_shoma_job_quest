@@ -35,7 +35,7 @@ void Graphics::Initialize(HWND hwnd)
         //スワップチェーンを作成するための設定オプション
         DXGI_SWAP_CHAIN_DESC swap_chain_desc;
         {
-            swap_chain_desc.BufferCount = 2;
+            swap_chain_desc.BufferCount = 3;
             swap_chain_desc.BufferDesc.Width = screen_width;
             swap_chain_desc.BufferDesc.Height = screen_height;
             swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;
@@ -69,6 +69,7 @@ void Graphics::Initialize(HWND hwnd)
             immediate_context_.GetAddressOf()
         );
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
     }
 
     //レンダーターゲットビューの生成
@@ -153,7 +154,9 @@ void Graphics::SetRenderTargets()
 //画面表示
 void Graphics::Present(UINT sync_interval)
 {
-    swap_chain_->Present(sync_interval, DXGI_PRESENT_ALLOW_TEARING);
+    HRESULT hr{ S_OK };
+    hr=swap_chain_->Present(sync_interval, DXGI_PRESENT_ALLOW_TEARING);
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 }
 
 void Graphics::SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers)

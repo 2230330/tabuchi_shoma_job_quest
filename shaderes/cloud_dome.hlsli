@@ -26,9 +26,10 @@ cbuffer CLOUD_RAY_MARCHING_CONSTNAT_BUFFER : register(b12)
     float alpha_scale;
     float light_scatter_strength;
     float base_brightness;
-    float padding1;
+    float padding0;
     
-    float4 wind_direction;
+    float3 wind_direction;
+    float padding1;
     
     float cloud_base;
     float cloud_top;

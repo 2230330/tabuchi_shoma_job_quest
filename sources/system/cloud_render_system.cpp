@@ -1,6 +1,7 @@
 ﻿#include"../../headers/system/cloud_render_system.h"
 
 #include<algorithm>
+#include<iostream>
 
 #include"../../headers/graphics.h"
 #include"../../headers/resource_manager.h"
@@ -121,7 +122,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng)
         {
             D3D11_BUFFER_DESC cb_desc{};
             cb_desc.Usage = D3D11_USAGE_DEFAULT;
-            cb_desc.ByteWidth = sizeof(CloudRayMarchingConstants);
+            cb_desc.ByteWidth = (sizeof(CloudRayMarchingConstants)+15)/16*16;//16バイト境界に丸め
             cb_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
             cb_desc.CPUAccessFlags=0;
             cb_desc.MiscFlags = 0;
@@ -188,9 +189,9 @@ void CloudRenderSystem::Render()
 
             {
                 float color[4] = { 0,0,0,1 };
-                context->ClearRenderTargetView(low_res_rtv.Get(),color);
+                context->ClearRenderTargetView(low_res_rtv.Get(), color);
                 context->OMSetRenderTargets(1, low_res_rtv.GetAddressOf(), nullptr);
-                
+
             }
 
             RenderState render_state(Graphics::Instance().GetDevice());
@@ -219,11 +220,10 @@ void CloudRenderSystem::Render()
             }
 
 
-            //定数バッファの設定
-        // 定数バッファ更新 (Map/Unmap)
+            //定数バッファの更新
             UpdateConstants(cloud);
             context->UpdateSubresource(
-                cloud_ray_marching_constant_buffer_.Get(), 0, nullptr, &cloud_ray_marching_constant_,0, 0);
+                cloud_ray_marching_constant_buffer_.Get(), 0, nullptr, &cloud_ray_marching_constant_, 0, 0);
             Graphics::Instance().SetConstantBuffer(
                 static_cast<int>(ConstantBufferSlot::kCloudDome),
                 1,

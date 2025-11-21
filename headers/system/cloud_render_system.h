@@ -44,9 +44,9 @@ private:
         int iteration{ 32 };//雲が存在する限界点
         float intensity{1.0f};//雲の輝度、シャフト強度
         float fog_scale{0.01f}; //   雲のスケール倍率
-        float step_size{ 100.f };//マーチング一ステップの長さ
+        float step_size{ 10.f };//マーチング一ステップの長さ
 
-        float max_distance{ 5000.f };//雲を追跡する最大距離
+        float max_distance{ 10000.f };//雲を追跡する最大距離
         float noise_intensity{ 1.5f };//ノイズのコントラスト
         float noise_threshold{ 0.1f };//雲の密度閾値
         float noise_seed{ 0.0f };//雲の乱数オフセット(風邪移動など)
@@ -59,12 +59,11 @@ private:
         DirectX::XMFLOAT3 wind_direction{ 0.01f,0.f,0.f };//雲を動かす方向
         float padding1{ 0 };
 
-        float cloud_base{ 2000.f };//雲の底面
-        float cloud_top{ 5000.f };//雲の上面
+        float cloud_base{ 500.f };//雲の底面
+        float cloud_top{ 2000.f };//雲の上面
         DirectX::XMFLOAT2 padding2{ 0,0 };
 
-    };
-    CloudRayMarchingConstants cloud_ray_marching_constant_;
+    }cloud_ray_marching_constant_;
     Microsoft::WRL::ComPtr<ID3D11Buffer>cloud_ray_marching_constant_buffer_;
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_res_srv = nullptr;
