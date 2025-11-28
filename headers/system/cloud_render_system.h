@@ -8,11 +8,13 @@
 class CloudRenderSystem :public IRenderSystem
 {
 public:
-    CloudRenderSystem(ComponentManager&comp_mng);
+    CloudRenderSystem(ComponentManager&comp_mng,RenderPass render_pass);
 
     void Render()override;
 
 private:
+    //初期に1度だけ呼び出し、ノイズマップを作成
+    void CreateNoiseTextures(ID3D11Device* device);
     void UpdateConstants(const ComponentCloudDome& cloud);
 
     ComponentManager& comp_mng_;
@@ -26,49 +28,51 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer>index_buffer_;
 
     // ドームメッシュ生成パラメータ
-    const float radius_ = 500.f;
+    const float radius_ = 1000.f;
     UINT index_count_;
 
     std::vector<SkyVertex> vertices_;
     std::vector<uint32_t> indices_;
 
     //シェーダー
-    Microsoft::WRL::ComPtr<ID3D11VertexShader>cloud_vs_;
-    Microsoft::WRL::ComPtr<ID3D11InputLayout>cloud_il_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_ps_;
 
 
     //定数バッファ
     struct CloudRayMarchingConstants
-    {
-        int iteration{ 32 };//雲が存在する限界点
-        float intensity{1.0f};//雲の輝度、シャフト強度
-        float fog_scale{0.01f}; //   雲のスケール倍率
-        float step_size{ 10.f };//マーチング一ステップの長さ
+    {//福井先生のコードを参考にしたやつ
+        DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
+        DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6001500.0f, 6004000.0f }; // highest and lowest altitudes at which clouds are distributed
 
-        float max_distance{ 10000.f };//雲を追跡する最大距離
-        float noise_intensity{ 1.5f };//ノイズのコントラスト
-        float noise_threshold{ 0.1f };//雲の密度閾値
-        float noise_seed{ 0.0f };//雲の乱数オフセット(風邪移動など)
+        float wind_speed = 1.0f; // [0.0, 20.0]
 
-        float alpha_scale{ 1.0f };//雲全体の透過率補正
-        float light_scatter_strength{ 1.f };//光の散乱補正
-        float base_brightness{ 1.f };//雲の基本輝度
-        float padding0{ 0 };
+        float density_scale = 0.05f; // [0.01, 0.2]
+        float cloud_coverage_scale = 0.2f; // [0.1, 1.0]
+        float rain_cloud_absorption_scale = 0.5;
+        float cloud_type_scale = 1.0f;
 
-        DirectX::XMFLOAT3 wind_direction{ 0.01f,0.f,0.f };//雲を動かす方向
-        float padding1{ 0 };
+        float earth_radius = 6000000.0f; // earth radius
+        float horizon_distance_scale = 1.0f;
+        float low_frequency_perlin_worley_sampling_scale = 0.00008f;
+        float high_frequency_worley_sampling_scale = 0.001f;
+        float cloud_density_long_distance_scale = 18.0f;
+        int enable_powdered_sugar_efffect = false;
 
-        float cloud_base{ 500.f };//雲の底面
-        float cloud_top{ 2000.f };//雲の上面
-        DirectX::XMFLOAT2 padding2{ 0,0 };
-
+        int ray_marching_steps = 128;
+        int auto_ray_marching_steps = false;
     }cloud_ray_marching_constant_;
     Microsoft::WRL::ComPtr<ID3D11Buffer>cloud_ray_marching_constant_buffer_;
 
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_res_srv = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView>low_res_rtv=nullptr;
-    D3D11_VIEWPORT vp{};
-    float down_sample{ 1.f };
+    //ノイズテクスチャ
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_perlin_worley_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>curl_noise_srv_ = nullptr;
+
+    const int high_freq_worley_dimensions{ 32 };
+    const int high_freq_worley_numthreads{ 8 };
+    const int low_freq_perlin_worley_dimensions{ 128 };
+    const int low_freq_perlin_worley_numthreads{ 8 };
+
     std::unique_ptr<FullscreenQuad>fullscreen_quad_;
 };

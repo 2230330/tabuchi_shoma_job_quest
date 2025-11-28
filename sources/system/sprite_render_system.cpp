@@ -4,8 +4,9 @@
 #include"../../headers/render_state.h"
 #include"../../headers/resource_manager.h"
 
-SpriteRenderSystem::SpriteRenderSystem(ComponentManager& comp_mng)
+SpriteRenderSystem::SpriteRenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
+    , IRenderSystem(render_pass)
 {
     ID3D11Device*device= Graphics::Instance().GetDevice();
 

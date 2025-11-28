@@ -5,8 +5,9 @@
 #include"../../headers/misc.h"
 #include"../../headers/constant_buffer_slot.h"
 
-SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng)
+SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_pass)
     :comp_mng_(comp_mng)
+    , IRenderSystem(render_pass)
 {
     ID3D11Device* device = Graphics::Instance().GetDevice();
 
@@ -125,7 +126,7 @@ void SkyRenderSystem::Render()
             // 深度・カリング設定（球の内側を描画）
             render_state.GetDepthStencilState(DepthState::no_test_no_write);
             render_state.GetRasterizerState(RasterizerState::solid_cull_none);
-            render_state.GetSamplerState(SamplerState::linear_clamp);
+            render_state.GetBlendState(BlendState::transparency);
 
             // シェーダー設定
             context->VSSetShader(sky_vs_.Get(), nullptr, 0);

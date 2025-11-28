@@ -12,6 +12,7 @@ enum class SamplerState
     linear_wrap,
     linear_clamp,
     anisotropic,
+    linear_mirror,
 
     enum_count
 };

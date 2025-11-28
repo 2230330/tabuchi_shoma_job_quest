@@ -231,7 +231,6 @@ float4 main(VS_OUT pin):SV_TARGET
     //大気散乱    
     float3 sky_color = float3(0, 0, 0);
 
-    //カメラの現在位置を地球の半径分押し上げる
     float3 position =  float3(0.f, height+EARTH_RADIUS, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
     float3 sun_pos = light_dir * SUN_DISTANCE; //太陽の位置()

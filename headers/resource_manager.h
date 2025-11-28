@@ -31,6 +31,7 @@ public:
         textures_.clear();
         vertex_shaders_.clear();
         pixel_shaders_.clear();
+        compute_shaders_.clear();
     }
 
     // GLTFモデルの読み込み（ロード済みなら共有）
@@ -44,7 +45,7 @@ public:
     Microsoft::WRL::ComPtr<ID3D11VertexShader> LoadVertexShader(ID3D11Device* device, const std::wstring& filename,
         ID3D11InputLayout**input_layout=nullptr,D3D11_INPUT_ELEMENT_DESC*input_element_desc=nullptr,UINT num_element=0);
     Microsoft::WRL::ComPtr<ID3D11PixelShader> LoadPixelShader(ID3D11Device* device, const std::wstring& filename);
-
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader> LoadComputeShader(ID3D11Device* device, const std::wstring& filename);
 
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>LoadTextureFromFile(ID3D11Device* device, const wchar_t* filename);
@@ -65,5 +66,5 @@ private:
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> textures_;
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11VertexShader>> vertex_shaders_;
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11PixelShader>> pixel_shaders_;
-
+    std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ComputeShader>> compute_shaders_;
 };

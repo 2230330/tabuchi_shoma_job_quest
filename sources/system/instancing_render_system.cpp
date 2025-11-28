@@ -7,8 +7,9 @@
 #include"../../headers/graphics.h"
 #include"../../headers/misc.h"
 
-InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng)
+InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng, RenderPass render_pass )
     :comp_mng_(comp_mng)
+    ,IRenderSystem(render_pass)
 {
 }
 

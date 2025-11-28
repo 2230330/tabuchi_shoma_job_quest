@@ -143,39 +143,53 @@ void ComponentEditor::DrawImgui()
                 //â_ÇÃÇ›ÇÃèàóùÇ»ÇÃÇ≈ÅAè„ÇÃï˚Ç…íuÇ¢ÇƒÇ®Ç´Ç‹Ç∑
                 if (comp_mng_.Has<ComponentCloudDome>(entity.entity))
                 {
-                    auto& cloud = comp_mng_.GetByEntity<ComponentCloudDome>(entity.entity);
+                    auto& c = comp_mng_.GetByEntity<ComponentCloudDome>(entity.entity);
 
-                    ImGui::Text("Cloud Dome Parameters");
-                    ImGui::Separator();
-
-                    if (ImGui::CollapsingHeader("Base Settings", ImGuiTreeNodeFlags_DefaultOpen))
+                    if (ImGui::CollapsingHeader("Cloud Ray Marching Settings", ImGuiTreeNodeFlags_DefaultOpen))
                     {
-                        ImGui::DragInt("Iteration", &cloud.iteration, 1, 1, 2048);
-                        ImGui::DragFloat("Intensity", &cloud.intensity, 0.01f, 0.0f, 10.0f, "%.2f");
-                        ImGui::DragFloat("Fog Scale", &cloud.fog_scale, 0.0001f, 0.0f, 1.0f, "%.4f");
-                        ImGui::DragFloat("Step Size", &cloud.step_size, 1.0f, 1.0f, 1000.0f, "%.1f");
-                        ImGui::DragFloat("Max Distance", &cloud.max_distance, 10.0f, 0.0f, 10000.0f, "%.1f");
-                        ImGui::DragFloat("Cloud Base", &cloud.cloud_base, 100.0f, 500.0f, 13000.0f, "%.1f");
-                        ImGui::DragFloat("Cloud Top", &cloud.cloud_top, 100.0f, 500.0f, 13000.0f, "%.1f");
-                    }
+                        ImGui::Text("Wind");
+                        ImGui::DragFloat2("Wind Direction", reinterpret_cast<float*>(&c.wind_direction), 0.01f, -1.0f, 1.0f);
+                        ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 20.0f);
 
-                    if (ImGui::CollapsingHeader("Noise Settings"))
-                    {
-                        ImGui::DragFloat("Noise Intensity", &cloud.noise_intensity, 0.01f, 0.0f, 10.0f, "%.2f");
-                        ImGui::DragFloat("Noise Threshold", &cloud.noise_threshold, 0.001f, 0.0f, 1.0f, "%.3f");
-                        ImGui::DragFloat("Noise Seed", &cloud.noise_seed, 0.01f, -1000.0f, 1000.0f, "%.2f");
-                    }
+                        ImGui::Separator();
 
-                    if (ImGui::CollapsingHeader("Lighting Settings"))
-                    {
-                        ImGui::DragFloat("Alpha Scale", &cloud.alpha_scale, 0.01f, 0.0f, 10.0f, "%.2f");
-                        ImGui::DragFloat("Light Scatter Strength", &cloud.light_scatter_strength, 0.01f, 0.0f, 5.0f, "%.2f");
-                        ImGui::DragFloat("Base Brightness", &cloud.base_brightness, 0.01f, 0.0f, 10.0f, "%.2f");
-                    }
+                        ImGui::Text("Altitude");
+                        ImGui::DragFloat2("Cloud Altitude Min/Max", reinterpret_cast<float*>(&c.cloud_altitudes_min_max),
+                            10.0f, 0.0f, 6000000.0f);
 
-                    if (ImGui::CollapsingHeader("Wind Settings"))
-                    {
-                        ImGui::DragFloat3("Wind Direction", reinterpret_cast<float*>(&cloud.wind_direction), 0.001f, -1.0f, 1.0f, "%.3f");
+                        ImGui::Separator();
+
+                        ImGui::Text("Density / Coverage");
+                        ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.2f);
+                        ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.1f, 1.0f);
+                        ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 2.0f);
+                        ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
+
+                        ImGui::Separator();
+
+                        ImGui::Text("Ray March / Planet");
+                        ImGui::DragFloat("Earth Radius", &c.earth_radius, 1000.0f, 1000000.0f, 20000000.0f);
+                        ImGui::SliderFloat("Horizon Distance Scale", &c.horizon_distance_scale, 0.0f, 3.0f);
+
+                        ImGui::Separator();
+
+                        ImGui::Text("Noise Sampling");
+                        ImGui::DragFloat("Low Freq Sampling Scale", &c.low_frequency_perlin_worley_sampling_scale,
+                            0.00001f, 0.000001f, 0.01f, "%.8f");
+                        ImGui::DragFloat("High Freq Sampling Scale", &c.high_frequency_worley_sampling_scale,
+                            0.0001f, 0.000001f, 0.01f, "%.8f");
+
+                        ImGui::SliderFloat("Long Distance Density Scale", &c.cloud_density_long_distance_scale, 0.1f, 30.0f);
+
+                        ImGui::Separator();
+
+                        ImGui::Checkbox("Powdered Sugar Effect", reinterpret_cast<bool*>(&c.enable_powdered_sugar_efffect));
+
+                        ImGui::Separator();
+
+                        ImGui::Text("Ray March Quality");
+                        ImGui::SliderInt("Ray March Steps", &c.ray_marching_steps, 8, 512);
+                        ImGui::Checkbox("Auto Ray March Steps", reinterpret_cast<bool*>(&c.auto_ray_marching_steps));
                     }
 
                     ImGui::Separator();

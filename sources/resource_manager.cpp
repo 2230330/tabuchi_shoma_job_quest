@@ -5,6 +5,7 @@
 #include<functional>
 #include<filesystem>
 #include<iostream>
+#include<DirectXTex.h>
 
 #include"../headers/texture.h"
 #include"../headers/misc.h"
@@ -79,38 +80,123 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> ResourceManager::LoadPixelShader(ID3D1
     return shader;
 }
 
-Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ResourceManager::LoadTextureFromFile(ID3D11Device* device, const wchar_t* filename)
+Microsoft::WRL::ComPtr<ID3D11ComputeShader> ResourceManager::LoadComputeShader(ID3D11Device* device, const std::wstring& filename)
 {
-        HRESULT hr{ S_OK };
-        Microsoft::WRL::ComPtr<ID3D11Resource> resource;
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>shader_resource_view;
+    auto it = compute_shaders_.find(filename);
+    if (it != compute_shaders_.end())
+    {
+        return it->second;
+    }
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader> shader;
+    Microsoft::WRL::ComPtr<ID3DBlob> blob;
+    HRESULT hr = D3DReadFileToBlob(filename.c_str(), blob.GetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+    if (SUCCEEDED(hr))
+    {
+        hr = device->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+    }
+    if (FAILED(hr))
+    {
+        return nullptr;
+    }
+    compute_shaders_.emplace(filename, shader);
+    return shader;
+}
 
-        auto it = textures_.find(filename);
-        if (it != textures_.end())
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>
+ResourceManager::LoadTextureFromFile(ID3D11Device* device, const wchar_t* filename)
+{
+    HRESULT hr = S_OK;
+    Microsoft::WRL::ComPtr<ID3D11Resource> resource;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
+
+    // --- キャッシュ確認 ---
+    auto it = textures_.find(filename);
+    if (it != textures_.end())
+    {
+        return it->second;
+    }
+
+    std::filesystem::path dds_filename(filename);
+    dds_filename.replace_extension("dds");
+
+    //========================================================
+    //  DDS かつ Texture3D かどうかを事前に見極める
+    //========================================================
+    if (std::filesystem::exists(dds_filename))
+    {
+        DirectX::ScratchImage image;
+        DirectX::TexMetadata meta;
+
+        hr = DirectX::LoadFromDDSFile(dds_filename.c_str(), DirectX::DDS_FLAGS_NONE, &meta, image);
+        if (SUCCEEDED(hr))
         {
-            shader_resource_view = it->second;
-            (shader_resource_view)->GetResource(resource.GetAddressOf());
-        }
-        else
-        {
-            std::filesystem::path dds_filename(filename);
-            dds_filename.replace_extension("dds");
-            if (std::filesystem::exists(dds_filename.c_str()))
+            if (meta.dimension == DirectX::TEX_DIMENSION_TEXTURE3D)
             {
-                
-                hr = DirectX::CreateDDSTextureFromFile(device, dds_filename.c_str(), resource.GetAddressOf(), shader_resource_view.GetAddressOf());
+                //--------------------------------------------------------
+                // 3D テクスチャとして読み込む
+                //--------------------------------------------------------
+                D3D11_TEXTURE3D_DESC desc = {};
+                desc.Width = (UINT)meta.width;
+                desc.Height = (UINT)meta.height;
+                desc.Depth = (UINT)meta.depth;
+                desc.MipLevels = (UINT)meta.mipLevels;
+                desc.Format = meta.format;
+                desc.Usage = D3D11_USAGE_DEFAULT;
+                desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+                desc.CPUAccessFlags = 0;
+                desc.MiscFlags = 0;
+
+                std::vector<D3D11_SUBRESOURCE_DATA> initData(meta.mipLevels);
+                const DirectX::Image* imgs = image.GetImages();
+
+                for (size_t mip = 0; mip < meta.mipLevels; ++mip)
+                {
+                    initData[mip].pSysMem = imgs[mip].pixels;
+                    initData[mip].SysMemPitch = (UINT)imgs[mip].rowPitch;
+                    initData[mip].SysMemSlicePitch = (UINT)imgs[mip].slicePitch;
+                }
+
+                Microsoft::WRL::ComPtr<ID3D11Texture3D> tex3D;
+                hr = device->CreateTexture3D(&desc, initData.data(), tex3D.GetAddressOf());
                 _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-            }
-            else
-            {
-                hr = DirectX::CreateWICTextureFromFile(device, filename, resource.GetAddressOf(), shader_resource_view.GetAddressOf());
+
+                // --- SRV 作成 ---
+                D3D11_SHADER_RESOURCE_VIEW_DESC srvd = {};
+                srvd.Format = desc.Format;
+                srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+                srvd.Texture3D.MipLevels = desc.MipLevels;
+                srvd.Texture3D.MostDetailedMip = 0;
+
+                hr = device->CreateShaderResourceView(tex3D.Get(), &srvd, srv.GetAddressOf());
                 _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+                // キャッシュ登録
+                //textures_.insert({ filename, srv });
+                return srv;
             }
-            textures_.insert(std::make_pair(filename, shader_resource_view));
         }
-   
-    
-        return shader_resource_view;
+
+        // ここまで来たら → DDS だが 2D or CubeMap
+        hr = DirectX::CreateDDSTextureFromFile(
+            device, dds_filename.c_str(), resource.GetAddressOf(), srv.GetAddressOf()
+        );
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        textures_.insert({ filename, srv });
+        return srv;
+    }
+
+    //========================================================
+    //  DDS 以外（PNG, JPEG など）は従来通り WIC で読み込む
+    //========================================================
+    hr = DirectX::CreateWICTextureFromFile(
+        device, filename, resource.GetAddressOf(), srv.GetAddressOf()
+    );
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    textures_.insert({ filename, srv });
+    return srv;
 }
 
 Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ResourceManager::MakeDummyTexture(ID3D11Device* device, DWORD value, UINT dimension)

@@ -4,20 +4,23 @@
 struct ComponentCloudDome :public IComponent
 {
     int iteration{ 128 };//雲が存在する限界点
-    float intensity{ 1.0f };//雲の輝度、シャフト強度
-    float fog_scale{ 0.01f }; //   雲のスケール倍率
-    float step_size{ 10.f };//マーチング一ステップの長さ
+	DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
+	DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6001500.0f, 6004000.0f }; // highest and lowest altitudes at which clouds are distributed
 
-    float max_distance{ 10000.f };//雲を追跡する最大距離
-    float noise_intensity{ 1.5f };//ノイズのコントラスト
-    float noise_threshold{ 0.1f };//雲の密度閾値
-    float noise_seed{ 0.0f };//雲の乱数オフセット(風邪移動など)
+	float wind_speed = 1.0f; // [0.0, 20.0]
 
-    float alpha_scale{ 1.0f };//雲全体の透過率補正
-    float light_scatter_strength{ 1.f };//光の散乱補正
-    float base_brightness{ 1.f };//雲の基本輝度
-    DirectX::XMFLOAT3 wind_direction{ 0.01f,0.f,0.f };//雲を動かす方向
+	float density_scale = 0.05f; // [0.01, 0.2]
+	float cloud_coverage_scale = 0.2f; // [0.1, 1.0]
+	float rain_cloud_absorption_scale = 0.5;
+	float cloud_type_scale = 1.0f;
 
-    float cloud_base{ 500.f };//雲の底面
-    float cloud_top{ 2000.f };//雲の上面
+	float earth_radius = 6000000.0f; // earth radius
+	float horizon_distance_scale = 1.0f;
+	float low_frequency_perlin_worley_sampling_scale = 0.00008f;
+	float high_frequency_worley_sampling_scale = 0.001f;
+	float cloud_density_long_distance_scale = 18.0f;
+	int enable_powdered_sugar_efffect = false;
+
+	int ray_marching_steps = 128;
+	int auto_ray_marching_steps = false;
 };

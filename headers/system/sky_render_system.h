@@ -8,10 +8,9 @@
 class SkyRenderSystem:public IRenderSystem
 {
 public:
-    SkyRenderSystem(ComponentManager& comp_mng);
+    SkyRenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
 
     void Render()override;
-
 private:
     ComponentManager& comp_mng_;
 

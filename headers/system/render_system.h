@@ -9,7 +9,7 @@
 class RenderSystem :public IRenderSystem
 {
 public:
-    RenderSystem(ComponentManager& comp_mng);
+    RenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
 
     void Render()override;
 private:

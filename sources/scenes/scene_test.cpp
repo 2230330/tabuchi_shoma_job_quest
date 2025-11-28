@@ -195,6 +195,8 @@ void SceneTest::RenderCore(float elapsed_time)
         dc->PSSetSamplers(3, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::anisotropic);
         dc->PSSetSamplers(4, 1, sampler_state.GetAddressOf());
+        sampler_state = render_state->GetSamplerState(SamplerState::linear_mirror);
+        dc->PSSetSamplers(5, 1, sampler_state.GetAddressOf());
 
 
     }

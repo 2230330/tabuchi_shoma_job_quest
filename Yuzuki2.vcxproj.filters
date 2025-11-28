@@ -57,6 +57,9 @@
     <Filter Include="sources\post_process">
       <UniqueIdentifier>{b953fa68-1cc3-4d31-abdd-9f82a6cc4404}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\ComputeShader">
+      <UniqueIdentifier>{e48e0d9a-f8ba-440c-9b8f-27481d70fac4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\geometric_primitive.h">
@@ -447,6 +450,9 @@
     <None Include="shaderes\noise_functions.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaderes\perlin_worley_noise.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">
@@ -532,6 +538,12 @@
     </FxCompile>
     <FxCompile Include="shaderes\cloud_dome_ps.hlsl">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\high_freq_worley_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

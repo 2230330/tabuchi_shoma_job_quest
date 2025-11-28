@@ -22,14 +22,14 @@ float3 rand3(float3 p)
     )) * 43758.5453);
 }
 
-
-inline float Hash13(float3 position)
-{    
+float Hash13(float3 position)
+{
     return frac(sin(dot(position, float3(12.9898f, 78.233f, 37.719f))) * 43758.5453f);
 
 }
 
-inline float Grad3D(float hash, float3 position)
+
+float Grad3D(float hash, float3 position)
 {
     int h = int(1e4 * hash) & 15;
     float u = h < 8 ? position.x : position.y, v = h < 4 ? position.y : h == 12 || h == 14 ? position.x : position.z;
@@ -42,7 +42,7 @@ inline float Grad3D(float hash, float3 position)
 
 //ÉpÅ[ÉäÉìÉmÉCÉY
 //https://postd.cc/understanding-perlin-noise/
-inline float PerlinNoise(float3 position, uint seed = 63456.0f)
+float PerlinNoise(float3 position, uint seed = 63456.0f)
 {
     float3 pi = floor(position);
     float3 pf = position - pi;
@@ -70,7 +70,7 @@ inline float PerlinNoise(float3 position, uint seed = 63456.0f)
 
 }
 //  https://qiita.com/Tanoren/items/0b83aa9ab69fc56bbeca
-inline	float PerlinNoiseFBM(float3 position, uint seed = 63456.0f, float adjust_value = 0.5f)
+float PerlinNoiseFBM(float3 position, uint seed = 63456.0f, float adjust_value = 0.5f)
 {
     float noise_sum = 0.0f,
 		  frequency = 1.0f,
@@ -100,6 +100,23 @@ float Esgtsta(float4 v)
     return (EsgtsaOrig(EsgtsaOrig(EsgtsaOrig(EsgtsaOrig(uint(v.x)) + uint(v.y)) + uint(v.z)) + uint(v.w))) * 2.3283064365386962890625e-10f;
 }
 
+//https://andantesoft.hatenablog.com/entry/2024/12/19/193517
+float ibuki(float4 v)
+{
+    const uint4 mult =
+        uint4(0xae3cc725, 0x9fe72885, 0xae36bfb5, 0x82c1fcad);
+  
+    uint4 u = uint4(v);
+    u = u * mult;
+    u ^= u.wxyz ^ u >> 13;
+      
+    uint r = dot(u, mult);
+  
+    r ^= r >> 11;
+    r = (r * r) ^ r;
+          
+    return r * 2.3283064365386962890625e-10;
+}
 
 
 float WorleyNoise3D(float3 p)
@@ -133,10 +150,10 @@ float FBM(float3 p)
     float amp = 0.5;
     float freq = 1.0;
 
-    const int OCTAVES = 6; // ShadertoyÇÕ6Å`8Ç™ëΩÇ¢
+    const int OCTAVES = 2; // ShadertoyÇÕ6Å`8Ç™ëΩÇ¢
     for (int i = 0; i < OCTAVES; i++)
     {
-        sum += PerlinNoise(p * freq) * amp;
+        sum += ibuki(float4(p * freq, 1.0f)) * amp;
         freq *= 2.0;
         amp *= 0.5;
     }

@@ -1,8 +1,9 @@
 #include"../../headers/system/render_system.h"
 #include"../../headers/graphics.h"
 
-RenderSystem::RenderSystem(ComponentManager& comp_mng)
+RenderSystem::RenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
+    , IRenderSystem(render_pass)
 {
 }
 
