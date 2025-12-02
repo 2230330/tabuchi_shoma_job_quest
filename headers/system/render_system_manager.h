@@ -31,5 +31,5 @@ private:
     std::unique_ptr<FrameBuffer> back_framebuffer_;
     std::unique_ptr<FrameBuffer> object_framebuffer_;
 
-    float back_scale = 4.0f;
+    float back_scale = 2.0f;
 };

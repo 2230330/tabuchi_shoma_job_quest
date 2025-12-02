@@ -20,17 +20,41 @@ This tab contains all the necessary noise functions required to model a cloud sh
 #define UI3 uint3(UI0, UI1, 2798796415U)
 #define UIF (1.0 / float(0xffffffffU))
 
+//https://www.cs.ubc.ca/~rbridson/docs/schechter-sca08-turbulence.pdf 整数用の簡易ハッシュ関数
+uint EsgtsaOrig(uint s)
+{
+    s = (s ^ 2747636419u) * 2654435769;
+    s = (s ^ (s >> 16)) * 2654435769u;
+    s = (s ^ (s >> 16)) * 2654435769u;
+    return s;
+}
+//元々は自然な煙のアニメーションを生成するための関数らしいが、簡易なランダム値生成にも使える
+float Esgtsta(float4 v)
+{
+    return (EsgtsaOrig(EsgtsaOrig(EsgtsaOrig(EsgtsaOrig(uint(v.x)) + uint(v.y)) + uint(v.z)) + uint(v.w))) * 2.3283064365386962890625e-10f;
+}
 float3 hash33(float3 p)
 {
     uint3 q = uint3(int3(p)) * UI3;
     q = (q.x ^ q.y ^ q.z) * UI3;
-    return -1.0 + 2.0 * float3(q) * UIF;
+    //return -1.0 + 2.0 * float3(q) * UIF;
+    
+    float3 result= float3(
+        Esgtsta(float4(p, 1.0)),
+        Esgtsta(float4(p, 2.0)),
+        Esgtsta(float4(p, 3.0))
+    ) * 2.0f - 1.0f*float3(q) * UIF;//[-1,1]に正規化
+    
+    return normalize(result);
+
 }
 
 float remap(float x, float a, float b, float c, float d)
 {
     return (((x - a) / (b - a)) * (d - c)) + c;
 }
+
+
 
 // Gradient noise by iq (modified to be tileable)
 float gradient_noise(float3 x, float freq)
@@ -121,4 +145,17 @@ float worley_fbm(float3 p, float freq)
     return worley_noise(p * freq, freq) * 0.625 +
 		worley_noise(p * freq * 2.0, freq * 2.0) * 0.25 +
 		worley_noise(p * freq * 4.0, freq * 4.0) * 0.125;
+}
+
+// --- Helper: Random rotation matrix ---
+float3 rotate3D(float3 p, float seed)
+{
+    float angle = frac(sin(seed * 12.9898) * 43758.5453) * 6.28318;
+    float s = sin(angle);
+    float c = cos(angle);
+    return float3(
+        c * p.x - s * p.y,
+        s * p.x + c * p.y,
+        p.z
+    );
 }

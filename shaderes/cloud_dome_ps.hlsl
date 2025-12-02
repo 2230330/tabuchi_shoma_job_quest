@@ -286,7 +286,29 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
-    
+        //太陽
+    {
+        const float sol_size = 0.00872663806;
+        const float sun_disk_scale = 2.0; // [0.0, 360.0]
+	    // solar disk and out-scattering
+        float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
+        float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
+        
+        float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //視線と太陽の角度
+        float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
+        float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
+    //kasten-Young 1989近似
+        float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
+        float3 Ei = ComputeSunIrradiance(air_mass); //太陽光の色
+        
+        float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
+        float3 Lo = sun_disk * Ei * directional_light.intensity;
+        // 太陽のディスク内に視線が入っているときだけ加算
+        if (sun_disk > 0.01f) // しきい値で完全に限定
+        {
+            result += Lo;
+        }
+    }
     return result;
 }
 
@@ -455,7 +477,15 @@ float SampleCloudDensity(float3 sample_point, float3 weather_data, float mip_lev
 #endif
 }
 
-static const float3 noise_kernel[6] = { float3(0.38051305f, 0.92453449f, -0.02111345f), float3(-0.50625799f, -0.03590792f, -0.86163418f), float3(-0.32509218f, -0.94557439f, 0.01428793f), float3(0.09026238f, -0.27376545f, 0.95755165f), float3(0.28128598f, 0.42443639f, -0.86065785f), float3(-0.16852403f, 0.14748697f, 0.97460106f) };
+static const float3 noise_kernel[6] =
+{
+    float3(0.38051305f, 0.92453449f, -0.02111345f),
+    float3(-0.50625799f, -0.03590792f, -0.86163418f),
+    float3(-0.32509218f, -0.94557439f, 0.01428793f),
+    float3(0.09026238f, -0.27376545f, 0.95755165f),
+    float3(0.28128598f, 0.42443639f, -0.86065785f),
+    float3(-0.16852403f, 0.14748697f, 0.97460106f)
+};
 // a function to gather density in a cone for use with lighting clouds
 float SampleCloudDensityAlongCone(float3 ray_origin, float3 ray_direction /*normalized*/, float cone_spread_multplier /*how wide to make the cone*/)
 {
@@ -501,42 +531,36 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
 {
     float step_size = length(ray_step);
 	
-	// Use a coordinate system with the center of the earth as the origin
-#if 0
-	float3 sample_point = ray_origin + ray_step;
-#else
+	// レイ開始位置を少しランダムにして横筋を目立たなくする（ディザリング）
     float3 sample_point = ray_origin + ray_step * Hash(ray_origin * 10.0); // dithering ? 
-#endif
 	
+    //太陽方向と位相関数
     float3 sun_direction = normalize(-directional_light.direction.xyz);
-	
     float cos_theta = dot(sun_direction, normalize(ray_step));
-	// stack multiple phase functions to emulate some backscattering
-#if 1
-    float g = 0.2; // eccentricity
-    float henyey_greenstein_phase = MiePhase(cos_theta, g);
-#else
-	float henyey_greenstein_phase = max(max(henyey_greenstein(cos_theta, 0.6), henyey_greenstein(cos_theta, (0.4 - 1.4 * sun_direction.y))), henyey_greenstein(cos_theta, -0.2)); // TODO
-#endif
-	
+    float g = 0.4;
+    float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
+    henyey_greenstein_phase = lerp(0.4, 1.0f, henyey_greenstein_phase); //0.4~1.0の範囲に圧縮
+
+    
 	// precalculate atmosphere color
     float3 position = float3(0.f, EARTH_RADIUS, 0.f);
     //カメラから天球の各頂点への方向
     
+    //大気散乱の事前計算
     //疑似多重散乱の事前計算
     float3 multi_scattering = PrecomputeMultiScattering(position, ray_step, sun_direction);
-    
     ////シングルスキャッタリング
     float3 single_scattering = ComputeSkyColor(
     position,
     ray_step,
     sun_direction);
-    
-    //float3 atmosphere_color = atmosphere(sun_direction) * step_size * 0.1;
     float3 atmosphere_color = multi_scattering + single_scattering;
 	
     const float cone_spread_multplier = ((cloud_altitudes_min_max.y - cloud_altitudes_min_max.x) / 36.0); // how wide to make the cone
 	
+    //水平方向の光の制御
+    float horizon_factor = saturate(dot(ray_step, float3(0, 1, 0)));
+    
     float3 color = 0.0;
     float density = 0;
     float transmittence = 1.0;
@@ -547,7 +571,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
 	[loop]
     for (int i = 0; i < steps; i++)
     {
-		// cloud_test starts as zero as we always evaluate the second cas from the beginning
+        //雲内部なら高品質
         if (cloud_test > 0.0)
         {
 			// sample density the expensive way the setting the last parameter to false, indicating a full sample
@@ -565,8 +589,9 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                 if (sampled_density != 0.0)
                 {
 					// the accumulating variable for transmittence
-                    transmittence *= exp(-density_scale * sampled_density * step_size);
-
+                    //transmittence *= exp(-density_scale * sampled_density * step_size);
+                    transmittence *= exp(-density_scale * sampled_density * step_size ); // 減衰を弱める
+                    
 					// sample_cloud_density_along_cone just walks in the given direction from the start point and takes 6 number of lighting samples
                     float density_along_light_ray = 0.0;
                     density_along_light_ray += SampleCloudDensityAlongCone(sample_point, sun_direction, cone_spread_multplier);
@@ -574,22 +599,20 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
 			
 					// captures the direct lighting from the sun
                     float optical_thickness = density_scale * density_along_light_ray * cone_spread_multplier;
+                    //水平方向の吸収を緩和する
+                    //optical_thickness *= lerp(0.5, 1.0, horizon_factor);
                     float rain_cloud_absorption = exp(-weather_data.g) * rain_cloud_absorption_scale;
 					// beer's law models the attenuation of light as it passes through a material
-#if 1
+#if 0
                     float beers_law = exp(-optical_thickness * rain_cloud_absorption);
 #else
 					float beers_law = max(exp(-optical_thickness * rain_cloud_absorption), exp(-optical_thickness * 0.25 * rain_cloud_absorption) * 0.7);
 #endif
-					// in-scattering probability function (powdered sugar effect)
+					// 雲内部を明るくする近似
                     float powdered_sugar = enable_powdered_sugar_efffect ? 1.0 - exp(-optical_thickness) : 0.5;
 					
-                    //color += (2.0 * beers_law * powdered_sugar * henyey_greenstein_phase)
-                    //* atmosphere_color 
-                    //* transmittence 
-                    //* sampled_density;
                     // 太陽直接光
-                    float3 sun_light_color = float3(10.0, 9.5, 9); // or passed from CPU
+                    float3 sun_light_color = float3(1.0, 0.95, 0.9); // or passed from CPU
                     float3 direct_light =
                     2.0f*
                     beers_law *
@@ -598,10 +621,11 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     sun_light_color;
 
                     // 大気からの環境光（背景依存で暗くなり過ぎないよう係数を下げる）
-                    float3 ambient_light = atmosphere_color * 0.4;
+                    float3 ambient_light = atmosphere_color *0.5f;
 
                     // 合計ライト
-                    float3 lighting = direct_light + ambient_light;
+                    float3 lighting = direct_light + ambient_light + (atmosphere_color * 0.15f); //多重散乱ブーストとして
+                    //float3 lighting = direct_light /*+ ambient_light + (atmosphere_color * 0.15f)*/; //多重散乱ブーストとして
 
                     // 雲色寄与
                     color += lighting * sampled_density * transmittence;
@@ -609,7 +633,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                 }
                 sample_point += ray_step;
             }
-			// if not, then set cloud_test to zero so that we go back to the cheap sample case
+            //六回連続０なら雲を抜けた元して判断する
             else
             {
                 cloud_test = 0.0;
@@ -632,87 +656,55 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     return max(0.0, float4(color, alpha));
 }
 
+
 float4 main(VS_OUT pin) : SV_TARGET
 {
-	// from texture-space to ndc
     float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
-
-	// from ndc to world-space
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
 
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
-	
-	
-#if 0
-	const float4x4 dither_patterns =
-	{
-		{ 0.0f, 0.5f, 0.125f, 0.625f },
-		{ 0.75f, 0.22f, 0.875f, 0.375f },
-		{ 0.1875f, 0.6875f, 0.0625f, 0.5625 },
-		{ 0.9375f, 0.4375f, 0.8125f, 0.3125 }
-	};
-	ray_dir *= dither_patterns[pin.position.x % 4][pin.position.y % 4];
-#endif	
     float3 position = float3(0.f, EARTH_RADIUS, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
-    float3 sun_pos = light_dir * SUN_DISTANCE; //太陽の位置()
+    float3 sun_pos = light_dir * SUN_DISTANCE;
     float3 sun_dir = normalize(sun_pos - camera_position.xyz);
-    
-    //疑似多重散乱の事前計算
+
     float3 multi_scattering = PrecomputeMultiScattering(position, ray_dir, sun_dir);
-    
-    ////シングルスキャッタリング
-    float3 single_scattering = ComputeSkyColor(
-    position,
-    ray_dir,
-    sun_dir);
-	
+    float3 single_scattering = ComputeSkyColor(position, ray_dir, sun_dir);
+
     float3 color = 0.0;
     if (ray_dir.y > 0.0)
     {
-		// define the center of the earth as the origin of coordinates
         float3 eye_pos = float3(0.0, earth_radius, 0.0) + camera_position.xyz;
         float3 ray_origin = eye_pos + ray_dir * IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.x);
         float3 ray_endpoint = eye_pos + ray_dir * IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.y);
         float shell_dist = length(ray_endpoint - ray_origin);
-		
+
         float steps = ray_marching_steps;
         if (auto_ray_marching_steps)
         {
-            const float attenuation = 0.5625;
-#if 1
-			// take fewer steps towards horizon
-            steps = lerp(ray_marching_steps * attenuation, ray_marching_steps, clamp(dot(ray_dir, float3(0.0, 1.0, 0.0)), 0.0, 1.0));
-#else
-			// take more steps towards horizon
-			steps = lerp(ray_marching_steps, ray_marching_steps * attenuation, clamp(dot(ray_dir, float3(0.0, 1.0, 0.0)), 0.0, 1.0));
-#endif
+            steps = lerp(ray_marching_steps * 0.5625, ray_marching_steps, clamp(dot(ray_dir, float3(0.0, 1.0, 0.0)), 0.0, 1.0));
         }
 
-		
         float3 ray_step = ray_dir * shell_dist / steps;
         float4 volume = RayMarch(ray_origin, ray_step, int(steps));
-		
 
-        
-		//return volume;
-
-    
         //float3 background = atmosphere(ray_dir);
         float3 background = multi_scattering + single_scattering;
 		// draw cloud shape
         color = background * (1.0 - volume.a) + volume.xyz;
 		
 		// blend distant clouds into the sky
-		//color = lerp(clamp(color, 0.0, 1.0), clamp(background, 0.0, 1.0), smoothstep(0.6, 1.0, 1.0 - ray_dir.y));
-        color = lerp(max(color, 0.0), max(background, 0.0), smoothstep(0.6, 1.0, 1.0 - ray_dir.y));
+        color = lerp(clamp(color, 0.0, 1.0), clamp(background, color, 1.0), smoothstep(0.1, 1.0, 1.0 - ray_dir.y));
+        //color = lerp(max(color, 0.0), max(background, color), lerp(0.6, 1, 1.0 - ray_dir.y));
+
+
     }
     else
     {
         color = multi_scattering + single_scattering;
+        color = lerp(color * 0.5f, float3(0, 0, 0), -ray_dir.y);
     }
-	
-    
+
     return float4(color, 1.0f);
 }

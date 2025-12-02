@@ -56,25 +56,6 @@ float MiePhase(float cos_theta,float g)
     
     return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
 }
-//疑似ランベルト・ベールの法則（透過率）
-float3 TransmittanceNumerical(float3 startPos, float3 endPos, int numSamples)
-{
-    float3 dir = normalize(endPos - startPos);
-    float distance = length(endPos - startPos);
-    float stepSize = distance / numSamples;
-    float3 transmittance = float3(1.0, 1.0, 1.0);
-
-    for (int i = 0; i < numSamples; ++i)
-    {
-        float t = (i + 0.5) * stepSize;
-        float3 samplePos = startPos + dir * t;
-        float h = max(0.0, length(samplePos) -EARTH_RADIUS);
-        float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
-        transmittance *= exp(-sigma_t * stepSize);
-    }
-
-    return transmittance;
-}
 
 //距離×平均係数で指数減衰を近似
 float3 TransmittanceApprox(float3 startPos, float3 endPos)
@@ -249,6 +230,7 @@ float4 main(VS_OUT pin):SV_TARGET
     
     sky_color += single_scattering + (multi_scattering);
     
+    
     //太陽
     {
         const float sol_size = 0.00872663806;
@@ -274,7 +256,8 @@ float4 main(VS_OUT pin):SV_TARGET
     }
     
     //sky_color *= directional_light.intensity;
-    
+    sky_color = lerp(sky_color * 0.5f, float3(0, 0, 0), -view_dir.y);
+
 
     return float4(sky_color.xyz, 1.0f);
 }

@@ -40,15 +40,19 @@ private:
 
     //定数バッファ
     struct CloudRayMarchingConstants
-    {//福井先生のコードを参考にしたやつ
+    {
+        //風邪の制御
         DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
         DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6001500.0f, 6004000.0f }; // highest and lowest altitudes at which clouds are distributed
-
         float wind_speed = 1.0f; // [0.0, 20.0]
 
+        //密度
         float density_scale = 0.05f; // [0.01, 0.2]
+        //雲の覆う割合
         float cloud_coverage_scale = 0.2f; // [0.1, 1.0]
+        //雨雲の光吸収の強さ
         float rain_cloud_absorption_scale = 0.5;
+        //雲の種類、厚さを調整する
         float cloud_type_scale = 1.0f;
 
         float earth_radius = 6000000.0f; // earth radius
