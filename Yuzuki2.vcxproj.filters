@@ -453,6 +453,9 @@
     <None Include="shaderes\perlin_worley_noise.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaderes\swirly_curl_noise.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">
@@ -543,6 +546,12 @@
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\high_freq_worley_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\mid_freq_perlin_worley_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\curl_noise_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
   </ItemGroup>

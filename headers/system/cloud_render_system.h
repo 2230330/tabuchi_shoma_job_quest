@@ -73,10 +73,31 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>curl_noise_srv_ = nullptr;
 
-    const int high_freq_worley_dimensions{ 32 };
-    const int high_freq_worley_numthreads{ 8 };
+    //低周波ノイズ
     const int low_freq_perlin_worley_dimensions{ 128 };
     const int low_freq_perlin_worley_numthreads{ 8 };
+    //中周波
+    const int mid_freq_perlin_worley_dimensions{ 64 };
+    const int mid_freq_perlin_worley_numthreads{ 8 };
+    //高周波ノイズ
+    const int high_freq_worley_dimensions{ 32 };
+    const int high_freq_worley_numthreads{ 8 };
+    //curlノイズ
+    const int curl_dimensions{ 128 };
+    const int curl_numthreads{ 8 };
+    struct CurlParams
+    {
+        float frequency; //base_frequency(1.0f)
+        float amplitude; //出力ベクトルの振れ幅(40.f)
+        float eps_world; //差分幅（正規化座標系の割合）
+        unsigned int dim;//実際のボリューム寸法(curl_dimension)と同値
+        float time_offset;//アニメーション用オフセット
+        unsigned int seed; //ノイズシード
+        float dummy[2];
+    };
+    CurlParams curl_params_;
+    Microsoft::WRL::ComPtr<ID3D11Buffer>curl_params_buffer_;
+
 
     std::unique_ptr<FullscreenQuad>fullscreen_quad_;
 };

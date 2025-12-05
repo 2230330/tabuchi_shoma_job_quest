@@ -1,7 +1,7 @@
 //#include"cloud_dome.hlsli"
 #include"forward_light.hlsli"
 #include "scene_constant_buffer.hlsli"
-#include "noise_functions.hlsli"
+//#include "noise_functions.hlsli"
 #include "fullscreen_quad.hlsli"
 
 cbuffer CLOUD_RAY_MARCHING_CONSTNAT_BUFFER : register(b12)
@@ -291,15 +291,11 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         const float sol_size = 0.00872663806;
         const float sun_disk_scale = 2.0; // [0.0, 360.0]
 	    // solar disk and out-scattering
-        float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
         float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
+        float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
         
-        float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
         float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
         float sun_theta = acos(sun_elevation) * (180.0f / PI); //“x‚É•ÏŠ·
-    //kasten-Young 1989‹ß—
-        float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant‹ß—
-        float3 Ei = ComputeSunIrradiance(air_mass); //‘¾—zŒõ‚ÌF
         
         float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
         float3 Lo = sun_disk * Ei * directional_light.intensity;
@@ -456,7 +452,7 @@ float SampleCloudDensity(float3 sample_point, float3 weather_data, float mip_lev
         float high_frequency_fbm = high_frequency_noises.r * 0.625 + high_frequency_noises.g * 0.25 + high_frequency_noises.b * 0.125;
 	
 		// transition from wispy shape to billowy shape over height
-#if 0
+#if 1
 		float high_frequency_noise_modifier = lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 10.0, 0.0, 1.0));
 #else
         float high_frequency_noise_modifier = lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 4.0, 0.0, 1.0));
@@ -536,10 +532,11 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
 	
     //‘¾—z•ûŒü‚ÆˆÊ‘ŠŠÖ”
     float3 sun_direction = normalize(-directional_light.direction.xyz);
-    float cos_theta = dot(sun_direction, normalize(ray_step));
-    float g = 0.4;
-    float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
-    henyey_greenstein_phase = lerp(0.4, 1.0f, henyey_greenstein_phase); //0.4~1.0‚Ì”ÍˆÍ‚Éˆ³k
+    float cos_theta = dot(sun_direction, -normalize(ray_step));
+    float g = 0.6f;
+    //float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
+    float henyey_greenstein_phase = MiePhase(cos_theta, g);
+    henyey_greenstein_phase = saturate(henyey_greenstein_phase); //0~1.0‚Ì”ÍˆÍ‚Éˆ³k
 
     
 	// precalculate atmosphere color
@@ -554,7 +551,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     position,
     ray_step,
     sun_direction);
-    float3 atmosphere_color = multi_scattering + single_scattering;
+    float3 atmosphere_color = (multi_scattering + single_scattering)*step_size*0.1f;
 	
     const float cone_spread_multplier = ((cloud_altitudes_min_max.y - cloud_altitudes_min_max.x) / 36.0); // how wide to make the cone
 	
@@ -603,7 +600,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     //optical_thickness *= lerp(0.5, 1.0, horizon_factor);
                     float rain_cloud_absorption = exp(-weather_data.g) * rain_cloud_absorption_scale;
 					// beer's law models the attenuation of light as it passes through a material
-#if 0
+#if 1
                     float beers_law = exp(-optical_thickness * rain_cloud_absorption);
 #else
 					float beers_law = max(exp(-optical_thickness * rain_cloud_absorption), exp(-optical_thickness * 0.25 * rain_cloud_absorption) * 0.7);
@@ -621,11 +618,10 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     sun_light_color;
 
                     // ‘å‹C‚©‚ç‚ÌŠÂ‹«Œõi”wŒiˆË‘¶‚ÅˆÃ‚­‚È‚è‰ß‚¬‚È‚¢‚æ‚¤ŒW”‚ğ‰º‚°‚éj
-                    float3 ambient_light = atmosphere_color *0.5f;
+                    float3 ambient_light = atmosphere_color /** 0.2f + (atmosphere_color * 0.15f)*/;
 
                     // ‡Œvƒ‰ƒCƒg
-                    float3 lighting = direct_light + ambient_light + (atmosphere_color * 0.15f); //‘½dU—ƒu[ƒXƒg‚Æ‚µ‚Ä
-                    //float3 lighting = direct_light /*+ ambient_light + (atmosphere_color * 0.15f)*/; //‘½dU—ƒu[ƒXƒg‚Æ‚µ‚Ä
+                    float3 lighting = /*direct_light*/+ambient_light; //‘½dU—ƒu[ƒXƒg‚Æ‚µ‚Ä
 
                     // ‰_FŠñ—^
                     color += lighting * sampled_density * transmittence;
@@ -651,6 +647,8 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
             }
         }
     }
+    
+    color /= (color + 1.0f);
 	
     float alpha = 1.0 - transmittence;
     return max(0.0, float4(color, alpha));
@@ -695,9 +693,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         color = background * (1.0 - volume.a) + volume.xyz;
 		
 		// blend distant clouds into the sky
-        color = lerp(clamp(color, 0.0, 1.0), clamp(background, color, 1.0), smoothstep(0.1, 1.0, 1.0 - ray_dir.y));
-        //color = lerp(max(color, 0.0), max(background, color), lerp(0.6, 1, 1.0 - ray_dir.y));
-
+        color = lerp(clamp(color, 0.0, 1.0), clamp(background, color, 1.0), smoothstep(0.6, 1.0, 1.0 - ray_dir.y));
 
     }
     else

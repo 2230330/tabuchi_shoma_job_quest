@@ -92,70 +92,11 @@ bool SceneTest::InitializeCore()
             bit_block_transfer_ = std::make_unique<FullscreenQuad>(device);
         }
     }
-    //定数バッファ用意
-    {
-        ID3D11Device* device = Graphics::Instance().GetDevice();
 
-        //HRESULT hr{ S_OK };
-        //D3D11_BUFFER_DESC buffer_desc{};
-        //buffer_desc.ByteWidth = sizeof(SceneConstants);
-        //buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-        //buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        //buffer_desc.CPUAccessFlags = 0;
-        //buffer_desc.MiscFlags = 0;
-        //buffer_desc.StructureByteStride = 0;
-        //hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer_.GetAddressOf());
-        //_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-    }
-    int size = 10;
-    ////コンポーネントの設定(仮)
-    //for (int i = -size; i < size; i++)
-    //{
-    //    ID3D11Device* device = Graphics::Instance().GetDevice();
-    //    gltf_model.entity = world->GetEntityManager()->Add();
-    //    ComponentGltf gltf;
-    //    gltf.model = ResourceManager::Instance().LoadGltfModel(
-    //        device,
-    //        ".\\resources\\model\\gltf\\knife.glb"
-    //        //".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
-    //        //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
-    //    );
-    //    comp_mng->Add<ComponentGltf>(gltf_model.entity, gltf);
-    //    ComponentPosition pos;
-    //    int normalize_i = i >= 0 ? i : -i;
-    //    pos.value = { static_cast<float>(i % 50), 0.f, static_cast<float>(normalize_i / 50) };
-    //    comp_mng->Add<ComponentPosition>(gltf_model.entity, pos);
-    //    ComponentRotation ros;
-    //    ros.value = { 0.f,0.f,0.f };
-    //    comp_mng->Add<ComponentRotation>(gltf_model.entity, ros);
-    //    ComponentScale scale;
-    //    scale.value = { 1.f,1.f,1.f };
-    //    comp_mng->Add<ComponentScale>(gltf_model.entity, scale);
-    //    ComponentLocalToWorld world;
-    //    DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
-    //    comp_mng->Add(gltf_model.entity, world);
-    //    ComponentColor col;
-    //    col.value = { 1,1,1,1 };
-    //    comp_mng->Add(gltf_model.entity, col);
-    //    ComponentInstanced instance;
-    //    instance.entity_id = gltf_model.entity;
-    //    comp_mng->Add(gltf_model.entity, instance);
-    //}
 
     ID3D11Device*device= Graphics::Instance().GetDevice();
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\knife.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\sun.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\moon.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\sword.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\katana.glb");
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\eldenRing_Sky_Moon_Stars_1-1.png");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\incskies_050_16k.png");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\incskies_038_16k_c2.png");
     ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mamizo.png");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mwpan2_Aitoff_2000x1000.jpg");
-
     return true;
 }
 
