@@ -80,6 +80,31 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
                 low_freq_perlin_worley_srv_.GetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
         }
+        const wchar_t* mid_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\mid_freq_worley.dds";
+        _ASSERT_EXPR(std::filesystem::exists(mid_freq_noise_tex_path), "ファイルが存在しません");
+        {
+            DirectX::TexMetadata metadata{};
+            DirectX::ScratchImage image{};
+            HRESULT hr = DirectX::LoadFromDDSFile(
+                mid_freq_noise_tex_path,
+                DirectX::DDS_FLAGS_NONE,
+                &metadata,
+                image);
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+            const DirectX::Image* images = image.GetImages();
+            size_t nimages = image.GetImageCount();
+            hr=DirectX::CreateShaderResourceViewEx(
+                device,
+                images,
+                nimages,
+                metadata,
+                D3D11_USAGE_DEFAULT, 
+                D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET, 
+                0, 0, DirectX::CREATETEX_FLAGS::CREATETEX_DEFAULT, 
+                mid_freq_worley_srv_.GetAddressOf());
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        }
         const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ファイルが存在しません");
         {
@@ -101,7 +126,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
                 D3D11_USAGE_DEFAULT,
                 D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET,
                 0, 0, DirectX::CREATETEX_FLAGS::CREATETEX_DEFAULT,
-                high_freq_perlin_worley_srv_.GetAddressOf());
+                high_freq_worley_srv_.GetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
         }
 
@@ -147,7 +172,8 @@ void CloudRenderSystem::Render()
             //// テクスチャ
             ID3D11ShaderResourceView* srvs[] = {
                 low_freq_perlin_worley_srv_.Get(),
-                high_freq_perlin_worley_srv_.Get(),
+                high_freq_worley_srv_.Get(),
+                mid_freq_worley_srv_.Get(),
                 weather_map_srv_.Get(),
                 curl_noise_srv_.Get()
             };
@@ -303,7 +329,7 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
         context->CSSetUnorderedAccessViews(0, 1, &null_unordered_access_view, nullptr);
         context->CSSetShader(nullptr, nullptr, 0);
         //みっぷマップを自動生成
-        //context->GenerateMips(high_freq_worley_srv.Get());
+        //context->GenerateMips(curl_noise_srv_.Get());
 
         //GPU命令をキック
         // GPU完了待ち（同期）
@@ -453,7 +479,7 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
         context->CSSetUnorderedAccessViews(0, 1, &null_unordered_access_view,nullptr);
         context->CSSetShader(nullptr, nullptr,0);
         //みっぷマップを自動生成
-        //context->GenerateMips(high_freq_worley_srv.Get());
+        context->GenerateMips(high_freq_worley_srv.Get());
         
         //GPU命令をキック
         // GPU完了待ち（同期）
@@ -470,6 +496,77 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
         hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(), 
             DirectX::DDS_FLAGS_NONE, high_freq_noise_tex_path);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    }
+    const wchar_t* layout_cloud_height_profile_path = L".\\resources\\sprite\\volumetric_cloud_noises\\layout_cloud_height_profile.dds";
+    {
+        //空のテクスチャを作成
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> layout_cloud_height_profile_texture2d;
+        D3D11_TEXTURE2D_DESC texture2d_desc{};
+        texture2d_desc.Width = 64;
+        texture2d_desc.Height = 64;
+        texture2d_desc.MipLevels = 1;
+        texture2d_desc.MiscFlags = 0;
+        texture2d_desc.ArraySize = 1;
+        texture2d_desc.SampleDesc.Count = 1;
+        texture2d_desc.SampleDesc.Quality = 0;
+        texture2d_desc.Format = format;
+        texture2d_desc.Usage = D3D11_USAGE_DEFAULT;
+        texture2d_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
+        texture2d_desc.CPUAccessFlags = 0;
+        hr = device->CreateTexture2D(&texture2d_desc, NULL, layout_cloud_height_profile_texture2d.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        //シェーダーリソースビューを作成
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> layout_cloud_height_profile_srv;
+        D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+        srv_desc.Format = texture2d_desc.Format;
+        srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srv_desc.Texture3D.MipLevels = 1;
+        srv_desc.Texture3D.MostDetailedMip = 0;
+        hr = device->CreateShaderResourceView(
+            layout_cloud_height_profile_texture2d.Get(), &srv_desc, layout_cloud_height_profile_srv.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        //アンオーダードアクセスビューを作成
+        Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>layout_cloud_height_profile_unordered_access_view;
+        D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_view_desc = {};
+        unordered_access_view_desc.Format = texture2d_desc.Format;
+        unordered_access_view_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+        unordered_access_view_desc.Texture2D.MipSlice = 0;
+        hr = device->CreateUnorderedAccessView(layout_cloud_height_profile_texture2d.Get(), &unordered_access_view_desc, layout_cloud_height_profile_unordered_access_view.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        //コンピュートシェーダで3Dテクスチャ内部にノイズを書き込む
+        Microsoft::WRL::ComPtr<ID3D11ComputeShader> layout_cloud_height_profile_cs;
+        layout_cloud_height_profile_cs = ResourceManager::Instance().LoadComputeShader(
+            device, L"./resources/shader/layout_cloud_height_profile_cs.cso"
+        );
+        context->CSSetUnorderedAccessViews(0, 1, layout_cloud_height_profile_unordered_access_view.GetAddressOf(), nullptr);
+        context->CSSetShader(layout_cloud_height_profile_cs.Get(), nullptr, 0);
+        UINT thread_group_count =
+            (layout_cloud_height_profile_dimensions + layout_cloud_height_profile_numthreads - 1) / layout_cloud_height_profile_numthreads;
+        context->Dispatch(thread_group_count, thread_group_count, thread_group_count);
+
+        ID3D11UnorderedAccessView* null_unordered_access_view = nullptr;
+        context->CSSetUnorderedAccessViews(0, 1, &null_unordered_access_view, nullptr);
+        context->CSSetShader(nullptr, nullptr, 0);
+        //みっぷマップを自動生成
+        context->GenerateMips(layout_cloud_height_profile_srv.Get());
+
+        //GPU命令をキック
+        // GPU完了待ち（同期）
+        D3D11_QUERY_DESC queryDesc{};
+        queryDesc.Query = D3D11_QUERY_EVENT;
+        Microsoft::WRL::ComPtr<ID3D11Query> query;
+        device->CreateQuery(&queryDesc, &query);
+        context->End(query.Get());
+        while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
+
+        //DDSファイルとして書き出し
+        DirectX::ScratchImage image;
+        hr = DirectX::CaptureTexture(device, context, layout_cloud_height_profile_texture2d.Get(), image);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(),
+            DirectX::DDS_FLAGS_NONE, layout_cloud_height_profile_path);
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
     }

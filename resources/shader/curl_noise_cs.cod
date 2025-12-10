@@ -57,10 +57,10 @@ utof r1.xyz, vThreadID.xyzx
 itof r2.xyz, l(128, 128, 128, 0)
 div r1.xyz, r1.xyzx, r2.xyzx  // r1.x <- uvw.x; r1.y <- uvw.y; r1.z <- uvw.z
 
-#line 28
+#line 22
 mul r1.xyz, r1.xyzx, l(8.000000, 8.000000, 8.000000, 0.000000)  // r1.x <- p.x; r1.y <- p.y; r1.z <- p.z
 
-#line 30
+#line 24
 nop 
 mov r1.xyz, r1.xyzx
 
@@ -2009,7 +2009,7 @@ mul r1.xyz, r1.xyzx, l(0.080000, 0.080000, 0.080000, 0.000000)
 #line 175
 nop 
 mov r1.xyz, r1.xyzx
-mov r0.z, l(1.500000)
+mov r0.z, l(2.000000)
 mov r0.w, l(1.000000)
 
 #line 154
@@ -3950,7 +3950,7 @@ mul r1.xyz, r1.xyzx, l(2.500000, 2.500000, 2.500000, 0.000000)
 #line 177
 nop 
 mov r1.xyz, r1.xyzx
-mov r0.z, l(1.500000)
+mov r0.z, l(2.000000)
 mov r0.w, l(0.700000)
 
 #line 154
@@ -5891,7 +5891,7 @@ mul r1.xyz, r1.xyzx, l(3.000000, 3.000000, 3.000000, 0.000000)
 #line 179
 nop 
 mov r1.xyz, r1.xyzx
-mov r0.z, l(1.500000)
+mov r0.z, l(2.000000)
 mov r0.w, l(0.400000)
 
 #line 154
@@ -7832,7 +7832,7 @@ mul r1.xyz, r1.xyzx, l(3.500000, 3.500000, 3.500000, 0.000000)
 #line 181
 nop 
 mov r1.xyz, r1.xyzx
-mov r0.z, l(1.500000)
+mov r0.z, l(2.000000)
 mov r0.w, l(0.200000)
 
 #line 154
@@ -9773,7 +9773,7 @@ mul r1.xyz, r1.xyzx, l(4.000000, 4.000000, 4.000000, 0.000000)
 #line 183
 nop 
 mov r1.xyz, r1.xyzx
-mov r0.z, l(1.500000)
+mov r0.z, l(2.000000)
 mov r0.w, l(0.100000)
 
 #line 154
@@ -11721,19 +11721,19 @@ mul r1.x, r1.x, l(1.200000)
 exp r1.x, r1.x
 mul r0.xyzw, r0.xyzw, r1.xxxx  // r0.y <- <FlowField return value>.y; r0.z <- <FlowField return value>.z; r0.w <- <FlowField return value>.x
 
-#line 30 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\curl_noise_cs.hlsl"
+#line 24 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\curl_noise_cs.hlsl"
 mov r0.xyzw, r0.xyzw  // r0.y <- curl.y; r0.z <- curl.z; r0.w <- curl.x
 
-#line 33
+#line 27
 dp3 r1.x, r0.yzwy, r0.yzwy
 rsq r1.x, r1.x
 mul r0.xyzw, r0.xyzw, r1.xxxx
 mul r0.xyzw, r0.xyzw, l(0.500000, 0.500000, 0.500000, 0.500000)
 add r0.xyzw, r0.xyzw, l(0.500000, 0.500000, 0.500000, 0.500000)  // r0.y <- curl.y; r0.z <- curl.z; r0.w <- curl.x
 
-#line 35
+#line 29
 store_uav_typed u0.xyzw, vThreadID.xyzz, r0.xyzw
 
-#line 36
+#line 30
 ret 
 // Approximately 5860 instruction slots used

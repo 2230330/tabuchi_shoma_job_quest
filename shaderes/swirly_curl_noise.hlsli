@@ -172,15 +172,15 @@ float3 FlowField(float3 p)
 
     // オクターブ構成（低周波→高周波）
     p *= 0.08;
-    f += CurlOctave(p, 1.5, 1.0);
+    f += CurlOctave(p, 2.0f, 1.0);
     p *= 2.5;
-    f += CurlOctave(p, 1.5, 0.7);
+    f += CurlOctave(p, 2.0f, 0.7);
     p *= 3.0;
-    f += CurlOctave(p, 1.5, 0.4);
+    f += CurlOctave(p, 2.0f, 0.4);
     p *= 3.5;
-    f += CurlOctave(p, 1.5, 0.2);
+    f += CurlOctave(p, 2.0f, 0.2);
     p *= 4.0;
-    f += CurlOctave(p, 1.5, 0.1); // 高周波追加
+    f += CurlOctave(p, 2.0f, 0.1); // 高周波追加
 
     // 強度を残して非線形で強調
     float lenF = length(f);

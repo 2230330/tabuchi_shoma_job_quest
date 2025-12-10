@@ -53,8 +53,9 @@ Texture3D<float3> high_frequency_worley_texture : register(t1);
 	- precipitation(g channel): the chance that the cloud overhead will produce rain
 	- cloud type(b channel): a value of 0.0 indicates stratus, 0.5 indicates stratocumulus, and 1.0 indicate cumulus cloud
 */
-Texture2D<float3> weather_texture : register(t2);
-Texture2D<float3> curl_noise_texture : register(t3);
+Texture3D<float4> mid_frequency_worley_texture : register(t2);
+Texture2D<float3> weather_texture : register(t3);
+Texture2D<float3> curl_noise_texture : register(t4);
 #if 0
 Texture2D<float> gradient_stratus_texture : register(t4);
 Texture2D<float> gradient_cumulus_texture : register(t5);
@@ -69,6 +70,10 @@ float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
 float3 SampleHighFrequencyNoises(float3 sample_point, float mip_level)
 {
     return high_frequency_worley_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * high_frequency_worley_sampling_scale, mip_level);
+}
+float4 SampleMidFrequencyNoises(float3 sample_point,float mip_level)
+{
+    return mid_frequency_worley_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
 }
 float3 SampleWeatherData(float2 sample_point)
 {
@@ -288,22 +293,22 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
     }
         //太陽
     {
-        const float sol_size = 0.00872663806;
-        const float sun_disk_scale = 2.0; // [0.0, 360.0]
-	    // solar disk and out-scattering
-        float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
-        float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
+     //   const float sol_size = 0.00872663806;
+     //   const float sun_disk_scale = 2.0; // [0.0, 360.0]
+	    //// solar disk and out-scattering
+     //   float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
+     //   float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
         
-        float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
-        float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
+     //   float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
+     //   float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
         
-        float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
-        float3 Lo = sun_disk * Ei * directional_light.intensity;
-        // 太陽のディスク内に視線が入っているときだけ加算
-        if (sun_disk > 0.01f) // しきい値で完全に限定
-        {
-            result += Lo;
-        }
+     //   float sun_disk = lerp(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
+     //   float3 Lo = sun_disk * Ei * directional_light.intensity;
+     //   // 太陽のディスク内に視線が入っているときだけ加算
+     //   if (sun_disk > 0.01f) // しきい値で完全に限定
+     //   {
+     //       result += Lo*0.01f;
+     //   }
     }
     return result;
 }
@@ -405,7 +410,7 @@ float SampleCloudDensity(float3 sample_point, float3 weather_data, float mip_lev
 	
 	// read the low-frequency perlin-worley and worley noises
     float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, mip_level - 2.0);
-	
+
 	// build an fbm(fractal brownian motion) out of the low-frequency worley noises that can be used to add detail to the low-frequency perlin-worley noise
     float low_frequency_fbm = low_frequency_noises.g * 0.625 + low_frequency_noises.b * 0.25 + low_frequency_noises.a * 0.125;
     
@@ -586,7 +591,6 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                 if (sampled_density != 0.0)
                 {
 					// the accumulating variable for transmittence
-                    //transmittence *= exp(-density_scale * sampled_density * step_size);
                     transmittence *= exp(-density_scale * sampled_density * step_size ); // 減衰を弱める
                     
 					// sample_cloud_density_along_cone just walks in the given direction from the start point and takes 6 number of lighting samples
@@ -609,19 +613,16 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     float powdered_sugar = enable_powdered_sugar_efffect ? 1.0 - exp(-optical_thickness) : 0.5;
 					
                     // 太陽直接光
-                    float3 sun_light_color = float3(1.0, 0.95, 0.9); // or passed from CPU
+                    float3 sun_light_color = float3(10.0, 9.5, 9.f); // or passed from CPU
                     float3 direct_light =
                     2.0f*
                     beers_law *
                     powdered_sugar *
-                    henyey_greenstein_phase *
+                    henyey_greenstein_phase +
                     sun_light_color;
 
-                    // 大気からの環境光（背景依存で暗くなり過ぎないよう係数を下げる）
-                    float3 ambient_light = atmosphere_color /** 0.2f + (atmosphere_color * 0.15f)*/;
-
                     // 合計ライト
-                    float3 lighting = /*direct_light*/+ambient_light; //多重散乱ブーストとして
+                    float3 lighting = direct_light + atmosphere_color; //多重散乱ブーストとして
 
                     // 雲色寄与
                     color += lighting * sampled_density * transmittence;

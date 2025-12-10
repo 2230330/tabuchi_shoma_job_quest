@@ -14,6 +14,26 @@ float remap(float x, float a, float b, float c, float d)
     return (((x - a) / (b - a)) * (d - c)) + c;
 }
 
+
+static const uint UI0 = 1597334673u;
+static const uint UI1 = 3812015801u;
+static const uint3 UI3 = uint3(UI0, UI1, 2798796415u);
+// 1.0 / float(0xffffffffU) と同値。HLSLでは直接リテラルでOK。
+static const float UIF = 1.0 / 4294967295.0;
+
+float3 hash33(float3 p)
+{
+    // GLSL: uvec3(ivec3(p)) に相当
+    // HLSLでは (int3)p → (uint3) にキャスト
+    uint3 q = (uint3) ((int3) p) * UI3;
+
+    // 3成分の XOR をスカラに畳み、それを UI3 にブロードキャストして乗算
+    q = ((q.x ^ q.y ^ q.z)) * UI3;
+
+    // uint3 → float3 にキャストして正規化し、[-1, +1] に拡張
+    return -1.0 + 2.0 * (float3) q * UIF;
+}
+
 // 軽量 hash -> [-1,1] 範囲を返す（高速）
 float3 hash33_fast(float3 p)
 {
@@ -67,14 +87,14 @@ float gradient_noise(float3 x, float freq)
     float3 u = quintic(w);
 
     // グラディエントを軽量ハッシュで取得
-    float3 ga = hash33_fast(fmod(p + float3(0.0f, 0.0f, 0.0f), freq));
-    float3 gb = hash33_fast(fmod(p + float3(1.0f, 0.0f, 0.0f), freq));
-    float3 gc = hash33_fast(fmod(p + float3(0.0f, 1.0f, 0.0f), freq));
-    float3 gd = hash33_fast(fmod(p + float3(1.0f, 1.0f, 0.0f), freq));
-    float3 ge = hash33_fast(fmod(p + float3(0.0f, 0.0f, 1.0f), freq));
-    float3 gf = hash33_fast(fmod(p + float3(1.0f, 0.0f, 1.0f), freq));
-    float3 gg = hash33_fast(fmod(p + float3(0.0f, 1.0f, 1.0f), freq));
-    float3 gh = hash33_fast(fmod(p + float3(1.0f, 1.0f, 1.0f), freq));
+    float3 ga = hash33(fmod(p + float3(0.0f, 0.0f, 0.0f), freq));
+    float3 gb = hash33(fmod(p + float3(1.0f, 0.0f, 0.0f), freq));
+    float3 gc = hash33(fmod(p + float3(0.0f, 1.0f, 0.0f), freq));
+    float3 gd = hash33(fmod(p + float3(1.0f, 1.0f, 0.0f), freq));
+    float3 ge = hash33(fmod(p + float3(0.0f, 0.0f, 1.0f), freq));
+    float3 gf = hash33(fmod(p + float3(1.0f, 0.0f, 1.0f), freq));
+    float3 gg = hash33(fmod(p + float3(0.0f, 1.0f, 1.0f), freq));
+    float3 gh = hash33(fmod(p + float3(1.0f, 1.0f, 1.0f), freq));
 
     float va = dot(ga, w - float3(0.0f, 0.0f, 0.0f));
     float vb = dot(gb, w - float3(1.0f, 0.0f, 0.0f));
@@ -127,7 +147,7 @@ float worley_noise(float3 uv, float freq)
     float3 id = floor(uv);
     float3 p = frac(uv);
 
-    float min_dist = 1e9;
+    float min_dist = 10000.f;
     [unroll]
     for (int i = 0; i < 19; ++i)
     {
@@ -135,7 +155,7 @@ float worley_noise(float3 uv, float freq)
         // freq でのタイル処理（fmod でループ）
         float3 cell = fmod(id + offset, freq);
         // 0..1 のランダム点（hash -> [ -1,1 ] を [0,1] に）
-        float3 h = hash33_fast(cell) * 0.5f + 0.5f;
+        float3 h = hash33(cell) * 0.5f + 0.5f;
         h += offset;
         float3 d = p - h;
         float dd = dot(d, d);
@@ -143,15 +163,63 @@ float worley_noise(float3 uv, float freq)
     }
 
     // inverted worley（元実装にならって）
-    return saturate(1.0f - min_dist);
+    return (1.0f - min_dist);
 }
+
+
+// 0..1 のジッタ
+float3 jitter01(uint3 cellId)
+{
+    return 0.5 * (hash33(cellId) + 1.0); // [-1,1]→[0,1]
+}
+
+float worley_noise_fixed(float3 uv, int period /*= (int)freq*/)
+{
+    float3 idf = floor(uv);
+    int3 cid = (int3) idf; // 整数セルID
+    float3 p = frac(uv); // 局所座標 0..1
+
+    float minDist2 = 1e10;
+
+    // 3×3×3 探索
+    [unroll]
+    for (int oz = -1; oz <= 1; ++oz)
+        for (int oy = -1; oy <= 1; ++oy)
+            for (int ox = -1; ox <= 1; ++ox)
+            {
+                int3 nid = cid + int3(ox, oy, oz);
+
+        // タイル（モジュロ）: 正の範囲に正規化
+                if (period > 0)
+                {
+                    nid.x = (nid.x % period + period) % period;
+                    nid.y = (nid.y % period + period) % period;
+                    nid.z = (nid.z % period + period) % period;
+                }
+
+        // ハッシュ入力は整数セルID
+                float3 j = jitter01((uint3) nid); // 0..1
+
+        // 特徴点の局所位置 = offset + jitter
+                float3 feature = float3(ox, oy, oz) + j;
+
+        // 距離は p(0..1) からの差
+                float3 d = p - feature;
+                float d2 = dot(d, d);
+                minDist2 = min(minDist2, d2);
+            }
+
+    // inverted worley（F1相当）
+    return 1.0 - minDist2; // あるいは 1.0 - sqrt(minDist2) を好みに応じて
+}
+
 
 float worley_fbm(float3 p, float freq)
 {
     // freq は最初の周波数（例: 1.0）
-    return worley_noise(p * freq, freq) * 0.625f +
-           worley_noise(p * freq * 2.0f, freq * 2.0f) * 0.25f +
-           worley_noise(p * freq * 4.0f, freq * 4.0f) * 0.125f;
+    return worley_noise_fixed(p * freq, freq) * 0.625f +
+           worley_noise_fixed(p * freq * 2.0f, freq * 2.0f) * 0.25f +
+           worley_noise_fixed(p * freq * 4.0f, freq * 4.0f) * 0.125f;
 }
 
 // ---- Shadertoy 風 FBM（軽量 hash1 を使用） ----

@@ -554,5 +554,8 @@
     <FxCompile Include="shaderes\compute_shaders\curl_noise_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\layout_cloud_height_profile_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

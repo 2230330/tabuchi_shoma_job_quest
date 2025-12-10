@@ -18,12 +18,6 @@ void main(uint3 dtid : SV_DispatchThreadID)
         return;
 
     float3 uvw = (float3) dtid / CURL_NOISE_SIZE;
-
-    //float3 worley = worley_fbm(uvw, 4);
-    
-    //worley = Warp(worley*4.0f);
-    
-    float eps = 0.01f;
     
     float3 p = uvw * 8.0f;
         

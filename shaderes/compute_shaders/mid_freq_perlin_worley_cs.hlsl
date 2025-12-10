@@ -14,11 +14,11 @@ void main(uint3 dtid : SV_DISPATCHTHREADID)
         return;
     }
     
-    const float freq = 4.0;
+    const float freq = 8.0;
     
     float3 uvw = (float3) (dtid) / MID_FREQ_PERLIN_WORLEY_DIMENSIONS;
 	
-    float pfbm = lerp(1.0, perlin_fbm(uvw, freq /*4.0*/, 7), 0.5);
+    float pfbm = lerp(1.0, perlin_fbm(uvw, freq , 7), 0.5);
     pfbm = abs(pfbm * 2.0 - 1.0); // billowy perlin noise
     
     float4 color = 0;

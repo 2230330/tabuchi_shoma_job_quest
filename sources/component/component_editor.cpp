@@ -149,7 +149,7 @@ void ComponentEditor::DrawImgui()
                     {
                         ImGui::Text("Wind");
                         ImGui::DragFloat2("Wind Direction", reinterpret_cast<float*>(&c.wind_direction), 0.01f, -1.0f, 1.0f);
-                        ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 20.0f);
+                        ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 100.0f);
 
                         ImGui::Separator();
 
@@ -160,9 +160,9 @@ void ComponentEditor::DrawImgui()
                         ImGui::Separator();
 
                         ImGui::Text("Density / Coverage");
-                        ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.2f);
+                        ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.5f);
                         ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.1f, 1.0f);
-                        ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 10.0f);
+                        ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 100.0f);
                         ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
 
                         ImGui::Separator();

@@ -69,7 +69,8 @@ private:
 
     //ノイズテクスチャ
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_srv_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_perlin_worley_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>mid_freq_worley_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_worley_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>curl_noise_srv_ = nullptr;
 
@@ -85,6 +86,11 @@ private:
     //curlノイズ
     const int curl_dimensions{ 128 };
     const int curl_numthreads{ 8 };
+    //雲の高度分布テクスチャ
+    const int layout_cloud_height_profile_dimensions{ 64 };
+    const int layout_cloud_height_profile_numthreads{ 8 };
+
+
     struct CurlParams
     {
         float frequency; //base_frequency(1.0f)
