@@ -74,21 +74,21 @@ void ComponentEditor::DrawImgui()
             {
                 uint32_t entity = enti_mng_.Add();
                 //äÓëbèÓïÒÇÃí«â¡
-                ComponentPosition position{};
-                comp_mng_.Add<ComponentPosition>(entity, position);
-                ComponentRotation rotation{};
-                comp_mng_.Add<ComponentRotation>(entity, rotation);
-                ComponentScale scale;
-                scale.value = { 1.f, 1.f, 1.f };
-                comp_mng_.Add(entity, scale);
-                ComponentLocalToWorld l2w{};
-                comp_mng_.Add(entity, l2w);
-                ComponentTexture texture;
-                comp_mng_.Add(entity, texture);
+                //ComponentPosition position{};
+                //comp_mng_.Add<ComponentPosition>(entity, position);
+                //ComponentRotation rotation{};
+                //comp_mng_.Add<ComponentRotation>(entity, rotation);
+                //ComponentScale scale;
+                //scale.value = { 1.f, 1.f, 1.f };
+                //comp_mng_.Add(entity, scale);
+                //ComponentLocalToWorld l2w{};
+                //comp_mng_.Add(entity, l2w);
+                //ComponentTexture texture;
+                //comp_mng_.Add(entity, texture);
                 ComponentCloudDome cloud_dome;
                 comp_mng_.Add(entity, cloud_dome);
-                ComponentIntensity intensity;
-                comp_mng_.Add(entity, intensity);
+                //ComponentVolumetricCloud volumetric_cloud;
+                //comp_mng_.Add(entity, volumetric_cloud);
 
                 has_cloud_ = entity;
             }

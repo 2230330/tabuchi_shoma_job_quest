@@ -1,4 +1,5 @@
 #include"../perlin_worley_noise.hlsli"
+#include"../swirly_curl_noise.hlsli"
 
 RWTexture3D<float4> low_freq_perlin_worley : register(u0);
 
@@ -22,10 +23,11 @@ void main(uint3 dtid : SV_DISPATCHTHREADID)
     pfbm = abs(pfbm * 2.0 - 1.0); // billowy perlin noise
     
     float4 color = 0;
-    color.g = lerp(1.0f,worley_fbm(uvw, freq * 1.0),0.5f);
-    color.b = lerp(1.0f,worley_fbm(uvw, freq * 2.0),0.5f);
-    color.a = lerp(1.0f, worley_fbm(uvw, freq * 4.0), 0.5f);
-    color.r = remap(pfbm, 0.0, 1.0, color.b, 1.0); // perlin-worley
+    color.g = worley_fbm(uvw, freq * 1.0);
+    color.b = worley_fbm(uvw, freq * 2.0);
+    color.a = worley_fbm(uvw, freq * 4.0);
+    color.r = remap(pfbm, 0.0, 1.0, color.g, 1.0);
 
+    
     low_freq_perlin_worley[dtid] =color;
 }

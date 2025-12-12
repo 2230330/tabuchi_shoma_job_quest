@@ -19,24 +19,8 @@ private:
 
     ComponentManager& comp_mng_;
 
-    //ドーム頂点構造
-    struct SkyVertex {
-        DirectX::XMFLOAT3 position;
-        DirectX::XMFLOAT2 texcoord;
-    };
-    Microsoft::WRL::ComPtr<ID3D11Buffer>vertex_buffer_;
-    Microsoft::WRL::ComPtr<ID3D11Buffer>index_buffer_;
-
-    // ドームメッシュ生成パラメータ
-    const float radius_ = 1000.f;
-    UINT index_count_;
-
-    std::vector<SkyVertex> vertices_;
-    std::vector<uint32_t> indices_;
-
     //シェーダー
     Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_ps_;
-
 
     //定数バッファ
     struct CloudRayMarchingConstants

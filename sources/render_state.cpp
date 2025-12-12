@@ -84,20 +84,6 @@ RenderState::RenderState(ID3D11Device* device)
 				sampler_state_[static_cast<int>(SamplerState::linear_clamp)].GetAddressOf());
 			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
-		//リニアサンプリング、ミラー(ボリューメトリッククラウド様に作成)
-		{
-			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-			desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
-			desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
-			desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
-			desc.BorderColor[0] = 0.0f;
-			desc.BorderColor[1] = 0.0f;
-			desc.BorderColor[2] = 0.0f;
-			desc.BorderColor[3] = 0.0f;
-			HRESULT hr = device->CreateSamplerState(&desc,
-                sampler_state_[static_cast<int>(SamplerState::linear_mirror)].GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-		}
 		//
 		{
 			desc.MipLODBias = 0;
@@ -116,6 +102,20 @@ RenderState::RenderState(ID3D11Device* device)
 			HRESULT hr = device->CreateSamplerState(&desc,
 				sampler_state_[static_cast<int>(SamplerState::anisotropic)].GetAddressOf());
 			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
+		//リニアサンプリング、ミラー(ボリューメトリッククラウド様に作成)
+		{
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+			desc.BorderColor[0] = 0.0f;
+			desc.BorderColor[1] = 0.0f;
+			desc.BorderColor[2] = 0.0f;
+			desc.BorderColor[3] = 0.0f;
+			HRESULT hr = device->CreateSamplerState(&desc,
+                sampler_state_[static_cast<int>(SamplerState::linear_mirror)].GetAddressOf());
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
 	}
 

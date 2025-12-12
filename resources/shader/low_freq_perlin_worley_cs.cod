@@ -44,7 +44,7 @@ mov r0.xyz, r0.xyzx  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
 #line 22
 mov r0.w, l(0.000000)  // r0.w <- UIF
 
-#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
+#line 11 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
 mov r1.x, l(128)
 uge r1.x, vThreadID.x, r1.x
 mov r1.y, l(128)
@@ -55,21 +55,21 @@ uge r1.y, vThreadID.z, r1.y
 or r1.x, r1.y, r1.x
 if_nz r1.x
 
-#line 14
+#line 15
   ret 
 
-#line 15
+#line 16
 endif 
 
-#line 17
+#line 18
 mov r1.x, l(4.000000)  // r1.x <- freq
 
-#line 19
+#line 20
 utof r1.yzw, vThreadID.xxyz
 itof r2.xyz, l(128, 128, 128, 0)
 div r1.yzw, r1.yyzw, r2.xxyz  // r1.y <- uvw.x; r1.z <- uvw.y; r1.w <- uvw.z
 
-#line 21
+#line 22
 nop 
 mov r1.yzw, r1.yyzw
 mov r1.x, r1.x
@@ -461,20 +461,20 @@ endloop
 #line 126
 mov r3.w, r3.w  // r3.w <- <perlin_fbm return value>
 
-#line 21 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
+#line 22 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
 mov r1.x, l(-1.000000)
 add r1.x, r1.x, r3.w
 mul r1.x, r1.x, l(0.500000)
 add r1.x, r1.x, l(1.000000)  // r1.x <- pfbm
 
-#line 22
+#line 23
 mul r1.x, r1.x, l(2.000000)
 mov r2.x, l(-1.000000)
 add r1.x, r1.x, r2.x
 mov r2.x, -r1.x
 max r1.x, r1.x, r2.x  // r1.x <- pfbm
 
-#line 25
+#line 26
 nop 
 mov r1.yzw, r1.yyzw
 mov r2.x, l(4.000000)
@@ -1792,13 +1792,10 @@ add r2.x, r2.x, l(1.000000)  // r2.x <- <worley_noise_fixed return value>
 mul r2.x, r2.x, l(0.125000)
 add r2.x, r2.x, r2.y  // r2.x <- <worley_fbm return value>
 
-#line 25 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
-mov r2.y, l(-1.000000)
-add r2.x, r2.y, r2.x
-mul r2.x, r2.x, l(0.500000)
-add r2.z, r2.x, l(1.000000)  // r2.z <- color.y
+#line 26 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
+mov r2.x, r2.x  // r2.x <- color.y
 
-#line 26
+#line 27
 nop 
 mov r1.yzw, r1.yyzw
 mov r3.x, l(8.000000)
@@ -3114,15 +3111,12 @@ add r3.x, r3.x, l(1.000000)  // r3.x <- <worley_noise_fixed return value>
 
 #line 220
 mul r3.x, r3.x, l(0.125000)
-add r3.x, r3.x, r3.y  // r3.x <- <worley_fbm return value>
+add r2.z, r3.x, r3.y  // r2.z <- <worley_fbm return value>
 
-#line 26 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
-mov r3.y, l(-1.000000)
-add r3.x, r3.y, r3.x
-mul r3.x, r3.x, l(0.500000)
-add r2.x, r3.x, l(1.000000)  // r2.x <- color.z
+#line 27 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
+mov r2.z, r2.z  // r2.z <- color.z
 
-#line 27
+#line 28
 nop 
 mov r1.yzw, r1.yyzw
 mov r3.x, l(16.000000)
@@ -3654,17 +3648,17 @@ loop
     imax r7.w, r3.z, r7.w
     udiv null, r7.z, r7.z, r7.w
     ineg r7.w, r7.z
-    ine r8.x, l(0, 0, 0, 0), r8.x  // vThreadID.x <- dtid.x; vThreadID.y <- dtid.y; vThreadID.z <- dtid.z; r0.x <- UI0
-    movc r7.z, r8.x, r7.w, r7.z  // r0.y <- UI1
+    ine r8.x, l(0, 0, 0, 0), r8.x
+    movc r7.z, r8.x, r7.w, r7.z
     iadd r7.z, r3.z, r7.z
-    ineg r7.w, r7.z  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
-    ineg r8.x, r3.z  // r0.w <- UIF
-    and r8.y, r7.z, l(0x80000000)
-    imax r7.z, r7.z, r7.w
-    imax r7.w, r3.z, r8.x
-    udiv null, r7.z, r7.z, r7.w
     ineg r7.w, r7.z
-    ine r8.x, l(0, 0, 0, 0), r8.y
+    ineg r8.x, r3.z
+    and r8.y, r7.z, l(0x80000000)
+    imax r7.z, r7.z, r7.w  // vThreadID.x <- dtid.x; vThreadID.y <- dtid.y; vThreadID.z <- dtid.z
+    imax r7.w, r3.z, r8.x  // r0.x <- UI0
+    udiv null, r7.z, r7.z, r7.w  // r0.y <- UI1
+    ineg r7.w, r7.z  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
+    ine r8.x, l(0, 0, 0, 0), r8.y  // r0.w <- UIF
     movc r9.z, r8.x, r7.w, r7.z  // r9.z <- nid.z
 
 #line 201
@@ -3675,7 +3669,7 @@ loop
 
 #line 173
     nop 
-    utof r8.xyz, r9.xyzx  // r1.y <- uvw.x; r1.z <- uvw.y; r1.w <- uvw.z
+    utof r8.xyz, r9.xyzx
 
 #line 28
     ftoi r8.xyz, r8.xyzx
@@ -3687,7 +3681,7 @@ loop
     imul null, r8.xyz, r0.xyzx, r7.zzzz
 
 #line 34
-    utof r8.xyz, r8.xyzx
+    utof r8.xyz, r8.xyzx  // r1.y <- uvw.x; r1.z <- uvw.y; r1.w <- uvw.z
     mul r8.xyz, r8.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
     mul r8.xyz, r0.wwww, r8.xyzx
     add r8.xyz, r8.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r8.x <- <hash33 return value>.x; r8.y <- <hash33 return value>.y; r8.z <- <hash33 return value>.z
@@ -4067,13 +4061,13 @@ loop
     ineg r6.z, r7.y
     ineg r6.w, r3.x
     and r7.x, r7.y, l(0x80000000)
-    imax r6.z, r7.y, r6.z  // r1.x <- pfbm
+    imax r6.z, r7.y, r6.z
     imax r6.w, r3.x, r6.w
     udiv null, r6.z, r6.z, r6.w
     ineg r6.w, r6.z
     ine r7.x, l(0, 0, 0, 0), r7.x
     movc r6.z, r7.x, r6.w, r6.z
-    iadd r6.z, r3.x, r6.z
+    iadd r6.z, r3.x, r6.z  // r1.x <- pfbm
     ineg r6.w, r6.z
     ineg r7.x, r3.x
     and r7.y, r6.z, l(0x80000000)
@@ -4438,15 +4432,12 @@ add r0.x, r0.x, l(1.000000)  // r0.x <- <worley_noise_fixed return value>
 
 #line 220
 mul r0.x, r0.x, l(0.125000)
-add r0.x, r0.x, r3.y  // r0.x <- <worley_fbm return value>
+add r2.w, r0.x, r3.y  // r2.w <- <worley_fbm return value>
 
-#line 27 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
-mov r0.y, l(-1.000000)
-add r0.x, r0.y, r0.x
-mul r0.x, r0.x, l(0.500000)
-add r2.w, r0.x, l(1.000000)  // r2.w <- color.w
+#line 28 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
+mov r2.w, r2.w  // r2.w <- color.w
 
-#line 28
+#line 29
 nop 
 mov r1.x, r1.x
 mov r0.x, l(0)
@@ -4465,12 +4456,12 @@ add r0.y, r0.y, r0.z
 mul r0.x, r0.y, r0.x
 add r2.y, r2.x, r0.x  // r2.y <- <remap return value>
 
-#line 28 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
+#line 29 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
 mov r2.y, r2.y  // r2.y <- color.x
 
-#line 30
-store_uav_typed u0.xyzw, vThreadID.xyzz, r2.yzxw
+#line 32
+store_uav_typed u0.xyzw, vThreadID.xyzz, r2.yxzw
 
-#line 31
+#line 33
 ret 
-// Approximately 3161 instruction slots used
+// Approximately 3152 instruction slots used

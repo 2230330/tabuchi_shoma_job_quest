@@ -65,15 +65,15 @@ Texture2D<float> gradient_cumulonimbus_texture : register(t6);
 static const float time_offset = 10000.0;
 float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
 {
-    return low_frequency_perlin_worley_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
+    return low_frequency_perlin_worley_texture.SampleLevel(sampler_states[LINEAR_WRAP], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
 }
 float3 SampleHighFrequencyNoises(float3 sample_point, float mip_level)
 {
-    return high_frequency_worley_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * high_frequency_worley_sampling_scale, mip_level);
+    return high_frequency_worley_texture.SampleLevel(sampler_states[LINEAR_WRAP], sample_point * high_frequency_worley_sampling_scale, mip_level);
 }
 float4 SampleMidFrequencyNoises(float3 sample_point,float mip_level)
 {
-    return mid_frequency_worley_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
+    return mid_frequency_worley_texture.SampleLevel(sampler_states[LINEAR_WRAP], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
 }
 float3 SampleWeatherData(float2 sample_point)
 {
@@ -81,7 +81,7 @@ float3 SampleWeatherData(float2 sample_point)
 
 #if 1
     float horizon_distance = sqrt(cloud_altitudes_min_max.x * cloud_altitudes_min_max.x - earth_radius * earth_radius) * horizon_distance_scale;
-    return weather_texture.Sample(sampler_states[LINEAR_MIRROR], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
+    return weather_texture.Sample(sampler_states[LINEAR_WRAP], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
 #else
 	const float weather_scale = 0.00006;
 	return weather_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * weather_scale + 0.5 + offset, 0);
@@ -498,14 +498,14 @@ float SampleCloudDensityAlongCone(float3 ray_origin, float3 ray_direction /*norm
 	
 	// lighting ray-march loop
 	[unroll]
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 2; i++)
     {
 		// add the current step offset to the sample position
         sample_point += (ray_direction + noise_kernel[i] * float(i)) * cone_spread_multplier;
         weather_data = SampleWeatherData(sample_point.xz);
 #if 0
 		// sample cloud density the cheap way, using only one level of noise
-		density_along_cone += sample_cloud_density(sample_point, weather_data, float(i) /*mip_level*/, density_along_cone > 0.3 /*cheap_sample*/);
+		density_along_cone += SampleCloudDensity(sample_point, weather_data, float(i) /*mip_level*/, density_along_cone > 0.3 /*cheap_sample*/);
 #else
 		// always sample cloud density the expensive way
         density_along_cone += SampleCloudDensity(sample_point, weather_data, float(i) /*mip_level*/, false /*cheap_sample*/);

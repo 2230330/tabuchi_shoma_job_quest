@@ -158,12 +158,12 @@ float3 CurlOctave(float3 p, float scale, float strength)
 
 
 
-float3 FlowField(float3 p)
+float3 FlowField(float3 p,float scale,float strength)
 {
     float3 f = 0;
 
     // 大きなうねり（弱め）
-    float3 largeCurl = CurlNoise(p * 0.02) * 1.2;
+    float3 largeCurl = CurlNoise(p * 0.03) * strength;
     p += largeCurl;
 
     // 風方向のバイアス（弱め）
@@ -171,20 +171,20 @@ float3 FlowField(float3 p)
     p += windDir * 2.0;
 
     // オクターブ構成（低周波→高周波）
-    p *= 0.08;
-    f += CurlOctave(p, 2.0f, 1.0);
+    p *= 0.1;
+    f += CurlOctave(p, scale, 1.0);
     p *= 2.5;
-    f += CurlOctave(p, 2.0f, 0.7);
+    f += CurlOctave(p, scale, 0.7);
     p *= 3.0;
-    f += CurlOctave(p, 2.0f, 0.4);
+    f += CurlOctave(p, scale, 0.4);
     p *= 3.5;
-    f += CurlOctave(p, 2.0f, 0.2);
+    f += CurlOctave(p, scale, 0.2);
     p *= 4.0;
-    f += CurlOctave(p, 2.0f, 0.1); // 高周波追加
+    f += CurlOctave(p, scale, 0.1); // 高周波追加
 
     // 強度を残して非線形で強調
     float lenF = length(f);
-    return normalize(f) * pow(lenF, 1.2); // 渦の強さをさらに残す
+    return normalize(f) * pow(lenF, 1.4); // 渦の強さをさらに残す
 }
 
 

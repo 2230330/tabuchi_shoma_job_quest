@@ -21,7 +21,7 @@ void main(uint3 dtid : SV_DispatchThreadID)
     
     float3 p = uvw * 8.0f;
         
-    float3 curl = FlowField(p);
+    float3 curl = FlowField(p,2.0f,1.2f);
 
     // ³‹K‰»‚µ‚Ä 1 ¨ 0~1 ‚Éû‚ß‚é
     curl = normalize(curl) * 0.5 + 0.5;
