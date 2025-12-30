@@ -155,14 +155,14 @@ void ComponentEditor::DrawImgui()
 
                         ImGui::Text("Altitude");
                         ImGui::DragFloat2("Cloud Altitude Min/Max", reinterpret_cast<float*>(&c.cloud_altitudes_min_max),
-                            10.0f, 0.0f, 6000000.0f);
+                            10.0f, 0.0f, 6383000.0f);
 
                         ImGui::Separator();
 
                         ImGui::Text("Density / Coverage");
                         ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.5f);
                         ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.1f, 1.0f);
-                        ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 100.0f);
+                        ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 10.0f);
                         ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
 
                         ImGui::Separator();

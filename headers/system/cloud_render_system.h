@@ -27,7 +27,7 @@ private:
     {
         //•—×‚Ì§Œä
         DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
-        DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6001500.0f, 6004000.0f }; // highest and lowest altitudes at which clouds are distributed
+        DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6370500.0f, 6372000.0f }; // highest and lowest altitudes at which clouds are distributed
         float wind_speed = 1.0f; // [0.0, 20.0]
 
         //–§“x
@@ -39,7 +39,7 @@ private:
         //‰_‚Ìí—ŞAŒú‚³‚ğ’²®‚·‚é
         float cloud_type_scale = 1.0f;
 
-        float earth_radius = 6000000.0f; // earth radius
+        float earth_radius = 6370000.0f; // earth radius
         float horizon_distance_scale = 1.0f;
         float low_frequency_perlin_worley_sampling_scale = 0.00008f;
         float high_frequency_worley_sampling_scale = 0.001f;
@@ -59,13 +59,13 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>curl_noise_srv_ = nullptr;
 
     //’áü”gƒmƒCƒY
-    const int low_freq_perlin_worley_dimensions{ 128 };
+    const int low_freq_perlin_worley_dimensions{ 256 };
     const int low_freq_perlin_worley_numthreads{ 8 };
     //’†ü”g
     const int mid_freq_perlin_worley_dimensions{ 64 };
     const int mid_freq_perlin_worley_numthreads{ 8 };
     //‚ü”gƒmƒCƒY
-    const int high_freq_worley_dimensions{ 32 };
+    const int high_freq_worley_dimensions{ 64 };
     const int high_freq_worley_numthreads{ 8 };
     //curlƒmƒCƒY
     const int curl_dimensions{ 128 };

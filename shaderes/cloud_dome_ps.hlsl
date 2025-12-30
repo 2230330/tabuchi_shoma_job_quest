@@ -198,17 +198,17 @@ float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, float3 vi
     float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
     //kasten-Young 1989近似
     float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
-    air_mass = min(air_mass, 20.0f); // 極端な値を制限
+    //air_mass = min(air_mass, 20.0f); // 極端な値を制限
     float3 Ei = ComputeSunIrradiance(air_mass);
     
     //位相関数(散乱光の内こちらに向く割合)
     float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0))); //０＝天頂、1＝地
     float mie_boost = 0.5f * horizon_factor * (0.01f + air_mass * 0.05f);
     
-    float cos_theta = clamp(dot(view_dir, light_dir), -0.4f, 1.0f);
+    float cos_theta = lerp(dot(view_dir, light_dir), -0.4f, 1.0f);
     float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
-    float phase = ((RayleighPhase(sun_elevation) * (lerp(10.0f, 2.f, sunset_factor))
-    + MiePhase(sun_elevation, 0.5) * mie_boost) / (4.0f * PI));
+    float phase = ((RayleighPhase(cos_theta) * (lerp(10.0f, 2.f, sunset_factor))
+    + MiePhase(cos_theta, 0.5) * mie_boost) / (4.0f * PI));
     
     //太陽方向
     float3 T1 = TransmittanceApprox(sample_pos, sample_pos + light_dir * ATMOSPHERE_HEIGHT);
@@ -243,12 +243,12 @@ float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, float3 vi
 float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
 {
     
-    float cos_theta = clamp(dot(view_dir, light_dir), -0.4f, 1.0f); //視線と太陽の角度
+    float cos_theta = clamp(dot(view_dir, light_dir), -0.f, 1.0f); //視線と太陽の角度
     float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
     float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
     //kasten-Young 1989近似
     float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
-    air_mass = min(air_mass, 50.0f); // 極端な値を制限
+    //air_mass = min(air_mass, 50.0f); // 極端な値を制限
 
     float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
     float3 Ei = ComputeSunIrradiance(air_mass);
@@ -293,30 +293,15 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
     }
         //太陽
     {
-     //   const float sol_size = 0.00872663806;
-     //   const float sun_disk_scale = 2.0; // [0.0, 360.0]
-	    //// solar disk and out-scattering
-     //   float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
-     //   float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
-        
-     //   float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
-     //   float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
-        
-     //   float sun_disk = lerp(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
-     //   float3 Lo = sun_disk * Ei * directional_light.intensity;
-     //   // 太陽のディスク内に視線が入っているときだけ加算
-     //   if (sun_disk > 0.01f) // しきい値で完全に限定
-     //   {
-     //       result += Lo*0.01f;
-     //   }
+
     }
     return result;
 }
 
-// fractional value for sample position in the cloud layer
+// 雲レイヤー内におけるサンプル位置の高さ比率を求める
 float GetHeightFractionForPoint(float position)
 {
-	// get global fractional position in cloud zone
+	// 雲が存在する高度範囲内でのグローバルな相対位置（0.0~1.0）を計算
     float height_fraction = (position - cloud_altitudes_min_max.x) / (cloud_altitudes_min_max.y - cloud_altitudes_min_max.x);
     return clamp(height_fraction, 0.0, 1.0);
 }
@@ -386,7 +371,7 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 
 float IntersectSphere(float3 pos, float3 dir, float r)
 {
-	// define the center of the sphere as the origin of coordinates
+	// 球の中心を原点とした座標系でのレイと球の交差判定
     float a = dot(dir, dir);
     float b = 2.0 * dot(dir, pos);
     float c = dot(pos, pos) - (r * r);
@@ -398,45 +383,57 @@ float IntersectSphere(float3 pos, float3 dir, float r)
 
 #define ENABLE_CLOUD_ANIMATION 
 // Andrew Schneider "Real-Time Volumetric Cloudscape" In GPU Pro 7, pp. 97-127
-// returns density at a given point
+// 指定された位置における雲の密度を返す
 float SampleCloudDensity(float3 sample_point, float3 weather_data, float mip_level, bool cheap_sample = false)
 {
-	// get the height-fraction for use with blending noise types over height
+	// 高さに応じてノイズをブレンドするため、位置から高さ比率を算出
     float height_fraction = GetHeightFractionForPoint(length(sample_point));
 	
 #ifdef ENABLE_CLOUD_ANIMATION
+        // 風向きと風速に基づいて雲を移動させる（低周波形状用）
     sample_point.xz += (options.z + time_offset) * 20.0 * normalize(-wind_direction) * wind_speed * 0.6;
 #endif
 	
-	// read the low-frequency perlin-worley and worley noises
+	// 低周波の Perlin-Worley ノイズと Worley ノイズを取得
     float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, mip_level - 2.0);
 
-	// build an fbm(fractal brownian motion) out of the low-frequency worley noises that can be used to add detail to the low-frequency perlin-worley noise
-    float low_frequency_fbm = low_frequency_noises.g * 0.625 + low_frequency_noises.b * 0.25 + low_frequency_noises.a * 0.125;
+	// 低周波 Worley ノイズを用いて fbm（フラクタルブラウン運動）を構築し、
+    // 低周波 Perlin-Worley ノイズにディテールを追加する
+    float low_frequency_fbm = 
+    low_frequency_noises.g * 0.625 +
+    low_frequency_noises.b * 0.25 +
+    low_frequency_noises.a * 0.125;
     
-	// define the base cloud shape by dilating it with the low-frequency fbm(fractal brownian motion) mode of worley noise
-    float base_cloud = Remap(low_frequency_noises.r, -(1.0 - low_frequency_fbm), 1.0, 0.0, 1.0);
+	// 低周波 fbm によって Perlin-Worley ノイズを膨張させ、
+	// 雲のベース形状を定義する
+    float base_cloud = 
+    Remap(low_frequency_noises.r,
+    -(1.0 - low_frequency_fbm),
+    1.0, 
+    0.0,
+    1.0);
 	
-	// get the density-height gradient using the density height function
+	// 雲タイプに応じた、高さ方向の密度勾配を取得
     float cloud_type = clamp(weather_data.b * cloud_type_scale, 0.0, 1.0);
     float density_height_gradient = GetDensityHeightGradient(height_fraction, cloud_type);
 	
-	// apply the height function to the base cloud shape
+	// 高さ方向の密度関数をベース雲形状に適用
     base_cloud *= density_height_gradient;
 	
-	// cloud coverage is stored in weather_data's red channel
+	// 雲の被覆率(カバレッジ)はweather_dataのRチャンネルに格納されている
     float cloud_coverage = weather_data.r * cloud_coverage_scale;
 	
-	// use remap to apply the cloud  coverage attribute
+	// remapを用いて雲の被覆率を反映させる
     float base_cloud_with_coverage = Remap(base_cloud, 1.0 - cloud_coverage, 1.0, 0.0, 1.0);
     base_cloud_with_coverage *= cloud_coverage;
 
     float final_cloud = base_cloud_with_coverage;
     if (!cheap_sample && base_cloud_with_coverage > 0.0)
     {
-		// constract with worley noise at the top produces billowing detail
+		// 雲の上部をWorleyノイズで削り、もくもくした立体感を作る
 	
 #ifdef ENABLE_CLOUD_ANIMATION
+        // 高周波ディテール用の追加アニメーション
         if (wind_speed != 0.0)
         {
             sample_point.xz -= (options.z + time_offset) * normalize(-wind_direction) * 40.0;
@@ -445,25 +442,25 @@ float SampleCloudDensity(float3 sample_point, float3 weather_data, float mip_lev
 #endif
 		
 #if 1
-		// add some turbulence to bottom of clouds
+		// 雲の下部に乱流（カールノイズ）を加えて自然な揺らぎを作る
         float3 curl_noise = curl_noise_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point.xy * 0.00008, 0);
         sample_point.xy = sample_point.xy + curl_noise.xy * (1.0 - height_fraction);
 #endif
 		
-		// sample high-frequency noises
+		// 高周波ノイズをサンプリング
         float3 high_frequency_noises =SampleHighFrequencyNoises(sample_point, mip_level);
 	
-		// build high-frequency worley noise fbm(fractal brownian motion)
+		// 高周波 Worley ノイズによる fbm を構築
         float high_frequency_fbm = high_frequency_noises.r * 0.625 + high_frequency_noises.g * 0.25 + high_frequency_noises.b * 0.125;
 	
-		// transition from wispy shape to billowy shape over height
+		// 高さに応じて、繊細な雲形状から膨らんだ形状へ遷移させる
 #if 1
 		float high_frequency_noise_modifier = lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 10.0, 0.0, 1.0));
 #else
         float high_frequency_noise_modifier = lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 4.0, 0.0, 1.0));
 #endif
 	
-		// erode the base cloud shape with distorted high-frequency worley noises
+		// 歪ませた高周波Worleyノイズでベース雲形状を侵食する
 #if 1
         final_cloud = Remap(base_cloud_with_coverage, high_frequency_noise_modifier * 0.2, 1.0, 0.0, 1.0);
 #else	
@@ -487,7 +484,7 @@ static const float3 noise_kernel[6] =
     float3(0.28128598f, 0.42443639f, -0.86065785f),
     float3(-0.16852403f, 0.14748697f, 0.97460106f)
 };
-// a function to gather density in a cone for use with lighting clouds
+//ライティング様に円錐状に雲密度を収集する関数
 float SampleCloudDensityAlongCone(float3 ray_origin, float3 ray_direction /*normalized*/, float cone_spread_multplier /*how wide to make the cone*/)
 {
 	
@@ -533,7 +530,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     float step_size = length(ray_step);
 	
 	// レイ開始位置を少しランダムにして横筋を目立たなくする（ディザリング）
-    float3 sample_point = ray_origin + ray_step * Hash(ray_origin * 10.0); // dithering ? 
+    float3 sample_point =ray_origin + ray_step * Hash(ray_origin * 10.0);
 	
     //太陽方向と位相関数
     float3 sun_direction = normalize(-directional_light.direction.xyz);
@@ -544,7 +541,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     henyey_greenstein_phase = saturate(henyey_greenstein_phase); //0~1.0の範囲に圧縮
 
     
-	// precalculate atmosphere color
+    // 地球中心基準のカメラ位置
     float3 position = float3(0.f, EARTH_RADIUS, 0.f);
     //カメラから天球の各頂点への方向
     
@@ -569,41 +566,41 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     float cloud_test = 0;
     int zero_density_sample_count = 0;
 	
-	// start the main ray-march loop
+    //メインのレイマーチングループ
 	[loop]
     for (int i = 0; i < steps; i++)
     {
         //雲内部なら高品質
         if (cloud_test > 0.0)
         {
-			// sample density the expensive way the setting the last parameter to false, indicating a full sample
+            //天候データ
             float3 weather_data = SampleWeatherData(sample_point.xz);
             float sampled_density = SampleCloudDensity(sample_point, weather_data, 0.0, false /*cheap_sample*/);
-			// if we just sample a zero, increment the counter
+            // 密度ゼロが続いた回数をカウント
             if (sampled_density == 0.0)
             {
                 zero_density_sample_count++;
             }
-			// if we are doing an expensive sample that is still potentially in the cloud
-            if (zero_density_sample_count != 6)
+            //雲内部と判断できる間は積算を続行
+            if (zero_density_sample_count != 10)
             {
                 density += sampled_density;
                 if (sampled_density != 0.0)
                 {
-					// the accumulating variable for transmittence
+                    //視線方向の透過率を更新
                     transmittence *= exp(-density_scale * sampled_density * step_size ); // 減衰を弱める
                     
-					// sample_cloud_density_along_cone just walks in the given direction from the start point and takes 6 number of lighting samples
+                    //太陽方向の密度計算
                     float density_along_light_ray = 0.0;
                     density_along_light_ray += SampleCloudDensityAlongCone(sample_point, sun_direction, cone_spread_multplier);
                     density_along_light_ray += SampleCloudDensityLongDistance(sample_point, sun_direction, cone_spread_multplier);
 			
-					// captures the direct lighting from the sun
+					//光学的な厚み
                     float optical_thickness = density_scale * density_along_light_ray * cone_spread_multplier;
                     //水平方向の吸収を緩和する
                     //optical_thickness *= lerp(0.5, 1.0, horizon_factor);
                     float rain_cloud_absorption = exp(-weather_data.g) * rain_cloud_absorption_scale;
-					// beer's law models the attenuation of light as it passes through a material
+					//ランベルトベールの法則による光減衰
 #if 1
                     float beers_law = exp(-optical_thickness * rain_cloud_absorption);
 #else
@@ -612,21 +609,39 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
 					// 雲内部を明るくする近似
                     float powdered_sugar = enable_powdered_sugar_efffect ? 1.0 - exp(-optical_thickness) : 0.5;
 					
+                    //高さ
+                    float height = saturate(
+                    (sample_point.y - cloud_altitudes_min_max.x) /
+                    (cloud_altitudes_min_max.y - cloud_altitudes_min_max.x));
+                    //直射光ブースト
+                    float top_light = smoothstep(0.0f, 1.0f, height);
+                    float up_light = saturate(dot(sun_direction, float3(0, 1, 0)));
+                    
                     // 太陽直接光
-                    float3 sun_light_color = float3(10.0, 9.5, 9.f); // or passed from CPU
+                    float3 sun_light_color = float3(1.0, 0.95, 0.9f); // or passed from CPU
                     float3 direct_light =
-                    2.0f*
-                    beers_law *
-                    powdered_sugar *
-                    henyey_greenstein_phase +
+                    (1.0f
+                    //* beers_law
+                    * powdered_sugar
+                    * henyey_greenstein_phase
+                    ) *
+                    lerp(0.0f,1.0f,up_light*top_light) +
                     sun_light_color;
 
                     // 合計ライト
-                    float3 lighting = direct_light + atmosphere_color; //多重散乱ブーストとして
+                    float shadow = beers_law;
+                    float3 lighting = 
+                    direct_light * shadow + 
+                    atmosphere_color * lerp(1.0f, shadow, 0.2f);
 
                     // 雲色寄与
                     color += lighting * sampled_density * transmittence;
 
+                    if(transmittence>=1.f)
+                    {
+                        break;
+                    }
+                    
                 }
                 sample_point += ray_step;
             }
@@ -639,19 +654,29 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
         }
         else
         {
-			// sample density the cheap way, only using the low-frequency noise 
+			//雲の外判定中は低品質サンプリング
             float3 weather_data = SampleWeatherData(sample_point.xz);
             cloud_test = SampleCloudDensity(sample_point, weather_data, 0.0, true /*cheap_sample*/);
             if (cloud_test == 0.0)
             {
                 sample_point += ray_step;
+                if(sample_point.y<=cloud_altitudes_min_max.x)
+                {
+                    sample_point += ray_step*cloud_altitudes_min_max.x;
+                }
             }
         }
+        
+        float distance = length(ray_origin - sample_point);
+        
+        if (distance >= 13000.f)//13km(雲の最高高度)
+        {
+            break;
+        }
     }
+    	
     
-    color /= (color + 1.0f);
-	
-    float alpha = 1.0 - transmittence;
+    float alpha = 1.0 - transmittence;    
     return max(0.0, float4(color, alpha));
 }
 

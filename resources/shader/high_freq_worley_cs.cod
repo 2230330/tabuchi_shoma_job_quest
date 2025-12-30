@@ -45,12 +45,12 @@ mov r0.xyz, r0.xyzx  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
 mov r0.w, l(0.000000)  // r0.w <- UIF
 
 #line 12 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
-mov r1.x, l(32)
+mov r1.x, l(64)
 uge r1.x, vThreadID.x, r1.x
-mov r1.y, l(32)
+mov r1.y, l(64)
 uge r1.y, vThreadID.y, r1.y
 or r1.x, r1.y, r1.x
-mov r1.y, l(32)
+mov r1.y, l(64)
 uge r1.y, vThreadID.z, r1.y
 or r1.x, r1.y, r1.x
 if_nz r1.x
@@ -63,7 +63,7 @@ endif
 
 #line 21
 utof r1.xyz, vThreadID.xyzx
-itof r2.xyz, l(32, 32, 32, 0)
+itof r2.xyz, l(64, 64, 64, 0)
 div r1.xyz, r1.xyzx, r2.xyzx  // r1.x <- uvw.x; r1.y <- uvw.y; r1.z <- uvw.z
 
 #line 24

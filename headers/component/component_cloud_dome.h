@@ -5,7 +5,7 @@ struct ComponentCloudDome :public IComponent
 {
     int iteration{ 128 };//â_Ç™ë∂ç›Ç∑ÇÈå¿äEì_
 	DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
-	DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6001500.0f, 6004000.0f }; // highest and lowest altitudes at which clouds are distributed
+	DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6370500.0f, 6372000.0f }; // highest and lowest altitudes at which clouds are distributed
 
 	float wind_speed = 1.0f; // [0.0, 20.0]
 
@@ -14,7 +14,7 @@ struct ComponentCloudDome :public IComponent
 	float rain_cloud_absorption_scale = 0.5;
 	float cloud_type_scale = 1.0f;
 
-	float earth_radius = 6000000.0f; // earth radius
+	float earth_radius = 6370000.0f; // earth radius
 	float horizon_distance_scale = 1.0f;
 	float low_frequency_perlin_worley_sampling_scale = 0.00008f;
 	float high_frequency_worley_sampling_scale = 0.001f;

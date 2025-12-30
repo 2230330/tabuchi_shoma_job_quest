@@ -45,12 +45,12 @@ mov r0.xyz, r0.xyzx  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
 mov r0.w, l(0.000000)  // r0.w <- UIF
 
 #line 11 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl"
-mov r1.x, l(128)
+mov r1.x, l(256)
 uge r1.x, vThreadID.x, r1.x
-mov r1.y, l(128)
+mov r1.y, l(256)
 uge r1.y, vThreadID.y, r1.y
 or r1.x, r1.y, r1.x
-mov r1.y, l(128)
+mov r1.y, l(256)
 uge r1.y, vThreadID.z, r1.y
 or r1.x, r1.y, r1.x
 if_nz r1.x
@@ -66,14 +66,14 @@ mov r1.x, l(4.000000)  // r1.x <- freq
 
 #line 20
 utof r1.yzw, vThreadID.xxyz
-itof r2.xyz, l(128, 128, 128, 0)
+itof r2.xyz, l(256, 256, 256, 0)
 div r1.yzw, r1.yyzw, r2.xxyz  // r1.y <- uvw.x; r1.z <- uvw.y; r1.w <- uvw.z
 
 #line 22
 nop 
 mov r1.yzw, r1.yyzw
 mov r1.x, r1.x
-mov r2.x, l(4)
+mov r2.x, l(7)
 
 #line 117 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
 mov r2.y, l(0.554785)  // r2.y <- g
