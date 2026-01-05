@@ -51,7 +51,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
     //ノイズテクスチャの読み込み
     {
         //コンピュートシェーダーで使うノイズテクスチャの作成
-        CreateNoiseTextures(device);
+        //CreateNoiseTextures(device);
 
         HRESULT hr{ S_OK };
         
@@ -238,14 +238,6 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
         context->CSSetShader(cs.Get(), nullptr, 0);
         UINT threadGroupCount = (low_freq_perlin_worley_dimensions + low_freq_perlin_worley_numthreads - 1) / low_freq_perlin_worley_numthreads;
         context->Dispatch(threadGroupCount, threadGroupCount, threadGroupCount);
-
-        // GPU完了待ち（同期）
-        D3D11_QUERY_DESC queryDesc{};
-        queryDesc.Query = D3D11_QUERY_EVENT;
-        Microsoft::WRL::ComPtr<ID3D11Query> query;
-        device->CreateQuery(&queryDesc, &query);
-        context->End(query.Get());
-        while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
         // UAV解除
         ID3D11UnorderedAccessView* nullUAV = nullptr;
         context->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
@@ -255,6 +247,14 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
         context->GenerateMips(low_freq_srv.Get());
 
 
+        // GPU完了待ち（同期）
+        D3D11_QUERY_DESC queryDesc{};
+        queryDesc.Query = D3D11_QUERY_EVENT;
+        Microsoft::WRL::ComPtr<ID3D11Query> query;
+        device->CreateQuery(&queryDesc, &query);
+        context->End(query.Get());
+        while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
+
         // DDS保存
         DirectX::ScratchImage image;
         hr = DirectX::CaptureTexture(device, context, low_freq_tex.Get(), image);
@@ -263,6 +263,7 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
             DirectX::DDS_FLAGS_NONE, low_freq_noise_tex_path);
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
+    context->Flush();
     //curlノイズテクスチャの生成
     const wchar_t* curl_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\curl_texture.dds";
     {
@@ -355,6 +356,7 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
             1
         );
     }
+    context->Flush();
     //中周波ノイズテクスチャの生成
     const wchar_t* mid_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\mid_freq_worley.dds";
     {
@@ -427,6 +429,7 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
     }
+    context->Flush();
     //高周波ノイズテクスチャの生成
     const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
     {
@@ -497,8 +500,10 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
         hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(), 
             DirectX::DDS_FLAGS_NONE, high_freq_noise_tex_path);
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
     }
+
+    // 命令キック
+    context->Flush();
 }
 
 void CloudRenderSystem::UpdateConstants(const ComponentCloudDome& cloud)

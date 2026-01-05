@@ -51,25 +51,10 @@ bool SceneTest::InitializeCore()
                 device,
                 L".\\resources\\model\\fbx\\nico\\nico.fbx"
                 , true
-
             );
-
-            //gltf_model.gltf_mesh = rsc_mng->LoadGltfModel(
-            //    device,
-            //    ".\\resources\\model\\gltf\\knife.glb"
-            //    );
         }
         //shader
         {
-
-            //shader_from_cso::CreatePsFromCso(
-            //    device,
-            //    ".\\resources\\shader\\luminance_extraction_ps.cso",
-            //    pixel_shaders_[0].GetAddressOf());
-            //shader_from_cso::CreatePsFromCso(
-            //    device,
-            //    ".\\resources\\shader\\blur_ps.cso",
-            //    pixel_shaders_[1].GetAddressOf());
             pixel_shaders_[0] = 
                 ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\luminance_extraction_ps.cso");
             pixel_shaders_[1] =
@@ -77,7 +62,6 @@ bool SceneTest::InitializeCore()
         }
         //フレームバッファの作成
         {
-
             for (int i = 0; i < 2; i++)
             {
                 framebuffers_[i] = std::make_unique<FrameBuffer>(
@@ -152,7 +136,6 @@ void SceneTest::RenderCore(float elapsed_time)
         D3D11_VIEWPORT viewport;
         UINT num_viewports{ 1 };
         dc->RSGetViewports(&num_viewports, &viewport);
-
 
         light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kLight));
         SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame));
