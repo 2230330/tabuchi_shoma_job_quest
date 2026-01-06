@@ -1,13 +1,13 @@
 #include"../../headers/system/render_system.h"
 #include"../../headers/graphics.h"
 
-RenderSystem::RenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
+GltfRenderSystem::GltfRenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
     , IRenderSystem(render_pass)
 {
 }
 
-void RenderSystem::Render()
+void GltfRenderSystem::Render()
 {
     comp_mng_.ForEach<ComponentGltf>([this](uint32_t entity_id, ComponentGltf& gltf)
         {

@@ -145,7 +145,7 @@ void Scene::Update(float elapsed_time)
 void Scene::Render(float elapsed_time)
 {
 	//	バックバッファクリア
-	Graphics::Instance().ViewClear(0.2f,0.2f,0.2f,1.0f);
+	Graphics::Instance().ViewClear(0.2f,0.2f,0.2f,0.0f);
 	Graphics::Instance().SetRenderTargets();
 
 	// ビューポートの設定

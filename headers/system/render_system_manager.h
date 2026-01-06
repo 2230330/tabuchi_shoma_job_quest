@@ -32,4 +32,6 @@ private:
     std::unique_ptr<FrameBuffer> object_framebuffer_;
 
     float back_scale = 1.0f;
+    int back_sample_count_ = 0;
+    const int back_sample_rimit_ = 60;
 };

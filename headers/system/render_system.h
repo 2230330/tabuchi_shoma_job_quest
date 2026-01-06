@@ -6,10 +6,10 @@
 
 //描画用システム
 //現在は、元々用意していたGlTFモデルの描画を使っていますが、そのうちちゃんと作りたい
-class RenderSystem :public IRenderSystem
+class GltfRenderSystem :public IRenderSystem
 {
 public:
-    RenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
+    GltfRenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
 
     void Render()override;
 private:

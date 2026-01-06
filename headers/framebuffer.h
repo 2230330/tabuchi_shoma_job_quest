@@ -24,7 +24,7 @@ public:
     ~FrameBuffer() = default;
 
     //画面のクリア
-    void Clear(ID3D11DeviceContext* immediate_context, usage flags = usage::color_depth_stencil, DirectX::XMFLOAT4 color = { 0.0f, 0.0f, 0.0f, 1.f }, float depth = 1, uint8_t stencil = 0);
+    void Clear(ID3D11DeviceContext* immediate_context, usage flags = usage::color_depth_stencil, DirectX::XMFLOAT4 color = { 0.0f, 0.0f, 0.0f, 0.f }, float depth = 1, uint8_t stencil = 0);
     //レンダリング開始
     void Activate(ID3D11DeviceContext* immediate_context, usage flags = usage::color_depth_stencil);
     //レンダリング終了

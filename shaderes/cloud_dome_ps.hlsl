@@ -251,8 +251,8 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
     //air_mass = min(air_mass, 50.0f); // 極端な値を制限
 
     float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
+    //太陽光スペクトルの減衰(波長依存)
     float3 Ei = ComputeSunIrradiance(air_mass);
-    
     
     //太陽に近いほど1.0
     float angle_factor = pow(saturate(cos_theta), 2.0f);
@@ -357,7 +357,7 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
     return density_gradient;
 
 }
-
+// レイと球の交差判定を行い、交差点までの距離を返す
 float IntersectSphere(float3 pos, float3 dir, float r)
 {
 	// 球の中心を原点とした座標系でのレイと球の交差判定
@@ -532,7 +532,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
 
     
     // 地球中心基準のカメラ位置
-    float3 position = float3(0.f, EARTH_RADIUS, 0.f);
+    float3 position = float3(0.f, earth_radius, 0.f);
     //カメラから天球の各頂点への方向
     
     //大気散乱の事前計算
@@ -543,12 +543,12 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     position,
     ray_step,
     sun_direction);
-    float3 atmosphere_color = (multi_scattering + single_scattering)*step_size*0.1f;
+    float3 atmosphere_color = (multi_scattering + single_scattering);
 	
     const float cone_spread_multplier = ((cloud_altitudes_min_max.y - cloud_altitudes_min_max.x) / 36.0); // how wide to make the cone
 	
     //水平方向の光の制御
-    float horizon_factor = saturate(dot(ray_step, float3(0, 1, 0)));
+    float horizon_factor = saturate(dot(ray_step, float3(0, 1, 0)/*up*/));
     
     float3 color = 0.0;
     float density = 0;
@@ -565,7 +565,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
         {
             //天候データ
             float3 weather_data = SampleWeatherData(sample_point.xz);
-            float sampled_density = SampleCloudDensity(sample_point, weather_data, 0.0, false /*cheap_sample*/);
+            float sampled_density = SampleCloudDensity(sample_point, weather_data, 6.0, false /*cheap_sample*/);
             // 密度ゼロが続いた回数をカウント
             if (sampled_density == 0.0)
             {
@@ -611,7 +611,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     float up_light = saturate(dot(sun_direction, float3(0, 1, 0)));
                     
                     // 太陽直接光
-                    float3 sun_light_color = float3(1.0, 0.95, 0.9f); // or passed from CPU
+                    float3 sun_light_color = directional_light.color.rgb*(1.0f-cloud_coverage_scale*0.5f); // or passed from CPU
                     float3 direct_light =
                     (1.0f
                     * beers_law
@@ -625,7 +625,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     float shadow = beers_law;
                     float3 lighting = 
                     direct_light * shadow + 
-                    atmosphere_color * lerp(0.50f, shadow, 0.2f);
+                    atmosphere_color /** lerp(0.50f, shadow, 0.2f)*/;
 
                     // 雲色寄与
                     color += lighting * sampled_density * transmittence;
@@ -663,12 +663,6 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
         }
         
         float distance = length(ray_origin - sample_point);
-        
-        //遠距離で強制終了
-        if (distance >= 5000.f)
-        {
-            break;
-        }
     }
     	    
     float alpha = 1.0 - transmittence;    
@@ -684,7 +678,7 @@ float4 main(VS_OUT pin) : SV_TARGET
 
     // 地球中心基準のカメラ位置
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
-    float3 position = float3(0.f, EARTH_RADIUS, 0.f);
+    float3 position = float3(0.f, earth_radius, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
     float3 sun_pos = light_dir * SUN_DISTANCE;
     float3 sun_dir = normalize(sun_pos - camera_position.xyz);
@@ -719,14 +713,16 @@ float4 main(VS_OUT pin) : SV_TARGET
         color = background * (1.0 - volume.a) + volume.xyz;
 		
         // 遠くの雲を空にブレンド
-        color = lerp(clamp(color, 0.10, 1.0), clamp(background, color, 1.0), lerp(0.6, 1.0, 1.0 - ray_dir.y));
+        {
+            color = lerp(clamp(color, 0.0, 1.0), clamp(background, color, 1.0), lerp(0.2, 1.0, 1.0 - ray_dir.y));
+        }
 
     }
     else
     {
         //地平線下
         color = multi_scattering + single_scattering;
-        color = lerp(color * 0.5f, float3(0, 0, 0), -ray_dir.y);
+        color = lerp(0.5f, 0.1f, -ray_dir.y);
     }
     
     return float4(color, 1.0f);
