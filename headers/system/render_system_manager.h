@@ -3,6 +3,7 @@
 #include<vector>
 #include<memory>
 #include"i_render_system.h"
+#include"ibl_manager.h"
 #include"../component/component_manager.h"
 #include"../world/world.h"
 #include"../fullscreen_quad.h"
@@ -30,8 +31,16 @@ private:
     std::unique_ptr<FullscreenQuad> bit_block_transfer_;
     std::unique_ptr<FrameBuffer> back_framebuffer_;
     std::unique_ptr<FrameBuffer> object_framebuffer_;
+    std::unique_ptr<FrameBuffer> final_framebuffer_;
 
-    float back_scale = 1.0f;
+    //IBLマネージャ
+    std::unique_ptr<IBLManager> ibl_manager_ ;
+    //IBL分割ステップ
+    int ibl_steps_per_frame_ = 1;
+
+    const float back_scale = 2.0f;
+    //背景のサンプリング間隔
+    //マイフレーム呼び出す必要はないと感じました
     int back_sample_count_ = 0;
-    const int back_sample_rimit_ = 60;
+    const int back_sample_rimit_ = 4;
 };

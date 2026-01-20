@@ -45,12 +45,12 @@ mov r0.xyz, r0.xyzx  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
 mov r0.w, l(0.000000)  // r0.w <- UIF
 
 #line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\mid_freq_perlin_worley_cs.hlsl"
-mov r1.x, l(64)
+mov r1.x, l(128)
 uge r1.x, vThreadID.x, r1.x
-mov r1.y, l(64)
+mov r1.y, l(128)
 uge r1.y, vThreadID.y, r1.y
 or r1.x, r1.y, r1.x
-mov r1.y, l(64)
+mov r1.y, l(128)
 uge r1.y, vThreadID.z, r1.y
 or r1.x, r1.y, r1.x
 if_nz r1.x
@@ -66,7 +66,7 @@ mov r1.x, l(8.000000)  // r1.x <- freq
 
 #line 19
 utof r1.yzw, vThreadID.xxyz
-itof r2.xyz, l(64, 64, 64, 0)
+itof r2.xyz, l(128, 128, 128, 0)
 div r1.yzw, r1.yyzw, r2.xxyz  // r1.y <- uvw.x; r1.z <- uvw.y; r1.w <- uvw.z
 
 #line 21
@@ -464,7 +464,7 @@ mov r3.w, r3.w  // r3.w <- <perlin_fbm return value>
 #line 21 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\mid_freq_perlin_worley_cs.hlsl"
 mov r1.x, l(-1.000000)
 add r1.x, r1.x, r3.w
-mul r1.x, r1.x, l(0.500000)
+mul r1.x, r1.x, l(0.800000)
 add r1.x, r1.x, l(1.000000)  // r1.x <- pfbm
 
 #line 22

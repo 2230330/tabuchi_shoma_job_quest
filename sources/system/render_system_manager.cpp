@@ -29,6 +29,15 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
     );
+    final_framebuffer_ = std::make_unique<FrameBuffer>(
+        Graphics::Instance().GetDevice(),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
+    );
+
+    //IBLマネージャ
+    ibl_manager_ = std::make_unique<IBLManager>();
+    ibl_manager_->Initialize(Graphics::Instance().GetDevice());
 }
 
 void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)
@@ -36,43 +45,79 @@ void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)
     systems_.emplace_back(std::move(system));
 }
 
+
 void RenderSystemManager::RenderAll()
 {
-    //背景用フレームバッファ
-    if (back_sample_count_ < back_sample_rimit_)
-    {
+    auto* ctx = Graphics::Instance().GetDeviceContext();
+
+    // === 背景（低頻度） ===
+    if (back_sample_count_ < back_sample_rimit_) {
         back_sample_count_++;
     }
-    else
-    {
+    else {
         back_sample_count_ = 0;
-        back_framebuffer_->Clear(Graphics::Instance().GetDeviceContext());
-        back_framebuffer_->Activate(Graphics::Instance().GetDeviceContext());
-        RunPass(RenderPass::RenderPass_Background);
-        back_framebuffer_->Deactivate(Graphics::Instance().GetDeviceContext());
+
+        //  背景パスに入る前に SkyRenderSystem に sky cube を渡す
+        //    systems_ を走査して SkyRenderSystem を見つける（1回見つけたらキャッシュでもOK）
+        for (auto& sys : systems_) {
+            if (sys->GetPass() == RenderPass::RenderPass_Background) {
+                if (auto sky = dynamic_cast<SkyRenderSystem*>(sys.get())) {
+                    sky->SetSkyCubeSRV(ibl_manager_->GetSkyCubeSRV()); //  IBL の sky cube
+                }
+            }
+        }
+
+        back_framebuffer_->Clear(ctx);
+        back_framebuffer_->Activate(ctx);
+        RunPass(RenderPass::RenderPass_Background); // Sky は今渡した SRV を使って描画
+        back_framebuffer_->Deactivate(ctx);
+
+        // IBL 入力更新（背景SRV→SkyCube化を内包）
+        ibl_manager_->UpdateEnvironmentCapture(*back_framebuffer_);
+        ibl_manager_->BuildSkyCubeFromEnvSource();
+
+        if (ibl_manager_->IsDirty()) {
+            // Diffuse SH（軽い）
+            ibl_manager_->UpdateDiffuseSH();
+
+            // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
+            for (int s = 0; s < ibl_steps_per_frame_; ++s) {
+                ibl_manager_->UpdateSpecularPrefilter();
+            }
+
+            Graphics::Instance().SetRenderTargets(); //IBL更新でコンテキストが汚れるのでリセット
+        }
     }
-    
-    //オブジェクト用フレームバッファ
-    object_framebuffer_->Clear(Graphics::Instance().GetDeviceContext());
-    object_framebuffer_->Activate(Graphics::Instance().GetDeviceContext());
+
+    // === オブジェクト（毎フレーム） ===
+    object_framebuffer_->Clear(ctx);
+    object_framebuffer_->Activate(ctx);
+
+    // IBL を PS にバインド（t1: PrefEnv, t2: BRDF LUT, b2: SH）
+    ibl_manager_->BindForObjectPass(ctx);
+
     RunPass(RenderPass::RenderPass_Object);
-    object_framebuffer_->Deactivate(Graphics::Instance().GetDeviceContext());
+    object_framebuffer_->Deactivate(ctx);
 
+    // === 合成
+    //final_framebuffer_->Clear(ctx);
+    //final_framebuffer_->Activate(ctx);
 
-    //フルスクリーンクワッドで画面に転送
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),
         object_framebuffer_->GetShaderResourceView(0).Get(),
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
-    bit_block_transfer_->blit(
-        Graphics::Instance().GetDeviceContext(),
-        srvs,
-        0,
-        _countof(srvs) 
-    );
-
+    bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
     Graphics::Instance().ClearShaderResourceViews(0, 2);
+
+    //final_framebuffer_->Deactivate(ctx);
+
+    //// 最終出力へ
+    //srvs[0] = final_framebuffer_->GetShaderResourceView(0).Get();
+    //Graphics::Instance().SetShaderResource(0, 1, srvs);
+    //bit_block_transfer_->blit(ctx, srvs, 0, 1);
+    //Graphics::Instance().ClearShaderResourceViews(0, 1);
 }
 
 //レンダーパスごとにシステムを回す

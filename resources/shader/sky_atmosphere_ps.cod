@@ -144,44 +144,55 @@ mov r2.x, l(16)  // r2.x <- MAX_SAMPLES
 #line 74
 mov r2.yzw, l(0,0.000000,0.000000,0.000000)  // r2.y <- INV_WAVELENGTH4.x; r2.z <- INV_WAVELENGTH4.y; r2.w <- INV_WAVELENGTH4.z
 
-#line 214
+#line 216
 itof r3.xyz, l(0, 0, 0, 0)  // r3.x <- sky_color.x; r3.y <- sky_color.y; r3.z <- sky_color.z
 
-#line 216
+#line 218
 add r4.y, r1.y, cb11[0].x  // r4.y <- position.y
 mov r4.xz, l(0,0,0,0)  // r4.x <- position.x; r4.z <- position.z
 
-#line 217
+#line 219
 mov r5.xyz, -cb3[2].xyzx
 dp3 r3.w, r5.xyzx, r5.xyzx
 rsq r3.w, r3.w
 mul r5.xyz, r3.wwww, r5.xyzx  // r5.x <- light_dir.x; r5.y <- light_dir.y; r5.z <- light_dir.z
 
-#line 218
+#line 220
 mul r6.xyz, r1.zzzz, r5.xyzx  // r6.x <- sun_pos.x; r6.y <- sun_pos.y; r6.z <- sun_pos.z
 
-#line 219
+#line 221
 mov r7.xyz, -v2.xyzx
 add r6.xyz, r6.xyzx, r7.xyzx
 dp3 r1.z, r6.xyzx, r6.xyzx
 rsq r1.z, r1.z
 mul r6.xyz, r1.zzzz, r6.xyzx  // r6.x <- sun_dir.x; r6.y <- sun_dir.y; r6.z <- sun_dir.z
 
-#line 221
+#line 223
 mov r7.xyz, -cb1[2].xyzx
 add r7.xyz, r7.xyzx, v2.xyzx
 dp3 r1.z, r7.xyzx, r7.xyzx
 rsq r1.z, r1.z
 mul r7.xyz, r1.zzzz, r7.xyzx  // r7.x <- view_dir.x; r7.y <- view_dir.y; r7.z <- view_dir.z
 
-#line 224
+#line 227
+lt r1.z, r7.y, l(0.000000)
+if_nz r1.z
+
+#line 229
+  itof o0.xyzw, l(0, 0, 0, 1)
+  ret 
+
+#line 230
+endif 
+
+#line 233
 nop 
-mov r4.xyz, r4.xyzx
+mov r8.xyz, r4.xyzx
 mov r7.xyz, r7.xyzx
 mov r6.xyz, r6.xyzx
 
 #line 94
-mov r8.xyz, r4.xyzx  // r8.x <- sample_pos.x; r8.y <- sample_pos.y; r8.z <- sample_pos.z
+mov r8.xyz, r8.xyzx  // r8.x <- sample_pos.x; r8.y <- sample_pos.y; r8.z <- sample_pos.z
 
 #line 96
 dp3 r1.z, r8.xyzx, r8.xyzx
@@ -512,10 +523,10 @@ if_z r3.w
   mov r9.xyz, r9.xyzx  // r9.x <- <PrecomputeMultiScattering return value>.x; r9.y <- <PrecomputeMultiScattering return value>.y; r9.z <- <PrecomputeMultiScattering return value>.z
 endif 
 
-#line 224
+#line 233
 mov r9.xyz, r9.xyzx  // r9.x <- multi_scattering.x; r9.y <- multi_scattering.y; r9.z <- multi_scattering.z
 
-#line 227
+#line 236
 nop 
 mov r4.xyz, r4.xyzx
 mov r7.xyz, r7.xyzx
@@ -908,33 +919,37 @@ loop
 endloop 
 
 #line 205
-mov r11.xyz, r11.xyzx  // r11.x <- <ComputeSkyColor return value>.x; r11.y <- <ComputeSkyColor return value>.y; r11.z <- <ComputeSkyColor return value>.z
+add r0.xyz, r11.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+div r0.xyz, r11.xyzx, r0.xyzx  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
 
-#line 227
-mov r11.xyz, r11.xyzx  // r11.x <- single_scattering.x; r11.y <- single_scattering.y; r11.z <- single_scattering.z
+#line 207
+mov r0.xyz, r0.xyzx  // r0.x <- <ComputeSkyColor return value>.x; r0.y <- <ComputeSkyColor return value>.y; r0.z <- <ComputeSkyColor return value>.z
 
-#line 232
-add r0.xyz, r9.xyzx, r11.xyzx
-add r0.xyz, r0.xyzx, r3.xyzx  // r0.x <- sky_color.x; r0.y <- sky_color.y; r0.z <- sky_color.z
-
-#line 240
-mov r0.w, l(0.999848)  // r0.w <- sun_angular_diameter_cos_min
+#line 236
+mov r0.xyz, r0.xyzx  // r0.x <- single_scattering.x; r0.y <- single_scattering.y; r0.z <- single_scattering.z
 
 #line 241
+add r0.xyz, r9.xyzx, r0.xyzx
+add r0.xyz, r0.xyzx, r3.xyzx  // r0.x <- sky_color.x; r0.y <- sky_color.y; r0.z <- sky_color.z
+
+#line 249
+mov r0.w, l(0.999848)  // r0.w <- sun_angular_diameter_cos_min
+
+#line 250
 mov r1.x, l(0.999962)  // r1.x <- sun_angular_diameter_cos_max
 
-#line 243
+#line 252
 dp3 r1.y, r7.xyzx, r5.xyzx
 max r1.y, r1.y, l(-1.000000)
 min r1.y, r1.y, l(1.000000)  // r1.y <- cos_theta
 
-#line 244
+#line 253
 itof r3.xyz, l(0, 1, 0, 0)
 dp3 r1.z, r5.xyzx, r3.xyzx
 max r1.z, r1.z, l(0.000000)
 min r1.z, r1.z, l(1.000000)  // r1.z <- sun_elevation
 
-#line 245
+#line 254
 mov r1.w, -r1.z
 max r2.x, r1.w, r1.z
 mov r3.x, -r2.x
@@ -954,7 +969,7 @@ and r1.w, r1.w, r3.x
 add r1.w, r1.w, r2.x
 mul r1.w, r1.w, l(57.295780)  // r1.w <- sun_theta
 
-#line 247
+#line 256
 mov r1.w, -r1.w
 add r1.w, r1.w, l(96.079948)
 log r1.w, r1.w
@@ -964,7 +979,7 @@ mul r1.w, r1.w, l(0.505720)
 add r1.z, r1.w, r1.z
 div r1.z, l(1.000000), r1.z  // r1.z <- air_mass
 
-#line 248
+#line 257
 nop 
 mov r1.z, r1.z
 
@@ -980,10 +995,10 @@ exp r2.xyz, r2.xyzx  // r2.x <- Ei.x; r2.y <- Ei.y; r2.z <- Ei.z
 #line 88
 mov r2.xyz, r2.xyzx  // r2.x <- <ComputeSunIrradiance return value>.x; r2.y <- <ComputeSunIrradiance return value>.y; r2.z <- <ComputeSunIrradiance return value>.z
 
-#line 248
+#line 257
 mov r2.xyz, r2.xyzx  // r2.x <- Ei.x; r2.y <- Ei.y; r2.z <- Ei.z
 
-#line 250
+#line 259
 mov r0.w, -r0.w
 add r1.x, r0.w, r1.x
 add r0.w, r0.w, r1.y
@@ -996,31 +1011,22 @@ add r1.x, r1.x, l(3.000000)
 mul r0.w, r0.w, r0.w
 mul r0.w, r0.w, r1.x  // r0.w <- sun_disk
 
-#line 251
+#line 260
 mul r1.xyz, r2.xyzx, r0.wwww
 mul r1.xyz, r1.xyzx, cb3[4].xxxx  // r1.x <- Lo.x; r1.y <- Lo.y; r1.z <- Lo.z
 
-#line 253
+#line 262
 lt r0.w, l(0.010000), r0.w
 if_nz r0.w
 
-#line 255
+#line 264
   add r0.xyz, r0.xyzx, r1.xyzx
 
-#line 256
+#line 265
 endif 
 
-#line 260
-mul r0.xyz, r0.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)
-itof r1.xyz, l(0, 0, 0, 0)
-mov r0.w, -r7.y
-mov r2.xyz, -r0.xyzx
-add r1.xyz, r1.xyzx, r2.xyzx
-mul r1.xyz, r0.wwww, r1.xyzx
-add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- sky_color.x; r0.y <- sky_color.y; r0.z <- sky_color.z
-
-#line 263
-mov o0.xyz, r0.xyzx
-mov o0.w, l(1.000000)
+#line 271
+mov o0.xyz, r0.xyzx  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z
+mov o0.w, l(1.000000)  // o0.w <- <main return value>.w
 ret 
 // Approximately 572 instruction slots used

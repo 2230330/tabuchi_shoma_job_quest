@@ -31,8 +31,14 @@ public:
     void Deactivate(ID3D11DeviceContext* immediate_context);
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetShaderResourceView(int num) { return shader_resource_views_[num]; }
+    const Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetShaderResourceView(int num)
+        const { return shader_resource_views_[num]; }
+
+    Microsoft::WRL::ComPtr<ID3D11Texture2D>GetTexture2D() { return render_target_texture_2d_; }
+    const Microsoft::WRL::ComPtr<ID3D11Texture2D>GetTexture2D() const { return render_target_texture_2d_; }
 
 private:
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> render_target_texture_2d_;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view_;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depth_stencil_view_;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_views_[2];

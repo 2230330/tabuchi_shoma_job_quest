@@ -1,4 +1,7 @@
 ﻿#include"../../headers/system/sky_render_system.h"
+
+#include <DirectXTex.h>
+
 #include"../../headers/graphics.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/render_state.h"
@@ -10,6 +13,11 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_p
     , IRenderSystem(render_pass)
 {
     ID3D11Device* device = Graphics::Instance().GetDevice();
+
+    //Texture2D/SRV
+    {
+
+    }
 
     //頂点情報とインデックス情報の作成
     {
@@ -108,17 +116,20 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_p
     sky_vs_ = ResourceManager::Instance().LoadVertexShader(device, L".\\resources\\shader\\sky_atmosphere_vs.cso",
         sky_input_.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
     sky_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\sky_atmosphere_ps.cso");
+
+    //フルスクリーン
+    sky_frame_buffer_= std::make_unique<FrameBuffer>(
+        device,
+        Graphics::Instance().GetScreenWidth(),
+        Graphics::Instance().GetScreenHeight());
+    full_screen_quad_ = std::make_unique<FullscreenQuad>(device);
 }
 
 
 void SkyRenderSystem::Render()
 {
-    frame_count_++;
-    //if (frame_count_ % 1 == 0)
-    {
-        frame_count_ = 0;
-
-        comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
+    comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
+        {
 
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
@@ -140,14 +151,8 @@ void SkyRenderSystem::Render()
             context->IASetIndexBuffer(index_buffer_.Get(), DXGI_FORMAT_R32_UINT, 0);
             context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-            // テクスチャ設定（必要なら）
-            auto* texture = comp_mng_.TryGetByEntity<ComponentTexture>(entity_id);
-            if (texture)
-            {
-                context->PSSetShaderResources(0, 1, texture->texture.GetAddressOf());
-            }
             //定数バッファの設定
-            rayleigh_constant.height = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id)->value.y*1e3f;
+            rayleigh_constant.height = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id)->value.y * 1e3f;
             RayleighConstants data = rayleigh_constant;
             context->UpdateSubresource(rayleigh_constant_buffer_.Get(), 0, 0, &data, 0, 0);
             Graphics::Instance().SetConstantBuffer(
@@ -159,9 +164,8 @@ void SkyRenderSystem::Render()
             context->DrawIndexed(index_count_, 0, 0);
 
             Graphics::Instance().ClearConstantBuffers(static_cast<int>(ConstantBufferSlot::kSkyRayleigh), 1);
+        }
 
-            });
-
-
-    }
+        });
 }
+

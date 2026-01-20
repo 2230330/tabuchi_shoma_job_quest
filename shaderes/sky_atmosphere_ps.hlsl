@@ -202,6 +202,8 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
     
+    result /= result + 1.0f; //トーンマッピング
+    
     return result;
 }
 
@@ -219,6 +221,13 @@ float4 main(VS_OUT pin):SV_TARGET
     float3 sun_dir = normalize(sun_pos.xyz-pin.world_pos.xyz);//頂点ー＞太陽
     //カメラから天球の各頂点への方向
     float3 view_dir = normalize(pin.world_pos.xyz - camera_position.xyz); //camera->頂点まで方向
+    
+    
+    //地平線以下
+    if (view_dir.y < 0.0f)
+    {
+        return float4(0, 0, 0, 1);
+    }
     
     //疑似多重散乱の事前計算
     float3 multi_scattering = PrecomputeMultiScattering(position, view_dir, sun_dir);
@@ -256,8 +265,7 @@ float4 main(VS_OUT pin):SV_TARGET
         }
     }
     
-    //sky_color *= directional_light.intensity;
-    sky_color = lerp(sky_color * 0.5f, float3(0, 0, 0), -view_dir.y);
+
 
 
     return float4(sky_color.xyz, 1.0f);

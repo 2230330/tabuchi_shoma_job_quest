@@ -269,6 +269,9 @@
     <ClInclude Include="headers\component\component_volumetric_cloud.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\system\ibl_manager.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -392,6 +395,9 @@
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\cloud_render_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\ibl_manager.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>
@@ -571,6 +577,27 @@
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\layout_global_cloud_mask_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\ibl_brdf_lut_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_prefilter_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\latlong_to_cubemap_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_screen_vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_screen_gs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\latlong_to_cubemap_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_sky_atmosphere_ps.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

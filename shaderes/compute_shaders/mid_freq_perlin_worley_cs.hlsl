@@ -2,7 +2,7 @@
 
 RWTexture3D<float4> mid_freq_perlin_worley : register(u0);
 
-#define MID_FREQ_PERLIN_WORLEY_DIMENSIONS 64
+#define MID_FREQ_PERLIN_WORLEY_DIMENSIONS 128
 #define MID_FREQ_PERLIN_WORLEY_NUMTHREADS 8
 [numthreads(MID_FREQ_PERLIN_WORLEY_NUMTHREADS, MID_FREQ_PERLIN_WORLEY_NUMTHREADS, MID_FREQ_PERLIN_WORLEY_NUMTHREADS)]
 void main(uint3 dtid : SV_DISPATCHTHREADID)
@@ -18,7 +18,7 @@ void main(uint3 dtid : SV_DISPATCHTHREADID)
     
     float3 uvw = (float3) (dtid) / MID_FREQ_PERLIN_WORLEY_DIMENSIONS;
 	
-    float pfbm = lerp(1.0, perlin_fbm(uvw, freq , 7), 0.5);
+    float pfbm = lerp(1.0, perlin_fbm(uvw, freq , 7), 0.8);
     pfbm = abs(pfbm * 2.0 - 1.0); // billowy perlin noise
     
     float4 color = 0;

@@ -18,7 +18,6 @@ FrameBuffer::FrameBuffer(ID3D11Device* device, uint32_t width, uint32_t height, 
 
 	if (flags & usage::color)
 	{
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> render_target_buffer;
 		D3D11_TEXTURE2D_DESC texture2d_desc{};
 		texture2d_desc.Width = width;
 		texture2d_desc.Height = height;
@@ -31,13 +30,13 @@ FrameBuffer::FrameBuffer(ID3D11Device* device, uint32_t width, uint32_t height, 
 		texture2d_desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 		texture2d_desc.CPUAccessFlags = 0;
 		texture2d_desc.MiscFlags = generate_mips ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0; 
-		hr = device->CreateTexture2D(&texture2d_desc, 0, render_target_buffer.GetAddressOf());
+		hr = device->CreateTexture2D(&texture2d_desc, 0, render_target_texture_2d_.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
 		D3D11_RENDER_TARGET_VIEW_DESC render_target_view_desc{};
 		render_target_view_desc.Format = texture2d_desc.Format;
 		render_target_view_desc.ViewDimension = enable_msaa ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D; 
-		hr = device->CreateRenderTargetView(render_target_buffer.Get(), &render_target_view_desc, render_target_view_.GetAddressOf());
+		hr = device->CreateRenderTargetView(render_target_texture_2d_.Get(), &render_target_view_desc, render_target_view_.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
 		D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_view_desc{};
@@ -45,7 +44,7 @@ FrameBuffer::FrameBuffer(ID3D11Device* device, uint32_t width, uint32_t height, 
 		shader_resource_view_desc.ViewDimension = enable_msaa ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D; 
 		shader_resource_view_desc.Texture2D.MostDetailedMip = 0;
 		shader_resource_view_desc.Texture2D.MipLevels = generate_mips ? -1 : 1; 
-		hr = device->CreateShaderResourceView(render_target_buffer.Get(), &shader_resource_view_desc, shader_resource_views_[0].GetAddressOf());
+		hr = device->CreateShaderResourceView(render_target_texture_2d_.Get(), &shader_resource_view_desc, shader_resource_views_[0].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
 	if (flags & usage::depth_stencil)

@@ -27,7 +27,7 @@ private:
     {
         //ïóé◊ÇÃêßå‰
         DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
-        DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6370500.0f, 6372000.0f }; // highest and lowest altitudes at which clouds are distributed
+        DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6373500.0f, 6375000.0f }; // highest and lowest altitudes at which clouds are distributed
         float wind_speed = 1.0f; // [0.0, 20.0]
 
         //ñßìx
@@ -41,13 +41,15 @@ private:
 
         float earth_radius = 6370000.0f; // earth radius
         float horizon_distance_scale = 1.0f;
-        float low_frequency_perlin_worley_sampling_scale = 0.00008f;
-        float high_frequency_worley_sampling_scale = 0.001f;
+        float low_frequency_perlin_worley_sampling_scale = 0.000021f;
+        float high_frequency_worley_sampling_scale = 0.0003f;
         float cloud_density_long_distance_scale = 18.0f;
         int enable_powdered_sugar_efffect = false;
 
         int ray_marching_steps = 128;
         int auto_ray_marching_steps = false;
+
+        DirectX::XMFLOAT2 dummy;
     }cloud_ray_marching_constant_;
     Microsoft::WRL::ComPtr<ID3D11Buffer>cloud_ray_marching_constant_buffer_;
 
@@ -62,7 +64,7 @@ private:
     const int low_freq_perlin_worley_dimensions{ 256 };
     const int low_freq_perlin_worley_numthreads{ 8 };
     //íÜé¸îg
-    const int mid_freq_perlin_worley_dimensions{ 64 };
+    const int mid_freq_perlin_worley_dimensions{ 128 };
     const int mid_freq_perlin_worley_numthreads{ 8 };
     //çÇé¸îgÉmÉCÉY
     const int high_freq_worley_dimensions{ 64 };
