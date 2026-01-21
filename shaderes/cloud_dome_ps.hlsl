@@ -42,32 +42,26 @@ SamplerState sampler_states[6] : register(s0);
 	r channel is perln-worley noise, gba channels are worley noise at increasing frequencies 
 */
 Texture3D<float4> low_frequency_perlin_worley_texture : register(t0);
-Texture3D<float4> low_frequency_perlin_worley_2_texture : register(t1);
 /*
 	low_frequency_perlin_worley_texture
 	rgb channels are worley noise at increasing frequencies 
 */
 
-Texture3D<float3> high_frequency_worley_texture : register(t2);
+Texture3D<float3> high_frequency_worley_texture : register(t1);
 /*
 	weather_texture
 	- cloud coverage(r channel): the precentage of cloud coverage in the sky
 	- precipitation(g channel): the chance that the cloud overhead will produce rain
 	- cloud type(b channel): a value of 0.0 indicates stratus, 0.5 indicates stratocumulus, and 1.0 indicate cumulus cloud
 */
-Texture2D<float3> weather_texture : register(t3);
-Texture2D<float3> curl_noise_texture : register(t4);
-Texture2D<float3> sky_color_texture : register(t5);
+Texture2D<float3> weather_texture : register(t2);
+Texture2D<float3> curl_noise_texture : register(t3);
+Texture2D<float3> sky_color_texture : register(t4);
 
 static const float time_offset = 10000.0;
 float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
 {
     return low_frequency_perlin_worley_texture.SampleLevel(sampler_states[LINEAR_WRAP], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
-}
-//遠距離用、マップ一つではパターンがよく見えてしまったので
-float4 SampleLowFrequencyNoises2(float3 sample_point, float mip_level)
-{
-    return low_frequency_perlin_worley_2_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
 }
 float3 SampleHighFrequencyNoises(float3 sample_point, float mip_level)
 {

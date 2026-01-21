@@ -64,7 +64,6 @@ private:
 
     //ノイズテクスチャ
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_srv_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_2_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>mid_freq_worley_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_worley_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;

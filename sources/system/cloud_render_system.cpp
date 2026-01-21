@@ -79,31 +79,6 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
                 low_freq_perlin_worley_srv_.GetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
         }
-        const wchar_t* low_freq_noise_2_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley_2.dds";
-        _ASSERT_EXPR(std::filesystem::exists(low_freq_noise_2_tex_path), "ファイルが存在しません");
-        {
-            DirectX::TexMetadata metadata{};
-            DirectX::ScratchImage image{};
-            HRESULT hr = DirectX::LoadFromDDSFile(
-                low_freq_noise_2_tex_path,
-                DirectX::DDS_FLAGS_NONE,
-                &metadata,
-                image);
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
-            const DirectX::Image* images = image.GetImages();
-            size_t nimages = image.GetImageCount();
-            hr = DirectX::CreateShaderResourceViewEx(
-                device,
-                images,
-                nimages,
-                metadata,
-                D3D11_USAGE_DEFAULT,
-                D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET,
-                0, 0, DirectX::CREATETEX_FLAGS::CREATETEX_DEFAULT,
-                low_freq_perlin_worley_2_srv_.GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        }
         const wchar_t* mid_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\mid_freq_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(mid_freq_noise_tex_path), "ファイルが存在しません");
         {
@@ -202,7 +177,6 @@ void CloudRenderSystem::Render()
             //// テクスチャ
             ID3D11ShaderResourceView* srvs[] = {
                 low_freq_perlin_worley_srv_.Get(),
-                low_freq_perlin_worley_2_srv_.Get(),
                 high_freq_worley_srv_.Get(),
                 weather_map_srv_.Get(),
                 curl_noise_srv_.Get(),
@@ -305,85 +279,6 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
           //    return;
           //}
     //}
-    context->Flush();
-    //二枚目のlowマップ
-    const wchar_t* low_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley_2.dds";
-    {
-        // 3Dテクスチャ作成（MipMap対応）
-        Microsoft::WRL::ComPtr<ID3D11Texture3D> low_freq_tex;
-        D3D11_TEXTURE3D_DESC desc{};
-        desc.Width = low_freq_perlin_worley_dimensions;
-        desc.Height = low_freq_perlin_worley_dimensions;
-        desc.Depth = low_freq_perlin_worley_dimensions;
-        desc.MipLevels = 0; // 自動生成
-        desc.Format = format;
-        desc.Usage = D3D11_USAGE_DEFAULT;
-        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
-        desc.CPUAccessFlags = 0;
-        desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // MipMap生成可能に
-        hr = device->CreateTexture3D(&desc, nullptr, low_freq_tex.GetAddressOf());
-        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
-        // SRV作成（MipMap対応）
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> low_freq_srv;
-        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-        srvDesc.Format = desc.Format;
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-        srvDesc.Texture3D.MipLevels = -1; // 全MipMap使用
-        srvDesc.Texture3D.MostDetailedMip = 0;
-        hr = device->CreateShaderResourceView(low_freq_tex.Get(), &srvDesc, low_freq_srv.GetAddressOf());
-        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
-        // UAV作成
-        Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> low_freq_uav;
-        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
-        uavDesc.Format = desc.Format;
-        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-        uavDesc.Texture3D.MipSlice = 0;
-        uavDesc.Texture3D.FirstWSlice = 0;
-        uavDesc.Texture3D.WSize = -1;
-        hr = device->CreateUnorderedAccessView(low_freq_tex.Get(), &uavDesc, low_freq_uav.GetAddressOf());
-        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
-        // コンピュートシェーダーでノイズ生成
-        auto cs = ResourceManager::Instance().LoadComputeShader(device, L".\\resources\\shader\\low_freq_perlin_worley_2_cs.cso");
-        context->CSSetUnorderedAccessViews(0, 1, low_freq_uav.GetAddressOf(), nullptr);
-        context->CSSetShader(cs.Get(), nullptr, 0);
-        UINT threadGroupCount = (low_freq_perlin_worley_dimensions + low_freq_perlin_worley_numthreads - 1) / low_freq_perlin_worley_numthreads;
-        context->Dispatch(threadGroupCount, threadGroupCount, threadGroupCount);
-        // UAV解除
-        ID3D11UnorderedAccessView* nullUAV = nullptr;
-        context->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
-        context->CSSetShader(nullptr, nullptr, 0);
-
-        // MipMap生成
-        context->GenerateMips(low_freq_srv.Get());
-
-
-        // GPU完了待ち（同期）
-        D3D11_QUERY_DESC queryDesc{};
-        queryDesc.Query = D3D11_QUERY_EVENT;
-        Microsoft::WRL::ComPtr<ID3D11Query> query;
-        device->CreateQuery(&queryDesc, &query);
-        context->End(query.Get());
-        while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
-
-        // DDS保存
-        DirectX::ScratchImage image;
-        hr = DirectX::CaptureTexture(device, context, low_freq_tex.Get(), image);
-        if (FAILED(hr))
-        {
-            HRTrace(hr); // ログだけ出す
-            return;
-        }     
-        hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(),
-            DirectX::DDS_FLAGS_NONE, low_freq_noise_tex_path);
-        if (FAILED(hr))
-        {
-            HRTrace(hr); // ログだけ出す
-            return;
-        }
-    }
     context->Flush();
     //curlノイズテクスチャの生成
     //const wchar_t* curl_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\curl_texture.dds";
