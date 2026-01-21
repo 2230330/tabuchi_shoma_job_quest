@@ -5,31 +5,32 @@
 #include"../../headers/system/render_system.h"
 #include"../../headers/system/instancing_render_system.h"
 #include"../../headers/system/sprite_render_system.h"
-#include"../../headers/system/sky_render_system.h"
-#include"../../headers/system/cloud_render_system.h"
+
 
 
 RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)
 {
-    AddSystem(std::make_unique<SkyRenderSystem>(comp_mng_,RenderPass_Background));
-    AddSystem(std::make_unique<CloudRenderSystem>(comp_mng_,RenderPass_Background));
+    //AddSystem(std::make_unique<SkyRenderSystem>(comp_mng_,RenderPass_Background));
+    //AddSystem(std::make_unique<CloudRenderSystem>(comp_mng_,RenderPass_Background));
+    sky_render_system_ = std::make_unique<SkyRenderSystem>(comp_mng_, RenderPass_Background);
+    cloud_render_system_ = std::make_unique<CloudRenderSystem>(comp_mng_, RenderPass_Background);
     AddSystem(std::make_unique<GltfRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<InstancingRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Object));
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
+    sky_framebuffer_ = std::make_unique<FrameBuffer>(
+        Graphics::Instance().GetDevice(),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
+    );
     back_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale)//背景は小さく描画、アップサンプリングで合成
     );
     object_framebuffer_ = std::make_unique<FrameBuffer>(
-        Graphics::Instance().GetDevice(),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
-    );
-    final_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
@@ -57,20 +58,27 @@ void RenderSystemManager::RenderAll()
     else {
         back_sample_count_ = 0;
 
-        //  背景パスに入る前に SkyRenderSystem に sky cube を渡す
-        //    systems_ を走査して SkyRenderSystem を見つける（1回見つけたらキャッシュでもOK）
-        for (auto& sys : systems_) {
-            if (sys->GetPass() == RenderPass::RenderPass_Background) {
-                if (auto sky = dynamic_cast<SkyRenderSystem*>(sys.get())) {
-                    sky->SetSkyCubeSRV(ibl_manager_->GetSkyCubeSRV()); //  IBL の sky cube
-                }
-            }
-        }
+        // 空、雲と別に描画し、作成した画像を雲に渡す
+        sky_framebuffer_->Clear(ctx);
+        sky_framebuffer_->Activate(ctx);
+        sky_render_system_->Render();
+        sky_framebuffer_->Deactivate(ctx);
 
         back_framebuffer_->Clear(ctx);
         back_framebuffer_->Activate(ctx);
-        RunPass(RenderPass::RenderPass_Background); // Sky は今渡した SRV を使って描画
+
+        cloud_render_system_->SetSkyColorSRV(sky_framebuffer_->GetShaderResourceView(0).Get());
+        cloud_render_system_->Render();
+
+        //雲がなかった場合、大気をそのまま描画する
+        if (!cloud_render_system_->HasRenderableCloud())
+        {
+            ID3D11ShaderResourceView* srv[] = { sky_framebuffer_->GetShaderResourceView(0).Get() };
+            bit_block_transfer_->blit(ctx, srv, 0, 1);
+        }
+
         back_framebuffer_->Deactivate(ctx);
+
 
         // IBL 入力更新（背景SRV→SkyCube化を内包）
         ibl_manager_->UpdateEnvironmentCapture(*back_framebuffer_);
@@ -109,7 +117,7 @@ void RenderSystemManager::RenderAll()
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
-    Graphics::Instance().ClearShaderResourceViews(0, 2);
+    Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
 
     //final_framebuffer_->Deactivate(ctx);
 
@@ -121,14 +129,18 @@ void RenderSystemManager::RenderAll()
 }
 
 //レンダーパスごとにシステムを回す
+//背景は工程が多く複雑なので、こちらではオブジェクトパスのみを実装
 void RenderSystemManager::RunPass(RenderPass pass)
 {
-    for (auto& system : systems_)
+    if (pass == RenderPass_Object)
     {
-        if (system->GetPass() == pass)
+        for (auto& system : systems_)
         {
-            system->Render();
+            if (system->GetPass() == pass)
+            {
+                system->Render();
+            }
         }
     }
-        
+
 }

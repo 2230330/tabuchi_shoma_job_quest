@@ -66,40 +66,7 @@ void ComponentEditor::DrawImgui()
                 has_sky_ = -1;
             }
         }
-        //雲の追加
-        if (ImGui::Button("add cloud"))
-        {
 
-            if (has_cloud_ < 0)
-            {
-                uint32_t entity = enti_mng_.Add();
-                //基礎情報の追加
-                //ComponentPosition position{};
-                //comp_mng_.Add<ComponentPosition>(entity, position);
-                //ComponentRotation rotation{};
-                //comp_mng_.Add<ComponentRotation>(entity, rotation);
-                //ComponentScale scale;
-                //scale.value = { 1.f, 1.f, 1.f };
-                //comp_mng_.Add(entity, scale);
-                //ComponentLocalToWorld l2w{};
-                //comp_mng_.Add(entity, l2w);
-                //ComponentTexture texture;
-                //comp_mng_.Add(entity, texture);
-                ComponentCloudDome cloud_dome;
-                comp_mng_.Add(entity, cloud_dome);
-                //ComponentVolumetricCloud volumetric_cloud;
-                //comp_mng_.Add(entity, volumetric_cloud);
-
-                has_cloud_ = entity;
-            }
-            else
-            {
-                enti_mng_.Remove(has_cloud_); // alive = false にする
-                comp_mng_.RemoveAllComponents(has_cloud_); // すべてのコンポーネントを削除
-
-                has_cloud_ = -1;
-            }
-        }
 
         //生きているエンティティを表示する
         const std::vector<Entity>& entities = enti_mng_.GetArray();
@@ -140,6 +107,36 @@ void ComponentEditor::DrawImgui()
                     ImGui::ColorEdit4("Color", &color.value.x);
                     ImGui::Separator();
                 }
+
+                if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
+                {
+                    ImGui::Text("Sky Atmosphere Component");
+                    //雲の追加
+                    if (ImGui::Button("add cloud"))
+                    {
+
+                        if (has_cloud_ < 0)
+                        {
+                            uint32_t entity = enti_mng_.Add();
+
+                            ComponentCloudDome cloud_dome;
+                            comp_mng_.Add(entity, cloud_dome);
+                            //ComponentVolumetricCloud volumetric_cloud;
+                            //comp_mng_.Add(entity, volumetric_cloud);
+
+                            has_cloud_ = entity;
+                        }
+                        else
+                        {
+                            enti_mng_.Remove(has_cloud_); // alive = false にする
+                            comp_mng_.RemoveAllComponents(has_cloud_); // すべてのコンポーネントを削除
+
+                            has_cloud_ = -1;
+                        }
+                    }
+                    ImGui::Separator();
+                }
+
                 //雲のみの処理なので、上の方に置いておきます
                 if (comp_mng_.Has<ComponentCloudDome>(entity.entity))
                 {

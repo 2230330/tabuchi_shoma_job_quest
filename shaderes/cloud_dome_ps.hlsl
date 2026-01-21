@@ -42,24 +42,32 @@ SamplerState sampler_states[6] : register(s0);
 	r channel is perln-worley noise, gba channels are worley noise at increasing frequencies 
 */
 Texture3D<float4> low_frequency_perlin_worley_texture : register(t0);
+Texture3D<float4> low_frequency_perlin_worley_2_texture : register(t1);
 /*
 	low_frequency_perlin_worley_texture
 	rgb channels are worley noise at increasing frequencies 
 */
-Texture3D<float3> high_frequency_worley_texture : register(t1);
+
+Texture3D<float3> high_frequency_worley_texture : register(t2);
 /*
 	weather_texture
 	- cloud coverage(r channel): the precentage of cloud coverage in the sky
 	- precipitation(g channel): the chance that the cloud overhead will produce rain
 	- cloud type(b channel): a value of 0.0 indicates stratus, 0.5 indicates stratocumulus, and 1.0 indicate cumulus cloud
 */
-Texture2D<float3> weather_texture : register(t2);
-Texture2D<float3> curl_noise_texture : register(t3);
+Texture2D<float3> weather_texture : register(t3);
+Texture2D<float3> curl_noise_texture : register(t4);
+Texture2D<float3> sky_color_texture : register(t5);
 
 static const float time_offset = 10000.0;
 float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
 {
     return low_frequency_perlin_worley_texture.SampleLevel(sampler_states[LINEAR_WRAP], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
+}
+//遠距離用、マップ一つではパターンがよく見えてしまったので
+float4 SampleLowFrequencyNoises2(float3 sample_point, float mip_level)
+{
+    return low_frequency_perlin_worley_2_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
 }
 float3 SampleHighFrequencyNoises(float3 sample_point, float mip_level)
 {
@@ -98,41 +106,9 @@ float Remap(float original_value, float original_min, float original_max, float 
 }
 
 
-static const float RAYLEIGH_SCALE_HEIGHT = 8000.f;
-static const float MIE_SCALE_HEIGHT = 1200.f;
-static const float OZONE_SCALE_HALF_WIDTH = 15000.f;
-static const float OZONE_CENTER_HEIGHT = 50000.f;
 static const float EARTH_RADIUS = 6370000.0f; // 地球半径 [m]
 static const float SUN_DISTANCE = 150000000000.0f; // 太陽までの距離 [m]
-static const float ATMOSPHERE_HEIGHT = 100000.0f; // 大気の高さ [m]
-static const int MAX_SAMPLES = 16;
 
-//簡易的レイリー散乱
-float3 SigmaRayleigh(float h)
-{
-    
-    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / RAYLEIGH_SCALE_HEIGHT);
-}
-//簡易的ミー散乱
-float3 SigmaMie(float h)
-{
-    return float3(3.996e-6, 3.31e-6, 1e-6f) * exp(-(h) / MIE_SCALE_HEIGHT);
-}
-//オゾン吸収係数
-float3 SigmaOzone(float h)
-{
-    float3 coeff = float3(0.650e-6, 1.881e-6, 0.085e-6);
-    float ozoneFactor = max(0.0, 1.0 - (abs(h - OZONE_CENTER_HEIGHT) / OZONE_SCALE_HALF_WIDTH));
-    return coeff * ozoneFactor;
-}
-//フェーズ関数(レイリー散乱)
-float RayleighPhase(float cos_theta)
-{
-    return (3.0f * (1.0f + cos_theta * cos_theta))
-            / (16.0 * PI);
-    
-    //return (3.0 / (16.0 * PI)) * (1.0 + pow(cos_theta * 0.5 + 0.5, 2.0));//福井先生のコードより
-}
 //フェーズ関数(ミー散乱)
 float MiePhase(float cos_theta, float g)
 {
@@ -142,166 +118,7 @@ float MiePhase(float cos_theta, float g)
     return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
 }
 
-//距離×平均係数で指数減衰を近似
-float3 TransmittanceApprox(float3 startPos, float3 endPos)
-{
-    float distance = max(50e3f, length(endPos - startPos));
-    // 高度に依存した sigma_t_avg を評価するのが理想だが、まずは sample midpoint を使う
-    float3 midPos = (startPos + endPos) * 0.5f;
-    float h = max(0.0f, length(midPos) - EARTH_RADIUS);
-    float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
-    return exp(-sigma_t * distance); // component-wise exp
-}
-// 波長 (nm)
-static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f); // 赤, 緑, 青
-// λ^-4 の相対比を計算
-static const float3 INV_WAVELENGTH4 = (float3(
-    1.0f / pow(WAVELENGTHS.x, 4.0f),
-    1.0f / pow(WAVELENGTHS.y, 4.0f),
-    1.0f / pow(WAVELENGTHS.z, 4.0f)
-));
 
-float3 ComputeSunIrradiance(float air_mass)
-{
-    // 光学的厚さ τ(λ)
-    float3 tau = INV_WAVELENGTH4 * air_mass * 3e9f /*スキャッタリングスケール*/;
-
-    // Beer-Lambert減衰
-    float3 Ei = exp(-tau);
-
-    return Ei; // 赤が残り、青が強く減衰
-}
-
-//複数回散乱して入る入散乱の光を計算する
-float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, float3 view_dir, float3 light_dir)
-{
-    float3 sample_pos = position;
-    //高度計算
-    float h = length(sample_pos) - EARTH_RADIUS; //自身の位置-地球半径
-    //100メートル地下ならば、計算する必要はない
-    if (h < -100.f)
-        return float3(0.f, 0.f, 0.f);
-    
-    //散乱係数
-    float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
-    float3 sigma_t = sigma_s + SigmaOzone(h);
-    
-    //太陽光スペクトルの減衰(波長依存)
-    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
-    float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
-    //kasten-Young 1989近似
-    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
-    //air_mass = min(air_mass, 20.0f); // 極端な値を制限
-    float3 Ei = ComputeSunIrradiance(air_mass);
-    
-    //位相関数(散乱光の内こちらに向く割合)
-    float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0))); //０＝天頂、1＝地
-    float mie_boost = 0.5f * horizon_factor * (0.01f + air_mass * 0.05f);
-    
-    float cos_theta = lerp(dot(view_dir, light_dir), -0.4f, 1.0f);
-    float g = 0.8f;
-    float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
-    float phase = ((RayleighPhase(cos_theta) * (lerp(10.0f, 2.f, sunset_factor))
-    + MiePhase(cos_theta,g) * mie_boost) / (4.0f * PI));
-    
-    //太陽方向
-    float3 T1 = TransmittanceApprox(sample_pos, sample_pos + light_dir * ATMOSPHERE_HEIGHT);
-    //中継点方向
-    float3 T2 = TransmittanceApprox(position, sample_pos);
-    
-    //光学的厚さ τを簡易的に推定
-    //積分をしたくないので設定
-    float approx_sun_distance = ATMOSPHERE_HEIGHT; //大気圏厚み
-    float sigma_t_avg = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f; //チャンネル平均
-    float tau_sun = min(sigma_t_avg * approx_sun_distance, 2.0f); //単純近似の光学的深さ
-    
-    //単一散乱寄与
-    //ここでサンプル店の寄与量を調整するために、stepLength  掃討のスケールをかける
-    float step_scale = approx_sun_distance * 0.5f;
-    float3 L2 = T1 * sigma_s * phase * Ei * step_scale;
-    
-    //多重散乱係数f_ms
-    //f_ms=omega_avg*(1-exp(-tau_sun))： τ が大きいほど多重散乱が増える
-    float3 omega = sigma_s / max(sigma_t, float3(1e-6, 1e-6, 1e-6)); // アルベド（散乱/全係数）
-    float omega_avg = (omega.x + omega.y + omega.z) / 3.0;
-    float f_ms = saturate(omega_avg * (1.0f - exp(-tau_sun)));
-    //F_ms：漸か式近似1/(1-f_ms)
-    float F_ms = 1.0 / max(1.0 - f_ms, 1e-3f);
-
-    //最終psiに対してT2をかけて視線上の減衰を考慮
-    float3 psi_ms = L2 * F_ms;
-    return psi_ms;
-}
-
-//散乱光の計算(シングルスキャッタリング＋その地点までの散乱光)
-float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
-{
-    
-    float cos_theta = clamp(dot(view_dir, light_dir), -0.f, 1.0f); //視線と太陽の角度
-    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
-    float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
-    //kasten-Young 1989近似
-    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
-    //air_mass = min(air_mass, 50.0f); // 極端な値を制限
-
-    float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
-    //太陽光スペクトルの減衰(波長依存)
-    float3 Ei = ComputeSunIrradiance(air_mass);
-    
-    //太陽に近いほど1.0
-    float angle_factor = pow(saturate(cos_theta), 2.0f);
-    float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(30.0f, 10.f, sunset_factor));
-    //夕焼けを作る際、夕焼けは太陽の傾きによるミー散乱の強化が主な要因の為、
-    //太陽の傾きで強くする
-    float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0)));
-    float mie_boost = 0.001f + horizon_factor * (0.01f + air_mass * 0.05f);
-    float g = 0.6f;
-    float phase_mie = MiePhase(cos_theta, g) * mie_boost;
-    
-    //青空の時は変化が少ないのでサンプル数を減らし、
-    //変化の多い地平線付近だけ多めにする
-    float samples_f = lerp(MAX_SAMPLES / 2, (float) MAX_SAMPLES, horizon_factor);
-    int adaptive_samples = max(1, (int) round(samples_f)); // round() -> float, cast -> int
-
-    float step_size = ATMOSPHERE_HEIGHT / adaptive_samples;
-    float3 result = float3(0.0, 0.0, 0.0);
-    for (int i = 0; i < adaptive_samples; ++i)
-    {
-        float u = (i + 0.5f) / adaptive_samples;
-        float t = ATMOSPHERE_HEIGHT * (1.0f - pow(1.0f - u, 2.0f)); // 下層に多く
-        //float t = i * step_size;
-
-        float3 sample_pos = camera_pos + view_dir * t;
-        float h = length(sample_pos) - EARTH_RADIUS;
-
-        //100メートル地下ならば、考慮に入れなくても良い
-        if (h < 0.0f)
-        {
-            continue;
-        }
-        
-        float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
-        float3 T1 = TransmittanceApprox(camera_pos, sample_pos);
-        float3 T2 = TransmittanceApprox(sample_pos, sample_pos + light_dir * ATMOSPHERE_HEIGHT);
-        
-        result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
-    }
-        //太陽
-    {
-        float zenith_angle = clamp(dot(float3(0.0, 1.0, 0.0), light_dir), -1.0, 1.0);
-        float sun_energy = max(0.0, 1.0 - exp(-((PI * 0.5) - acos(zenith_angle)))) * 1000.0;
-        const float sol_size = 0.00872663806;
-        const float sun_disk_scale = 2.0; // [0.0, 360.0]
-	// solar disk and out-scattering
-        float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
-        float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
-        float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
-        float3 Lo = (sun_energy * 1900.0 * result) * sun_disk * Ei;
-        result += Lo;
-    }
-        result /= result + 1.0f;
-    return result;
-}
 
 // 雲レイヤー内におけるサンプル位置の高さ比率を求める
 float GetHeightFractionForPoint(float position)
@@ -383,20 +200,22 @@ float IntersectSphere(float3 pos, float3 dir, float r)
 }
 
 #define ENABLE_CLOUD_ANIMATION 
-// Andrew Schneider "Real-Time Volumetric Cloudscape" In GPU Pro 7, pp. 97-127
 // 指定された位置における雲の密度を返す
 float SampleCloudDensity
-(float3 sample_point, float3 weather_data, float mip_level, bool cheap_sample = false)
+(float3 sample_point, float3 weather_data, float mip_level, bool cheap_sample = false, float horizon_soft=0)
 {
 	// 高さに応じてノイズをブレンドするため、位置から高さ比率を算出
     float height_fraction = GetHeightFractionForPoint(length(sample_point));
 	
+	// 雲の被覆率(カバレッジ)はweather_dataのRチャンネルに格納されている
+    float cloud_coverage = weather_data.r * cloud_coverage_scale;
+    
 #ifdef ENABLE_CLOUD_ANIMATION
         // 風向きと風速に基づいて雲を移動させる（低周波形状用）
     sample_point.xz += (options.z + time_offset) * 20.0 * normalize(-wind_direction) * wind_speed * 0.6;
 #endif
 	// 低周波のPerlin-WorleyノイズとWorleyノイズを取得
-    float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, max(mip_level - 2.0,0.0f));
+    float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, max(mip_level - 2.0, 0.0f));
 
 	// 低周波 Worley ノイズを用いて fbm（フラクタルブラウン運動）を構築し、
     // 低周波 Perlin-Worley ノイズにディテールを追加する
@@ -421,8 +240,6 @@ float SampleCloudDensity
 	// 高さ方向の密度関数をベース雲形状に適用
     base_cloud *= density_height_gradient;
 	
-	// 雲の被覆率(カバレッジ)はweather_dataのRチャンネルに格納されている
-    float cloud_coverage = weather_data.r * cloud_coverage_scale;
 	
 	// remapを用いて雲の被覆率を反映させる
     float base_cloud_with_coverage = Remap(base_cloud, 1.0 - cloud_coverage, 1.0, 0.0, 1.0);
@@ -551,8 +368,61 @@ float SampleCloudOpticalDepthAlongCone(
     return optical_depth;
 }
 
+//太陽光の色を取得
+static const float RAYLEIGH_SCALE_HEIGHT = 8000.f;
+static const float MIE_SCALE_HEIGHT = 1200.f;
+static const float OZONE_SCALE_HALF_WIDTH = 15000.f;
+static const float OZONE_CENTER_HEIGHT = 50000.f;
+//簡易的レイリー散乱
+float3 SigmaRayleigh(float h)
+{
+    
+    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / RAYLEIGH_SCALE_HEIGHT);
+}
+//簡易的ミー散乱
+float3 SigmaMie(float h)
+{
+    return float3(3.996e-6, 3.31e-6, 1e-6f) * exp(-(h) / MIE_SCALE_HEIGHT);
+}
+//オゾン吸収係数
+float3 SigmaOzone(float h)
+{
+    float3 coeff = float3(0.650e-6, 1.881e-6, 0.085e-6);
+    float ozoneFactor = max(0.0, 1.0 - (abs(h - OZONE_CENTER_HEIGHT) / OZONE_SCALE_HALF_WIDTH));
+    return coeff * ozoneFactor;
+}
+//距離×平均係数で指数減衰を近似
+float3 TransmittanceApprox(float3 startPos, float3 endPos)
+{
+    float distance = max(50e3f, length(endPos - startPos));
+    // 高度に依存した sigma_t_avg を評価するのが理想だが、まずは sample midpoint を使う
+    float3 midPos = (startPos + endPos) * 0.5f;
+    float h = max(0.0f, length(midPos) - EARTH_RADIUS);
+    float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
+    return exp(-sigma_t * distance); // component-wise exp
+}
+// 波長 (nm)
+static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f); // 赤, 緑, 青
+// λ^-4 の相対比を計算
+static const float3 INV_WAVELENGTH4 = (float3(
+    1.0f / pow(WAVELENGTHS.x, 4.0f),
+    1.0f / pow(WAVELENGTHS.y, 4.0f),
+    1.0f / pow(WAVELENGTHS.z, 4.0f)
+));
+float3 ComputeSunIrradiance(float air_mass)
+{
+    // 光学的厚さ τ(λ)
+    float3 tau = INV_WAVELENGTH4 * air_mass * 3e9f /*スキャッタリングスケール*/;
+
+    // Beer-Lambert減衰
+    float3 Ei = exp(-tau);
+
+    return Ei; // 赤が残り、青が強く減衰
+}
+
+
 // レイマーチングによる大気散乱と雲のレンダリング
-float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
+float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*背景の空の色*/)
 {
     // レイの1ステップの長さ
     float step_size = length(ray_step);
@@ -572,18 +442,20 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     float henyey_greenstein_phase = MiePhase(cos_theta, g);
     henyey_greenstein_phase = saturate(henyey_greenstein_phase); //0~1.0の範囲に圧縮
 
+    //太陽光スペクトルの減衰(波長依存)
+    float sun_elevation = clamp(dot(sun_direction, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
+    float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
+    //kasten-Young 1989近似
+    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
+    air_mass = min(air_mass, 4.0f); // 極端な値を制限
+     // 太陽直接光
+    float3 Ei = ComputeSunIrradiance(air_mass);
+    
     // 地球中心基準のカメラ位置
     float3 position = float3(0.f, earth_radius, 0.f);
     
-    //大気散乱の事前計算
-    //疑似多重散乱の事前計算
-    float3 multi_scattering = PrecomputeMultiScattering(position, ray_step, sun_direction);
-    ////シングルスキャッタリング
-    float3 single_scattering = ComputeSkyColor(
-    position,
-    ray_step,
-    sun_direction);
-    float3 atmosphere_color = (multi_scattering + single_scattering);
+    //大気散乱の色を取得
+    float3 atmosphere_color = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP],texcoord.xy);
 	
     //雲の光学的厚み計算用の係数
     const float cone_spread_multplier = ((cloud_altitudes_min_max.y - cloud_altitudes_min_max.x) / 36.0); 
@@ -591,7 +463,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
     //水平方向の光の制御
     float view_up = saturate(dot(normalize(ray_step), float3(0, 1, 0)));
     float horizon = 1.0 - view_up; // 0:上向き, 1:地平線
-    float horizon_soft = smoothstep(0.2, 0.8, horizon);
+    float horizon_soft = lerp(0.2, 0.8, horizon);
     
     float3 color = 0.0;
     float density = 0;
@@ -614,7 +486,12 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
             float detail_lod = smoothstep(0.0, 10.0, horizon_soft);
             //雲密度サンプリング
             float sampled_density = 
-            SampleCloudDensity(sample_point, weather_data, detail_lod, (detail_lod<=1.0f)?false:true /*cheap_sample*/);
+            SampleCloudDensity(
+            sample_point,
+            weather_data,
+            detail_lod,
+            (detail_lod<=1.0f)?false:true /*cheap_sample*/,
+            horizon);
             // 密度ゼロが続いた回数をカウント
             if (sampled_density == 0.0)
             {
@@ -636,14 +513,14 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     //太陽がカメラ側にある場合、影を作らない
 
                     //雲の影計算
-                    if(dist<8000)
+                    if (dist < 180000)
                     {
                         optical_depth_along_light_ray += SampleCloudOpticalDepthAlongCone(
                         sample_point, sun_direction, step_size);
                     }
                     else
                     {
-                        optical_depth_along_light_ray += sampled_density*10.f;
+                        optical_depth_along_light_ray += sampled_density * 10.f;
                     }
 
 
@@ -670,16 +547,14 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
                     float top_light = smoothstep(0.0f, 1.0f, height);
                     float up_light = saturate(dot(sun_direction, float3(0, 1, 0)));
                     
-                    // 太陽直接光
-                    float3 sun_light_color = directional_light.color.rgb /** (1.f - (cloud_coverage_scale)*0.5)*/; // or passed from CPU
-                    float3 direct_light =
+                   float3 direct_light =
                     (1.0f
                     * beers_law
                     * powdered_sugar
                     * lerp(0.1f, 10.0f, henyey_greenstein_phase) // 太陽光位相関数
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
-                    + sun_light_color;
+                    + Ei;
 
                     // 合計ライト
                     float3 lighting=0.0f;
@@ -738,7 +613,9 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
         {
 			//雲の外判定中は低品質サンプリング
             float3 weather_data = SampleWeatherData(sample_point.xz);
-            cloud_test = SampleCloudDensity(sample_point, weather_data, 0.0, true /*cheap_sample*/);
+            
+            cloud_test = 
+            SampleCloudDensity(sample_point, weather_data, 0.0, true /*cheap_sample*/);
             float step_scale = 1.0f;
             if (cloud_test <= 0.0)
             {
@@ -750,14 +627,8 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps)
         
         
         dist = length(sample_point - ray_origin);
-        if(dist >18000)
-        {
-            break;
-        }
 
-    }
-    
-    
+    }    
         	    
     float alpha = saturate(1.0 - transmittence);
     
@@ -778,20 +649,17 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 sun_pos = light_dir * SUN_DISTANCE;
     float3 sun_dir = normalize(sun_pos - camera_position.xyz);
 
-    //大気散乱の事前計算
-    float3 multi_scattering = PrecomputeMultiScattering(position, ray_dir, sun_dir);
-    float3 single_scattering = ComputeSkyColor(position, ray_dir, sun_dir);
-
     float3 color = 0.0;
-    if (ray_dir.y > 0.0)
+    //地平線上
+    float3 eye_pos = float3(0.0, earth_radius, 0.0) + camera_position.xyz;
+    float3 ray_origin = eye_pos + ray_dir 
+    * IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.x);
+    float3 ray_endpoint = eye_pos + ray_dir
+    * IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.y);
+    float shell_dist = length(ray_endpoint - ray_origin);
+    
+    if (ray_dir.y>=0.0f)
     {
-        //地平線上
-        float3 eye_pos = float3(0.0, earth_radius, 0.0) + camera_position.xyz;
-        float3 ray_origin = eye_pos + ray_dir 
-        * IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.x);
-        float3 ray_endpoint = eye_pos + ray_dir
-        * IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.y);
-        float shell_dist = length(ray_endpoint - ray_origin);
 
         float steps = ray_marching_steps;
         
@@ -817,9 +685,9 @@ float4 main(VS_OUT pin) : SV_TARGET
 
         float3 ray_step = ray_dir * shell_dist / steps;
         // メインのレイマーチング関数を呼び出す
-        float4 volume = RayMarch(ray_origin, ray_step, int(steps));
-        //雲の色
-        float3 background = multi_scattering + single_scattering;
+        float4 volume = RayMarch(ray_origin, ray_step, int(steps),pin.texcoord.xy);
+        //空の色
+        float3 background = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb;
         // 雲のボリュームカラーと背景色をアルファブレンド
         color = (background * (1.0 - volume.a)) + volume.xyz;
         
@@ -828,17 +696,18 @@ float4 main(VS_OUT pin) : SV_TARGET
             // 地平線方向でフェードを強める（任意だが非常に効く）
             float view_up = saturate(dot(ray_dir, float3(0, 1, 0)));
             float horizon = 1.0 - view_up;
-            //float horizon_fade = pow(saturate(horizon), 10.0f);
-            float horizon_fade = (horizon * horizon) * (horizon * horizon);
+            float horizon_fade = ((horizon * horizon) * (horizon * horizon));
             
-            color = lerp(
-            max(color, 0.0),
-            max(background, 0.0),
-            smoothstep(0, 1.0, horizon_fade)
-            );
+            //雲の色を空に近づけるが、遮蔽は意地
+            float3 cloud_color_only =
+            lerp(volume.rgb, background * volume.a, horizon_fade);
+            
+            color = background * (1.0f - volume.a) + cloud_color_only;
+            
         }
 
     }
+
 
     return float4(color, 1.0f);
 }

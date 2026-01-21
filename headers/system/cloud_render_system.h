@@ -10,9 +10,18 @@ class CloudRenderSystem :public IRenderSystem
 public:
     CloudRenderSystem(ComponentManager&comp_mng,RenderPass render_pass);
 
+    void SetSkyColorSRV(ID3D11ShaderResourceView* sky_color_srv) {
+        sky_color_srv_ = sky_color_srv;
+    }
+
     void Render()override;
 
+    bool HasRenderableCloud() { return enable_cloud_; }
+
 private:
+    //enable cloud
+    bool enable_cloud_ = false;
+
     //初期に1度だけ呼び出し、ノイズマップを作成
     void CreateNoiseTextures(ID3D11Device* device);
     void UpdateConstants(const ComponentCloudDome& cloud);
@@ -27,7 +36,7 @@ private:
     {
         //風邪の制御
         DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
-        DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6373500.0f, 6375000.0f }; // highest and lowest altitudes at which clouds are distributed
+        DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6371500.0f, 6373000.0f }; // highest and lowest altitudes at which clouds are distributed
         float wind_speed = 1.0f; // [0.0, 20.0]
 
         //密度
@@ -55,6 +64,7 @@ private:
 
     //ノイズテクスチャ
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_2_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>mid_freq_worley_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_worley_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;
@@ -90,6 +100,8 @@ private:
     CurlParams curl_params_;
     Microsoft::WRL::ComPtr<ID3D11Buffer>curl_params_buffer_;
 
+    //スカイカラー
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>sky_color_srv_ = nullptr;
 
     std::unique_ptr<FullscreenQuad>fullscreen_quad_;
 };

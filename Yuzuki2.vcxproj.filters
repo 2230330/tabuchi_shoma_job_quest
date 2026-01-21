@@ -599,5 +599,8 @@
     <FxCompile Include="shaderes\ibl_sky_atmosphere_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_2_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
