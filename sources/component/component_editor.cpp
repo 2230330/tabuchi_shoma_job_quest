@@ -144,6 +144,12 @@ void ComponentEditor::DrawImgui()
 
                     if (ImGui::CollapsingHeader("Cloud Ray Marching Settings", ImGuiTreeNodeFlags_DefaultOpen))
                     {
+                        if(ImGui::Button("shadow_flag"))
+                        {
+                            c.shadow_flag =!c.shadow_flag;
+                        }
+                        ImGui::Separator();
+
                         ImGui::Text("Wind");
                         ImGui::DragFloat2("Wind Direction", reinterpret_cast<float*>(&c.wind_direction), 0.01f, -1.0f, 1.0f);
                         ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 100.0f);

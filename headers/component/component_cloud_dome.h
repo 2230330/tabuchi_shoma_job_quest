@@ -23,4 +23,6 @@ struct ComponentCloudDome :public IComponent
 
 	int ray_marching_steps = 128;
 	int auto_ray_marching_steps = false;
+
+	bool shadow_flag = false;
 };

@@ -232,6 +232,7 @@
     <ClInclude Include="headers\component\component_volumetric_cloud.h" />
     <ClInclude Include="headers\component\i_component.h" />
     <ClInclude Include="headers\constant_buffer_slot.h" />
+    <ClInclude Include="headers\deferred_g_buffer.h" />
     <ClInclude Include="headers\entity\entity.h" />
     <ClInclude Include="headers\entity\entity_manager.h" />
     <ClInclude Include="headers\entity\entity_record.h" />
@@ -284,6 +285,7 @@
     <ClCompile Include="sources\archetype\archetype_manager.cpp" />
     <ClCompile Include="sources\camera.cpp" />
     <ClCompile Include="sources\component\component_editor.cpp" />
+    <ClCompile Include="sources\deferred_g_buffer.cpp" />
     <ClCompile Include="sources\entity\entity_manager.cpp" />
     <ClCompile Include="sources\framebuffer.cpp" />
     <ClCompile Include="sources\framework.cpp" />
@@ -359,6 +361,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_screen_shadow_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\curl_noise_cs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>

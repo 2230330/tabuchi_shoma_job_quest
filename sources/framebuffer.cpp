@@ -6,11 +6,26 @@ inline bool operator& (FrameBuffer::usage lhs, FrameBuffer::usage rhs)
 {
     return static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs);
 }
-FrameBuffer::FrameBuffer(ID3D11Device* device, uint32_t width, uint32_t height, usage flags , bool enable_msaa, int subsamples, bool generate_mips)
+FrameBuffer::FrameBuffer(
+	ID3D11Device* device,
+	uint32_t width,
+	uint32_t height,
+	usage flags ,
+	bool shadow_flag,
+	bool enable_msaa,
+	int subsamples,
+	bool generate_mips
+)
 {
+	if (shadow_flag)
+	{
+		enable_msaa = false;
+	}
+
 	HRESULT hr{ S_OK };
 
-	DXGI_FORMAT rt_format = DXGI_FORMAT_R16G16B16A16_FLOAT; // DXGI_FORMAT_R16G16B16A16_FLOAT DXGI_FORMAT_R32G32B32A32_FLOAT
+	DXGI_FORMAT rt_format =
+		(!shadow_flag)?DXGI_FORMAT_R16G16B16A16_FLOAT:DXGI_FORMAT_R16_FLOAT; 
 	UINT msaa_quality_level;
 	UINT sample_count = subsamples;
 	hr = device->CheckMultisampleQualityLevels(rt_format, sample_count, &msaa_quality_level);

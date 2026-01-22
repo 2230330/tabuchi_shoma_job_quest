@@ -272,6 +272,9 @@
     <ClInclude Include="headers\system\ibl_manager.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\deferred_g_buffer.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -399,6 +402,9 @@
     </ClCompile>
     <ClCompile Include="sources\system\ibl_manager.cpp">
       <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\deferred_g_buffer.cpp">
+      <Filter>sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -601,6 +607,9 @@
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_2_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_screen_shadow_ps.hlsl">
+      <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

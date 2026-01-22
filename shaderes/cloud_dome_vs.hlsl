@@ -1,5 +1,5 @@
-#include"cloud_dome.hlsli"
 #include"scene_constant_buffer.hlsli"
+#include"fullscreen_quad.hlsli"
 VS_OUT main(VS_INPUT vin)
 {
     //VS_OUT vout;

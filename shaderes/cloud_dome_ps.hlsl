@@ -1,31 +1,8 @@
-//#include"cloud_dome.hlsli"
+#include"cloud_dome.hlsli"
 #include"forward_light.hlsli"
 #include "scene_constant_buffer.hlsli"
 //#include "noise_functions.hlsli"
 #include "fullscreen_quad.hlsli"
-
-cbuffer CLOUD_RAY_MARCHING_CONSTNAT_BUFFER : register(b12)
-{
-    float2 wind_direction;
-    float2 cloud_altitudes_min_max; // highest and lowest altitudes at which clouds are distributed
-	
-    float wind_speed; // [0.0, 20.0]
-	
-    float density_scale; // [0.01, 0.2]
-    float cloud_coverage_scale; // [0.1, 1.0]
-    float rain_cloud_absorption_scale;
-    float cloud_type_scale;
-
-    float earth_radius; // earth radius
-    float horizon_distance_scale;
-    float low_frequency_perlin_worley_sampling_scale;
-    float high_frequency_worley_sampling_scale;
-    float cloud_density_long_distance_scale;
-    bool enable_powdered_sugar_efffect;
-	
-    uint ray_marching_steps;
-    bool auto_ray_marching_steps;
-};
 
 static const float PI = 3.14159265359f;
 
@@ -127,37 +104,6 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 {
     float density_gradient = 0.0;
 
-#if 0
-	const float stratus_threshold = 0.1;
-	const float stratocumulus_threshold = 0.9;
-	//const float cumulus_threshold = 1.0;
-
-	int type = 2;
-    // cloud type: {0: stratus, 1: cumulus, 2: cumulonimbus}
-	if (cloud_type < stratus_threshold)
-	{
-		type = 0;
-	}
-	else if (cloud_type < stratocumulus_threshold)
-	{
-		type = 1;
-	}
-	
-	
-	// sample from gradient texture
-	if (type == 0) // stratus clouds
-	{
-		density_gradient = gradient_stratus_texture.SampleLevel(sampler_states[LINEAR_BORDER_BLACK], float2(0.5, 1.0 - height_fraction), 0);
-	}
-	else if (type == 1) // cumulus clouds
-	{
-		density_gradient = gradient_cumulus_texture.SampleLevel(sampler_states[LINEAR_BORDER_BLACK], float2(0.5, 1.0 - height_fraction), 0);
-	}
-	else if (type == 2)// cumulunimbusclouds
-	{
-		density_gradient = gradient_cumulonimbus_texture.SampleLevel(sampler_states[LINEAR_BORDER_BLACK], float2(0.5, 1.0 - height_fraction), 0);
-	}
-#else
     // height_fraction に基づいて、stratus、stratocumulus、cumulus の各雲タイプの密度勾配をブレンドする
     const float4 stratus_gradient = float4(0.02f, 0.05f, 0.09f, 0.11f);
     const float4 stratocumulus_gradient = float4(0.02f, 0.2f, 0.48f, 0.625f);
@@ -169,7 +115,6 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 
     float4 cloud_gradient = stratus_gradient * stratus + stratocumulus_gradient * stratocumulus + cumulus_gradient * cumulus;
     density_gradient = smoothstep(cloud_gradient.x, cloud_gradient.y, height_fraction) - smoothstep(cloud_gradient.z, cloud_gradient.w, height_fraction);
-#endif
     return density_gradient;
 
 }
@@ -640,8 +585,6 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
     float3 position = float3(0.f, earth_radius, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
-    float3 sun_pos = light_dir * SUN_DISTANCE;
-    float3 sun_dir = normalize(sun_pos - camera_position.xyz);
 
     float3 color = 0.0;
     //地平線上

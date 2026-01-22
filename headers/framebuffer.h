@@ -20,7 +20,16 @@ public:
         depth_stencil = depth | stencil,
     };
 
-    FrameBuffer(ID3D11Device* device, uint32_t width, uint32_t height, usage flags = usage::color_depth_stencil, bool enable_msaa = false, int subsamples = 1, bool generate_mips = false);
+    FrameBuffer(
+        ID3D11Device* device,
+        uint32_t width,
+        uint32_t height,
+        usage flags = usage::color_depth_stencil,
+        bool shadow_flag=false,
+        bool enable_msaa = false,
+        int subsamples = 1,
+        bool generate_mips = false
+    );
     ~FrameBuffer() = default;
 
     //‰æ–Ê‚ÌƒNƒŠƒA

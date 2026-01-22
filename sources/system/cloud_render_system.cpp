@@ -15,10 +15,10 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
     ,IRenderSystem(render_pass)
 {
     ID3D11Device* device = Graphics::Instance().GetDevice();
+    HRESULT hr{ S_OK };
 
     //定数バッファ生成
     {
-        HRESULT hr{ S_OK };
         D3D11_BUFFER_DESC cb_desc{};
 
         //curlノイズ生成用バッファ
@@ -142,10 +142,18 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
     };
     //シェーダーの設定
     cloud_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\cloud_dome_ps.cso");
-
+    cloud_screen_shadow_ps = ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\cloud_screen_shadow_ps.cso");
 
     //フルスクリーンクワッドの作成
     fullscreen_quad_ = std::make_unique<FullscreenQuad>(device);
+
+    //シャドウマップ
+    shadow_map_ = 
+        std::make_unique<FrameBuffer>(
+            device, 
+            SHADOW_RES,
+            SHADOW_RES,
+            FrameBuffer::usage::color, true);
 }
 void CloudRenderSystem::Render()
 {
@@ -186,10 +194,22 @@ void CloudRenderSystem::Render()
             // 描画呼び出し
             fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_ps_.Get());
 
+            shadow_map_->Clear(context);
+            shadow_map_->Activate(context);
+            //影描画様に雲の位置を書き出す
+            if (cloud.shadow_flag)
+            {
+
+                fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_screen_shadow_ps.Get());
+
+            }
+            shadow_map_->Activate(context);
+
             Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
 
+
+
             //一つ見つかればそれで終わり
-            return;
         });
 }
 //初期に1度だけ呼び出し、ノイズマップを作成

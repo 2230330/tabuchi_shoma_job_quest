@@ -4,6 +4,7 @@
 #include<wrl.h>
 #include"../component/component_manager.h"
 #include"../fullscreen_quad.h"
+#include"../framebuffer.h"
 
 class CloudRenderSystem :public IRenderSystem
 {
@@ -13,6 +14,8 @@ public:
     void SetSkyColorSRV(ID3D11ShaderResourceView* sky_color_srv) {
         sky_color_srv_ = sky_color_srv;
     }
+
+    const ID3D11ShaderResourceView* GetCloudShadowSRV() { return shadow_map_->GetShaderResourceView(0).Get(); }
 
     void Render()override;
 
@@ -101,6 +104,12 @@ private:
 
     //スカイカラー
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>sky_color_srv_ = nullptr;
+    const int SHADOW_RES = 512;
 
     std::unique_ptr<FullscreenQuad>fullscreen_quad_;
+
+    //シャドウマップ用
+    std::unique_ptr<FrameBuffer>shadow_map_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps = nullptr;
+
 };
