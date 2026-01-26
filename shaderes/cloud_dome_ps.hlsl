@@ -376,7 +376,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
     float3 sun = -directional_light.direction.xyz;
     float3 sun_direction = normalize(sun);
     float cos_theta = clamp(dot(ray_direction, sun_direction), -1.f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
-    float g = 0.4f;
+    float g = 0.0f;
     //float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
     float henyey_greenstein_phase = MiePhase(cos_theta, g);
     henyey_greenstein_phase = saturate(henyey_greenstein_phase); //0~1.0‚Ì”ÍˆÍ‚Éˆ³k
