@@ -48,16 +48,6 @@ float Hash(float3 p)
     return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
 }
 
-// --- 追加: サブサンプル数とジッタ関数 ---
-static const int SUBSAMPLES = 2; // 2 にするとコストは約2倍だがノイズがかなり減る。4 も可。
-
-float Hash2(float2 p)
-{
-    float3 q = frac(float3(p.xyx) * 0.3183099 + 0.1);
-    q *= 17.0;
-    return frac(q.x * q.y * q.z * (q.x + q.y + q.z));
-}
-
 float Remap(float original_value, float original_min, float original_max, float new_min, float new_max)
 {
     float denom = original_max - original_min;
@@ -256,11 +246,7 @@ float RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /*
     const float3 ray_direction = normalize(ray_step);
 
     // ピクセル毎の小さなジッタ（位相をずらす）
-    float pixel_jitter = Hash2(texcoord * 1234.567 + options.z * 0.01) - 0.5; // [-0.5,0.5]
-    float initial_phase = saturate(pixel_jitter);
-
-    // 初期サンプル位置を位相でずらす（従来の Hash を置換）
-    float3 sample_point = ray_origin + ray_step * initial_phase;
+    float3 sample_point = ray_origin + ray_step * Hash(ray_origin * 6.0);
 
     float3 sun = -directional_light.direction.xyz;
     float3 sun_direction = normalize(sun);
@@ -272,67 +258,36 @@ float RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /*
     float density = 0.0;
     float cloud_test = 0.0;
     int zero_density_sample_count = 0;
+    float detail_lod = smoothstep(0.0, 6.0, horizon_soft);
 
-    [loop]
-    for (int i = 0; i < steps; i++)
+    float transmittence = 1.0;
+
+    for (int i = 0; i < steps; ++i)
     {
         if (cloud_test > 0.0)
         {
-            float detail_lod = smoothstep(0.0, 6.0, horizon_soft);
+            float d = SampleCloudDensity(sample_point, coarse_weather, detail_lod, false);
 
-            // HQ: サブサンプル平均化（ストラティファイド）
-            float sampled_density = 0.0;
-#if SUBSAMPLES == 1
-            sampled_density = SampleCloudDensity(sample_point, coarse_weather, detail_lod, (detail_lod <= 1.0f) ? false : true, horizon);
-#else
-            // 2点サンプルを ray_step 内に分散
-            float3 p0 = sample_point + ray_step * 0.25;
-            float3 p1 = sample_point + ray_step * 0.75;
+            float sigma = density_scale * d;
+            float T_step = exp(-sigma * step_size);
 
-            float d0 = SampleCloudDensity(p0, coarse_weather, detail_lod, (detail_lod <= 1.0f) ? false : true, horizon);
-            float d1 = SampleCloudDensity(p1, coarse_weather, detail_lod, (detail_lod <= 1.0f) ? false : true, horizon);
-            sampled_density = 0.5 * (d0 + d1);
-#endif
+            transmittence *= T_step;
 
-            if (sampled_density == 0.0)
-            {
-                zero_density_sample_count++;
-            }
+            if (transmittence < 1e-3)
+                break;
 
-            if (zero_density_sample_count != 6)
-            {
-                float density_attenuation = lerp(1.0f, 0.3f, horizon_soft);
-                density += sampled_density * density_attenuation;
-
-                if(density > 0.5f)
-                    break;
-                
-                // 次サンプルへ
-                sample_point += ray_step;
-            }
-            else
-            {
-                cloud_test = 0.0;
-                zero_density_sample_count = 0;
-            }
+            sample_point += ray_step;
         }
         else
         {
-            // 低品質サンプリング: coarse_weather を使って判定
-            cloud_test = SampleCloudDensity(sample_point, coarse_weather, 0.0, true /*cheap_sample*/);
-            float step_scale = 1.0f;
-            if (cloud_test <= 0.0)
-            {
-                step_scale = lerp(1.0f, 3.0f, horizon);
-            }
-            sample_point += ray_step * step_scale;
+            cloud_test = SampleCloudDensity(sample_point, coarse_weather, 0.0, true);
+            sample_point += ray_step;
         }
     }
 
-    float optical_thickness = density_scale * density * step_size;
-    float alpha = saturate(1.0 - exp(-optical_thickness));
-
+    float alpha = saturate(1.0 - transmittence);
     return alpha;
+
 }
 
 // レイと球の交差判定

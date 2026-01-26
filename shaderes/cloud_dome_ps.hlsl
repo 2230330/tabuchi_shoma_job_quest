@@ -538,8 +538,6 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     
                 }
                 
-                //サンプル位置を進める
-                sample_point +=ray_step;
             }
             //六回連続０なら雲を抜けた元して判断する
             else
@@ -547,6 +545,8 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                 cloud_test = 0.0;
                 zero_density_sample_count = 0;
             }
+                //サンプル位置を進める
+                sample_point +=ray_step;
         }
         else
         {

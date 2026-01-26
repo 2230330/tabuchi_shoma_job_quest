@@ -14,20 +14,6 @@ Texture2D cloud_texture : register(t0);
 
 static const float PI = 3.14159265358979323846;
 
-float3 hsv2rgb(float3 c)
-{
-    float3 t = abs(fmod(c.x * 6.0 + float3(0.0, 4.0, 2.0), 6.0) - 3.0);
-    float3 rgb = saturate(t - 1.0);
-    return c.z * lerp(float3(1.0, 1.0, 1.0), rgb, c.y);
-}
-
-float2x2 rotate2d(float angle)
-{
-    float s = sin(angle);
-    float c = cos(angle);
-    return float2x2(c, -s,
-                    s, c);
-}
 
 static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f);
 static const float3 INV_WAVELENGTH4 = (float3(
@@ -94,14 +80,13 @@ float4 main(VS_OUT pin) : SV_Target
     float cosTheta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f);
     float angle = acos(cosTheta); // 0 = 視線と太陽が一致
 
-    // 元の見た目を保つための「ライン状ハイライト」式をほぼ踏襲
-    // ただし分母に小さなイプシロンを入れてゼロ除算を防ぐ
+    //ライン状ハイライト式
     const float EPS = 1e-4f;
     float mx = sin(abs(angle)) * 4.0;
     float my = mx;
     float denom_x = max(abs(angle) + my, EPS);
     float denom_y = max(abs(angle) + mx, EPS);
-    float denom_xdiff = max(abs(angle - angle) + my, EPS); // 元コードの差分項は実質ゼロに近い
+    float denom_xdiff = max(abs(angle - angle) + my, EPS); 
     float denom_ysum = max(abs(angle + angle) + mx, EPS);
 
     float lx = 0.01 / denom_x;
@@ -120,14 +105,9 @@ float4 main(VS_OUT pin) : SV_Target
     float3 finalColor = saturate(Ei * s.xxx);
     
     //雲による遮蔽計算
-    float erosion = pow(softMask, 1.0f);
+    float erosion = pow(softMask, 1.5f);
     //太陽を侵食
     float3 eroded_color = finalColor * (1.0f - erosion);
-
-    // 雲による遮蔽量（0..1）
-    const float cloudOpacity = 1.0; // 調整可
-    float occlusion = saturate(softMask * cloudOpacity);
-    float visible = saturate(1.0 - occlusion);
 
     // 太陽の強さに基づく安全なアルファ（黒点発生を避ける）
     // finalColor が小さくてもアルファがゼロに張り付かないようにする
@@ -136,9 +116,8 @@ float4 main(VS_OUT pin) : SV_Target
     float intensityScale = 1.0;
     float colorAlpha = saturate(sunIntensity * intensityScale);
 
-    // 全体の透過度：雲で減衰した「可視度 * 太陽強度に基づくアルファ」
-    //float outAlpha = visible * colorAlpha;
-    float outAlpha = saturate(colorAlpha * (1.0 - erosion )); // 侵食もアルファに影響させる
+    // 侵食を考慮した最終アルファ
+    float outAlpha = saturate(colorAlpha * (1.0 - erosion )); 
 
     // 非プリマルチ出力にする（レンダラーで通常アルファ合成を想定）
     float3 outColor = eroded_color;
