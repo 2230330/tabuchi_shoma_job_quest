@@ -61,6 +61,50 @@ void LightManager::SetForwardLightConstant(int start_slot)
 	Graphics::Instance().SetConstantBuffer(start_slot, 1, forward_light_constant_buffer_.GetAddressOf());
 }
 
+void LightManager::SetDeferredLightConstant(int start_slot)
+{
+	DeferredLightContstants constant;
+
+	//環境光
+	{
+		constant.lights.work_data[0] = ambient_color;
+        constant.lights.work_data[3].w = light_kind_ambient_light;
+		Graphics::Instance().GetDeviceContext()
+			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
+        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
+	}
+
+    //ディレクションライト
+	{
+		constant.lights.work_data[0] = direction_light_.direction;
+		constant.lights.work_data[1] = direction_light_.color;
+		constant.lights.work_data[3].w = light_kind_derectional_light;
+
+        constant.use_shadow = 1;
+		constant.shadow_attenuation = 0.5f;
+        constant.shadow_bias = 0.001f;
+
+		//ライト方向から見た視線行列を生成
+        DirectX::XMVECTOR light_pos = DirectX::XMLoadFloat4(&direction_light_.direction);
+        light_pos = DirectX::XMVectorScale(light_pos, -100.f);//ライト位置を少し後ろに
+		DirectX::XMMATRIX V=DirectX::XMMatrixLookAtLH(
+			light_pos,
+			DirectX::XMVectorZero(),
+			DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)
+        );
+		//シャドウマップに描画したい範囲の射影行列を生成
+        DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicLH(200.f, 200.f, 0.1f, 400.f);
+		//ライトビュー行列を保存
+		DirectX::XMStoreFloat4x4(&constant.light_view_projection, V * P);
+
+        Graphics::Instance().GetDeviceContext()
+			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
+        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
+
+	}
+
+}
+
 void LightManager::DrawImgui()
 {
 	if (ImGui::Begin("light manager"))
@@ -75,7 +119,7 @@ void LightManager::DrawImgui()
 			direction_light_.direction.y = sinf(elevation_);
 			direction_light_.direction.z = cosf(elevation_) * sinf(azimuth_);
 
-			if (ImGui::SliderFloat("intensity", &direction_light_.intensity, 0.0f, 20.f));
+			if (ImGui::SliderFloat("intensity", &direction_light_.color.w, 0.0f, 20.f));
 			
 			ImGui::TreePop();
 		}

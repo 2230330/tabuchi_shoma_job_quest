@@ -203,7 +203,7 @@ void CloudRenderSystem::Render()
                 fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_screen_shadow_ps.Get());
 
             }
-            shadow_map_->Activate(context);
+            shadow_map_->Deactivate(context);
 
             Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
 

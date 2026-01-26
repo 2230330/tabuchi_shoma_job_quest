@@ -133,7 +133,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         {
             float3 diffuse = (float3) 0, specular = (float3) 0;
             float3 L = normalize(directional_light.direction.xyz);
-            float3 LC = directional_light.color.rgb*directional_light.intensity;
+            float3 LC = directional_light.color.rgb*directional_light.color.w;
             DirectBRDF(diffuse_reflectance, F0, N, V, L, LC, roughness, diffuse, specular);
 
             total_diffuse += diffuse;

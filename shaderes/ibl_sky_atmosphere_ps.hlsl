@@ -279,7 +279,7 @@ float4 main(PSIn pin) : SV_TARGET
         float3 Ei = ComputeSunIrradiance(air_mass); //太陽光の色
         
         float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
-        float3 Lo = sun_disk * Ei * directional_light.intensity;
+        float3 Lo = sun_disk * Ei * directional_light.color.w;
         // 太陽のディスク内に視線が入っているときだけ加算
         if (sun_disk > 0.01f) // しきい値で完全に限定
         {

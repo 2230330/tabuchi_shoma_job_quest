@@ -15,7 +15,7 @@ public:
         sky_color_srv_ = sky_color_srv;
     }
 
-    const ID3D11ShaderResourceView* GetCloudShadowSRV() { return shadow_map_->GetShaderResourceView(0).Get(); }
+    ID3D11ShaderResourceView* GetCloudShadowSRV() { return shadow_map_->GetShaderResourceView(0).Get(); }
 
     void Render()override;
 

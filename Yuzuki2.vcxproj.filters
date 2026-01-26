@@ -474,6 +474,9 @@
     <None Include="shaderes\volumetric_cloud.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaderes\deferred_rendering.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">
@@ -609,6 +612,9 @@
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\cloud_screen_shadow_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\celestial_light_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

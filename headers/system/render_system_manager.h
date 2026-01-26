@@ -48,4 +48,6 @@ private:
     //マイフレーム呼び出す必要はないと感じました
     int back_sample_count_ = 0;
     const int back_sample_rimit_ = 0;
+
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> celestial_light_ps_;
 };

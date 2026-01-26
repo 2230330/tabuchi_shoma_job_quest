@@ -183,7 +183,7 @@ float RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /*
         if (cloud_test > 0.0)
         {
             // ループ内テクスチャフェッチを削減: coarse_weather を使う
-            float detail_lod = smoothstep(0.0, 10.0, horizon_soft);
+            float detail_lod = smoothstep(0.0, 6.0, horizon_soft);
             float sampled_density =
                 SampleCloudDensity(
                     sample_point,
@@ -197,13 +197,13 @@ float RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /*
                 zero_density_sample_count++;
             }
 
-            if (zero_density_sample_count != 3)
+            if (zero_density_sample_count != 6)
             {
                 float density_attenuation = lerp(1.0f, 0.3f, horizon_soft);
                 density += sampled_density * density_attenuation;
 
-                if (density > 0.5f)
-                    break;
+                //if (density > 0.5f)
+                //    break;
 
                 sample_point += ray_step;
             }

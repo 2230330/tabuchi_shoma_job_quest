@@ -15,34 +15,32 @@
 //       
 //       float4 direction;              // Offset:   32
 //       float4 color;                  // Offset:   48
-//       float intensity;               // Offset:   64
-//       float3 dummy;                  // Offset:   68
 //
-//   } directional_light;               // Offset:   32 Size:    48
+//   } directional_light;               // Offset:   32 Size:    32
 //   
 //   struct point_lights
 //   {
 //       
-//       float4 position;               // Offset:   80
-//       float4 color;                  // Offset:   96
-//       float range;                   // Offset:  112
-//       float intensity;               // Offset:  116
-//       float2 dummy;                  // Offset:  120
+//       float4 position;               // Offset:   64
+//       float4 color;                  // Offset:   80
+//       float range;                   // Offset:   96
+//       float intensity;               // Offset:  100
+//       float2 dummy;                  // Offset:  104
 //
-//   } point_light[8];                  // Offset:   80 Size:   384 [unused]
+//   } point_light[8];                  // Offset:   64 Size:   384 [unused]
 //   
 //   struct spot_lights
 //   {
 //       
-//       float4 position;               // Offset:  464
-//       float4 direction;              // Offset:  480
-//       float4 color;                  // Offset:  496
-//       float range;                   // Offset:  512
-//       float inner_corn;              // Offset:  516
-//       float outer_corn;              // Offset:  520
-//       float dummy;                   // Offset:  524
+//       float4 position;               // Offset:  448
+//       float4 direction;              // Offset:  464
+//       float4 color;                  // Offset:  480
+//       float range;                   // Offset:  496
+//       float inner_corn;              // Offset:  500
+//       float outer_corn;              // Offset:  504
+//       float dummy;                   // Offset:  508
 //
-//   } spot_light[8];                   // Offset:  464 Size:   512 [unused]
+//   } spot_light[8];                   // Offset:  448 Size:   512 [unused]
 //
 // }
 //
@@ -72,7 +70,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB3[5], immediateIndexed
+dcl_constantbuffer CB3[4], immediateIndexed
 dcl_input_ps_siv linear noperspective v0.xyz, position
 dcl_input_ps linear v1.xy
 dcl_input_ps_siv constant v2.x, rendertarget_array_index
@@ -1062,7 +1060,7 @@ mul r0.w, r0.w, r1.x  // r0.w <- sun_disk
 
 #line 282
 mul r1.xyz, r2.xyzx, r0.wwww
-mul r1.xyz, r1.xyzx, cb3[4].xxxx  // r1.x <- Lo.x; r1.y <- Lo.y; r1.z <- Lo.z
+mul r1.xyz, r1.xyzx, cb3[3].wwww  // r1.x <- Lo.x; r1.y <- Lo.y; r1.z <- Lo.z
 
 #line 284
 lt r0.w, l(0.010000), r0.w

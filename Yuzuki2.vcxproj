@@ -323,6 +323,7 @@
     <None Include="shaderes\bidirectional_reflectance_distribution_function.hlsli" />
     <None Include="shaderes\bloom.hlsli" />
     <None Include="shaderes\cloud_dome.hlsli" />
+    <None Include="shaderes\deferred_rendering.hlsli" />
     <None Include="shaderes\forward_light.hlsli" />
     <None Include="shaderes\fullscreen_quad.hlsli" />
     <None Include="shaderes\gbuffer.hlsli" />
@@ -345,6 +346,12 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\blur_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\celestial_light_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>

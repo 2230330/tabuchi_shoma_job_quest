@@ -36,34 +36,32 @@
 //       
 //       float4 direction;              // Offset:   32
 //       float4 color;                  // Offset:   48
-//       float intensity;               // Offset:   64
-//       float3 dummy;                  // Offset:   68
 //
-//   } directional_light;               // Offset:   32 Size:    48
+//   } directional_light;               // Offset:   32 Size:    32
 //   
 //   struct point_lights
 //   {
 //       
-//       float4 position;               // Offset:   80
-//       float4 color;                  // Offset:   96
-//       float range;                   // Offset:  112
-//       float intensity;               // Offset:  116
-//       float2 dummy;                  // Offset:  120
+//       float4 position;               // Offset:   64
+//       float4 color;                  // Offset:   80
+//       float range;                   // Offset:   96
+//       float intensity;               // Offset:  100
+//       float2 dummy;                  // Offset:  104
 //
-//   } point_light[8];                  // Offset:   80 Size:   384 [unused]
+//   } point_light[8];                  // Offset:   64 Size:   384 [unused]
 //   
 //   struct spot_lights
 //   {
 //       
-//       float4 position;               // Offset:  464
-//       float4 direction;              // Offset:  480
-//       float4 color;                  // Offset:  496
-//       float range;                   // Offset:  512
-//       float inner_corn;              // Offset:  516
-//       float outer_corn;              // Offset:  520
-//       float dummy;                   // Offset:  524
+//       float4 position;               // Offset:  448
+//       float4 direction;              // Offset:  464
+//       float4 color;                  // Offset:  480
+//       float range;                   // Offset:  496
+//       float inner_corn;              // Offset:  500
+//       float outer_corn;              // Offset:  504
+//       float dummy;                   // Offset:  508
 //
-//   } spot_light[8];                   // Offset:  464 Size:   512 [unused]
+//   } spot_light[8];                   // Offset:  448 Size:   512 [unused]
 //
 // }
 //

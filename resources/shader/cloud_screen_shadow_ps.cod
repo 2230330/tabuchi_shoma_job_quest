@@ -455,7 +455,7 @@ loop
 
 #line 186
     mov r6.x, l(-0.000000)
-    add r6.y, r6.x, l(10.000000)
+    add r6.y, r6.x, l(6.000000)
     add r6.x, r3.x, r6.x
     div r6.y, l(1.000000, 1.000000, 1.000000, 1.000000), r6.y
     mul r6.x, r6.y, r6.x
@@ -821,7 +821,7 @@ loop
     endif 
 
 #line 200
-    ine r6.x, r5.z, l(3)
+    ine r6.x, r5.z, l(6)
     if_nz r6.x
 
 #line 202
@@ -832,22 +832,12 @@ loop
 
 #line 203
       mul r6.x, r6.x, r8.x
-      add r6.x, r5.x, r6.x  // r6.x <- density
-
-#line 205
-      lt r6.y, l(0.500000), r6.x
-      if_nz r6.y
-
-#line 206
-        mov r5.x, r6.x  // r5.x <- density
-        break 
-      endif   // r6.x <- density
+      add r5.x, r5.x, r6.x
 
 #line 208
       add r4.yzw, r0.yyzw, r4.yyzw
 
 #line 209
-      mov r5.x, r6.x  // r5.x <- density
     else 
 
 #line 212
@@ -1127,10 +1117,8 @@ loop
 #line 226
   endif 
 
-#line 181
-  iadd r5.w, r5.w, l(1)
-
 #line 227
+  iadd r5.w, r5.w, l(1)
 endloop 
 
 #line 229
@@ -1156,4 +1144,4 @@ mov r0.x, r0.x  // r0.x <- cloud_presence
 itof o0.yzw, l(0, 0, 0, 1)  // o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 mov o0.x, r0.x  // o0.x <- <main return value>.x
 ret 
-// Approximately 666 instruction slots used
+// Approximately 660 instruction slots used

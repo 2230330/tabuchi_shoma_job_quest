@@ -137,7 +137,7 @@ void SceneTest::RenderCore(float elapsed_time)
         UINT num_viewports{ 1 };
         dc->RSGetViewports(&num_viewports, &viewport);
 
-        light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kLight));
+        light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kForwardLight));
         SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame));
     }
     //レンダリングオブジェクト描画

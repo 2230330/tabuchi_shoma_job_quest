@@ -5,6 +5,7 @@
 #include"../../headers/system/render_system.h"
 #include"../../headers/system/instancing_render_system.h"
 #include"../../headers/system/sprite_render_system.h"
+#include"../../headers/resource_manager.h"
 
 
 
@@ -39,6 +40,10 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     //IBLマネージャ
     ibl_manager_ = std::make_unique<IBLManager>();
     ibl_manager_->Initialize(Graphics::Instance().GetDevice());
+
+    celestial_light_ps_ =
+        ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(), L".\\resources\\shader\\celestial_light_ps.cso");
+
 }
 
 void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)
@@ -76,6 +81,11 @@ void RenderSystemManager::RenderAll()
             ID3D11ShaderResourceView* srv[] = { sky_framebuffer_->GetShaderResourceView(0).Get() };
             bit_block_transfer_->blit(ctx, srv, 0, 1);
         }
+
+        ID3D11ShaderResourceView* srvs[] = {
+            cloud_render_system_->GetCloudShadowSRV(),
+        };
+        bit_block_transfer_->blit(ctx, srvs, 0, 1, celestial_light_ps_.Get());
 
         back_framebuffer_->Deactivate(ctx);
 
