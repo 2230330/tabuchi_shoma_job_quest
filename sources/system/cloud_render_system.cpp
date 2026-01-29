@@ -81,13 +81,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
         { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
-    shadowmap_caster_vertex_shader_=
-        ResourceManager::Instance().LoadVertexShader(
-            device,
-            L".\\resources\\shader\\cloud_shadowmap_vs.cso",
-            shadowmap_caster_input_layout_.GetAddressOf(),
-            input_element_desc,
-            ARRAYSIZE(input_element_desc));
+
     //シェーダーの設定
     cloud_ps_ = 
         ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\volumetric_cloud_ps.cso");
@@ -103,8 +97,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
             device, 
             SHADOW_RES,
             SHADOW_RES,
-            FrameBuffer::usage::color_depth, 
-            true/*影フラグ*/);
+            FrameBuffer::usage::color);
 }
 void CloudRenderSystem::Render()
 {
@@ -146,14 +139,10 @@ void CloudRenderSystem::Render()
             fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_ps_.Get());
 
             shadow_map_->Clear(context);
-            shadow_map_->Activate(context,FrameBuffer::usage::color_depth);
+            shadow_map_->Activate(context,FrameBuffer::usage::color);
             //影描画様に雲の位置を書き出す
-            //if (cloud.shadow_flag)
             {
-
-
                 fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_screen_shadow_ps.Get());
-
             }
             shadow_map_->Deactivate(context);
 

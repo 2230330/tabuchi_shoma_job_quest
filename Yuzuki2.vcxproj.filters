@@ -614,7 +614,7 @@
     <FxCompile Include="shaderes\ibl_volumetric_cloud_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\cloud_shadowmap_vs.hlsl">
+    <FxCompile Include="shaderes\radial_god_lay_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

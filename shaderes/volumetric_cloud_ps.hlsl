@@ -398,7 +398,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
     float3 sun = -directional_light.direction.xyz;
     float3 sun_direction = normalize(sun);
     float cos_theta = clamp(dot(ray_direction, sun_direction), -0.f, 1.0f); //視線と太陽の角度
-    float g = 0.8f;
+    float g = 0.6f;
     //float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
     float henyey_greenstein_phase = MiePhase(cos_theta, g);
     henyey_greenstein_phase = saturate(henyey_greenstein_phase); //0~1.0の範囲に圧縮
@@ -411,6 +411,8 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
     air_mass = min(air_mass, 4.0f); // 極端な値を制限
      // 太陽直接光
     float3 Ei = ComputeSunIrradiance(air_mass);
+    
+    Ei *= lerp(0.5f, 1.5f, sun_elevation); //太陽高度で増減
     
     // 地球中心基準のカメラ位置
     float3 position = float3(0.f, earth_radius, 0.f);
@@ -490,7 +492,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
 
 
                     //光学的厚み
-                    float shadow_strength = 5.0f; //ループを6回で切る為、影が薄くなるので強めにする
+                    float shadow_strength = 10.0f; //ループを6回で切る為、影が薄くなるので強めにする
                     float light_density_scale = density_scale * shadow_strength;
                     float optical_thickness = (light_density_scale * (optical_depth_along_light_ray+density_along_light_ray));
                     
@@ -517,7 +519,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     (1.0f
                     * beers_law
                     * powdered_sugar
-                    * lerp(0.1f, 10.0f, henyey_greenstein_phase) // 太陽光位相関数
+                    * lerp(0.1f, 30.0f, henyey_greenstein_phase) // 太陽光位相関数
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
                     + Ei;

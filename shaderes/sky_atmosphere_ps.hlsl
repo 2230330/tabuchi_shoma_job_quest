@@ -163,7 +163,6 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
     float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
     float3 Ei = ComputeSunIrradiance(air_mass);
     
-    
     //太陽に近いほど1.0
     float angle_factor = pow(saturate(cos_theta), 2.0f);
     float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(30.0f, 10.f, sunset_factor));
@@ -238,35 +237,13 @@ float4 main(VS_OUT pin):SV_TARGET
     view_dir,
     sun_dir);
     
-    sky_color += single_scattering + (multi_scattering);
+    sky_color += single_scattering + (multi_scattering) ; //環境光的に少し足す
     
-    
-    //太陽
-    {
-    //    const float sol_size = 0.00872663806;
-    //    const float sun_disk_scale = 2.0; // [0.0, 360.0]
-	   // // solar disk and out-scattering
-    //    float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
-    //    float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
-        
-    //    float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //視線と太陽の角度
-    //    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
-    //    float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
-    ////kasten-Young 1989近似
-    //    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
-    //    float3 Ei = ComputeSunIrradiance(air_mass); //太陽光の色
-        
-    //    float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
-    //    float3 Lo = sun_disk * Ei * directional_light.intensity;
-    //    // 太陽のディスク内に視線が入っているときだけ加算
-    //    if (sun_disk > 0.01f) // しきい値で完全に限定
-    //    {
-    //        sky_color += Lo ;
-    //    }
-    }
-    
+    //夜の簡易実装
+    float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //視線と太陽の角度
+    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
 
-
+    sky_color += lerp(float3(0.1f, 0.1f, 0.2f), 0, sun_elevation);
 
     return float4(sky_color.xyz, 1.0f);
 }

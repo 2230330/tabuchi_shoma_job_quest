@@ -23,13 +23,13 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale_),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)
     );
     back_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale)//背景は小さく描画、アップサンプリングで合成
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale_),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)//背景は小さく描画、アップサンプリングで合成
     );
     object_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
@@ -42,10 +42,11 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     ibl_manager_->Initialize(Graphics::Instance().GetDevice());
 
     celestial_light_ps_ =
-        ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(), L".\\resources\\shader\\celestial_light_ps.cso");
+        ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
+            L".\\resources\\shader\\celestial_light_ps.cso");
     light_shafts_ps_ =
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
-            L".\\resources\\shader\\light_space_cloud_occlusion_ps.cso");
+            L".\\resources\\shader\\radial_god_lay_ps.cso");
 
 }
 
@@ -89,12 +90,24 @@ void RenderSystemManager::RenderAll()
             ID3D11ShaderResourceView* srv[] = { sky_framebuffer_->GetShaderResourceView(0).Get() };
             bit_block_transfer_->blit(ctx, srv, 0, 1);
         }
-
-        ID3D11ShaderResourceView* srvs[] = {
-            cloud_render_system_->GetCloudShadowSRV(),
-        };
+        
+        // 天体光描画
+        ID3D11ShaderResourceView* srvs[]={nullptr};
+        if(cloud_flag)
+        {
+            srvs[0] = {
+                cloud_render_system_->GetCloudShadowSRV(),
+            };
+        }
         bit_block_transfer_->blit(ctx, srvs, 0, 1, celestial_light_ps_.Get());
 
+        //雲オンリーのゴッドレイ(未完成)
+        //if (cloud_flag)
+        //{
+        //    srvs[0] = {
+        //        cloud_render_system_->GetCloudShadowSRV(),
+        //    };
+        //}
         //bit_block_transfer_->blit(ctx, srvs, 0, 1, light_shafts_ps_.Get());
 
         back_framebuffer_->Deactivate(ctx);

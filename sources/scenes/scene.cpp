@@ -161,7 +161,11 @@ void Scene::Render(float elapsed_time)
 	RenderCore(elapsed_time);
 }
 
-void Scene::SetSceneConstant(int start_slot,DirectX::XMFLOAT2 viewport_size ,bool is_update_resource)
+void Scene::SetSceneConstant(
+	int start_slot ,
+	bool is_update_resource,
+	DirectX::XMFLOAT4 directional_light,
+	DirectX::XMFLOAT2 viewport_size)
 {
 	if (is_update_resource)
 	{
@@ -202,6 +206,37 @@ void Scene::SetSceneConstant(int start_slot,DirectX::XMFLOAT2 viewport_size ,boo
 		DirectX::XMStoreFloat4x4(&scene.inverse_view_transform, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&view)));
 		DirectX::XMStoreFloat4x4(&scene.inverse_projection_transform, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&projection)));
 		DirectX::XMStoreFloat4x4(&scene.inverse_view_projection_transform, DirectX::XMMatrixInverse(nullptr, DirectX::XMLoadFloat4x4(&view_projection)));
+
+		//âÊñ è„ÇÃëæóz1ÇÃåvéZ
+		DirectX::XMVECTOR sun_dir =DirectX::XMLoadFloat4(&directional_light);
+		sun_dir = DirectX::XMVector3Normalize(DirectX::XMVectorScale(sun_dir,-1.0f));
+        DirectX::XMVECTOR sun_pos = DirectX::XMVectorAdd(
+			DirectX::XMLoadFloat3(&camera_position), DirectX::XMVectorScale(sun_dir, 1000.0f));
+		DirectX::XMMATRIX VP = DirectX::XMLoadFloat4x4(&view_projection); 
+
+		DirectX::XMVECTOR sun_clip4 = DirectX::XMVector4Transform(
+			DirectX::XMVectorSetW(sun_pos, 1.0f),
+			VP
+		);
+
+		float w = DirectX::XMVectorGetW(sun_clip4);
+		if (w <= 0.0001f) {
+			// ÉJÉÅÉâå„ï˚ or ïsê≥ÅFâÊñ åvéZÇµÇ»Ç¢
+			sun_visible_ = 0.0f;
+		}
+		else {
+			DirectX::XMVECTOR sun_ndc = DirectX::XMVectorScale(sun_clip4, 1.0f / w);
+			float ndcX = DirectX::XMVectorGetX(sun_ndc);
+			float ndcY = DirectX::XMVectorGetY(sun_ndc);
+
+			sun_uv_.x = 0.5f + 0.5f * ndcX;
+			sun_uv_.y = 0.5f - 0.5f * ndcY;
+			sun_visible_ = w;
+		}
+
+
+		scene.sun_uv = sun_uv_;
+        scene.sun_visible = sun_visible_;
 
 		Graphics::Instance().GetDeviceContext()->UpdateSubresource(scene_constant_buffer.Get(), 0, 0, &scene, 0, 0);
 	}

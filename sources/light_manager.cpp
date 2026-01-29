@@ -1,6 +1,7 @@
 #include"../headers/light_manager.h"
 
 #include<string>
+#include<cmath>
 
 #include"../headers/graphics.h"
 #include"../headers/misc.h"
@@ -38,7 +39,6 @@ LightManager::LightManager()
 
 void LightManager::SetForwardLightConstant(int start_slot)
 {
-	UpdateLightViewProjection();
 
 	ForwardLightConstants constant;
 	constant.directional_light = direction_light_;
@@ -110,13 +110,17 @@ void LightManager::DrawImgui()
 		if (ImGui::TreeNode("directional light"))
 		{
 			if (ImGui::SliderAngle("azimuth", &azimuth_, -180.0f, 180.0f));
-			if (ImGui::SliderAngle("elevation", &elevation_, -89.0f, 89.0f));
-
-			direction_light_.direction.x = cosf(elevation_) * cosf(azimuth_);
-			direction_light_.direction.y = sinf(elevation_);
-			direction_light_.direction.z = cosf(elevation_) * sinf(azimuth_);
-
+			if (ImGui::SliderAngle("elevation", &elevation_, -90.0f, 90.0f));
 			if (ImGui::SliderFloat("intensity", &direction_light_.color.w, 0.0f, 20.f));
+
+			if(ImGui::Button("moove_", ImVec2(64, 32)))
+			{
+				moove_light_ = !moove_light_;
+			}
+			if (moove_light_)
+			{
+				if (ImGui::DragFloat("day_length_seconds", &day_length_seconds_, 1.0f, 240));
+			}
 			
 			ImGui::TreePop();
 		}
@@ -168,8 +172,54 @@ void LightManager::DrawImgui()
 	}
 }
 
-void LightManager::UpdateLightViewProjection()
+void LightManager::Update(float elapsed_time)
 {
+
+	const float kMinEl = -DirectX::XM_PIDIV2 + 0.001f; // ちょい余裕（真上/真下の特異点回避）
+	const float kMaxEl = DirectX::XM_PIDIV2 - 0.001f;
+	if (elevation_ < kMinEl) elevation_ = kMinEl;
+	if (elevation_ > kMaxEl) elevation_ = kMaxEl;
+
+	// azimuth_: [-180°, +180°] にラップ（正規化）
+	// a = fmod(a + pi, 2pi) -> [0,2pi) -> [-pi,pi)
+	azimuth_ = std::fmod(azimuth_ + DirectX::XM_PI, DirectX::XM_2PI);
+	if (azimuth_ < 0.0f) azimuth_ += DirectX::XM_2PI;
+	azimuth_ -= DirectX::XM_PI;
+
+
+	//ディレクションライトを太陽の様に動かす
+	if (moove_light_)
+	{
+        time_of_day += elapsed_time / day_length_seconds_;
+		if (time_of_day > 1.0f)
+			time_of_day -= 1.0f;
+
+		float theta = time_of_day * DirectX::XM_2PI;
+		//太陽の軌道円を作る
+		DirectX::XMVECTOR pos = DirectX::XMVectorSet(cosf(theta), 0.0f, sinf(theta), 0.0f);
+
+		//軌道を傾ける,X軸回転で軌道面を傾ける
+		DirectX::XMMATRIX tilt = DirectX::XMMatrixRotationX(sun_tilt_);
+		pos = DirectX::XMVector3TransformNormal(pos, tilt);
+
+		DirectX::XMVECTOR dir = DirectX::XMVectorNegate(pos);
+		dir = DirectX::XMVector3Normalize(dir);
+		DirectX::XMFLOAT3 d;
+		DirectX::XMStoreFloat3(&d, dir);
+
+		direction_light_.direction.x = d.x;
+		direction_light_.direction.y = d.y;
+		direction_light_.direction.z= d.z;
+
+    }
+	else
+	{ 
+
+		direction_light_.direction.x = cosf(elevation_) * cosf(azimuth_);
+		direction_light_.direction.y = sinf(elevation_);
+		direction_light_.direction.z = cosf(elevation_) * sinf(azimuth_);
+	}
+
 	
 	//ライト方向から見た視線行列を生成
 

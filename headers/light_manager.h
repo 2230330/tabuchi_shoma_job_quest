@@ -52,14 +52,17 @@ public:
     //ライトのIMGUI管理
     void DrawImgui();
 
-private:
-
-    void UpdateLightViewProjection();
+    void Update(float elampsed_time);
 
 private:
+    bool moove_light_ = false;
+    float day_length_seconds_ = 120.0f;//時間経過のスケール
+    float sun_tilt_ = DirectX::XMConvertToRadians(23.5f);//太陽の傾き
+    float time_of_day = 0.5f;//0~1で1日を表現
+
     DirectionLight direction_light_;
     float azimuth_ = 0.f;//ライトの水平角度
-    float elevation_ = -1.07;//ライトの仰角
+    float elevation_ = DirectX::XMConvertToRadians(-90);//ライトの仰角
     DirectX::XMFLOAT4 ambient_color_ = { 1,1,1,1 };
     //ライト空間用
     DirectX::XMFLOAT4X4 light_view_projection_{};
@@ -68,6 +71,7 @@ private:
     const float shadow_near_plane_ = 1.0f;
     const float shadow_far_plane_ = 200000;
     const float shadow_map_size_ = 1024.0f;
+
 
     std::vector<PointLight>point_lights_;
     std::vector<SpotLight>spot_lights_;

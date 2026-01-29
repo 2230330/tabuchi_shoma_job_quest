@@ -1,4 +1,4 @@
-//ライトシャフトに使う、簡易的な雲の存在マップ
+//ゴッドレイに使う、簡易的な雲の存在マップ
 #include"volumetric_cloud.hlsli"
 #include"fullscreen_quad.hlsli"
 #include "scene_constant_buffer.hlsli"
@@ -228,7 +228,7 @@ float3 coarse_weather)
 
                 transmittence *= T_step;
 
-                if (transmittence < 0.3f)
+                if (transmittence < 0.1f)
                     break;
             }
             else
@@ -251,9 +251,7 @@ float3 coarse_weather)
             sample_point += ray_step * step_scale;
         }
         
-        dist += length(ray_step);
-        if(dist > limit_dist)
-            break;
+
     }
 
     float alpha = saturate(1.0 - transmittence);
@@ -317,12 +315,19 @@ float4 main(VS_OUT pin) : SV_TARGET
         return float4(0, 0, 0, 1);
 
     // 被覆率に応じてステップ数を縮小（低コスト）
-    int steps = max(4, (int) (base_steps * lerp(0.1f, 1.0f, saturate(1.0 - coarse_coverage))));
+    int steps = max(4, (int) (base_steps * lerp(1.0, 1.0f, saturate(1.0 - coarse_coverage))));
     float3 ray_step = ray_dir * (shell_dist / steps);
 
     float cloud_presence = RayMarch(ray_origin, ray_step, steps, coarse_weather);
     
     cloud_presence = saturate(cloud_presence);
     
-    return float4(cloud_presence, 0, 0, 1);
+    //深度情報
+    float depth_norm = saturate(t0 / t1);
+    //雲がないピクセルは最遠に設定
+    if(cloud_presence<=0.001f)
+        depth_norm = 1.0f;
+     
+    // 雲の存在を赤チャンネルに格納、深度情報をgチャンネルに格納
+    return float4(cloud_presence, depth_norm, 0, 1);
 }

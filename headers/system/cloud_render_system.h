@@ -53,8 +53,8 @@ private:
 
         float earth_radius = 6370000.0f; // earth radius
         float horizon_distance_scale = 1.0f;
-        float low_frequency_perlin_worley_sampling_scale = 0.000021f;
-        float high_frequency_worley_sampling_scale = 0.0003f;
+        float low_frequency_perlin_worley_sampling_scale = 0.00004f;
+        float high_frequency_worley_sampling_scale = 0.0004f;
         float cloud_density_long_distance_scale = 18.0f;
         int enable_powdered_sugar_efffect = false;
 
@@ -111,9 +111,5 @@ private:
     const int SHADOW_RES = 512;
     std::unique_ptr<FrameBuffer>shadow_map_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView>shadowmap_dsv_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>shadowmap_srv_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11VertexShader>shadowmap_caster_vertex_shader_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11InputLayout>shadowmap_caster_input_layout_ = nullptr;
 
 };

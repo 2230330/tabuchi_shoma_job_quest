@@ -67,10 +67,19 @@ float4 main(VS_OUT pin) : SV_Target
         clip(-1); // 地平線より下は描かない)
     }
 
+    float light_scale = 1.0f;
+    
     float3 light_dir = normalize(-directional_light.direction.xyz);
-
+    if(directional_light.direction.y >= 0)
+    {
+        light_dir = normalize(directional_light.direction.xyz);
+        light_scale = 0.8f; // 月光は弱く
+    }
+    //float3 sun_dir = normalize(-directional_light.direction.xyz);
+    //float3 moon_dir = normalize(directional_light.direction.xyz);
+    
     // 安定した角度計算（スカラー）
-    float cosTheta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f);
+    float cosTheta = clamp(dot(view_dir, light_dir), -0.0f, 1.0f);
     float angle = acos(cosTheta); // 0 = 視線と太陽が一致
 
     //ライン状ハイライト式
@@ -88,14 +97,20 @@ float4 main(VS_OUT pin) : SV_Target
     float lyx = 0.01 / denom_ysum;
     float s = lx + ly + lxy + lyx;
 
-    // 空気質量・太陽スペクトル
-    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f);
-    float sun_theta = acos(sun_elevation) * (180.0f / PI);
-    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364)));
-    float3 Ei = ComputeSunIrradiance(air_mass);
 
     // 太陽の光（色・強度）
-    float3 finalColor = (Ei * s.xxx);
+    float3 finalColor = (s.xxx);
+
+    // 空気質量・太陽スペクトル
+    if (directional_light.direction.y < 0)
+    {
+        float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f);
+        float sun_theta = acos(sun_elevation) * (180.0f / PI);
+        float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364)));
+        float3 Ei = ComputeSunIrradiance(air_mass);
+        
+        finalColor *= Ei;
+    }
     
     //雲による遮蔽計算
     float erosion = pow(softMask, 1.5f);
@@ -113,7 +128,7 @@ float4 main(VS_OUT pin) : SV_Target
     float outAlpha = saturate(colorAlpha * (1.0 - erosion )); 
 
     // 非プリマルチ出力にする（レンダラーで通常アルファ合成を想定）
-    float3 outColor = eroded_color;
+    float3 outColor = eroded_color*light_scale;
 
     return float4(outColor, outAlpha);
 }

@@ -93,6 +93,7 @@ bool SceneTest::UninitializeCore()
 
 void SceneTest::UpdateCore(float elapsed_time)
 {
+    light_manager_->Update(elapsed_time);
     update_sys_mng->UpdateAll(elapsed_time);
 }
 
@@ -138,7 +139,7 @@ void SceneTest::RenderCore(float elapsed_time)
         dc->RSGetViewports(&num_viewports, &viewport);
 
         light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kForwardLight));
-        SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame));
+        SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame),true,light_manager_->GetDirectionLight().direction);
     }
     //レンダリングオブジェクト描画
     {
@@ -173,27 +174,6 @@ void SceneTest::RenderCore(float elapsed_time)
                 }
             }
             Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
-            //this->model.skinned_mesh->Render(dc, model.world, model.color,&keyframe);
-
-            //static std::vector<GltfModel::Node> animated_nodes{
-            //    comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->animated_nodes_
-            //};
-            //static float time{ 0 };
-            //if (comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
-            //    ->GetAnimations().size() > 0)
-            //{
-            //    comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->Animate(0, time += elapsed_time, animated_nodes);
-            //    if (comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
-            //        ->GetAnimations().at(0).duration < time)
-            //    {
-            //        time = 0; // Repeat playback
-            //    }
-            //}
-
-
-            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->UpdateAnimation(elapsed_time);
-            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->Render(dc,comp_mng->Get<ComponentLocalToWorld>(gltf_model.entity).value );
-            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->UpdateAnimation(elapsed_time);
 
             render_sys_mng->RenderAll();
         }
