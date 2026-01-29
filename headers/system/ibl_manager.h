@@ -23,7 +23,7 @@ public:
     // 背景ソース（back_fb の SRV）を受け取り、内部の env_source_srv_ を更新
     void UpdateEnvironmentCapture(const FrameBuffer& back_fb);
 
-    // 背景ソース（LatLong 2D）→ SkyCube（TextureCube）へ変換（CS）
+    // キューブマップの作製
     void BuildSkyCubeFromEnvSource();
 
     // Diffuse（SH 9係数）更新（軽量版）
@@ -36,12 +36,22 @@ public:
     void BindForObjectPass(ID3D11DeviceContext* ctx);
 
     // 背景描画用：SkyRenderSystem へ渡す SkyCube の SRV
-    ID3D11ShaderResourceView* GetSkyCubeSRV() const { return sky_cube_srv_.Get(); }
+    ID3D11ShaderResourceView* GetSkyCubeSRV() const 
+    { 
+        if (cloud_flag_)
+        {
+            return cloud_cube_srv_.Get();
+        }
+        else if (sky_flag_)
+        {
+            return sky_cube_srv_.Get();
+        }
+    }
     
     //背景に雲があるのかどうかを知るための関数
     void SetCloudFlag(bool cloud_flag) { cloud_flag_ = cloud_flag; }
     //空があるかどうかを知るための関数
-    void GetSkyFlag(bool sky_flag) { sky_flag_ = sky_flag; }
+    void SetSkyFlag(bool sky_flag) { sky_flag_ = sky_flag; }
 
 private:
     // パラメータ
@@ -147,7 +157,6 @@ private:
         //雲ボックス
         Microsoft::WRL::ComPtr<ID3D11Texture2D>           cloud_cube_tex_;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  cloud_cube_srv_;
-        Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> cloud_cube_uav_; // CS で書く用
         std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> cloud_cube_rtvs_; // face×mip
 
 };

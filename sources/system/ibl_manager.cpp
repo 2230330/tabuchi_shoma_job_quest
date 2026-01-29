@@ -216,13 +216,13 @@ void IBLManager::Initialize(ID3D11Device* dev)
         uavd.Texture2DArray.ArraySize = kCubeFaces;
         dev_->CreateUnorderedAccessView(sky_cube_tex_.Get(), &uavd, sky_cube_uav_.GetAddressOf());
 
-        D3D11_RENDER_TARGET_VIEW_DESC rd{};
-        rd.Format = td.Format;
-        rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-        rd.Texture2DArray.MipSlice = 0;
-        rd.Texture2DArray.FirstArraySlice = 0;
-        rd.Texture2DArray.ArraySize = kCubeFaces;
-        dev_->CreateRenderTargetView(sky_cube_tex_.Get(), &rd, cube_rtv_all_.GetAddressOf());
+        //D3D11_RENDER_TARGET_VIEW_DESC rd{};
+        //rd.Format = td.Format;
+        //rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+        //rd.Texture2DArray.MipSlice = 0;
+        //rd.Texture2DArray.FirstArraySlice = 0;
+        //rd.Texture2DArray.ArraySize = kCubeFaces;
+        //dev_->CreateRenderTargetView(sky_cube_tex_.Get(), &rd, cube_rtv_all_.GetAddressOf());
 
         sky_cube_rtvs_.clear();
         sky_cube_rtvs_.reserve(kCubeFaces);
@@ -262,22 +262,6 @@ void IBLManager::Initialize(ID3D11Device* dev)
         sd.TextureCube.MostDetailedMip = 0;
         sd.TextureCube.MipLevels = 1;
         dev_->CreateShaderResourceView(cloud_cube_tex_.Get(), &sd, cloud_cube_srv_.GetAddressOf());
-
-        D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
-        uavd.Format = td.Format;
-        uavd.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-        uavd.Texture2DArray.MipSlice = 0;
-        uavd.Texture2DArray.FirstArraySlice = 0;
-        uavd.Texture2DArray.ArraySize = kCubeFaces;
-        dev_->CreateUnorderedAccessView(cloud_cube_tex_.Get(), &uavd, cloud_cube_uav_.GetAddressOf());
-
-        //D3D11_RENDER_TARGET_VIEW_DESC rd{};
-        //rd.Format = td.Format;
-        //rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-        //rd.Texture2DArray.MipSlice = 0;
-        //rd.Texture2DArray.FirstArraySlice = 0;
-        //rd.Texture2DArray.ArraySize = kCubeFaces;
-        //dev_->CreateRenderTargetView(cloud_cube_tex_.Get(), &rd, cube_rtv_all_.GetAddressOf());
 
         cloud_cube_rtvs_.clear();
         cloud_cube_rtvs_.reserve(kCubeFaces);
@@ -389,7 +373,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
     ctx_->VSSetShader(nullptr, nullptr, 0);
     ctx_->OMSetRenderTargets(0, nullptr, nullptr);
 
-    if (cloud_flag_||!cloud_cube_ps_||!cloud_cube_uav_)
+    if (cloud_flag_||!cloud_cube_ps_)
     {
 
         //viewportê›íË
@@ -528,10 +512,21 @@ void IBLManager::UpdateSpecularPrefilter()
                 //    L".\\resources\\sprite\\cube_maps\\prefiltered_env.dds", false
                 //);
 
-                SaveTextureToDDS(
-                    cloud_cube_tex_.Get(),
-                    L".\\resources\\sprite\\cube_maps\\sky_cube.dds", false
-                );
+                //if(cloud_flag_)
+                //{
+
+                //    SaveTextureToDDS(
+                //        cloud_cube_tex_.Get(),
+                //        L".\\resources\\sprite\\cube_maps\\sky_cube.dds", false
+                //    );
+                //}
+                //else if(sky_flag_)
+                //{
+                //    SaveTextureToDDS(
+                //        sky_cube_tex_.Get(),
+                //        L".\\resources\\sprite\\cube_maps\\sky_cube.dds", false
+                //    );
+                //}
 
                 want_save_dds_ = false;
             }

@@ -352,16 +352,6 @@ float3 SigmaOzone(float h)
     float ozoneFactor = max(0.0, 1.0 - (abs(h - OZONE_CENTER_HEIGHT) / OZONE_SCALE_HALF_WIDTH));
     return coeff * ozoneFactor;
 }
-//‹——£~•½‹ÏŒW”‚Åw”Œ¸Š‚ğ‹ß—
-float3 TransmittanceApprox(float3 startPos, float3 endPos)
-{
-    float distance = max(50e3f, length(endPos - startPos));
-    // ‚“x‚ÉˆË‘¶‚µ‚½ sigma_t_avg ‚ğ•]‰¿‚·‚é‚Ì‚ª—‘z‚¾‚ªA‚Ü‚¸‚Í sample midpoint ‚ğg‚¤
-    float3 midPos = (startPos + endPos) * 0.5f;
-    float h = max(0.0f, length(midPos) - EARTH_RADIUS);
-    float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
-    return exp(-sigma_t * distance); // component-wise exp
-}
 // ”g’· (nm)
 static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f); // Ô, —Î, Â
 // ƒÉ^-4 ‚Ì‘Š‘Î”ä‚ğŒvZ

@@ -266,5 +266,11 @@ float4 main(PSIn pin) : SV_TARGET
     
     sky_color += single_scattering + (multi_scattering);
     
+    //–é‚ÌŠÈˆÕÀ‘•
+    float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
+    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
+
+    sky_color += lerp(float3(0.1f, 0.1f, 0.2f), 0, sun_elevation);
+    
     return float4(sky_color.xyz, 1.0f);
 }

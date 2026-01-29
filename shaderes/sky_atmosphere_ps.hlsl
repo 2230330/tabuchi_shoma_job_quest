@@ -201,7 +201,7 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
     
-    result /= result + 1.0f; //トーンマッピング
+    result /= result + 1.0f; //抑制
     
     return result;
 }

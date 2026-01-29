@@ -159,10 +159,10 @@ mov x0[2].xy, l(-0.325092,-0.945574,0,0)
 mov x0[3].xy, l(0.090262,-0.273765,0,0)
 mov x0[4].xy, l(0.281286,0.424436,0,0)
 
-#line 368
+#line 358
 mov r1.xyz, l(0.000000,0.000000,0.000000,0)  // r1.x <- INV_WAVELENGTH4.x; r1.y <- INV_WAVELENGTH4.y; r1.z <- INV_WAVELENGTH4.z
 
-#line 614
+#line 604
 mul r0.z, v1.x, l(2.000000)
 mov r0.w, l(-1.000000)
 add r0.z, r0.w, r0.z  // r0.z <- ndc.x
@@ -171,7 +171,7 @@ mov r0.w, -r0.w
 add r0.w, r0.w, l(1.000000)  // r0.w <- ndc.y
 mov r2.xy, l(0,1.000000,0,0)  // r2.x <- ndc.z; r2.y <- ndc.w
 
-#line 615
+#line 605
 mul r3.xyzw, r0.zzzz, cb1[26].xyzw
 mul r4.xyzw, r0.wwww, cb1[27].xyzw
 add r3.xyzw, r3.xyzw, r4.xyzw
@@ -180,25 +180,25 @@ add r3.xyzw, r3.xyzw, r4.xyzw
 mul r2.xyzw, r2.yyyy, cb1[29].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw  // r2.x <- pos.x; r2.y <- pos.y; r2.z <- pos.z; r2.w <- pos.w
 
-#line 616
+#line 606
 div r2.xyz, r2.xyzx, r2.wwww
 
-#line 619
+#line 609
 mov r3.xyz, -cb1[2].xyzx
 add r2.xyz, r2.xyzx, r3.xyzx
 dp3 r0.z, r2.xyzx, r2.xyzx
 rsq r0.z, r0.z
 mul r2.xyz, r0.zzzz, r2.xyzx  // r2.x <- ray_dir.x; r2.y <- ray_dir.y; r2.z <- ray_dir.z
 
-#line 621
+#line 611
 mov r3.xyz, l(0,0,0,0)  // r3.x <- color.x; r3.y <- color.y; r3.z <- color.z
 
-#line 623
+#line 613
 mov r4.xz, l(0,0,0,0)
 mov r4.y, cb12[2].y
 add r4.xyz, r4.xyzx, cb1[2].xyzx  // r4.x <- eye_pos.x; r4.y <- eye_pos.y; r4.z <- eye_pos.z
 
-#line 625
+#line 615
 nop 
 mov r4.xyz, r4.xyzx
 mov r2.xyz, r2.xyzx
@@ -265,10 +265,10 @@ if_z r2.w
   endif 
 endif 
 
-#line 625
+#line 615
 mov r3.w, r3.w  // r3.w <- t0
 
-#line 626
+#line 616
 nop 
 mov r0.z, cb12[0].w
 
@@ -333,10 +333,10 @@ if_z r2.w
   endif 
 endif 
 
-#line 626
+#line 616
 mov r4.w, r4.w  // r4.w <- t1
 
-#line 629
+#line 619
 lt r0.z, r3.w, l(0.000000)
 lt r0.w, r4.w, l(0.000000)
 or r0.z, r0.w, r0.z
@@ -344,45 +344,45 @@ ge r0.w, r3.w, r4.w
 or r0.z, r0.w, r0.z
 if_nz r0.z
 
-#line 631
+#line 621
   itof r0.z, l(-1)
   lt r0.z, r0.z, l(0.000000)
   and r0.z, r0.z, l(-1)
   discard_nz r0.z
 
-#line 632
+#line 622
 endif 
 
-#line 634
+#line 624
 mul r5.xyz, r2.xyzx, r3.wwww
 add r5.xyz, r4.xyzx, r5.xyzx  // r5.x <- ray_origin.x; r5.y <- ray_origin.y; r5.z <- ray_origin.z
 
-#line 635
+#line 625
 mul r6.xyz, r2.xyzx, r4.wwww
 add r4.xyz, r4.xyzx, r6.xyzx  // r4.x <- ray_endpoint.x; r4.y <- ray_endpoint.y; r4.z <- ray_endpoint.z
 
-#line 636
+#line 626
 mov r6.xyz, -r5.xyzx
 add r4.xyz, r4.xyzx, r6.xyzx
 dp3 r0.z, r4.xyzx, r4.xyzx
 sqrt r0.z, r0.z  // r0.z <- shell_dist
 
-#line 638
+#line 628
 ge r0.w, r2.y, l(0.000000)
 if_nz r0.w
 
-#line 641
+#line 631
   utof r0.w, cb12[3].w  // r0.w <- steps
 
-#line 644
+#line 634
   ine r1.w, l(0, 0, 0, 0), cb12[4].x
   if_nz r1.w
 
-#line 652
+#line 642
     max r1.w, r2.y, l(0.000000)
     min r1.w, r1.w, l(1.000000)  // r1.w <- viewUp
 
-#line 655
+#line 645
     utof r2.w, cb12[3].w
     mul r2.w, r2.w, l(0.300000)
     utof r3.w, cb12[3].w
@@ -402,29 +402,29 @@ if_nz r0.w
     mul r1.w, r1.w, r3.w
     add r0.w, r1.w, r2.w
 
-#line 661
+#line 651
   endif 
 
-#line 663
+#line 653
   mul r4.xyz, r0.zzzz, r2.xyzx
   div r4.xyz, r4.xyzx, r0.wwww  // r4.x <- ray_step.x; r4.y <- ray_step.y; r4.z <- ray_step.z
 
-#line 665
+#line 655
   nop 
   mov r5.xyz, r5.xyzx
   mov r4.xyz, r4.xyzx
   ftoi r0.z, r0.w
 
-#line 389
+#line 379
   dp3 r0.w, r4.xyzx, r4.xyzx
   sqrt r0.w, r0.w  // r0.w <- step_size
 
-#line 392
+#line 382
   dp3 r1.w, r4.xyzx, r4.xyzx
   rsq r1.w, r1.w
   mul r6.xyz, r1.wwww, r4.xyzx  // r6.x <- ray_direction.x; r6.y <- ray_direction.y; r6.z <- ray_direction.z
 
-#line 395
+#line 385
   nop 
   mul r7.xyz, r5.xyzx, l(6.000000, 6.000000, 6.000000, 0.000000)
 
@@ -444,27 +444,27 @@ if_nz r0.w
   mul r1.w, r1.w, r2.w
   frc r1.w, r1.w  // r1.w <- <Hash return value>
 
-#line 395
+#line 385
   mul r7.xyz, r1.wwww, r4.xyzx
   add r7.xyz, r5.xyzx, r7.xyzx  // r7.x <- sample_point.x; r7.y <- sample_point.y; r7.z <- sample_point.z
 
-#line 398
+#line 388
   mov r8.xyz, -cb3[11].xyzx  // r8.x <- sun.x; r8.y <- sun.y; r8.z <- sun.z
 
-#line 399
+#line 389
   dp3 r1.w, r8.xyzx, r8.xyzx
   rsq r1.w, r1.w
   mul r8.xyz, r1.wwww, r8.xyzx  // r8.x <- sun_direction.x; r8.y <- sun_direction.y; r8.z <- sun_direction.z
 
-#line 400
+#line 390
   dp3 r1.w, r6.xyzx, r8.xyzx
   max r1.w, r1.w, l(-0.000000)
   min r1.w, r1.w, l(1.000000)  // r1.w <- cos_theta
 
-#line 401
+#line 391
   mov r2.w, l(0.600000)  // r2.w <- g
 
-#line 403
+#line 393
   nop 
   mov r1.w, r1.w
   mov r2.w, r2.w
@@ -487,20 +487,20 @@ if_nz r0.w
   mul r0.x, r0.x, r1.w
   div r0.x, r4.w, r0.x  // r0.x <- <MiePhase return value>
 
-#line 403
+#line 393
   mov r0.x, r0.x  // r0.x <- henyey_greenstein_phase
 
-#line 404
+#line 394
   max r0.x, r0.x, l(0.000000)
   min r0.x, r0.x, l(1.000000)  // r0.x <- henyey_greenstein_phase
 
-#line 407
+#line 397
   itof r9.xyz, l(0, 1, 0, 0)
   dp3 r1.w, r8.xyzx, r9.xyzx
   max r1.w, r1.w, l(0.000000)
   min r1.w, r1.w, l(1.000000)  // r1.w <- sun_elevation
 
-#line 408
+#line 398
   mov r2.w, -r1.w
   max r3.w, r1.w, r2.w
   mov r4.w, -r3.w
@@ -520,7 +520,7 @@ if_nz r0.w
   add r2.w, r2.w, r3.w
   mul r2.w, r2.w, l(57.295780)  // r2.w <- sun_theta
 
-#line 410
+#line 400
   mov r2.w, -r2.w
   add r2.w, r2.w, l(96.079948)
   log r2.w, r2.w
@@ -530,44 +530,44 @@ if_nz r0.w
   add r2.w, r1.w, r2.w
   div r2.w, l(1.000000), r2.w  // r2.w <- air_mass
 
-#line 411
+#line 401
   min r2.w, r2.w, l(4.000000)
 
-#line 413
+#line 403
   nop 
   mov r2.w, r2.w
 
-#line 376
+#line 366
   mul r1.xyz, r1.xyzx, r2.wwww
   mul r1.xyz, r1.xyzx, l(3000000000.000000, 3000000000.000000, 3000000000.000000, 0.000000)  // r1.x <- tau.x; r1.y <- tau.y; r1.z <- tau.z
 
-#line 379
+#line 369
   mov r1.xyz, -r1.xyzx
   mul r1.xyz, r1.xyzx, l(1.442695, 1.442695, 1.442695, 0.000000)
   exp r1.xyz, r1.xyzx  // r1.x <- Ei.x; r1.y <- Ei.y; r1.z <- Ei.z
 
-#line 381
+#line 371
   mov r1.xyz, r1.xyzx  // r1.x <- <ComputeSunIrradiance return value>.x; r1.y <- <ComputeSunIrradiance return value>.y; r1.z <- <ComputeSunIrradiance return value>.z
 
-#line 413
+#line 403
   mov r1.xyz, r1.xyzx  // r1.x <- Ei.x; r1.y <- Ei.y; r1.z <- Ei.z
 
-#line 415
+#line 405
   mov r2.w, l(-0.500000)
   add r2.w, r2.w, l(1.500000)
   mul r1.w, r1.w, r2.w
   add r1.w, r1.w, l(0.500000)
   mul r1.xyz, r1.wwww, r1.xyzx
 
-#line 421
+#line 411
   sample_indexable(texture2d)(float,float,float,float) r9.xyz, v1.xyxx, t4.xyzw, s3  // r9.x <- atmosphere_color.x; r9.y <- atmosphere_color.y; r9.z <- atmosphere_color.z
 
-#line 424
+#line 414
   mov r1.w, -cb12[0].z
   add r1.w, r1.w, cb12[0].w
   div r1.w, r1.w, l(36.000000)  // r1.w <- cone_spread_multplier
 
-#line 427
+#line 417
   dp3 r2.w, r4.xyzx, r4.xyzx
   rsq r2.w, r2.w
   mul r10.xyz, r2.wwww, r4.xyzx
@@ -576,35 +576,35 @@ if_nz r0.w
   max r2.w, r2.w, l(0.000000)
   min r2.w, r2.w, l(1.000000)  // r2.w <- view_up
 
-#line 428
+#line 418
   mov r2.w, -r2.w
   add r2.w, r2.w, l(1.000000)  // r2.w <- horizon
 
-#line 429
+#line 419
   mov r3.w, l(-0.200000)
   add r3.w, r3.w, l(0.800000)
   mul r3.w, r2.w, r3.w
   add r3.w, r3.w, l(0.200000)  // r3.w <- horizon_soft
 
-#line 431
+#line 421
   mov r10.xyz, l(0,0,0,0)  // r10.x <- color.x; r10.y <- color.y; r10.z <- color.z
 
-#line 433
+#line 423
   mov r4.w, l(1.000000)  // r4.w <- transmittence
 
-#line 434
+#line 424
   itof r5.w, l(0)  // r5.w <- cloud_test
 
-#line 435
+#line 425
   mov r6.w, l(0)  // r6.w <- zero_density_sample_count
 
-#line 438
+#line 428
   dp3 r7.w, r4.xyzx, r4.xyzx
   sqrt r7.w, r7.w
   itof r8.w, r0.z
   mul r7.w, r7.w, r8.w  // r7.w <- limit_dist
 
-#line 442
+#line 432
   mov r8.w, l(0)  // r8.w <- i
   mov r11.xyz, r10.xyzx  // r11.x <- color.x; r11.y <- color.y; r11.z <- color.z
   mov r12.xy, r7.xzxx  // r12.x <- sample_point.x; r12.y <- sample_point.z
@@ -617,11 +617,11 @@ if_nz r0.w
     ilt r13.y, r13.x, r0.z
     breakc_z r13.y
 
-#line 445
+#line 435
     lt r13.y, l(0.000000), r10.w
     if_nz r13.y
 
-#line 448
+#line 438
       nop 
       mov r12.xy, r12.xyxx
 
@@ -652,10 +652,10 @@ if_nz r0.w
       add r13.yz, r13.yyzy, r14.xxyx
       sample_indexable(texture2d)(float,float,float,float) r13.yzw, r13.yzyy, t2.wxzy, s2  // r13.y <- <SampleWeatherData return value>.x; r13.w <- <SampleWeatherData return value>.y; r13.z <- <SampleWeatherData return value>.z
 
-#line 448
+#line 438
       mov r13.yzw, r13.yyzw  // r13.y <- weather_data.x; r13.z <- weather_data.z; r13.w <- weather_data.y
 
-#line 450
+#line 440
       mov r14.x, l(-0.000000)
       add r14.y, r14.x, l(10.000000)
       add r14.x, r3.w, r14.x
@@ -668,7 +668,7 @@ if_nz r0.w
       mul r14.x, r14.x, r14.x
       mul r14.x, r14.x, r14.y  // r14.x <- detail_lod
 
-#line 452
+#line 442
       nop 
       mov r15.xz, r12.xxyx
       mov r15.y, r12.z
@@ -1014,34 +1014,34 @@ if_nz r0.w
       max r13.y, r13.y, l(0.000000)
       min r13.y, r13.y, l(1.000000)  // r13.y <- <SampleCloudDensity return value>
 
-#line 452
+#line 442
       mov r13.y, r13.y  // r13.y <- sampled_density
 
-#line 460
+#line 450
       eq r13.z, r13.y, l(0.000000)
       if_nz r13.z
 
-#line 462
+#line 452
         iadd r12.w, r12.w, l(1)
 
-#line 463
+#line 453
       endif 
 
-#line 465
+#line 455
       ine r13.z, r12.w, l(6)
       if_nz r13.z
 
-#line 471
+#line 461
         ne r13.z, r13.y, l(0.000000)
         if_nz r13.z
 
-#line 474
+#line 464
           mov r13.z, l(0)  // r13.z <- density_along_light_ray
 
-#line 476
+#line 466
           mov r14.x, l(0)  // r14.x <- optical_depth_along_light_ray
 
-#line 481
+#line 471
           nop 
           mov r15.xy, r12.xyxx
           mov r15.z, r12.z
@@ -3806,10 +3806,10 @@ if_nz r0.w
 #line 315
           mov r14.y, r14.y  // r14.y <- <SampleCloudOpticalDepthAlongCone return value>
 
-#line 481
+#line 471
           add r14.x, r14.y, r14.x
 
-#line 483
+#line 473
           nop 
           mov r12.xy, r12.xyxx
           mov r12.z, r12.z
@@ -4230,39 +4230,39 @@ if_nz r0.w
           mul r14.y, r14.y, r14.z
           exp r14.y, r14.y  // r14.y <- <SampleCloudDensityLongDistance return value>
 
-#line 483
+#line 473
           add r13.z, r13.z, r14.y
 
-#line 495
+#line 485
           mov r14.y, l(10.000000)  // r14.y <- shadow_strength
 
-#line 496
+#line 486
           mul r14.y, r14.y, cb12[1].y  // r14.y <- light_density_scale
 
-#line 497
+#line 487
           add r13.z, r13.z, r14.x
           mul r13.z, r13.z, r14.y  // r13.z <- optical_thickness
 
-#line 499
+#line 489
           mov r13.w, -r13.w
           mul r13.w, r13.w, l(1.442695)
           exp r13.w, r13.w
           mul r13.w, r13.w, cb12[1].w  // r13.w <- rain_cloud_absorption
 
-#line 502
+#line 492
           mov r14.x, l(-1.000000)
           add r14.x, r14.x, l(0.400000)
           mul r14.x, r3.w, r14.x
           add r14.x, r14.x, l(1.000000)  // r14.x <- horizon_optical_scale
 
-#line 503
+#line 493
           mov r14.y, -r13.z
           mul r14.x, r14.x, r14.y
           mul r13.w, r13.w, r14.x
           mul r13.w, r13.w, l(1.442695)
           exp r13.w, r13.w  // r13.w <- beers_law
 
-#line 506
+#line 496
           ine r14.x, l(0, 0, 0, 0), cb12[3].z
           mov r13.z, -r13.z
           mul r13.z, r13.z, l(1.442695)
@@ -4272,14 +4272,14 @@ if_nz r0.w
           add r13.z, r13.z, l(1.000000)
           movc r13.z, r14.x, r13.z, l(0.500000)  // r13.z <- powdered_sugar
 
-#line 508
+#line 498
           mov r14.x, l(-0.800000)
           add r14.x, r14.x, l(1.200000)
           mul r14.x, r3.w, r14.x
           add r14.x, r14.x, l(0.800000)
           mul r13.z, r13.z, r14.x
 
-#line 511
+#line 501
           mov r14.x, -cb12[0].z
           add r14.x, r12.z, r14.x
           mov r14.y, -cb12[0].z
@@ -4288,7 +4288,7 @@ if_nz r0.w
           max r14.x, r14.x, l(0.000000)
           min r14.x, r14.x, l(1.000000)  // r14.x <- height
 
-#line 515
+#line 505
           mov r14.y, l(-0.000000)
           add r14.z, r14.y, l(1.000000)
           add r14.x, r14.y, r14.x
@@ -4301,13 +4301,13 @@ if_nz r0.w
           mul r14.x, r14.x, r14.x
           mul r14.x, r14.x, r14.y  // r14.x <- top_light
 
-#line 516
+#line 506
           itof r14.yzw, l(0, 0, 1, 0)
           dp3 r14.y, r8.xyzx, r14.yzwy
           max r14.y, r14.y, l(0.000000)
           min r14.y, r14.y, l(1.000000)  // r14.y <- up_light
 
-#line 518
+#line 508
           mul r14.z, r13.w, l(1.000000)
           mul r13.z, r13.z, r14.z
           mov r14.z, l(-0.100000)
@@ -4323,17 +4323,17 @@ if_nz r0.w
           mul r13.z, r13.z, r14.x
           add r14.xyz, r1.xyzx, r13.zzzz  // r14.x <- direct_light.x; r14.y <- direct_light.y; r14.z <- direct_light.z
 
-#line 530
+#line 520
           itof r15.xyz, l(0, 1, 0, 0)
           dp3 r13.z, r6.xyzx, r15.xyzx
           max r13.z, r13.z, l(0.000000)
           min r13.z, r13.z, l(1.000000)  // r13.z <- view_zenith
 
-#line 533
+#line 523
           mov r13.z, -r13.z
           add r13.z, r13.z, l(1.000000)  // r13.z <- lateral
 
-#line 536
+#line 526
           sqrt r14.w, r13.w
           mul r13.z, r13.z, l(0.700000)
           mov r15.x, -r13.w
@@ -4341,11 +4341,11 @@ if_nz r0.w
           mul r13.z, r13.z, r14.w
           add r13.z, r13.z, r13.w  // r13.z <- beer_lateral
 
-#line 539
+#line 529
           sqrt r13.w, r13.z
           mul r13.z, r13.w, r13.z  // r13.z <- shadow
 
-#line 540
+#line 530
           mul r14.xyz, r13.zzzz, r14.xyzx
           mov r13.w, l(-0.500000)
           add r13.z, r13.w, r13.z
@@ -4354,66 +4354,66 @@ if_nz r0.w
           mul r15.xyz, r9.xyzx, r13.zzzz
           add r14.xyz, r14.xyzx, r15.xyzx  // r14.x <- lighting.x; r14.y <- lighting.y; r14.z <- lighting.z
 
-#line 546
+#line 536
           mul r13.y, r13.y, cb12[1].y  // r13.y <- sigma
 
-#line 550
+#line 540
           mov r13.y, -r13.y
           mul r13.y, r0.w, r13.y
           mul r13.y, r13.y, l(1.442695)  // r4.x <- ray_step.x; r4.y <- ray_step.y; r4.z <- ray_step.z
           exp r13.y, r13.y  // r13.y <- T_step
 
-#line 553
+#line 543
           mov r13.z, -r13.y  // r5.x <- ray_origin.x; r5.y <- ray_origin.y; r5.z <- ray_origin.z; r4.x <- ray_step.x; r4.y <- ray_step.y; r4.z <- ray_step.z; r0.z <- steps; r0.y <- time_offset
           add r13.z, r13.z, l(1.000000)
           mul r13.z, r9.w, r13.z  // r0.w <- step_size; r13.z <- delta
 
-#line 556
+#line 546
           mul r14.xyz, r13.zzzz, r14.xyzx
           add r14.xyz, r11.xyzx, r14.xyzx  // r14.x <- color.x; r14.y <- color.y; r14.z <- color.z
 
-#line 559
+#line 549
           mul r13.y, r9.w, r13.y  // r6.x <- ray_direction.x; r6.y <- ray_direction.y; r6.z <- ray_direction.z; r13.y <- transmittence
 
-#line 564
+#line 554
           ge r13.z, l(0.000001), r13.y
           if_nz r13.z
 
-#line 566
+#line 556
             mov r11.xyz, r14.xyzx  // r11.x <- color.x; r11.y <- color.y; r11.z <- color.z
             mov r9.w, r13.y  // r9.w <- transmittence
             break 
 
-#line 567
+#line 557
           endif   // r14.x <- color.x; r14.y <- color.y; r14.z <- color.z; r13.y <- transmittence
 
-#line 569
+#line 559
         else   // Prior locations: r11.x <- color.x; r11.y <- color.y; r11.z <- color.z; r9.w <- transmittence; r13.w <- weather_data.y; r13.y <- sampled_density
           mov r14.xyz, r11.xyzx  // r14.x <- color.x; r14.y <- color.y; r14.z <- color.z
           mov r13.y, r9.w  // r13.y <- transmittence
         endif 
 
-#line 571
+#line 561
       else   // Prior locations: r12.x <- sample_point.x; r12.y <- sample_point.z; r12.z <- sample_point.y; r11.x <- color.x; r11.y <- color.y; r11.z <- color.z; r9.w <- transmittence; r13.w <- weather_data.y; r13.y <- sampled_density
 
-#line 575
+#line 565
         mov r10.w, l(0)
 
-#line 576
+#line 566
         mov r12.w, l(0)
 
-#line 577
+#line 567
         mov r14.xyz, r11.xyzx  // r14.x <- color.x; r14.y <- color.y; r14.z <- color.z
         mov r13.y, r9.w  // r13.y <- transmittence
       endif 
 
-#line 579
+#line 569
       add r12.xyz, r4.xzyx, r12.xyzx  // r12.x <- sample_point.x; r12.y <- sample_point.z; r12.z <- sample_point.y
 
-#line 580
+#line 570
     else   // Prior locations: r11.x <- color.x; r11.y <- color.y; r11.z <- color.z; r9.w <- transmittence
 
-#line 584
+#line 574
       nop 
       mov r12.xy, r12.xyxx
 
@@ -4444,10 +4444,10 @@ if_nz r0.w
       add r13.zw, r13.zzzw, r15.xxxy
       sample_indexable(texture2d)(float,float,float,float) r13.zw, r13.zwzz, t2.ywxz, s2  // r13.z <- <SampleWeatherData return value>.x; r13.w <- <SampleWeatherData return value>.z
 
-#line 584
+#line 574
       mov r13.zw, r13.zzzw  // r13.z <- weather_data.x; r13.w <- weather_data.z
 
-#line 586
+#line 576
       nop 
       mov r15.xz, r12.xxyx
       mov r15.y, r12.z
@@ -4679,107 +4679,107 @@ if_nz r0.w
       max r13.z, r13.z, l(0.000000)
       min r10.w, r13.z, l(1.000000)  // r10.w <- <SampleCloudDensity return value>
 
-#line 586
+#line 576
       mov r10.w, r10.w  // r10.w <- cloud_test
 
-#line 588
+#line 578
       mov r13.z, l(1.000000)  // r13.z <- step_scale
 
-#line 589
+#line 579
       ge r13.w, l(0.000000), r10.w
       if_nz r13.w
 
-#line 592
+#line 582
         mov r13.w, l(-1.000000)
         add r13.w, r13.w, l(3.000000)
         mul r13.w, r2.w, r13.w
         add r13.z, r13.w, l(1.000000)
 
-#line 593
+#line 583
       endif 
 
-#line 594
+#line 584
       mul r15.xyz, r4.xyzx, r13.zzzz
       add r12.xyz, r15.xzyx, r12.xyzx
 
-#line 595
+#line 585
       mov r14.xyz, r11.xyzx  // r14.x <- color.x; r14.y <- color.y; r14.z <- color.z
       mov r13.y, r9.w  // r13.y <- transmittence
     endif 
 
-#line 598
+#line 588
     mov r15.xyz, -r5.xyzx
     add r15.xyz, r12.xzyx, r15.xyzx
     dp3 r13.z, r15.xyzx, r15.xyzx
     sqrt r13.z, r13.z  // r13.z <- dist
 
-#line 599
+#line 589
     ge r13.z, r13.z, r7.w
     if_nz r13.z
 
-#line 601
+#line 591
       mov r11.xyz, r14.xyzx  // r11.x <- color.x; r11.y <- color.y; r11.z <- color.z
       mov r9.w, r13.y  // r9.w <- transmittence
       break 
 
-#line 602
+#line 592
     endif   // r14.x <- color.x; r14.y <- color.y; r14.z <- color.z; r13.y <- transmittence
 
-#line 442
+#line 432
     iadd r13.x, r13.x, l(1)
 
-#line 604
+#line 594
     mov r11.xyz, r14.xyzx  // r11.x <- color.x; r11.y <- color.y; r11.z <- color.z
     mov r9.w, r13.y  // r9.w <- transmittence
   endloop 
 
-#line 606
+#line 596
   mov r0.x, -r9.w
   add r0.x, r0.x, l(1.000000)
   max r0.x, r0.x, l(0.000000)
   min r11.w, r0.x, l(1.000000)  // r11.w <- alpha
 
-#line 608
+#line 598
   max r0.xyzw, r11.xyzw, l(0.000000, 0.000000, 0.000000, 0.000000)  // r0.x <- <RayMarch return value>.x; r0.y <- <RayMarch return value>.y; r0.z <- <RayMarch return value>.z; r0.w <- <RayMarch return value>.w
 
-#line 665
+#line 655
   mov r0.xyzw, r0.xyzw  // r0.x <- volume.x; r0.y <- volume.y; r0.z <- volume.z; r0.w <- volume.w
 
-#line 667
+#line 657
   sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t4.xyzw, s3  // r1.x <- background.x; r1.y <- background.y; r1.z <- background.z
 
-#line 674
+#line 664
   itof r4.xyz, l(0, 1, 0, 0)
   dp3 r1.w, r2.xyzx, r4.xyzx
   max r1.w, r1.w, l(0.000000)
   min r1.w, r1.w, l(1.000000)  // r1.w <- view_up
 
-#line 675
+#line 665
   mov r1.w, -r1.w
   add r1.w, r1.w, l(1.000000)  // r1.w <- horizon
 
-#line 676
+#line 666
   mul r2.x, r1.w, r1.w
   mul r1.w, r1.w, r1.w
   mul r1.w, r1.w, r2.x  // r1.w <- horizon_fade
 
-#line 679
+#line 669
   mul r2.xyz, r0.wwww, r1.xyzx
   mov r4.xyz, -r0.xyzx
   add r2.xyz, r2.xyzx, r4.xyzx
   mul r2.xyz, r1.wwww, r2.xyzx
   add r0.xyz, r0.xyzx, r2.xyzx  // r0.x <- cloud_color_only.x; r0.y <- cloud_color_only.y; r0.z <- cloud_color_only.z
 
-#line 682
+#line 672
   mov r0.w, -r0.w
   add r0.w, r0.w, l(1.000000)
   mul r1.xyz, r0.wwww, r1.xyzx
   add r3.xyz, r0.xyzx, r1.xyzx
 
-#line 686
+#line 676
 endif 
 
-#line 689
+#line 679
 mov o0.xyz, r3.xyzx
 mov o0.w, l(1.000000)
 ret 
