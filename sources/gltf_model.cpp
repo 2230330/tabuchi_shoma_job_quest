@@ -406,6 +406,7 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
 
 	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
+	//immediate_context->PSSetShaderResources(100, 1, cube_map_srv_.GetAddressOf());
 
 	immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
 	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
@@ -526,6 +527,11 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	{
 		traverse(node_index);
 	}
+
+    ID3D11ShaderResourceView* null_srv[] = { nullptr };
+    immediate_context->PSSetShaderResources(0, 1, null_srv);
+    immediate_context->PSSetShaderResources(1, 1, null_srv);
+
 }
 
 void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location)

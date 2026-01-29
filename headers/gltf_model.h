@@ -144,6 +144,12 @@ public:
 		return filename_;
 	}
 
+	//キューブマップ情報の取得
+	void SetCubeMap(ID3D11ShaderResourceView* cube_map_srv)
+	{
+        cube_map_srv_ = cube_map_srv;
+	}
+
 private:
 	struct Scene
 	{
@@ -220,5 +226,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> instancing_input_layout;//インスタンシング描画
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_cbuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_joint_cbuffer;
+
+	//キューブマップの実装
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cube_map_srv_=nullptr;		
 };
 #endif // !PART2_GLTF_MODEL_H

@@ -50,6 +50,9 @@ StructuredBuffer<material_constants> materials : register(t0);
 #define OCCLUSION_TEXTURE 4
 Texture2D<float4> material_textures[5] : register(t1);
 
+//キューブマップ情報
+TextureCube cubemap_texture : register(t100);
+
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
 #define LINEAR_WRAP 2
@@ -125,7 +128,9 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     //垂直反射時のフレネル反射率(非金属でも最低4％は鏡面反射する)
     float3 F0 = lerp(0.04f, albedo.rgb, metalness);
     //視線ベクトル
-    float3 V = normalize(pin.w_position.xyz - camera_position.xyz);
+    //float3 V = normalize(pin.w_position.xyz - camera_position.xyz);
+    float3 V = normalize(camera_position.xyz - pin.w_position.xyz);
+
     //直接光のシューディング
     float3 total_diffuse = 0, total_specular = 0;
     {
@@ -190,6 +195,27 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
             total_diffuse += diffuse;
             total_specular += specular;
         }
+        
+
+        // 視線（ピクセル→カメラ）※修正済みのVを使う
+        float3 R = reflect(-V, N); // 反射方向
+
+        // roughnessでmipを選ぶ（ざっくり）
+        // ※ cubemapにmipがある前提（prefilter済みが理想）
+        float mip = roughness * 8.0f; // 8.0f は mip段数に合わせて調整
+
+        float3 env = cubemap_texture.SampleLevel(sampler_states[LINEAR_CLAMP], R, mip).rgb;
+
+        // Fresnel（角度依存で反射が強くなる）
+        float NdotV = saturate(dot(N, V));
+        float3 F = CalcFresnel(F0, NdotV);
+
+        // 金属は強く反射、非金属は弱く（それっぽく）
+        float reflect_strength = lerp(0.04f, 1.0f, metalness);
+
+        // 反射をspecularへ加算
+        total_specular += env * F * reflect_strength;
+
     }
     
 
@@ -200,6 +226,8 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     
     //色生成
     float3 color = total_diffuse + total_specular + (emisive_color);
+    
+    
     //sRGB空間へ
     color.rgb = pow(color.rgb, 1.0f / GammaFactor);
     return float4(color, base_color.a);

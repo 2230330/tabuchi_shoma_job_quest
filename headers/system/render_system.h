@@ -11,10 +11,15 @@ class GltfRenderSystem :public IRenderSystem
 public:
     GltfRenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
 
+    void SetCubeMap(ID3D11ShaderResourceView* cube_map_srv){
+        cube_map_srv_ = cube_map_srv;
+    }
+    
     void Render()override;
 private:
     //Šô‚Â‚©•`‰æ•û–@‚ğì‚é‚Â‚à‚è‚Å‚·
     //void DrawPrimitive(ID3D11DeviceContext* context, const GltfModel::Mesh::primitive& primitive, const GltfModel& model);
 
     ComponentManager& comp_mng_;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cube_map_srv_ = nullptr;
 };

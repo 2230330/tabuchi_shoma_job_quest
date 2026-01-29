@@ -175,6 +175,8 @@ void RenderSystemManager::RunPass(RenderPass pass)
         {
             if (system->GetPass() == pass)
             {
+                
+
                 system->Render();
             }
         }
