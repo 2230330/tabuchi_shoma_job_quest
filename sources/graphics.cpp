@@ -25,50 +25,42 @@ void Graphics::Initialize(HWND hwnd)
         D3D_FEATURE_LEVEL feature_levels[] =
         {
             D3D_FEATURE_LEVEL_11_0,
-            D3D_FEATURE_LEVEL_10_1,
-            D3D_FEATURE_LEVEL_10_0,
-            D3D_FEATURE_LEVEL_9_3,
-            D3D_FEATURE_LEVEL_9_2,
-            D3D_FEATURE_LEVEL_9_1,
+            //D3D_FEATURE_LEVEL_10_1,
+            //D3D_FEATURE_LEVEL_10_0,
+            //D3D_FEATURE_LEVEL_9_3,
+            //D3D_FEATURE_LEVEL_9_2,
+            //D3D_FEATURE_LEVEL_9_1,
         };
 
         //スワップチェーンを作成するための設定オプション
         DXGI_SWAP_CHAIN_DESC swap_chain_desc;
         {
-            swap_chain_desc.BufferCount = 2;
-            swap_chain_desc.BufferDesc.Width = screen_width;
-            swap_chain_desc.BufferDesc.Height = screen_height;
+
+            swap_chain_desc.BufferCount = 1;
+            swap_chain_desc.BufferDesc.Width = static_cast<UINT>(Graphics::Instance().GetScreenWidth());
+            swap_chain_desc.BufferDesc.Height = static_cast<UINT>(Graphics::Instance().GetScreenHeight());
+            swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;
             swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;
-            swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            swap_chain_desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-            swap_chain_desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+            swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            swap_chain_desc.OutputWindow = hwnd;
             swap_chain_desc.SampleDesc.Count = 1;
             swap_chain_desc.SampleDesc.Quality = 0;
-            swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            swap_chain_desc.OutputWindow = this->hwnd_;
-            swap_chain_desc.Windowed = TRUE;
-            swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-            swap_chain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+            swap_chain_desc.Windowed = true;
+
+            swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+            swap_chain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
         }
         D3D_FEATURE_LEVEL feature_level;
 
         //デバイス＆スワップチェーンの生成
-        hr = D3D11CreateDeviceAndSwapChain(
-            nullptr,
-            D3D_DRIVER_TYPE_HARDWARE,
-            nullptr,
-            create_device_flags,
-            feature_levels,
-            ARRAYSIZE(feature_levels),
-            D3D11_SDK_VERSION,
-            &swap_chain_desc,
-            swap_chain_.GetAddressOf(),
-            device_.GetAddressOf(),
-            &feature_level,
-            immediate_context_.GetAddressOf()
-        );
+        hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, create_device_flags,
+            feature_levels, ARRAYSIZE(feature_levels), D3D11_SDK_VERSION, &swap_chain_desc,
+            swap_chain_.GetAddressOf(), device_.GetAddressOf(), NULL, immediate_context_.GetAddressOf());
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+
     }
 
     //レンダーターゲットビューの生成
@@ -133,6 +125,7 @@ void Graphics::Initialize(HWND hwnd)
 
     //レンダーステート生成
     render_state_ = std::make_unique<RenderState>(this->device_.Get());
+
 }
 
 //画面のクリア
@@ -153,7 +146,16 @@ void Graphics::SetRenderTargets()
 //画面表示
 void Graphics::Present(UINT sync_interval)
 {
-    swap_chain_->Present(sync_interval, DXGI_PRESENT_ALLOW_TEARING);
+    HRESULT hr{ S_OK };
+    if (sync_interval==0)
+    {
+        hr = swap_chain_->Present(sync_interval, 0);
+    }
+    else
+    {
+        hr = swap_chain_->Present(sync_interval, 0);
+    }
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 }
 
 void Graphics::SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers)

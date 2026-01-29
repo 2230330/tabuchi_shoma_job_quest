@@ -51,25 +51,10 @@ bool SceneTest::InitializeCore()
                 device,
                 L".\\resources\\model\\fbx\\nico\\nico.fbx"
                 , true
-
             );
-
-            //gltf_model.gltf_mesh = rsc_mng->LoadGltfModel(
-            //    device,
-            //    ".\\resources\\model\\gltf\\knife.glb"
-            //    );
         }
         //shader
         {
-
-            //shader_from_cso::CreatePsFromCso(
-            //    device,
-            //    ".\\resources\\shader\\luminance_extraction_ps.cso",
-            //    pixel_shaders_[0].GetAddressOf());
-            //shader_from_cso::CreatePsFromCso(
-            //    device,
-            //    ".\\resources\\shader\\blur_ps.cso",
-            //    pixel_shaders_[1].GetAddressOf());
             pixel_shaders_[0] = 
                 ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\luminance_extraction_ps.cso");
             pixel_shaders_[1] =
@@ -77,7 +62,6 @@ bool SceneTest::InitializeCore()
         }
         //フレームバッファの作成
         {
-
             for (int i = 0; i < 2; i++)
             {
                 framebuffers_[i] = std::make_unique<FrameBuffer>(
@@ -92,70 +76,11 @@ bool SceneTest::InitializeCore()
             bit_block_transfer_ = std::make_unique<FullscreenQuad>(device);
         }
     }
-    //定数バッファ用意
-    {
-        ID3D11Device* device = Graphics::Instance().GetDevice();
 
-        //HRESULT hr{ S_OK };
-        //D3D11_BUFFER_DESC buffer_desc{};
-        //buffer_desc.ByteWidth = sizeof(SceneConstants);
-        //buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-        //buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        //buffer_desc.CPUAccessFlags = 0;
-        //buffer_desc.MiscFlags = 0;
-        //buffer_desc.StructureByteStride = 0;
-        //hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer_.GetAddressOf());
-        //_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-    }
-    int size = 10;
-    ////コンポーネントの設定(仮)
-    //for (int i = -size; i < size; i++)
-    //{
-    //    ID3D11Device* device = Graphics::Instance().GetDevice();
-    //    gltf_model.entity = world->GetEntityManager()->Add();
-    //    ComponentGltf gltf;
-    //    gltf.model = ResourceManager::Instance().LoadGltfModel(
-    //        device,
-    //        ".\\resources\\model\\gltf\\knife.glb"
-    //        //".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
-    //        //".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf"
-    //    );
-    //    comp_mng->Add<ComponentGltf>(gltf_model.entity, gltf);
-    //    ComponentPosition pos;
-    //    int normalize_i = i >= 0 ? i : -i;
-    //    pos.value = { static_cast<float>(i % 50), 0.f, static_cast<float>(normalize_i / 50) };
-    //    comp_mng->Add<ComponentPosition>(gltf_model.entity, pos);
-    //    ComponentRotation ros;
-    //    ros.value = { 0.f,0.f,0.f };
-    //    comp_mng->Add<ComponentRotation>(gltf_model.entity, ros);
-    //    ComponentScale scale;
-    //    scale.value = { 1.f,1.f,1.f };
-    //    comp_mng->Add<ComponentScale>(gltf_model.entity, scale);
-    //    ComponentLocalToWorld world;
-    //    DirectX::XMStoreFloat4x4(&world.value, DirectX::XMMatrixIdentity());
-    //    comp_mng->Add(gltf_model.entity, world);
-    //    ComponentColor col;
-    //    col.value = { 1,1,1,1 };
-    //    comp_mng->Add(gltf_model.entity, col);
-    //    ComponentInstanced instance;
-    //    instance.entity_id = gltf_model.entity;
-    //    comp_mng->Add(gltf_model.entity, instance);
-    //}
 
     ID3D11Device*device= Graphics::Instance().GetDevice();
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\knife.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\sun.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\moon.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\sword.glb");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\katana.glb");
     ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\BrainStem\\glTF\\BrainStem.gltf");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\eldenRing_Sky_Moon_Stars_1-1.png");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\incskies_050_16k.png");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\incskies_038_16k_c2.png");
     ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mamizo.png");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mwpan2_Aitoff_2000x1000.jpg");
-
     return true;
 }
 
@@ -168,6 +93,7 @@ bool SceneTest::UninitializeCore()
 
 void SceneTest::UpdateCore(float elapsed_time)
 {
+    light_manager_->Update(elapsed_time);
     update_sys_mng->UpdateAll(elapsed_time);
 }
 
@@ -175,7 +101,7 @@ void SceneTest::RenderCore(float elapsed_time)
 {
     HRESULT hr{ S_OK };
 
-    FLOAT color[]{ .5f,.5f,.5f,1.f };
+    FLOAT color[]{ .0f,.0f,.0f,0.f };
 
     ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
     RenderState* render_state = Graphics::Instance().GetRenderState();
@@ -195,6 +121,8 @@ void SceneTest::RenderCore(float elapsed_time)
         dc->PSSetSamplers(3, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::anisotropic);
         dc->PSSetSamplers(4, 1, sampler_state.GetAddressOf());
+        sampler_state = render_state->GetSamplerState(SamplerState::linear_mirror);
+        dc->PSSetSamplers(5, 1, sampler_state.GetAddressOf());
 
 
     }
@@ -210,9 +138,8 @@ void SceneTest::RenderCore(float elapsed_time)
         UINT num_viewports{ 1 };
         dc->RSGetViewports(&num_viewports, &viewport);
 
-
-        light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kLight));
-        SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame));
+        light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kForwardLight));
+        SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame),true,light_manager_->GetDirectionLight().direction);
     }
     //レンダリングオブジェクト描画
     {
@@ -247,27 +174,6 @@ void SceneTest::RenderCore(float elapsed_time)
                 }
             }
             Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
-            //this->model.skinned_mesh->Render(dc, model.world, model.color,&keyframe);
-
-            //static std::vector<GltfModel::Node> animated_nodes{
-            //    comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->animated_nodes_
-            //};
-            //static float time{ 0 };
-            //if (comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
-            //    ->GetAnimations().size() > 0)
-            //{
-            //    comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->Animate(0, time += elapsed_time, animated_nodes);
-            //    if (comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model
-            //        ->GetAnimations().at(0).duration < time)
-            //    {
-            //        time = 0; // Repeat playback
-            //    }
-            //}
-
-
-            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->UpdateAnimation(elapsed_time);
-            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->Render(dc,comp_mng->Get<ComponentLocalToWorld>(gltf_model.entity).value );
-            //comp_mng->TryGetByEntity<ComponentGltf>(gltf_model.entity)->model->UpdateAnimation(elapsed_time);
 
             render_sys_mng->RenderAll();
         }

@@ -16,4 +16,7 @@ public:
 private:
     ComponentManager& comp_mng_;
     EntityManager& enti_mng_;
+
+    int32_t has_sky_ = -1;
+    int32_t has_cloud_ = -1;
 };

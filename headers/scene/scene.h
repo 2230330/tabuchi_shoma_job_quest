@@ -34,9 +34,11 @@ protected:
 	virtual void UpdateCore(float elapsed_time){}
 	virtual void RenderCore(float elapsed_time){}
 
-	void SetSceneConstant(int start_slot = 1,
-		DirectX::XMFLOAT2 viewport_size=DirectX::XMFLOAT2(Graphics::Instance().GetScreenWidth(),Graphics::Instance().GetScreenHeight()),
-		bool is_update_resource = true);
+	void SetSceneConstant(
+		int start_slot = 1,
+		bool is_update_resource = true,
+		DirectX::XMFLOAT4 directional_light = { 0,0,0,1 },
+		DirectX::XMFLOAT2 viewport_size = DirectX::XMFLOAT2(Graphics::Instance().GetScreenWidth(), Graphics::Instance().GetScreenHeight()));
 
 	//static constexpr DirectX::XMFLOAT4X4 coordinate_system_transforms[]
 	//{
@@ -62,6 +64,9 @@ protected:
 		DirectX::XMFLOAT4X4 inverse_projection_transform;
 		DirectX::XMFLOAT4X4 inverse_view_projection_transform;
 		DirectX::XMFLOAT4X4 previous_view_projection_transform;
+        DirectX::XMFLOAT2 sun_uv; //画面上の太陽位置
+        float sun_visible; //カメラ前方にあるか
+        float dummy;
 	};
 
 
@@ -87,6 +92,11 @@ private:
 	float distance{ 20.0f };
 	float min_distance{ 10.f };
 	float max_distance{ 100.f };
+
+	//sun_uv
+    DirectX::XMFLOAT2 sun_uv_{ 0.0f,0.0f };//画面上の太陽位置
+	int sun_visible_{ 0 };//カメラ前方にあるか
+	
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> scene_constant_buffer;
 };

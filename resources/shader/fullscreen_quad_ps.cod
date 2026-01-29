@@ -6,8 +6,9 @@
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
-// sampler_states[1]                 sampler      NA          NA             s1      1 
-// texture_map                       texture  float4          2d             t0      1 
+// sampler_states[3]                 sampler      NA          NA             s3      1 
+// back_texture                      texture  float4          2d             t0      1 
+// object_texture                    texture  float4          2d             t1      1 
 //
 //
 //
@@ -27,17 +28,33 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_sampler s1, mode_default
+dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
+dcl_resource_texture2d (float,float,float,float) t1
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
+dcl_temps 3
 //
 // Initial variable locations:
 //   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\fullscreen_quad_ps.hlsl"
-sample_indexable(texture2d)(float,float,float,float) o0.xyzw, v1.xyxx, t0.xyzw, s1
+#line 19 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\fullscreen_quad_ps.hlsl"
+sample_indexable(texture2d)(float,float,float,float) r0.xyz, v1.xyxx, t0.xyzw, s3
+mov r0.xyz, r0.xyzx  // r0.x <- back.x; r0.y <- back.y; r0.z <- back.z
+
+#line 20
+sample_indexable(texture2d)(float,float,float,float) r1.xyzw, v1.xyxx, t1.xyzw, s3  // r1.x <- obj.x; r1.y <- obj.y; r1.z <- obj.z; r1.w <- obj.w
+
+#line 23
+mov r2.xyz, -r0.xyzx
+add r1.xyz, r1.xyzx, r2.xyzx
+mul r1.xyz, r1.xyzx, r1.wwww
+add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
+
+#line 25
+mov o0.xyz, r0.xyzx
+mov o0.w, l(1.000000)
 ret 
-// Approximately 2 instruction slots used
+// Approximately 10 instruction slots used

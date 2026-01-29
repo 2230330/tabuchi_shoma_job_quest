@@ -10,6 +10,7 @@
 #include"../headers/misc.h"
 #include"../headers/shader.h"
 #include"../headers/resource_manager.h"
+#include"../headers/constant_buffer_slot.h"
 
 inline std::string ConvertWstringToString(const std::wstring& wstr)
 {
@@ -181,7 +182,7 @@ void SkinnedMesh::Render(ID3D11DeviceContext* immediate_context,
 
             DirectX::XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&material_color) , DirectX::XMLoadFloat4(&material.Kd)));
             immediate_context->UpdateSubresource(constant_buffer_.Get(), 0, 0, &data, 0, 0);
-            immediate_context->VSSetConstantBuffers(0, 1, constant_buffer_.GetAddressOf());
+            immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerObject), 1, constant_buffer_.GetAddressOf());
 
             immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view[0].GetAddressOf());
             immediate_context->PSSetShaderResources(1, 1, material.shader_resource_view[1].GetAddressOf());

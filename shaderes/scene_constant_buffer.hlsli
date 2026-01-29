@@ -15,8 +15,9 @@ cbuffer SCENE_CONSTANT_BUFFER : register(b1)
     row_major float4x4 inverse_view_transform;
     row_major float4x4 inverse_projection_transform;
     row_major float4x4 inverse_view_projection_transform;
-
     row_major float4x4 previous_view_projection_transform;
+    float2 sun_uv;
+    float sun_visible;
 };
 
 #endif  //  __SCENE_CONSTANT_BUFFER_H__

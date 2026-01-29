@@ -10,7 +10,7 @@
 class SpriteRenderSystem :public IRenderSystem
 {
 public:
-    SpriteRenderSystem(ComponentManager&comp_mng);
+    SpriteRenderSystem(ComponentManager&comp_mng,RenderPass render_pass);
     ~SpriteRenderSystem();
 
 private:

@@ -10,7 +10,7 @@ class InstancingRenderSystem :public IRenderSystem
 {
 
 public:
-    InstancingRenderSystem(ComponentManager& comp_mng);
+    InstancingRenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
 
     void Render()override;
 private:

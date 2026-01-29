@@ -332,4 +332,6 @@ TextureCube specular_pmrem_cube_map, SamplerState state)
     float2 eny_brdf = SampleLutGGX(brdf_sample_point, lut_ggx_map, state).rg;
     return specular_light * (f0 * eny_brdf.x + eny_brdf.y);
 }
+
+
 #endif	//	__SHADING_FUNCTIONS_HLSLI__

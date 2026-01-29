@@ -51,19 +51,15 @@ void Framework::Render(float elapsed_time)
         scene_->Render(elapsed_time);
     }
 
-    scene_->DrawGui();
 
 
 #ifdef USE_IMGUI
+    scene_->DrawGui();
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif
 
-#if 0
-    UINT sync_interval{ 1 };
-#endif
     UINT sync_interval{ 0 };
-    //swap_cahin_->Present(sync_interval, 1);
     Graphics::Instance().Present(sync_interval);
 
 }

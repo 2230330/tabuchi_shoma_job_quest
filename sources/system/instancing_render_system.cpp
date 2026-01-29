@@ -5,9 +5,11 @@
 #include<functional>
 
 #include"../../headers/graphics.h"
+#include"../../headers/misc.h"
 
-InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng)
+InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng, RenderPass render_pass )
     :comp_mng_(comp_mng)
+    ,IRenderSystem(render_pass)
 {
 }
 
@@ -20,22 +22,30 @@ void InstancingRenderSystem::Render()
 
     comp_mng_.ForEach<ComponentGltf>([&](uint32_t entity_id, ComponentGltf& gltf)
         {
-            auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
-            auto* instanced = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
-
-            // インスタンシング対象のみ抽出
-            if (l2w && instanced)
+            if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id)&&
+                !comp_mng_.Has<ComponentCloudDome>(entity_id))
             {
-                model_to_worlds[gltf.model.get()].push_back(l2w->value);
+
+                auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
+                auto* instanced = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
+
+                // インスタンシング対象のみ抽出
+                if (l2w && instanced)
+                {
+                    model_to_worlds[gltf.model.get()].push_back(l2w->value);
+                }
             }
         });
 
     ID3D11Device* device = Graphics::Instance().GetDevice();
     ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    HRESULT hr{ S_OK };
 
     for (auto& [model, world_matrices] : model_to_worlds)
     {
         if (world_matrices.empty()) continue;
+
+        Graphics::Instance().SetRenderTargets();
 
         InstancingRenderSystem::InstanceBufferInfo& buf_info = instance_buffer_pool_[model];
 
@@ -50,16 +60,20 @@ void InstancingRenderSystem::Render()
             desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
             desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-            HRESULT hr = device->CreateBuffer(&desc, nullptr, buf_info.buffer.ReleaseAndGetAddressOf());
+            hr = device->CreateBuffer(&desc, nullptr, buf_info.buffer.ReleaseAndGetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), L"インスタンスバッファの作成に失敗しました");
             buf_info.cepasity = world_matrices.size();
         }
 
         // Map でデータ更新
         D3D11_MAPPED_SUBRESOURCE mapped{};
-        context->Map(buf_info.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-        memcpy(mapped.pData, world_matrices.data(), required_size);
-        context->Unmap(buf_info.buffer.Get(), 0);
+        hr=context->Map(buf_info.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        if (SUCCEEDED(hr))
+        {
+            memcpy(mapped.pData, world_matrices.data(), required_size);
+            context->Unmap(buf_info.buffer.Get(), 0);
+        }
 
         // インスタンシング描画呼び出し
         model->InstancingRender(context,

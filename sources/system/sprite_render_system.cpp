@@ -4,8 +4,9 @@
 #include"../../headers/render_state.h"
 #include"../../headers/resource_manager.h"
 
-SpriteRenderSystem::SpriteRenderSystem(ComponentManager& comp_mng)
+SpriteRenderSystem::SpriteRenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
+    , IRenderSystem(render_pass)
 {
     ID3D11Device*device= Graphics::Instance().GetDevice();
 
@@ -68,7 +69,8 @@ void SpriteRenderSystem::Render()
 
     comp_mng_.ForEach<ComponentTexture>([&](uint32_t entity_id, ComponentTexture& tex)
         {
-            if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id))
+            if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id)&&
+                !comp_mng_.Has<ComponentCloudDome>(entity_id))
             {
 
 
@@ -82,6 +84,7 @@ void SpriteRenderSystem::Render()
         });
 
     ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    HRESULT hr{ S_OK };
     context->VSSetShader(default_vs_.Get(), nullptr, 0);
     context->PSSetShader(default_ps_.Get(), nullptr, 0);
 
@@ -105,15 +108,19 @@ void SpriteRenderSystem::Render()
             desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
             ID3D11Device* device = Graphics::Instance().GetDevice();
-            HRESULT hr = device->CreateBuffer(&desc, nullptr, buf_info.buffer.ReleaseAndGetAddressOf());
+            hr = device->CreateBuffer(&desc, nullptr, buf_info.buffer.ReleaseAndGetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), L"インスタンスバッファの作成に失敗しました");
             buf_info.cepacity = world_matrices.size();
         }
 
         D3D11_MAPPED_SUBRESOURCE mapped{};
-        context->Map(buf_info.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-        memcpy(mapped.pData, world_matrices.data(), required_size);
-        context->Unmap(buf_info.buffer.Get(), 0);
+        hr=context->Map(buf_info.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        if(SUCCEEDED(hr))
+        {
+            memcpy(mapped.pData, world_matrices.data(), required_size);
+            context->Unmap(buf_info.buffer.Get(), 0);
+        };
 
         // テクスチャをセット
         context->PSSetShaderResources(0, 1, &texture);

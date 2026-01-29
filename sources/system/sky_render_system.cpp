@@ -1,14 +1,23 @@
 ﻿#include"../../headers/system/sky_render_system.h"
+
+#include <DirectXTex.h>
+
 #include"../../headers/graphics.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/render_state.h"
 #include"../../headers/misc.h"
 #include"../../headers/constant_buffer_slot.h"
 
-SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng)
+SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_pass)
     :comp_mng_(comp_mng)
+    , IRenderSystem(render_pass)
 {
     ID3D11Device* device = Graphics::Instance().GetDevice();
+
+    //Texture2D/SRV
+    {
+
+    }
 
     //頂点情報とインデックス情報の作成
     {
@@ -107,17 +116,22 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng)
     sky_vs_ = ResourceManager::Instance().LoadVertexShader(device, L".\\resources\\shader\\sky_atmosphere_vs.cso",
         sky_input_.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
     sky_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\sky_atmosphere_ps.cso");
+
+    //フルスクリーン
+    sky_frame_buffer_= std::make_unique<FrameBuffer>(
+        device,
+        Graphics::Instance().GetScreenWidth(),
+        Graphics::Instance().GetScreenHeight());
+    full_screen_quad_ = std::make_unique<FullscreenQuad>(device);
 }
 
 
 void SkyRenderSystem::Render()
 {
-    frame_count_++;
-    //if (frame_count_ % 1 == 0)
-    {
-        frame_count_ = 0;
-
-        comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
+    sky_flag_ = false;
+    comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
+        {
+            sky_flag_ = true;
 
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
@@ -125,7 +139,7 @@ void SkyRenderSystem::Render()
             // 深度・カリング設定（球の内側を描画）
             render_state.GetDepthStencilState(DepthState::no_test_no_write);
             render_state.GetRasterizerState(RasterizerState::solid_cull_none);
-            render_state.GetSamplerState(SamplerState::linear_clamp);
+            render_state.GetBlendState(BlendState::transparency);
 
             // シェーダー設定
             context->VSSetShader(sky_vs_.Get(), nullptr, 0);
@@ -139,14 +153,8 @@ void SkyRenderSystem::Render()
             context->IASetIndexBuffer(index_buffer_.Get(), DXGI_FORMAT_R32_UINT, 0);
             context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-            // テクスチャ設定（必要なら）
-            auto* texture = comp_mng_.TryGetByEntity<ComponentTexture>(entity_id);
-            if (texture)
-            {
-                context->PSSetShaderResources(0, 1, texture->texture.GetAddressOf());
-            }
             //定数バッファの設定
-            rayleigh_constant.height = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id)->value.y*1e3f;
+            rayleigh_constant.height = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id)->value.y * 1e3f;
             RayleighConstants data = rayleigh_constant;
             context->UpdateSubresource(rayleigh_constant_buffer_.Get(), 0, 0, &data, 0, 0);
             Graphics::Instance().SetConstantBuffer(
@@ -157,13 +165,9 @@ void SkyRenderSystem::Render()
             // 描画呼び出し
             context->DrawIndexed(index_count_, 0, 0);
 
-            // シェーダー解除（任意）
-            context->VSSetShader(nullptr, nullptr, 0);
-            context->PSSetShader(nullptr, nullptr, 0);
-            ID3D11ShaderResourceView* null_shader[]{ nullptr };
-            context->PSSetShaderResources(0, 1, null_shader);
-            Graphics::Instance().ClearConstantBuffers();
-            });
-    }
+            Graphics::Instance().ClearConstantBuffers(static_cast<int>(ConstantBufferSlot::kSkyRayleigh), 1);
+        }
 
+        });
 }
+

@@ -5,8 +5,7 @@ struct directional_lights
 {
     float4 direction;
     float4 color;
-    float intensity;
-    float3 dummy;
+
 };
 
 // “_ŒõŒ¹

@@ -4,19 +4,26 @@
 #include<d3d11.h>
 #include<wrl.h>
 #include"../component/component_manager.h"
+#include"../fullscreen_quad.h"
+#include"../framebuffer.h"
 
 class SkyRenderSystem:public IRenderSystem
 {
 public:
-    SkyRenderSystem(ComponentManager& comp_mng);
+    SkyRenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
+
+    //スカイキューブを受け取る
+    void SetSkyCubeSRV(ID3D11ShaderResourceView* sky_cube_srv){
+        sky_srv_ = sky_cube_srv;
+    }
 
     void Render()override;
 
+    bool GetSkyFlag() { return sky_flag_; }
 private:
-    ComponentManager& comp_mng_;
+    void SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath, bool force_srgb = false);
 
-    UINT frame_count_{0};//マイフレーム計算は重いので、特定のフレームのみで描画する
-    
+    ComponentManager& comp_mng_;    
 
     //頂点構造
     struct SkyVertex {
@@ -27,8 +34,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer>index_buffer_;
 
     // メッシュ生成パラメータ
-    const unsigned int latitude_segments_ = 64;
-    const unsigned int longitude_segments_ = 128;
+    const unsigned int latitude_segments_ = 16;
+    const unsigned int longitude_segments_ = 32;
     const float radius_ = 1000.f;
     UINT index_count_;
 
@@ -51,4 +58,16 @@ private:
     };
     RayleighConstants rayleigh_constant;
     Microsoft::WRL::ComPtr<ID3D11Buffer>rayleigh_constant_buffer_;
+
+    //スカイテクスチャ
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> sky_srv_=nullptr;
+
+
+    //フレームバッファ
+    std::unique_ptr<FrameBuffer> sky_frame_buffer_;
+    //フルスクリーンクワッド
+    std::unique_ptr<FullscreenQuad> full_screen_quad_;
+
+    bool sky_flag_ = false;
+
 };
