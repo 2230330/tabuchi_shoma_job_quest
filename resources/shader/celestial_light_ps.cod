@@ -26,40 +26,44 @@
 // cbuffer FORWARD_LIGHT_CONSTANT_BUFFER
 // {
 //
-//   float4 ambient_color;              // Offset:    0 Size:    16 [unused]
-//   uint4 light_count;                 // Offset:   16 Size:    16 [unused]
+//   uint4 light_count;                 // Offset:    0 Size:    16 [unused]
+//   float4 ambient_color;              // Offset:   16 Size:    16 [unused]
+//   float4x4 light_view_projection;    // Offset:   32 Size:    64 [unused]
+//   float4x4 inverse_light_view_projection;// Offset:   96 Size:    64 [unused]
+//   float2 light_orthographic_size;    // Offset:  160 Size:     8 [unused]
+//   float2 light_depth_range;          // Offset:  168 Size:     8 [unused]
 //   
 //   struct directional_lights
 //   {
 //       
-//       float4 direction;              // Offset:   32
-//       float4 color;                  // Offset:   48
+//       float4 direction;              // Offset:  176
+//       float4 color;                  // Offset:  192
 //
-//   } directional_light;               // Offset:   32 Size:    32
+//   } directional_light;               // Offset:  176 Size:    32
 //   
 //   struct point_lights
 //   {
 //       
-//       float4 position;               // Offset:   64
-//       float4 color;                  // Offset:   80
-//       float range;                   // Offset:   96
-//       float intensity;               // Offset:  100
-//       float2 dummy;                  // Offset:  104
+//       float4 position;               // Offset:  208
+//       float4 color;                  // Offset:  224
+//       float range;                   // Offset:  240
+//       float intensity;               // Offset:  244
+//       float2 dummy;                  // Offset:  248
 //
-//   } point_light[8];                  // Offset:   64 Size:   384 [unused]
+//   } point_light[8];                  // Offset:  208 Size:   384 [unused]
 //   
 //   struct spot_lights
 //   {
 //       
-//       float4 position;               // Offset:  448
-//       float4 direction;              // Offset:  464
-//       float4 color;                  // Offset:  480
-//       float range;                   // Offset:  496
-//       float inner_corn;              // Offset:  500
-//       float outer_corn;              // Offset:  504
-//       float dummy;                   // Offset:  508
+//       float4 position;               // Offset:  592
+//       float4 direction;              // Offset:  608
+//       float4 color;                  // Offset:  624
+//       float range;                   // Offset:  640
+//       float inner_corn;              // Offset:  644
+//       float outer_corn;              // Offset:  648
+//       float dummy;                   // Offset:  652
 //
-//   } spot_light[8];                   // Offset:  448 Size:   512 [unused]
+//   } spot_light[8];                   // Offset:  592 Size:   512 [unused]
 //
 // }
 //
@@ -92,7 +96,7 @@
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[30], immediateIndexed
-dcl_constantbuffer CB3[3], immediateIndexed
+dcl_constantbuffer CB3[12], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v1.xy
@@ -193,7 +197,7 @@ min r0.w, r0.w, l(1.000000)  // r0.w <- <SampleSoftCloudCoverage return value>
 #line 57
 mov r0.w, r0.w  // r0.w <- softMask
 
-#line 67
+#line 60
 mul r1.x, v1.x, l(2.000000)
 mov r1.y, l(-1.000000)
 add r1.x, r1.y, r1.x  // r1.x <- ndc.x
@@ -202,7 +206,7 @@ mov r1.y, -r1.y
 add r1.y, r1.y, l(1.000000)  // r1.y <- ndc.y
 mov r1.zw, l(0,0,0,1.000000)  // r1.z <- ndc.z; r1.w <- ndc.w
 
-#line 68
+#line 61
 mul r2.xyzw, r1.xxxx, cb1[26].xyzw
 mul r3.xyzw, r1.yyyy, cb1[27].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw
@@ -211,42 +215,42 @@ add r2.xyzw, r2.xyzw, r3.xyzw
 mul r1.xyzw, r1.wwww, cb1[29].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw  // r1.x <- pos.x; r1.y <- pos.y; r1.z <- pos.z; r1.w <- pos.w
 
-#line 69
+#line 62
 div r1.xyz, r1.xyzx, r1.wwww
 
-#line 71
+#line 64
 mov r2.xyz, -cb1[2].xyzx
 add r1.xyz, r1.xyzx, r2.xyzx
 dp3 r1.w, r1.xyzx, r1.xyzx
 rsq r1.w, r1.w
 mul r1.xyz, r1.wwww, r1.xyzx  // r1.x <- view_dir.x; r1.y <- view_dir.y; r1.z <- view_dir.z
 
-#line 72
+#line 65
 itof r1.w, l(0)
 ge r1.w, r1.w, r1.y
 if_nz r1.w
 
-#line 74
+#line 67
   itof r1.w, l(-1)
   lt r1.w, r1.w, l(0.000000)
   and r1.w, r1.w, l(-1)
   discard_nz r1.w
 
-#line 75
+#line 68
 endif 
 
-#line 77
-mov r2.xyz, -cb3[2].xyzx
+#line 70
+mov r2.xyz, -cb3[11].xyzx
 dp3 r1.w, r2.xyzx, r2.xyzx
 rsq r1.w, r1.w
 mul r2.xyz, r1.wwww, r2.xyzx  // r2.x <- light_dir.x; r2.y <- light_dir.y; r2.z <- light_dir.z
 
-#line 80
+#line 73
 dp3 r1.x, r1.xyzx, r2.xyzx
 max r1.x, r1.x, l(-1.000000)
 min r1.x, r1.x, l(1.000000)  // r1.x <- cosTheta
 
-#line 81
+#line 74
 mov r1.y, -r1.x
 max r1.z, r1.y, r1.x
 mov r1.w, -r1.z
@@ -265,31 +269,31 @@ lt r1.x, r1.x, r1.y
 and r1.x, r1.x, r1.w
 add r1.x, r1.x, r1.z  // r1.x <- angle
 
-#line 84
+#line 77
 mov r1.y, l(0.000100)  // r1.y <- EPS
 
-#line 85
+#line 78
 mov r1.z, -r1.x
 max r1.z, r1.z, r1.x
 sincos r1.z, null, r1.z
 mul r1.z, r1.z, l(4.000000)  // r1.z <- mx
 
-#line 86
+#line 79
 mov r1.z, r1.z  // r1.z <- my
 
-#line 87
+#line 80
 mov r1.w, -r1.x
 max r1.w, r1.w, r1.x
 add r1.w, r1.z, r1.w
 max r1.w, r1.y, r1.w  // r1.w <- denom_x
 
-#line 88
+#line 81
 mov r2.w, -r1.x
 max r2.w, r1.x, r2.w
 add r2.w, r1.z, r2.w
 max r2.w, r1.y, r2.w  // r2.w <- denom_y
 
-#line 89
+#line 82
 mov r3.x, -r1.x
 add r3.x, r1.x, r3.x
 mov r3.y, -r3.x
@@ -297,37 +301,37 @@ max r3.x, r3.y, r3.x
 add r3.x, r1.z, r3.x
 max r3.x, r1.y, r3.x  // r3.x <- denom_xdiff
 
-#line 90
+#line 83
 add r1.x, r1.x, r1.x
 mov r3.y, -r1.x
 max r1.x, r1.x, r3.y
 add r1.x, r1.z, r1.x
 max r1.x, r1.y, r1.x  // r1.x <- denom_ysum
 
-#line 92
+#line 85
 div r1.y, l(0.010000), r1.w  // r1.y <- lx
 
-#line 93
+#line 86
 div r1.z, l(0.010000), r2.w  // r1.z <- ly
 
-#line 94
+#line 87
 div r1.w, l(0.010000), r3.x  // r1.w <- lxy
 
-#line 95
+#line 88
 div r1.x, l(0.010000), r1.x  // r1.x <- lyx
 
-#line 96
+#line 89
 add r1.y, r1.z, r1.y
 add r1.y, r1.w, r1.y
 add r1.x, r1.x, r1.y  // r1.x <- s
 
-#line 99
+#line 92
 itof r1.yzw, l(0, 0, 1, 0)
 dp3 r1.y, r2.xyzx, r1.yzwy
 max r1.y, r1.y, l(0.000000)
 min r1.y, r1.y, l(1.000000)  // r1.y <- sun_elevation
 
-#line 100
+#line 93
 mov r1.z, -r1.y
 max r1.w, r1.z, r1.y
 mov r2.x, -r1.w
@@ -347,7 +351,7 @@ and r1.z, r1.z, r2.x
 add r1.z, r1.z, r1.w
 mul r1.z, r1.z, l(57.295780)  // r1.z <- sun_theta
 
-#line 101
+#line 94
 mov r1.z, -r1.z
 add r1.z, r1.z, l(96.079948)
 log r1.z, r1.z
@@ -357,7 +361,7 @@ mul r1.z, r1.z, l(0.505720)
 add r1.y, r1.z, r1.y
 div r1.y, l(1.000000), r1.y  // r1.y <- air_mass
 
-#line 102
+#line 95
 nop 
 mov r1.y, r1.y
 
@@ -373,48 +377,46 @@ exp r0.xyz, r0.xyzx  // r0.x <- Ei.x; r0.y <- Ei.y; r0.z <- Ei.z
 #line 29
 mov r0.xyz, r0.xyzx  // r0.x <- <ComputeSunIrradiance return value>.x; r0.y <- <ComputeSunIrradiance return value>.y; r0.z <- <ComputeSunIrradiance return value>.z
 
-#line 102
+#line 95
 mov r0.xyz, r0.xyzx  // r0.x <- Ei.x; r0.y <- Ei.y; r0.z <- Ei.z
 
-#line 105
-mul r0.xyz, r1.xxxx, r0.xyzx
-max r0.xyz, r0.xyzx, l(0.000000, 0.000000, 0.000000, 0.000000)
-min r0.xyz, r0.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)  // r0.x <- finalColor.x; r0.y <- finalColor.y; r0.z <- finalColor.z
+#line 98
+mul r0.xyz, r1.xxxx, r0.xyzx  // r0.x <- finalColor.x; r0.y <- finalColor.y; r0.z <- finalColor.z
 
-#line 108
+#line 101
 log r0.w, r0.w
 mul r0.w, r0.w, l(1.500000)
 exp r0.w, r0.w  // r0.w <- erosion
 
-#line 110
+#line 103
 mov r1.x, -r0.w
 add r1.x, r1.x, l(1.000000)
 mul r1.xyz, r0.xyzx, r1.xxxx  // r1.x <- eroded_color.x; r1.y <- eroded_color.y; r1.z <- eroded_color.z
 
-#line 114
+#line 107
 max r0.x, r0.y, r0.x
 max r0.x, r0.z, r0.x  // r0.x <- sunIntensity
 
-#line 116
+#line 109
 mov r0.y, l(1.000000)  // r0.y <- intensityScale
 
-#line 117
+#line 110
 mul r0.x, r0.y, r0.x
 max r0.x, r0.x, l(0.000000)
 min r0.x, r0.x, l(1.000000)  // r0.x <- colorAlpha
 
-#line 120
+#line 113
 mov r0.y, -r0.w
 add r0.y, r0.y, l(1.000000)
 mul r0.x, r0.y, r0.x
 max r0.x, r0.x, l(0.000000)
 min r0.x, r0.x, l(1.000000)  // r0.x <- outAlpha
 
-#line 123
+#line 116
 mov r1.xyz, r1.xyzx  // r1.x <- outColor.x; r1.y <- outColor.y; r1.z <- outColor.z
 
-#line 125
+#line 118
 mov o0.xyz, r1.xyzx
 mov o0.w, r0.x
 ret 
-// Approximately 200 instruction slots used
+// Approximately 198 instruction slots used

@@ -128,8 +128,10 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_p
 
 void SkyRenderSystem::Render()
 {
+    sky_flag_ = false;
     comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
         {
+            sky_flag_ = true;
 
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 

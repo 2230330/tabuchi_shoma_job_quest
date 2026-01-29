@@ -53,10 +53,21 @@ public:
     void DrawImgui();
 
 private:
+
+    void UpdateLightViewProjection();
+
+private:
     DirectionLight direction_light_;
     float azimuth_ = 0.f;//ライトの水平角度
     float elevation_ = -1.07;//ライトの仰角
-    DirectX::XMFLOAT4 ambient_color = { 1,1,1,1 };
+    DirectX::XMFLOAT4 ambient_color_ = { 1,1,1,1 };
+    //ライト空間用
+    DirectX::XMFLOAT4X4 light_view_projection_{};
+    DirectX::XMFLOAT4X4 inverse_light_view_projection_{};
+    const float shadow_distance_ = 50000;
+    const float shadow_near_plane_ = 1.0f;
+    const float shadow_far_plane_ = 200000;
+    const float shadow_map_size_ = 1024.0f;
 
     std::vector<PointLight>point_lights_;
     std::vector<SpotLight>spot_lights_;
@@ -70,6 +81,10 @@ private:
         DirectX::XMFLOAT4 ambient_color;
         //ｘ：空き、ｙ：ポイントライト数、ｚ：スポットライト数、ｗ：空き
         DirectX::XMUINT4  light_count{ 0,0,0,0 };
+        DirectX::XMFLOAT4X4 light_view_position;//ライトビュー空間でのカメラ位置
+        DirectX::XMFLOAT4X4 inverse_light_view_position;//逆行列
+        DirectX::XMFLOAT2 light_orthographic_size;//ライトの直交投影のサイズ(x:width,y:height)
+        DirectX::XMFLOAT2 light_depth_range;//ライトの直交投影の深度範囲(x:near,y:far)
         DirectionLight directional_light;
         PointLight point_light[light_max];
         SpotLight spot_light[light_max];
@@ -119,7 +134,7 @@ private:
         int use_shadow{ 0 };//　影を擁しているかどうか
         float shadow_attenuation{ 0.5f };//影色
         float shadow_bias{ 0.001f };//深度バイアス
-        UINT shadow_dummy;
+        UINT shadow_dummy{0};
         DirectX::XMFLOAT4X4 light_view_projection{}; //ライトの位置から見た射影行列
     };
 };

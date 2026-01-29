@@ -18,6 +18,8 @@ public:
     }
 
     void Render()override;
+
+    bool GetSkyFlag() { return sky_flag_; }
 private:
     void SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath, bool force_srgb = false);
 
@@ -65,5 +67,7 @@ private:
     std::unique_ptr<FrameBuffer> sky_frame_buffer_;
     //フルスクリーンクワッド
     std::unique_ptr<FullscreenQuad> full_screen_quad_;
+
+    bool sky_flag_ = false;
 
 };

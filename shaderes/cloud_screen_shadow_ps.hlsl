@@ -1,10 +1,8 @@
-//ライトシャフトに使う、簡易的な雲の存在マップ（軽量化版）
-// 改良点: 雲被覆率に基づく早期スキップ、天候テクスチャのループ外キャッシュ、cheap_sample 分岐の早期簡略化、レイマーチングステップ数の動的縮小
-#include"cloud_dome.hlsli"
+//ライトシャフトに使う、簡易的な雲の存在マップ
+#include"volumetric_cloud.hlsli"
 #include"fullscreen_quad.hlsli"
 #include "scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
-#include"gbuffer.hlsli"
 
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
@@ -18,12 +16,13 @@ Texture3D<float4> low_frequency_perlin_worley_texture : register(t0);
 Texture3D<float3> high_frequency_worley_texture : register(t1);
 Texture2D<float3> weather_texture : register(t2);
 Texture2D<float3> curl_noise_texture : register(t3);
-Texture2D<float3> sky_color_texture : register(t4);
+
+static const float PI = 3.14159265359f;
 
 static const float time_offset = 10000.0;
 float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
 {
-    return low_frequency_perlin_worley_texture.SampleLevel(sampler_states[LINEAR_WRAP], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
+    return low_frequency_perlin_worley_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point * low_frequency_perlin_worley_sampling_scale, mip_level);
 }
 float3 SampleHighFrequencyNoises(float3 sample_point, float mip_level)
 {
@@ -38,7 +37,7 @@ float3 SampleWeatherData(float2 sample_point)
 
 }
 
-static const float PI = 3.14159265359f;
+
 
 // from: https://www.shadertoy.com/view/4sfgzs credit to iq
 float Hash(float3 p)
@@ -62,7 +61,6 @@ float GetHeightFractionForPoint(float position)
     float height_fraction = (position - cloud_altitudes_min_max.x) / (cloud_altitudes_min_max.y - cloud_altitudes_min_max.x);
     return clamp(height_fraction, 0.0, 1.0);
 }
-
 // 雲タイプに応じた高さ方向の密度勾配を取得
 float GetDensityHeightGradient(float height_fraction, float cloud_type)
 {
@@ -83,206 +81,179 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 
 #define ENABLE_CLOUD_ANIMATION 
 
-// 指定された位置における雲の密度を返す（cheap_sample で大幅に軽量化）
+// 指定された位置における雲の密度を返す
 float SampleCloudDensity
-(float3 sample_point, float3 weather_data, float mip_level, bool cheap_sample = false, float horizon_soft = 0)
+(float3 sample_point,
+float3 weather_data,
+float mip_level,
+bool cheap_sample = false,
+float horizon_soft = 0)
 {
-    // 高さに応じてノイズをブレンドするため、位置から高さ比率を算出
+	// 高さに応じてノイズをブレンドするため、位置から高さ比率を算出
     float height_fraction = GetHeightFractionForPoint(length(sample_point));
-
-    // 雲の被覆率(カバレッジ)
+	
+	// 雲の被覆率(カバレッジ)はweather_dataのRチャンネルに格納されている
     float cloud_coverage = weather_data.r * cloud_coverage_scale;
-
-    // 被覆率が非常に小さい場合は即座に0を返して重い処理を回避する
-    if (cloud_coverage < 0.01f)
-        return 0.0f;
-
+    
 #ifdef ENABLE_CLOUD_ANIMATION
+        // 風向きと風速に基づいて雲を移動させる（低周波形状用）
     sample_point.xz += (options.z + time_offset) * 20.0 * normalize(-wind_direction) * wind_speed * 0.6;
 #endif
+	// 低周波のPerlin-WorleyノイズとWorleyノイズを取得
+    float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, max(mip_level - 2.0, 0.0f));
 
-    // cheap_sample なら低周波サンプルのみで大まかな判定を行い、高周波やカールノイズは省略する
-    float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, max(mip_level + 2.0, 2.0)); // 高いmipで cheaper
+	// 低周波 Worley ノイズを用いて fbm（フラクタルブラウン運動）を構築し、
+    // 低周波 Perlin-Worley ノイズにディテールを追加する
     float low_frequency_fbm =
-        low_frequency_noises.g * 0.625 +
-        low_frequency_noises.b * 0.25 +
-        low_frequency_noises.a * 0.125;
-
+    low_frequency_noises.g * 0.625 +
+    low_frequency_noises.b * 0.25 +
+    low_frequency_noises.a * 0.125;
+    
+	// 低周波 fbm によって Perlin-Worley ノイズを膨張させ、
+	// 雲のベース形状を定義する
     float base_cloud =
-        Remap(low_frequency_noises.r,
-        -(1.0 - low_frequency_fbm),
-        1.0,
-        0.0,
-        1.0);
-
+    Remap(low_frequency_noises.r,
+    -(1.0 - low_frequency_fbm),
+    1.0,
+    0.0,
+    1.0);
+	
+	// 雲タイプに応じた、高さ方向の密度勾配を取得
     float cloud_type = clamp(weather_data.b * cloud_type_scale, 0.0, 1.0);
     float density_height_gradient = GetDensityHeightGradient(height_fraction, cloud_type);
+	
+	// 高さ方向の密度関数をベース雲形状に適用
     base_cloud *= density_height_gradient;
-
+	
+	
+	// remapを用いて雲の被覆率を反映させる
     float base_cloud_with_coverage = Remap(base_cloud, 1.0 - cloud_coverage, 1.0, 0.0, 1.0);
     base_cloud_with_coverage *= cloud_coverage;
 
-    if (cheap_sample)
+    float final_cloud = base_cloud_with_coverage;
+    if (!cheap_sample && base_cloud_with_coverage > 0.0)
     {
-        // cheap_sample では高周波をまったく入れずに返す（ライトシャフト用途で十分）
-        return clamp(base_cloud_with_coverage, 0.0, 1.0);
-    }
-
-    // 高品質パス: 高周波ノイズやカールノイズを適用
+		// 雲の上部をWorleyノイズで削り、もくもくした立体感を作る
+	
 #ifdef ENABLE_CLOUD_ANIMATION
-    if (wind_speed != 0.0)
-    {
-        sample_point.xz -= (options.z + time_offset) * normalize(-wind_direction) * 40.0;
-        sample_point.y -= (options.z + time_offset) * 40.0;
-    }
+        // 高周波ディテール用の追加アニメーション
+        if (wind_speed != 0.0)
+        {
+            sample_point.xz -= (options.z + time_offset) * normalize(-wind_direction) * 40.0;
+            sample_point.y -= (options.z + time_offset) * 40.0;
+        }
 #endif
-
-    // カールノイズは小さいスケールで1テクスチャフェッチに留める（頻繁にやらない）
-    float3 curl_noise = curl_noise_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point.xy * 0.000008, 0);
-    sample_point.xy = sample_point.xy + curl_noise.xy * (1.0 - height_fraction);
-
-    float3 high_frequency_noises = SampleHighFrequencyNoises(sample_point, mip_level);
-    float high_frequency_fbm =
+		
+		
+		// 高周波ノイズをサンプリング
+        float3 high_frequency_noises = SampleHighFrequencyNoises(sample_point, mip_level);
+	
+		// 高周波 Worley ノイズによる fbm を構築
+        float high_frequency_fbm =
         high_frequency_noises.r * 0.625 +
         high_frequency_noises.g * 0.25 +
         high_frequency_noises.b * 0.125;
-
-    float high_frequency_noise_modifier =
+	
+		// 高さに応じて、繊細な雲形状から膨らんだ形状へ遷移させる
+#if 1
+        float high_frequency_noise_modifier =
         lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 10.0, 0.0, 1.0));
+#else
+        float high_frequency_noise_modifier = lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 4.0, 0.0, 1.0));
+#endif
+	
+		// 歪ませた高周波Worleyノイズでベース雲形状を侵食する
+#if 1
+        final_cloud = Remap(base_cloud_with_coverage, high_frequency_noise_modifier * 0.2, 1.0, 0.0, 1.0);
+#else	
+		final_cloud = remap(base_cloud_with_coverage, high_frequency_noise_modifier * 0.4 * height_fraction, 1.0, 0.0, 1.0);
+#endif
+    }
 
-    float final_cloud = Remap(base_cloud_with_coverage, high_frequency_noise_modifier * 0.2, 1.0, 0.0, 1.0);
+#if 1
     return clamp(final_cloud, 0.0, 1.0);
+#else
+    return pow(clamp(final_cloud, 0.0, 1.0), (1.0 - height_fraction) * 0.8 + 0.5);
+#endif
 }
 
-// RayMarch を軽量化: 天候データをループ外で渡す（テクスチャフェッチ削減）
-// coarse_weather: ループ外でサンプリングした天候（各ステップで同じものを使う）
-//float RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /*背景の空の色*/, float3 coarse_weather)
-//{
-//    float step_size = length(ray_step);
-//    const float3 ray_direction = normalize(ray_step);
 
-//    // 乱雑化は1回だけ
-//    float3 sample_point = ray_origin + 
-//    ray_step * Hash(ray_origin * 6.0);
-
-
-//    float3 sun = -directional_light.direction.xyz;
-//    float3 sun_direction = normalize(sun);
-
-//    float view_up = saturate(dot(normalize(ray_step), float3(0, 1, 0)));
-//    float horizon = 1.0 - view_up;
-//    float horizon_soft = lerp(0.2, 0.8, horizon);
-
-//    float density = 0.0;
-//    float cloud_test = 0.0;
-//    int zero_density_sample_count = 0;
-
-//    [loop]
-//    for (int i = 0; i < steps; i++)
-//    {
-//        if (cloud_test > 0.0)
-//        {
-//            // ループ内テクスチャフェッチを削減: coarse_weather を使う
-//            float detail_lod = smoothstep(0.0, 6.0, horizon_soft);
-//            //float sampled_density =
-//            //    SampleCloudDensity(
-//            //        sample_point,
-//            //        coarse_weather,
-//            //        detail_lod,
-//            //        (detail_lod <= 1.0f) ? false : true /*cheap_sample*/,
-//            //        horizon);
-            
-//                        // 2点サンプルを ray_step 内に分散
-//            float3 p0 = sample_point + ray_step * 0.25;
-//            float3 p1 = sample_point + ray_step * 0.75;
-
-//            float d0 = SampleCloudDensity(p0, coarse_weather, detail_lod, (detail_lod <= 1.0f) ? false : true, horizon);
-//            float d1 = SampleCloudDensity(p1, coarse_weather, detail_lod, (detail_lod <= 1.0f) ? false : true, horizon);
-//            float sampled_density = 0.5 * (d0 + d1);
-
-//            if (sampled_density == 0.0)
-//            {
-//                zero_density_sample_count++;
-//            }
-
-//            if (zero_density_sample_count != 6)
-//            {
-//                float density_attenuation = lerp(1.0f, 0.3f, horizon_soft);
-//                density += sampled_density * density_attenuation;
-
-//                //if (density > 0.5f)
-//                //    break;
-
-//                sample_point += ray_step;
-//            }
-//            else
-//            {
-//                cloud_test = 0.0;
-//                zero_density_sample_count = 0;
-//            }
-//        }
-//        else
-//        {
-//            // 低品質サンプリング: coarse_weather を使って判定するためテクスチャフェッチ不要
-//            cloud_test = SampleCloudDensity(sample_point, coarse_weather, 0.0, true /*cheap_sample*/);
-//            float step_scale = 1.0f;
-//            if (cloud_test <= 0.0)
-//            {
-//                step_scale = lerp(1.0f, 3.0f, horizon);
-//            }
-//            sample_point += ray_step * step_scale;
-//        }
-//    }
-
-//    float optical_thickness = density_scale * density * step_size;
-//    float alpha = saturate(1.0 - exp(-optical_thickness));
-
-//    return alpha;
-//}
-
-float RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /*背景の空の色*/, float3 coarse_weather)
+//深度情報ではなく、透過率で雲の存在を返す軽量化版RayMarch
+float RayMarch(
+float3 ray_origin,
+float3 ray_step,
+int steps,
+float3 coarse_weather)
 {
+    // レイの1ステップの長さ
     float step_size = length(ray_step);
+    
+    //レイの方向
     const float3 ray_direction = normalize(ray_step);
-
-    // ピクセル毎の小さなジッタ（位相をずらす）
+	
+	// レイ開始位置を少しランダムにして横筋を目立たなくする（ディザリング）
     float3 sample_point = ray_origin + ray_step * Hash(ray_origin * 6.0);
-
-    float3 sun = -directional_light.direction.xyz;
-    float3 sun_direction = normalize(sun);
 
     float view_up = saturate(dot(normalize(ray_step), float3(0, 1, 0)));
     float horizon = 1.0 - view_up;
     float horizon_soft = lerp(0.2, 0.8, horizon);
 
-    float density = 0.0;
     float cloud_test = 0.0;
     int zero_density_sample_count = 0;
-    float detail_lod = smoothstep(0.0, 6.0, horizon_soft);
+    float detail_lod = smoothstep(0.0, 10.0, horizon_soft);
 
     float transmittence = 1.0;
-
+    
+    //距離制限
+    float dist = 0;
+    const float limit_dist = length(ray_step) * steps;
+    
+    [loop]
     for (int i = 0; i < steps; ++i)
     {
         if (cloud_test > 0.0)
         {
-            float d = SampleCloudDensity(sample_point, coarse_weather, detail_lod, false);
+            float d = SampleCloudDensity(sample_point, coarse_weather, detail_lod, false, horizon);
 
-            float sigma = density_scale * d;
-            float T_step = exp(-sigma * step_size);
+            if (d == 0)
+            {
+                zero_density_sample_count++;
+            }
+            if (zero_density_sample_count != 6)
+            {
+                float sigma = density_scale * d;
+                //float T_step = 1.0f / (1.0f+sigma*step_size);
+                //float T_step = exp(-sigma * step_size);
+                float T_step = exp2((-sigma * step_size)*1.44269504);
 
-            transmittence *= T_step;
+                transmittence *= T_step;
 
-            if (transmittence < 1e-3)
-                break;
+                if (transmittence < 0.3f)
+                    break;
+            }
+            else
+            {
+                cloud_test = 0.0;
+                zero_density_sample_count = 0;
+            }
 
             sample_point += ray_step;
         }
         else
         {
-            cloud_test = SampleCloudDensity(sample_point, coarse_weather, 0.0, true);
-            sample_point += ray_step;
+            cloud_test = SampleCloudDensity(sample_point, coarse_weather, 6.0, true);
+            float step_scale = 1.0f;
+            if (cloud_test <= 0.0)
+            {
+                //地平線は荒く、上空は細かくステップを進める
+                step_scale = lerp(2.0f, 6.0f, horizon);
+            }
+            sample_point += ray_step * step_scale;
         }
+        
+        dist += length(ray_step);
+        if(dist > limit_dist)
+            break;
     }
 
     float alpha = saturate(1.0 - transmittence);
@@ -314,17 +285,18 @@ float4 main(VS_OUT pin) : SV_TARGET
     float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
-
+    
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
-    float3 light_dir = normalize(-directional_light.direction.xyz);
 
     if (ray_dir.y < 0.0)
-        return float4(0, 0, 0, 0);
+        clip(-1);
 
+    float sun_distance = 1.0f;
     float3 eye_pos = float3(0.0, earth_radius, 0.0) + camera_position.xyz;
     float t0 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.x);
     float t1 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.y);
 
+    // 雲レイヤーに交差しない場合はスキップ
     if (t0 < 0.0 || t1 < 0.0)
         return float4(0, 0, 0, 0);
 
@@ -345,9 +317,12 @@ float4 main(VS_OUT pin) : SV_TARGET
         return float4(0, 0, 0, 1);
 
     // 被覆率に応じてステップ数を縮小（低コスト）
-    int steps = max(1, (int) (base_steps * lerp(0.1f, 1.0f, saturate(1.0-coarse_coverage))));
+    int steps = max(4, (int) (base_steps * lerp(0.1f, 1.0f, saturate(1.0 - coarse_coverage))));
     float3 ray_step = ray_dir * (shell_dist / steps);
 
-    float cloud_presence = RayMarch(ray_origin, ray_step, steps, pin.texcoord.xy, coarse_weather);
+    float cloud_presence = RayMarch(ray_origin, ray_step, steps, coarse_weather);
+    
+    cloud_presence = saturate(cloud_presence);
+    
     return float4(cloud_presence, 0, 0, 1);
 }

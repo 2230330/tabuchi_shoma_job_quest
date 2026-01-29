@@ -35,11 +35,19 @@ LightManager::LightManager()
 	}
 }
 
+
 void LightManager::SetForwardLightConstant(int start_slot)
 {
+	UpdateLightViewProjection();
+
 	ForwardLightConstants constant;
 	constant.directional_light = direction_light_;
 	constant.ambient_color = { 0.2f,.2f,.2f,1.f };
+    constant.light_view_position = light_view_projection_;
+    constant.inverse_light_view_position = inverse_light_view_projection_;
+    constant.light_orthographic_size = { shadow_map_size_,shadow_map_size_ };
+    constant.light_depth_range = { shadow_near_plane_,shadow_far_plane_ };
+
 	for (auto& light : point_lights_)
 	{
 		constant.point_light[constant.light_count.y] = light;
@@ -67,7 +75,7 @@ void LightManager::SetDeferredLightConstant(int start_slot)
 
 	//環境光
 	{
-		constant.lights.work_data[0] = ambient_color;
+		constant.lights.work_data[0] = ambient_color_;
         constant.lights.work_data[3].w = light_kind_ambient_light;
 		Graphics::Instance().GetDeviceContext()
 			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
@@ -84,18 +92,7 @@ void LightManager::SetDeferredLightConstant(int start_slot)
 		constant.shadow_attenuation = 0.5f;
         constant.shadow_bias = 0.001f;
 
-		//ライト方向から見た視線行列を生成
-        DirectX::XMVECTOR light_pos = DirectX::XMLoadFloat4(&direction_light_.direction);
-        light_pos = DirectX::XMVectorScale(light_pos, -100.f);//ライト位置を少し後ろに
-		DirectX::XMMATRIX V=DirectX::XMMatrixLookAtLH(
-			light_pos,
-			DirectX::XMVectorZero(),
-			DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)
-        );
-		//シャドウマップに描画したい範囲の射影行列を生成
-        DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicLH(200.f, 200.f, 0.1f, 400.f);
-		//ライトビュー行列を保存
-		DirectX::XMStoreFloat4x4(&constant.light_view_projection, V * P);
+        constant.light_view_projection = light_view_projection_;
 
         Graphics::Instance().GetDeviceContext()
 			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
@@ -169,4 +166,36 @@ void LightManager::DrawImgui()
 		}
 	ImGui::End();
 	}
+}
+
+void LightManager::UpdateLightViewProjection()
+{
+	
+	//ライト方向から見た視線行列を生成
+
+	DirectX::XMVECTOR light_dir = DirectX::XMVector3Normalize(DirectX::XMLoadFloat4(&direction_light_.direction));
+	DirectX::XMVECTOR center = DirectX::XMVectorSet(0,0,0,0);
+
+	// 影中心からライト方向に引いた位置にライトを置く
+	DirectX::XMVECTOR light_pos = DirectX::XMVectorSubtract(center , DirectX::XMVectorScale(light_dir, shadow_distance_));
+
+	// 注視点は中心
+	DirectX::XMVECTOR target = center;
+
+	// up が light_dir と平行に近い場合の対策
+	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f);
+	if (fabs(DirectX::XMVectorGetX(DirectX::XMVector3Dot(light_dir, up))) > 0.95f)
+		up = DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
+
+	DirectX::XMMATRIX V = DirectX::XMMatrixLookAtLH(light_pos, target, up);
+
+	// 正射影（範囲は雲影を落としたい地面サイズ）
+	float w = shadow_map_size_;
+	float h = shadow_map_size_;
+
+	DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicLH(w, h, shadow_near_plane_, shadow_far_plane_);
+
+	DirectX::XMMATRIX VP = V * P;
+	DirectX::XMStoreFloat4x4(&light_view_projection_, VP);
+	DirectX::XMStoreFloat4x4(&inverse_light_view_projection_, DirectX::XMMatrixInverse(nullptr, VP));
 }

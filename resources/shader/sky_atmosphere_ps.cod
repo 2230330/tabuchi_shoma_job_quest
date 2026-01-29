@@ -34,40 +34,44 @@
 // cbuffer FORWARD_LIGHT_CONSTANT_BUFFER
 // {
 //
-//   float4 ambient_color;              // Offset:    0 Size:    16 [unused]
-//   uint4 light_count;                 // Offset:   16 Size:    16 [unused]
+//   uint4 light_count;                 // Offset:    0 Size:    16 [unused]
+//   float4 ambient_color;              // Offset:   16 Size:    16 [unused]
+//   float4x4 light_view_projection;    // Offset:   32 Size:    64 [unused]
+//   float4x4 inverse_light_view_projection;// Offset:   96 Size:    64 [unused]
+//   float2 light_orthographic_size;    // Offset:  160 Size:     8 [unused]
+//   float2 light_depth_range;          // Offset:  168 Size:     8 [unused]
 //   
 //   struct directional_lights
 //   {
 //       
-//       float4 direction;              // Offset:   32
-//       float4 color;                  // Offset:   48
+//       float4 direction;              // Offset:  176
+//       float4 color;                  // Offset:  192
 //
-//   } directional_light;               // Offset:   32 Size:    32
+//   } directional_light;               // Offset:  176 Size:    32
 //   
 //   struct point_lights
 //   {
 //       
-//       float4 position;               // Offset:   64
-//       float4 color;                  // Offset:   80
-//       float range;                   // Offset:   96
-//       float intensity;               // Offset:  100
-//       float2 dummy;                  // Offset:  104
+//       float4 position;               // Offset:  208
+//       float4 color;                  // Offset:  224
+//       float range;                   // Offset:  240
+//       float intensity;               // Offset:  244
+//       float2 dummy;                  // Offset:  248
 //
-//   } point_light[8];                  // Offset:   64 Size:   384 [unused]
+//   } point_light[8];                  // Offset:  208 Size:   384 [unused]
 //   
 //   struct spot_lights
 //   {
 //       
-//       float4 position;               // Offset:  448
-//       float4 direction;              // Offset:  464
-//       float4 color;                  // Offset:  480
-//       float range;                   // Offset:  496
-//       float inner_corn;              // Offset:  500
-//       float outer_corn;              // Offset:  504
-//       float dummy;                   // Offset:  508
+//       float4 position;               // Offset:  592
+//       float4 direction;              // Offset:  608
+//       float4 color;                  // Offset:  624
+//       float range;                   // Offset:  640
+//       float inner_corn;              // Offset:  644
+//       float outer_corn;              // Offset:  648
+//       float dummy;                   // Offset:  652
 //
-//   } spot_light[8];                   // Offset:  448 Size:   512 [unused]
+//   } spot_light[8];                   // Offset:  592 Size:   512 [unused]
 //
 // }
 //
@@ -101,7 +105,7 @@ ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB11[1], immediateIndexed
 dcl_constantbuffer CB1[3], immediateIndexed
-dcl_constantbuffer CB3[3], immediateIndexed
+dcl_constantbuffer CB3[12], immediateIndexed
 dcl_input_ps linear v2.xyz
 dcl_output o0.xyzw
 dcl_temps 15
@@ -150,7 +154,7 @@ add r4.y, r1.y, cb11[0].x  // r4.y <- position.y
 mov r4.xz, l(0,0,0,0)  // r4.x <- position.x; r4.z <- position.z
 
 #line 219
-mov r5.xyz, -cb3[2].xyzx
+mov r5.xyz, -cb3[11].xyzx
 dp3 r3.w, r5.xyzx, r5.xyzx
 rsq r3.w, r3.w
 mul r5.xyz, r3.wwww, r5.xyzx  // r5.x <- light_dir.x; r5.y <- light_dir.y; r5.z <- light_dir.z
@@ -916,18 +920,22 @@ loop
 #line 203
 endloop 
 
+#line 205
+add r0.xyz, r9.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+div r0.xyz, r9.xyzx, r0.xyzx  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
+
 #line 207
-mov r9.xyz, r9.xyzx  // r9.x <- <ComputeSkyColor return value>.x; r9.y <- <ComputeSkyColor return value>.y; r9.z <- <ComputeSkyColor return value>.z
+mov r0.xyz, r0.xyzx  // r0.x <- <ComputeSkyColor return value>.x; r0.y <- <ComputeSkyColor return value>.y; r0.z <- <ComputeSkyColor return value>.z
 
 #line 236
-mov r9.xyz, r9.xyzx  // r9.x <- single_scattering.x; r9.y <- single_scattering.y; r9.z <- single_scattering.z
+mov r0.xyz, r0.xyzx  // r0.x <- single_scattering.x; r0.y <- single_scattering.y; r0.z <- single_scattering.z
 
 #line 241
-add r0.xyz, r8.xyzx, r9.xyzx
+add r0.xyz, r8.xyzx, r0.xyzx
 add r0.xyz, r0.xyzx, r3.xyzx  // r0.x <- sky_color.x; r0.y <- sky_color.y; r0.z <- sky_color.z
 
 #line 271
 mov o0.xyz, r0.xyzx  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z
 mov o0.w, l(1.000000)  // o0.w <- <main return value>.w
 ret 
-// Approximately 509 instruction slots used
+// Approximately 511 instruction slots used

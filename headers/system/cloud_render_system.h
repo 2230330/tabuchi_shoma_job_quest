@@ -38,7 +38,7 @@ private:
     struct CloudRayMarchingConstants
     {
         //風邪の制御
-        DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
+        DirectX::XMFLOAT2 wind_direction = { 1.0f, 1.0f };
         DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6371500.0f, 6373000.0f }; // highest and lowest altitudes at which clouds are distributed
         float wind_speed = 1.0f; // [0.0, 20.0]
 
@@ -104,12 +104,16 @@ private:
 
     //スカイカラー
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>sky_color_srv_ = nullptr;
-    const int SHADOW_RES = 512;
 
     std::unique_ptr<FullscreenQuad>fullscreen_quad_;
 
     //シャドウマップ用
+    const int SHADOW_RES = 512;
     std::unique_ptr<FrameBuffer>shadow_map_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView>shadowmap_dsv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>shadowmap_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11VertexShader>shadowmap_caster_vertex_shader_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11InputLayout>shadowmap_caster_input_layout_ = nullptr;
 
 };

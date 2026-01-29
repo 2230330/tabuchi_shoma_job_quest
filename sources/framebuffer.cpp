@@ -25,7 +25,7 @@ FrameBuffer::FrameBuffer(
 	HRESULT hr{ S_OK };
 
 	DXGI_FORMAT rt_format =
-		(!shadow_flag)?DXGI_FORMAT_R16G16B16A16_FLOAT:DXGI_FORMAT_R16_FLOAT; 
+		(!shadow_flag) ? DXGI_FORMAT_R16G16B16A16_FLOAT : DXGI_FORMAT_R32_FLOAT;
 	UINT msaa_quality_level;
 	UINT sample_count = subsamples;
 	hr = device->CheckMultisampleQualityLevels(rt_format, sample_count, &msaa_quality_level);
@@ -83,6 +83,7 @@ FrameBuffer::FrameBuffer(
 		D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
 		depth_stencil_view_desc.Format = flags & usage::stencil ? DXGI_FORMAT_D24_UNORM_S8_UINT : DXGI_FORMAT_D32_FLOAT; // DXGI_FORMAT_D24_UNORM_S8_UINT : DXGI_FORMAT_D32_FLOAT : DXGI_FORMAT_D16_UNORM
 		depth_stencil_view_desc.ViewDimension = enable_msaa ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D; // UNIT.99
+        depth_stencil_view_desc.Texture2D.MipSlice = 0;
 		depth_stencil_view_desc.Flags = 0;
 		hr = device->CreateDepthStencilView(depth_stencil_buffer.Get(), &depth_stencil_view_desc, depth_stencil_view_.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
@@ -105,36 +106,89 @@ FrameBuffer::FrameBuffer(
 }
 
 void FrameBuffer::Clear(
-	ID3D11DeviceContext* immediate_context,
-	usage flags, 
+	ID3D11DeviceContext* ctx,
+	usage flags,
 	DirectX::XMFLOAT4 color,
-	float depth, 
+	float depth,
 	uint8_t stencil)
 {
-	if (flags & usage::color && render_target_view_) 
+	if (HasFlag(flags, usage::color) && render_target_view_)
 	{
-		immediate_context->ClearRenderTargetView(render_target_view_.Get(), reinterpret_cast<const FLOAT*>(&color));
+		ctx->ClearRenderTargetView(render_target_view_.Get(), reinterpret_cast<const FLOAT*>(&color));
 	}
-	if (flags & usage::depth_stencil && depth_stencil_view_) 
+
+	if (HasFlag(flags, usage::depth_stencil) && depth_stencil_view_)
 	{
-		immediate_context->ClearDepthStencilView(depth_stencil_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, depth, stencil);
+		UINT clear_flags = 0;
+		if (HasFlag(flags, usage::depth))   clear_flags |= D3D11_CLEAR_DEPTH;
+		if (HasFlag(flags, usage::stencil)) clear_flags |= D3D11_CLEAR_STENCIL;
+
+		// depth_stencil で来たら depth+stencil の意味なので両方
+		if (flags == usage::depth_stencil) clear_flags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL;
+
+		ctx->ClearDepthStencilView(depth_stencil_view_.Get(), clear_flags, depth, stencil);
 	}
 }
+
 void FrameBuffer::Activate(ID3D11DeviceContext* immediate_context, usage flags)
 {
+    // cache current viewport
 	viewport_count_ = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
 	immediate_context->RSGetViewports(&viewport_count_, cached_viewports_);
-	immediate_context->OMGetRenderTargets(1, cached_render_target_view_.ReleaseAndGetAddressOf(), cached_depth_stencil_view_.ReleaseAndGetAddressOf());
 
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> null_render_target_view;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> null_depth_stencil_view;
+	// --- Cache OM render targets (最大数で取得しておく) ---
+	ID3D11RenderTargetView* cached_rtvs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
+	immediate_context->OMGetRenderTargets(
+		D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT,
+		cached_rtvs,
+		cached_depth_stencil_view_.ReleaseAndGetAddressOf()
+	);
+	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+		cached_render_target_views_[i].Attach(cached_rtvs[i]);
+
+	// --- Set viewport ---
 	immediate_context->RSSetViewports(1, &viewport_);
-	immediate_context->OMSetRenderTargets(1, 
-		flags & usage::color ? render_target_view_.GetAddressOf() : null_render_target_view.GetAddressOf(),
-		flags & usage::depth_stencil ? depth_stencil_view_.Get() : null_depth_stencil_view.Get());
+
+	// --- Bind targets based on flags ---
+	ID3D11RenderTargetView* rtvs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
+	UINT num_rtvs = 0;
+
+	if (HasFlag(flags, usage::color) && render_target_view_)
+	{
+		rtvs[0] = render_target_view_.Get();
+		num_rtvs = 1;
+	}
+	else
+	{
+		// Depth only (RTV 0枚)
+		num_rtvs = 0;
+	}
+
+	ID3D11DepthStencilView* dsv = nullptr;
+	if (HasFlag(flags, usage::depth_stencil) && depth_stencil_view_)
+	{
+		dsv = depth_stencil_view_.Get();
+	}
+
+	immediate_context->OMSetRenderTargets(num_rtvs, rtvs, dsv);
 }
+
 void FrameBuffer::Deactivate(ID3D11DeviceContext* immediate_context)
 {
 	immediate_context->RSSetViewports(viewport_count_, cached_viewports_);
-	immediate_context->OMSetRenderTargets(1, cached_render_target_view_.GetAddressOf(), cached_depth_stencil_view_.Get());
+
+	ID3D11RenderTargetView* rtvs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
+	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+		rtvs[i] = cached_render_target_views_[i].Get();
+
+	immediate_context->OMSetRenderTargets(
+		D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT,
+		rtvs,
+		cached_depth_stencil_view_.Get()
+	);
+
+	// キャッシュをクリアして二重保持を避ける
+	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+		cached_render_target_views_[i].Reset();
+	cached_depth_stencil_view_.Reset();
 }

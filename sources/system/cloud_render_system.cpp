@@ -57,76 +57,17 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
         const wchar_t* low_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(low_freq_noise_tex_path), "ファイルが存在しません");
         {
-            DirectX::TexMetadata metadata{};
-            DirectX::ScratchImage image{};
-            HRESULT hr = DirectX::LoadFromDDSFile(
-                low_freq_noise_tex_path,
-                DirectX::DDS_FLAGS_NONE,
-                &metadata,
-                image);
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
-            const DirectX::Image* images = image.GetImages();
-            size_t nimages = image.GetImageCount();
-            hr=DirectX::CreateShaderResourceViewEx(
-                device,
-                images,
-                nimages,
-                metadata,
-                D3D11_USAGE_DEFAULT, 
-                D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET, 
-                0, 0, DirectX::CREATETEX_FLAGS::CREATETEX_DEFAULT, 
-                low_freq_perlin_worley_srv_.GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+            low_freq_perlin_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, low_freq_noise_tex_path);
         }
         const wchar_t* mid_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\mid_freq_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(mid_freq_noise_tex_path), "ファイルが存在しません");
         {
-            DirectX::TexMetadata metadata{};
-            DirectX::ScratchImage image{};
-            HRESULT hr = DirectX::LoadFromDDSFile(
-                mid_freq_noise_tex_path,
-                DirectX::DDS_FLAGS_NONE,
-                &metadata,
-                image);
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
-            const DirectX::Image* images = image.GetImages();
-            size_t nimages = image.GetImageCount();
-            hr=DirectX::CreateShaderResourceViewEx(
-                device,
-                images,
-                nimages,
-                metadata,
-                D3D11_USAGE_DEFAULT, 
-                D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET, 
-                0, 0, DirectX::CREATETEX_FLAGS::CREATETEX_DEFAULT, 
-                mid_freq_worley_srv_.GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+            mid_freq_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, mid_freq_noise_tex_path);
         }
         const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ファイルが存在しません");
         {
-            DirectX::TexMetadata metadata{};
-            DirectX::ScratchImage image{};
-            HRESULT hr = DirectX::LoadFromDDSFile(
-                high_freq_noise_tex_path,
-                DirectX::DDS_FLAGS_NONE,
-                &metadata,
-                image);
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-            const DirectX::Image* images = image.GetImages();
-            size_t nimages = image.GetImageCount();
-            hr = DirectX::CreateShaderResourceViewEx(
-                device,
-                images,
-                nimages,
-                metadata,
-                D3D11_USAGE_DEFAULT,
-                D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET,
-                0, 0, DirectX::CREATETEX_FLAGS::CREATETEX_DEFAULT,
-                high_freq_worley_srv_.GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+            high_freq_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, high_freq_noise_tex_path);
         }
 
         const wchar_t* weather_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\weather.bmp";
@@ -137,12 +78,21 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
 
     // InputLayoutとシェーダーの読み込み（仮）
     D3D11_INPUT_ELEMENT_DESC input_element_desc[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
+    shadowmap_caster_vertex_shader_=
+        ResourceManager::Instance().LoadVertexShader(
+            device,
+            L".\\resources\\shader\\cloud_shadowmap_vs.cso",
+            shadowmap_caster_input_layout_.GetAddressOf(),
+            input_element_desc,
+            ARRAYSIZE(input_element_desc));
     //シェーダーの設定
-    cloud_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\cloud_dome_ps.cso");
-    cloud_screen_shadow_ps = ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\cloud_screen_shadow_ps.cso");
+    cloud_ps_ = 
+        ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\volumetric_cloud_ps.cso");
+    cloud_screen_shadow_ps = 
+        ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\cloud_screen_shadow_ps.cso");
 
     //フルスクリーンクワッドの作成
     fullscreen_quad_ = std::make_unique<FullscreenQuad>(device);
@@ -153,7 +103,8 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
             device, 
             SHADOW_RES,
             SHADOW_RES,
-            FrameBuffer::usage::color, true);
+            FrameBuffer::usage::color_depth, 
+            true/*影フラグ*/);
 }
 void CloudRenderSystem::Render()
 {
@@ -190,15 +141,16 @@ void CloudRenderSystem::Render()
                 curl_noise_srv_.Get(),
                 sky_color_srv_.Get(),
             };
-            Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
+            //Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
             // 描画呼び出し
             fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_ps_.Get());
 
             shadow_map_->Clear(context);
-            shadow_map_->Activate(context);
+            shadow_map_->Activate(context,FrameBuffer::usage::color_depth);
             //影描画様に雲の位置を書き出す
-            if (cloud.shadow_flag)
+            //if (cloud.shadow_flag)
             {
+
 
                 fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_screen_shadow_ps.Get());
 

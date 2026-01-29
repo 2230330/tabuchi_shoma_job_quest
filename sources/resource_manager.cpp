@@ -27,19 +27,30 @@ std::shared_ptr<GltfModel> ResourceManager::LoadGltfModel(ID3D11Device* device, 
 Microsoft::WRL::ComPtr<ID3D11VertexShader> ResourceManager::LoadVertexShader(ID3D11Device* device, const std::wstring& filename,
     ID3D11InputLayout** input_layout, D3D11_INPUT_ELEMENT_DESC* input_element_desc,UINT num_element)
 {
-    auto it = vertex_shaders_.find(filename);
-    if (it != vertex_shaders_.end())
-    {
-        return it->second;
-    }
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> shader;
     Microsoft::WRL::ComPtr<ID3DBlob> blob;
 
     HRESULT hr = D3DReadFileToBlob(filename.c_str(), blob.GetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    auto it = vertex_shaders_.find(filename);
+    if (it != vertex_shaders_.end())
+    {
+        if (input_layout)
+        {
+            hr = device->CreateInputLayout(input_element_desc, num_element,
+                blob->GetBufferPointer(), blob->GetBufferSize(), input_layout);
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        }
+        return it->second;
+    }
+
+
     if (SUCCEEDED(hr))
     {
-        hr = device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader.GetAddressOf());
+        hr = device->CreateVertexShader(blob->GetBufferPointer(),
+            blob->GetBufferSize(), nullptr, shader.GetAddressOf());
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
 
@@ -69,6 +80,8 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> ResourceManager::LoadPixelShader(ID3D1
     if (SUCCEEDED(hr))
     {
         hr = device->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, shader.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
     }
 
     if (FAILED(hr))
@@ -173,7 +186,7 @@ ResourceManager::LoadTextureFromFile(ID3D11Device* device, const wchar_t* filena
                 _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
                 // キャッシュ登録
-                //textures_.insert({ filename, srv });
+                textures_.insert({ filename, srv });
                 return srv;
             }
         }

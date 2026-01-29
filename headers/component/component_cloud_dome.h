@@ -4,7 +4,7 @@
 struct ComponentCloudDome :public IComponent
 {
     int iteration{ 128 };//â_Ç™ë∂ç›Ç∑ÇÈå¿äEì_
-	DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.0f };
+	DirectX::XMFLOAT2 wind_direction = { 1.0f, 1.0f };
 	DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6371500.0f, 6373000.0f }; // highest and lowest altitudes at which clouds are distributed
 
 	float wind_speed = 1.0f; // [0.0, 20.0]

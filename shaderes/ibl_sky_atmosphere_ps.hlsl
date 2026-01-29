@@ -1,14 +1,13 @@
 #include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
 
-Texture2D sky_texture : register(t0);
-
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
 #define LINEAR_WRAP 2
 #define LINEAR_CLAMP 3
 #define ANISOTROPIC 4
 SamplerState sampler_states[5] : register(s0);
+
 
 static const float PI = 3.14159265358979323846f;
 
@@ -201,6 +200,7 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
     
+    result /= result + 1.0f; 
     
     return result;
 }
@@ -222,11 +222,15 @@ float3 DirectionFromCubeUV(uint face, float2 uv)
     return normalize(float3(-p.x, -p.y, -1));
 }
 
+//
+cbuffer SkyCubeCB : register(b0)
+{
+    uint FaceIndex;
+}
 struct PSIn
 {
     float4 pos : SV_Position;
     float2 uv : TEXCOORD0;
-    uint face : SV_RenderTargetArrayIndex;
 
 };
 float4 main(PSIn pin) : SV_TARGET
@@ -242,7 +246,7 @@ float4 main(PSIn pin) : SV_TARGET
     float3 sun_pos = light_dir * SUN_DISTANCE; //‘¾—z‚ÌˆÊ’u()
     float3 sun_dir = normalize(sun_pos.xyz - pin.pos.xyz); //’¸“_[„‘¾—z
     //ƒJƒƒ‰‚©‚ç“V‹…‚ÌŠe’¸“_‚Ö‚Ì•ûŒü
-    float3 view_dir = DirectionFromCubeUV(pin.face, pin.uv);
+    float3 view_dir = DirectionFromCubeUV(FaceIndex, pin.uv);
     
     
     //’n•½üˆÈ‰º
@@ -262,33 +266,5 @@ float4 main(PSIn pin) : SV_TARGET
     
     sky_color += single_scattering + (multi_scattering);
     
-    
-    //‘¾—z
-    {
-        const float sol_size = 0.00872663806;
-        const float sun_disk_scale = 2.0; // [0.0, 360.0]
-	    // solar disk and out-scattering
-        float sun_angular_diameter_cos_min = cos(sol_size * sun_disk_scale);
-        float sun_angular_diameter_cos_max = cos(sol_size * sun_disk_scale * 0.5);
-        
-        float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //Ž‹ü‚Æ‘¾—z‚ÌŠp“x
-        float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
-        float sun_theta = acos(sun_elevation) * (180.0f / PI); //“x‚É•ÏŠ·
-    //kasten-Young 1989‹ßŽ—
-        float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant‹ßŽ—
-        float3 Ei = ComputeSunIrradiance(air_mass); //‘¾—zŒõ‚ÌF
-        
-        float sun_disk = smoothstep(sun_angular_diameter_cos_min, sun_angular_diameter_cos_max, cos_theta);
-        float3 Lo = sun_disk * Ei * directional_light.color.w;
-        // ‘¾—z‚ÌƒfƒBƒXƒN“à‚ÉŽ‹ü‚ª“ü‚Á‚Ä‚¢‚é‚Æ‚«‚¾‚¯‰ÁŽZ
-        if (sun_disk > 0.01f) // ‚µ‚«‚¢’l‚ÅŠ®‘S‚ÉŒÀ’è
-        {
-            sky_color += Lo;
-        }
-    }
-    
-
-
-
     return float4(sky_color.xyz, 1.0f);
 }

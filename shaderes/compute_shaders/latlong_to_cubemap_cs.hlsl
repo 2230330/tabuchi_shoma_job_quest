@@ -37,7 +37,7 @@ float3 SampleLatLong(float3 dir)
     return EnvLatLong.SampleLevel(LinearClamp, uv, 0).rgb;
 }
 
-[numthreads(8, 8, 1)]
+[numthreads(4, 4, 1)]
 void main(uint3 id : SV_DispatchThreadID)
 {
     uint width, height, layers;

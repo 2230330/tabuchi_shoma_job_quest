@@ -37,6 +37,11 @@ public:
 
     // 背景描画用：SkyRenderSystem へ渡す SkyCube の SRV
     ID3D11ShaderResourceView* GetSkyCubeSRV() const { return sky_cube_srv_.Get(); }
+    
+    //背景に雲があるのかどうかを知るための関数
+    void SetCloudFlag(bool cloud_flag) { cloud_flag_ = cloud_flag; }
+    //空があるかどうかを知るための関数
+    void GetSkyFlag(bool sky_flag) { sky_flag_ = sky_flag; }
 
 private:
     // パラメータ
@@ -56,6 +61,8 @@ private:
     // フラグ
     bool dirty_ = true;  // Specular/SH の再生成が必要なとき true
     bool want_save_dds_ = false;//DDS保存フラグ
+    bool sky_flag_ = false;//空があるかどうか
+    bool cloud_flag_ = false;//雲があるかどうか
 
     // デバイス/コンテキスト
     Microsoft::WRL::ComPtr<ID3D11Device>        dev_;
@@ -64,7 +71,7 @@ private:
     // シェーダ
     Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_brdf_lut_;        // BRDF LUT 生成
     Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_latlong_to_cube_; // LatLong -> Cube 変換
-    Microsoft::WRL::ComPtr<ID3D11VertexShader>  vs_fullscreen_;      // 全面描画
+    Microsoft::WRL::ComPtr<ID3D11VertexShader>  ibl_screen_vs_;      // 全面描画
     Microsoft::WRL::ComPtr<ID3D11PixelShader>   ps_prefilter_;       // Prefilter
 
     // サンプラ
@@ -77,6 +84,12 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D>           sky_cube_tex_;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  sky_cube_srv_;
     Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> sky_cube_uav_; // CS で書く用
+    std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> sky_cube_rtvs_; // face×mip
+    struct SkyCubeCB {
+        UINT  faceIndex;
+        float _pad[3]; // 16byte アライメント
+    };
+    Microsoft::WRL::ComPtr<ID3D11Buffer> cb_sky_cube_; // b0: face
 
     // Specular Prefilter 出力（キューブ）
     Microsoft::WRL::ComPtr<ID3D11Texture2D>          prefilter_tex_;
@@ -112,9 +125,29 @@ private:
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView>cube_rtv_all_;//全スライス一括
     Microsoft::WRL::ComPtr<ID3D11GeometryShader>latlong_to_cube_gs_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>latlong_to_cube_ps_;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>sky_cube_ps_;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_cube_ps_;
 
 private:
     // 分割更新インデックス（Specular Prefilter 用）
     UINT prefilter_next_face_ = 0;
     UINT prefilter_next_mip_ = 0;
+
+    //分割更新インデックス（SkyCube用）
+    UINT sky_cube_next_face_ = 0;
+
+private:
+        //雲用ノイズテクスチャ
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_srv_ = nullptr;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>mid_freq_worley_srv_ = nullptr;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_worley_srv_ = nullptr;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>curl_noise_srv_ = nullptr;
+
+        //雲ボックス
+        Microsoft::WRL::ComPtr<ID3D11Texture2D>           cloud_cube_tex_;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  cloud_cube_srv_;
+        Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> cloud_cube_uav_; // CS で書く用
+        std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> cloud_cube_rtvs_; // face×mip
+
 };

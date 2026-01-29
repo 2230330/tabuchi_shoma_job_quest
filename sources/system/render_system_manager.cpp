@@ -43,6 +43,9 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
 
     celestial_light_ps_ =
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(), L".\\resources\\shader\\celestial_light_ps.cso");
+    light_shafts_ps_ =
+        ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
+            L".\\resources\\shader\\light_space_cloud_occlusion_ps.cso");
 
 }
 
@@ -67,6 +70,9 @@ void RenderSystemManager::RenderAll()
         sky_framebuffer_->Clear(ctx);
         sky_framebuffer_->Activate(ctx);
         sky_render_system_->Render();
+
+        bool sky_flag = sky_render_system_->GetSkyFlag();
+
         sky_framebuffer_->Deactivate(ctx);
 
         back_framebuffer_->Clear(ctx);
@@ -75,8 +81,10 @@ void RenderSystemManager::RenderAll()
         cloud_render_system_->SetSkyColorSRV(sky_framebuffer_->GetShaderResourceView(0).Get());
         cloud_render_system_->Render();
 
+        bool cloud_flag = cloud_render_system_->HasRenderableCloud();
+        
         //雲がなかった場合、大気をそのまま描画する
-        if (!cloud_render_system_->HasRenderableCloud())
+        if (!cloud_flag)
         {
             ID3D11ShaderResourceView* srv[] = { sky_framebuffer_->GetShaderResourceView(0).Get() };
             bit_block_transfer_->blit(ctx, srv, 0, 1);
@@ -87,23 +95,29 @@ void RenderSystemManager::RenderAll()
         };
         bit_block_transfer_->blit(ctx, srvs, 0, 1, celestial_light_ps_.Get());
 
+        //bit_block_transfer_->blit(ctx, srvs, 0, 1, light_shafts_ps_.Get());
+
         back_framebuffer_->Deactivate(ctx);
 
 
         // IBL 入力更新（背景SRV→SkyCube化を内包）
-        ibl_manager_->UpdateEnvironmentCapture(*back_framebuffer_);
-        ibl_manager_->BuildSkyCubeFromEnvSource();
+        if (sky_flag || cloud_flag)
+        {
+            ibl_manager_->SetCloudFlag(cloud_flag);
+            ibl_manager_->UpdateEnvironmentCapture(*sky_framebuffer_);
+            ibl_manager_->BuildSkyCubeFromEnvSource();
 
-        if (ibl_manager_->IsDirty()) {
-            // Diffuse SH（軽い）
-            ibl_manager_->UpdateDiffuseSH();
+            if (ibl_manager_->IsDirty()) {
+                // Diffuse SH（軽い）
+                ibl_manager_->UpdateDiffuseSH();
 
-            // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
-            for (int s = 0; s < ibl_steps_per_frame_; ++s) {
-                ibl_manager_->UpdateSpecularPrefilter();
+                // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
+                for (int s = 0; s < ibl_steps_per_frame_; ++s) {
+                    ibl_manager_->UpdateSpecularPrefilter();
+                }
+
+                Graphics::Instance().SetRenderTargets(); //IBL更新でコンテキストが汚れるのでリセット
             }
-
-            Graphics::Instance().SetRenderTargets(); //IBL更新でコンテキストが汚れるのでリセット
         }
     }
 

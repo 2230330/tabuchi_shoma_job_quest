@@ -47,6 +47,13 @@ public:
     const Microsoft::WRL::ComPtr<ID3D11Texture2D>GetTexture2D() const { return render_target_texture_2d_; }
 
 private:
+
+    inline bool HasFlag(FrameBuffer::usage flags, FrameBuffer::usage bit)
+    {
+        return (static_cast<uint8_t>(flags) & static_cast<uint8_t>(bit)) != 0;
+    }
+
+private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D> render_target_texture_2d_;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view_;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depth_stencil_view_;
@@ -54,7 +61,8 @@ private:
     D3D11_VIEWPORT viewport_;
     UINT viewport_count_{ D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE };
     D3D11_VIEWPORT cached_viewports_[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> cached_render_target_view_;
+    //cached_render_target_viewÇÕîzóÒÇ…ïœçX
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> cached_render_target_views_[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> cached_depth_stencil_view_;
 };
 #endif // !PART2_FRAMEBUFFER_H

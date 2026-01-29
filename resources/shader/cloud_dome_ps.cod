@@ -433,7 +433,7 @@ if_nz r0.w
   min r1.w, r1.w, l(1.000000)  // r1.w <- cos_theta
 
 #line 379
-  mov r2.w, l(0)  // r2.w <- g
+  mov r2.w, l(0.400000)  // r2.w <- g
 
 #line 381
   nop 

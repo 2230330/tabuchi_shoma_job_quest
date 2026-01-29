@@ -30,7 +30,7 @@ dcl_resource_texture2d (float,float,float,float) t0
 dcl_uav_typed_texture2darray (float,float,float,float) u0
 dcl_input vThreadID.xy
 dcl_temps 4
-dcl_thread_group 8, 8, 1
+dcl_thread_group 4, 4, 1
 //
 // Initial variable locations:
 //   vThreadID.x <- id.x; vThreadID.y <- id.y; vThreadID.z <- id.z

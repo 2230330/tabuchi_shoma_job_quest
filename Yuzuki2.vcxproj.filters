@@ -459,7 +459,7 @@
     <None Include="shaderes\sky_atmosphere.hlsli">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="shaderes\cloud_dome.hlsli">
+    <None Include="shaderes\volumetric_cloud.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\noise_functions.hlsli">
@@ -469,9 +469,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\swirly_curl_noise.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\volumetric_cloud.hlsli">
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\deferred_rendering.hlsli">
@@ -557,10 +554,7 @@
     <FxCompile Include="shaderes\sky_atmosphere_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\cloud_dome_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\cloud_dome_ps.hlsl">
+    <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl">
@@ -577,9 +571,6 @@
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\layout_cloud_height_profile_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
-      <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\layout_cloud_global_pattern_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
@@ -615,6 +606,15 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\celestial_light_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\light_space_cloud_occlusion_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_volumetric_cloud_ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_shadowmap_vs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

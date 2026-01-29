@@ -56,13 +56,6 @@ float4 main(VS_OUT pin) : SV_Target
     // ソフトマスク（0..1）
     float softMask = SampleSoftCloudCoverage(pin.texcoord);
 
-    // 雲にほぼ完全に覆われていれば早期に透明で打ち切る（太陽を描かない）
-    //const float FULL_OCCLUSION_THRESHOLD = 0.9; // 調整可
-    //if (softMask >= FULL_OCCLUSION_THRESHOLD)
-    //{
-    //    return float4(0,0,0,saturate(FULL_OCCLUSION_THRESHOLD - softMask));
-    //}
-
     // ビュー方向計算
     float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
     float4 pos = mul(ndc, inverse_view_projection_transform);
@@ -102,7 +95,7 @@ float4 main(VS_OUT pin) : SV_Target
     float3 Ei = ComputeSunIrradiance(air_mass);
 
     // 太陽の光（色・強度）
-    float3 finalColor = saturate(Ei * s.xxx);
+    float3 finalColor = (Ei * s.xxx);
     
     //雲による遮蔽計算
     float erosion = pow(softMask, 1.5f);
@@ -113,7 +106,7 @@ float4 main(VS_OUT pin) : SV_Target
     // finalColor が小さくてもアルファがゼロに張り付かないようにする
     float sunIntensity = max(max(finalColor.r, finalColor.g), finalColor.b); // 最大チャネル
     // スケーリングは見た目に応じて調整（0.8~2.0 程度）
-    float intensityScale = 1.0;
+    float intensityScale = 1.;
     float colorAlpha = saturate(sunIntensity * intensityScale);
 
     // 侵食を考慮した最終アルファ

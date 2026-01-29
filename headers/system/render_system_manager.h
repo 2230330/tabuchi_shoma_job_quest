@@ -50,4 +50,5 @@ private:
     const int back_sample_rimit_ = 0;
 
     Microsoft::WRL::ComPtr<ID3D11PixelShader> celestial_light_ps_;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> light_shafts_ps_;
 };

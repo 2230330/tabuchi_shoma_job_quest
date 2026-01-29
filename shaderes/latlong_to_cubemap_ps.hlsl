@@ -39,16 +39,19 @@ float3 SampleLatLong(float3 dir)
     return EnvLatLong.SampleLevel(LinearClamp, uv,0).rgb;
 }
 
+cbuffer SkyCubeCB : register(b0)
+{
+    uint FaceIndex;
+}
 struct PSIn
 {
     float4 pos: SV_POSITION;
     float2 uv : TEXCOORD0;
-    uint face : SV_RenderTargetArrayIndex;
 };
 
 float4 main(PSIn input) : SV_Target
 {
-    float3 dir = DirFromCubeUV(input.face, input.uv);
+    float3 dir = DirFromCubeUV(FaceIndex, input.uv);
     float3 color = SampleLatLong(dir);
     return float4(color, 1.0f);
 }

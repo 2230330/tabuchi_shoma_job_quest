@@ -21,9 +21,10 @@ void FullscreenQuad::blit(ID3D11DeviceContext* immediate_context, ID3D11ShaderRe
 	immediate_context->IASetInputLayout(NULL);
 
 	immediate_context->VSSetShader(embedded_vertex_shader.Get(), 0, 0);
-	replaced_pixel_shader ? immediate_context->PSSetShader(replaced_pixel_shader, 0, 0) : immediate_context->PSSetShader(embedded_pixel_shader.Get(), 0, 0);
+	replaced_pixel_shader 
+		? immediate_context->PSSetShader(replaced_pixel_shader, 0, 0) 
+		: immediate_context->PSSetShader(embedded_pixel_shader.Get(), 0, 0);
 	
-	immediate_context->PSSetShaderResources(start_slot, num_views, shader_resource_views);
 
 	immediate_context->Draw(4, 0);
 
