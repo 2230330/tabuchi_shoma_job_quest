@@ -24,7 +24,6 @@ bool SceneTest::InitializeCore()
     //各種マネージャの設定
     {
         comp_mng = std::make_unique<ComponentManager>();
-        enti_mng = std::make_unique<EntityManager>();
         world = std::make_unique<World>();
         comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
@@ -43,7 +42,6 @@ bool SceneTest::InitializeCore()
         ID3D11Device* device = Graphics::Instance().GetDevice();
         //2dスプライト宣言
         {
-            ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mamizo.png");
 
         }
         //3dオブジェクト宣言
@@ -70,9 +68,20 @@ bool SceneTest::InitializeCore()
                 );
             }
         }
-        //
+        //大気散乱と雲
         {
-            bit_block_transfer_ = std::make_unique<FullscreenQuad>(device);
+            int entity = world->GetEntityManager()->Add();
+            ComponentPosition position{};
+            comp_mng->Add<ComponentPosition>(entity, position);
+            ComponentRotation rotation{};
+            comp_mng->Add<ComponentRotation>(entity, rotation);
+            ComponentScale scale;
+            scale.value = { 1.f, 1.f, 1.f };
+            comp_mng->Add(entity, scale);
+            ComponentLocalToWorld l2w{};
+            comp_mng->Add(entity, l2w);
+            ComponentSkyAtmosphere sky;
+            comp_mng->Add(entity, sky);
         }
     }
 

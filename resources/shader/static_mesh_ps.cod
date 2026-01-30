@@ -43,7 +43,7 @@
 // SV_TARGET                0   xyzw        0   TARGET   float   xyzw
 //
 ps_5_0
-dcl_globalFlags refactoringAllowed
+dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[6], immediateIndexed
 dcl_sampler s2, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
@@ -53,46 +53,101 @@ dcl_input_ps linear v2.xy
 dcl_input_ps linear v3.xyz
 dcl_input_ps linear v4.xyz
 dcl_output o0.xyzw
-dcl_temps 4
-dp3 r0.x, v4.xyzx, v4.xyzx
-rsq r0.x, r0.x
-mul r0.xyz, r0.xxxx, v4.xyzx
-mul r1.xyz, r0.zxyz, l(0.000000, 0.000000, 1.000100, 0.000000)
-mad r1.xyz, r0.yzxy, l(0.000000, 1.000100, 0.000000, 0.000000), -r1.xyzx
-dp2 r0.w, r1.yzyy, r1.yzyy
-rsq r0.w, r0.w
-mul r1.xyz, r0.wwww, r1.xyzx
-mul r2.xyz, r0.yzxy, r1.zxyz
-mad r2.xyz, r1.yzxy, r0.zxyz, -r2.xyzx
-dp3 r0.w, r2.xyzx, r2.xyzx
-rsq r0.w, r0.w
-mul r2.xyz, r0.wwww, r2.xyzx
-sample_indexable(texture2d)(float,float,float,float) r3.xyz, v2.xyxx, t1.xyzw, s2
-mad r3.xyz, r3.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000), l(-1.000000, -1.000000, -1.000000, 0.000000)
-mul r1.xyz, r1.xyzx, r3.yyyy
-mad r1.xyz, r3.xxxx, r2.xyzx, r1.xyzx
-mad r0.xyz, r3.zzzz, r0.xyzx, r1.xyzx
-dp3 r0.w, r0.xyzx, r0.xyzx
-rsq r0.w, r0.w
-mul r0.xyz, r0.wwww, r0.xyzx
-dp3 r0.w, -cb1[4].xyzx, -cb1[4].xyzx
-rsq r0.w, r0.w
-mul r1.xyz, r0.wwww, -cb1[4].xyzx
-add r2.xyz, -v3.xyzx, cb1[5].xyzx
-dp3 r0.w, r2.xyzx, r2.xyzx
-rsq r0.w, r0.w
-mad r2.xyz, r2.xyzx, r0.wwww, r1.xyzx
-dp3 r0.w, r0.xyzx, r1.xyzx
-dp3 r1.x, r2.xyzx, r2.xyzx
+dcl_temps 6
+//
+// Initial variable locations:
+//   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
+//   v1.x <- pin.color.x; v1.y <- pin.color.y; v1.z <- pin.color.z; v1.w <- pin.color.w; 
+//   v2.x <- pin.texcoord.x; v2.y <- pin.texcoord.y; 
+//   v3.x <- pin.world_position.x; v3.y <- pin.world_position.y; v3.z <- pin.world_position.z; v3.w <- pin.world_position.w; 
+//   v4.x <- pin.world_normal.x; v4.y <- pin.world_normal.y; v4.z <- pin.world_normal.z; v4.w <- pin.world_normal.w; 
+//   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
+//
+#line 11 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\static_mesh_ps.hlsl"
+sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v2.xyxx, t0.xyzw, s2  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
+
+#line 12
+mov r0.w, r0.w  // r0.w <- alpha
+
+#line 13
+dp3 r1.x, v4.xyzx, v4.xyzx
 rsq r1.x, r1.x
-mul r1.xyz, r1.xxxx, r2.xyzx
-dp3 r0.x, r0.xyzx, r1.xyzx
-max r0.xw, r0.xxxw, l(0.000000, 0.000000, 0.000000, 0.500000)
-log r0.x, r0.x
-mul r0.x, r0.x, l(128.000000)
-exp r0.x, r0.x
-sample_indexable(texture2d)(float,float,float,float) r1.xyzw, v2.xyxx, t0.xyzw, s2
-mad r1.xyz, r1.xyzx, r0.wwww, r0.xxxx
-mul o0.xyzw, r1.xyzw, v1.xyzw
+mul r1.xyz, r1.xxxx, v4.xyzx  // r1.x <- N.x; r1.y <- N.y; r1.z <- N.z
+
+#line 17
+itof r2.xy, l(0, 0, 0, 0)  // r2.x <- T.y; r2.y <- T.z
+mov r2.z, l(1.000100)  // r2.z <- T.x
+
+#line 18
+mul r3.xyz, r1.yzxy, r2.yzxy
+mul r2.xyz, r1.zxyz, r2.xyzx
+mov r2.xyz, -r2.xyzx
+add r2.xyz, r2.xyzx, r3.xyzx
+dp3 r1.w, r2.xyzx, r2.xyzx
+rsq r1.w, r1.w
+mul r2.xyz, r1.wwww, r2.xyzx  // r2.x <- B.x; r2.y <- B.y; r2.z <- B.z
+
+#line 19
+mul r3.xyz, r1.zxyz, r2.yzxy
+mul r4.xyz, r1.yzxy, r2.zxyz
+mov r4.xyz, -r4.xyzx
+add r3.xyz, r3.xyzx, r4.xyzx
+dp3 r1.w, r3.xyzx, r3.xyzx
+rsq r1.w, r1.w
+mul r3.xyz, r1.wwww, r3.xyzx  // r3.x <- T.x; r3.y <- T.y; r3.z <- T.z
+
+#line 21
+sample_indexable(texture2d)(float,float,float,float) r4.xyz, v2.xyxx, t1.xyzw, s2
+mov r4.xyz, r4.xyzx  // r4.x <- normal.x; r4.y <- normal.y; r4.z <- normal.z
+
+#line 22
+mul r4.xyz, r4.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+mov r5.xyz, l(-1.000000,-1.000000,-1.000000,-0.000000)
+add r4.xyz, r4.xyzx, r5.xyzx
+
+#line 24
+mul r3.xyz, r3.xyzx, r4.xxxx
+mul r2.xyz, r2.xyzx, r4.yyyy
+add r2.xyz, r2.xyzx, r3.xyzx
+mul r1.xyz, r1.xyzx, r4.zzzz
+add r1.xyz, r1.xyzx, r2.xyzx
+dp3 r1.w, r1.xyzx, r1.xyzx
+rsq r1.w, r1.w
+mul r1.xyz, r1.wwww, r1.xyzx  // r1.x <- N.x; r1.y <- N.y; r1.z <- N.z
+
+#line 27
+mov r2.xyz, -cb1[4].xyzx
+dp3 r1.w, r2.xyzx, r2.xyzx
+rsq r1.w, r1.w
+mul r2.xyz, r1.wwww, r2.xyzx  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
+
+#line 28
+dp3 r1.w, r1.xyzx, r2.xyzx
+max r1.w, r1.w, l(0.500000)
+mul r3.xyz, r0.xyzx, r1.wwww  // r3.x <- diffuse.x; r3.y <- diffuse.y; r3.z <- diffuse.z
+
+#line 30
+mov r4.xyz, -v3.xyzx
+add r4.xyz, r4.xyzx, cb1[5].xyzx
+dp3 r1.w, r4.xyzx, r4.xyzx
+rsq r1.w, r1.w
+mul r4.xyz, r1.wwww, r4.xyzx  // r4.x <- V.x; r4.y <- V.y; r4.z <- V.z
+
+#line 31
+itof r1.w, l(0)
+add r2.xyz, r2.xyzx, r4.xyzx
+dp3 r2.w, r2.xyzx, r2.xyzx
+rsq r2.w, r2.w
+mul r2.xyz, r2.wwww, r2.xyzx
+dp3 r1.x, r1.xyzx, r2.xyzx
+max r1.x, r1.x, r1.w
+itof r1.y, l(128)
+log r1.x, r1.x
+mul r1.x, r1.x, r1.y
+exp r1.xyz, r1.xxxx  // r1.x <- specular.x; r1.y <- specular.y; r1.z <- specular.z
+
+#line 33
+add r0.xyz, r1.xyzx, r3.xyzx
+mul o0.xyzw, r0.xyzw, v1.xyzw
 ret 
-// Approximately 41 instruction slots used
+// Approximately 60 instruction slots used

@@ -51,7 +51,6 @@ private:
 
 
     std::unique_ptr<ComponentManager> comp_mng;
-    std::unique_ptr<EntityManager>enti_mng;
     std::unique_ptr<ComponentEditor>comp_edit;
     std::unique_ptr<UpdateSystemManager>update_sys_mng;
     std::unique_ptr<RenderSystemManager>render_sys_mng;

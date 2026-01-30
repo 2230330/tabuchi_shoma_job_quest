@@ -304,11 +304,6 @@ void IBLManager::Initialize(ID3D11Device* dev)
         {
             low_freq_perlin_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), low_freq_noise_tex_path);
         }
-        const wchar_t* mid_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\mid_freq_worley.dds";
-        _ASSERT_EXPR(std::filesystem::exists(mid_freq_noise_tex_path), "ファイルが存在しません");
-        {
-            mid_freq_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), mid_freq_noise_tex_path);
-        }
         const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ファイルが存在しません");
         {

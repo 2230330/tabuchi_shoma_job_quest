@@ -22,28 +22,117 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // no Output
 cs_5_0
-dcl_globalFlags refactoringAllowed
+dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_uav_typed_texture2d (float,float,float,float) u0
 dcl_input vThreadID.xy
-dcl_temps 3
+dcl_temps 2
 dcl_thread_group 8, 8, 8
-uge r0.xy, vThreadID.xyxx, l(64, 64, 0, 0)
+//
+// Initial variable locations:
+//   vThreadID.x <- dtid.x; vThreadID.y <- dtid.y
+//
+#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\layout_cloud_height_profile_cs.hlsl"
+mov r0.x, l(64)
+uge r0.x, vThreadID.x, r0.x
+mov r0.y, l(64)
+uge r0.y, vThreadID.y, r0.y
 or r0.x, r0.y, r0.x
 if_nz r0.x
+
+#line 13
   ret 
+
+#line 14
 endif 
+
+#line 16
 utof r0.x, vThreadID.x
-mad r1.xyzw, r0.xxxx, l(0.015625, 0.015625, 0.015625, 0.015625), l(-0.050000, -0.550000, -0.250000, -0.750000)
-mul_sat r1.xyzw, r1.xyzw, l(3.333333, 3.333333, 3.333333, 5.000000)
-mad r2.xyzw, r1.xyzw, l(-2.000000, -2.000000, -2.000000, -2.000000), l(3.000000, 3.000000, 3.000000, 3.000000)
-mul r1.xyzw, r1.xyzw, r1.xyzw
-mul r0.yz, r1.yywy, r2.yywy
-mad_sat r1.xy, r2.xzxx, r1.xzxx, -r0.yzyy
-mad r0.xy, r0.xxxx, l(0.015625, 0.015625, 0.000000, 0.000000), l(-0.650000, -0.100000, 0.000000, 0.000000)
-mul_sat r0.xy, r0.xyxx, l(4.999999, 1.250000, 0.000000, 0.000000)
-mad r0.zw, r0.xxxy, l(0.000000, 0.000000, -2.000000, -2.000000), l(0.000000, 0.000000, 3.000000, 3.000000)
-mul r0.xy, r0.xyxx, r0.xyxx
-mul_sat r1.zw, r0.xxxy, r0.zzzw
-store_uav_typed u0.xyzw, vThreadID.xyyy, r1.xyzw
+itof r0.y, l(64)
+div r0.x, r0.x, r0.y  // r0.x <- h
+
+#line 20
+mov r0.y, l(-0.050000)
+add r0.z, r0.y, l(0.350000)
+add r0.y, r0.y, r0.x
+div r0.z, l(1.000000, 1.000000, 1.000000, 1.000000), r0.z
+mul r0.y, r0.z, r0.y
+max r0.y, r0.y, l(0.000000)
+min r0.y, r0.y, l(1.000000)
+mul r0.z, r0.y, l(-2.000000)
+add r0.z, r0.z, l(3.000000)
+mul r0.y, r0.y, r0.y
+mul r0.y, r0.y, r0.z
+mov r0.z, l(-0.550000)
+add r0.w, r0.z, l(0.850000)
+add r0.z, r0.z, r0.x
+div r0.w, l(1.000000, 1.000000, 1.000000, 1.000000), r0.w
+mul r0.z, r0.w, r0.z
+max r0.z, r0.z, l(0.000000)
+min r0.z, r0.z, l(1.000000)
+mul r0.w, r0.z, l(-2.000000)
+add r0.w, r0.w, l(3.000000)
+mul r0.z, r0.z, r0.z
+mul r0.z, r0.z, r0.w
+mov r0.z, -r0.z
+add r1.x, r0.z, r0.y  // r1.x <- prof.x
+
+#line 22
+mov r0.y, l(-0.250000)
+add r0.z, r0.y, l(0.550000)
+add r0.y, r0.y, r0.x
+div r0.z, l(1.000000, 1.000000, 1.000000, 1.000000), r0.z
+mul r0.y, r0.z, r0.y
+max r0.y, r0.y, l(0.000000)
+min r0.y, r0.y, l(1.000000)
+mul r0.z, r0.y, l(-2.000000)
+add r0.z, r0.z, l(3.000000)
+mul r0.y, r0.y, r0.y
+mul r0.y, r0.y, r0.z
+mov r0.z, l(-0.750000)
+add r0.w, r0.z, l(0.950000)
+add r0.z, r0.z, r0.x
+div r0.w, l(1.000000, 1.000000, 1.000000, 1.000000), r0.w
+mul r0.z, r0.w, r0.z
+max r0.z, r0.z, l(0.000000)
+min r0.z, r0.z, l(1.000000)
+mul r0.w, r0.z, l(-2.000000)
+add r0.w, r0.w, l(3.000000)
+mul r0.z, r0.z, r0.z
+mul r0.z, r0.z, r0.w
+mov r0.z, -r0.z
+add r1.y, r0.z, r0.y  // r1.y <- prof.y
+
+#line 24
+mov r0.y, l(-0.650000)
+add r0.z, r0.y, l(0.850000)
+add r0.y, r0.y, r0.x
+div r0.z, l(1.000000, 1.000000, 1.000000, 1.000000), r0.z
+mul r0.y, r0.z, r0.y
+max r0.y, r0.y, l(0.000000)
+min r0.y, r0.y, l(1.000000)
+mul r0.z, r0.y, l(-2.000000)
+add r0.z, r0.z, l(3.000000)
+mul r0.y, r0.y, r0.y
+mul r1.z, r0.y, r0.z  // r1.z <- prof.z
+
+#line 26
+mov r0.y, l(-0.100000)
+add r0.z, r0.y, l(0.900000)
+add r0.x, r0.y, r0.x
+div r0.y, l(1.000000, 1.000000, 1.000000, 1.000000), r0.z
+mul r0.x, r0.y, r0.x
+max r0.x, r0.x, l(0.000000)
+min r0.x, r0.x, l(1.000000)
+mul r0.y, r0.x, l(-2.000000)
+add r0.y, r0.y, l(3.000000)
+mul r0.x, r0.x, r0.x
+mul r1.w, r0.x, r0.y  // r1.w <- prof.w
+
+#line 28
+max r0.xyzw, r1.xyzw, l(0.000000, 0.000000, 0.000000, 0.000000)
+min r0.xyzw, r0.xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
+store_uav_typed u0.xyzw, vThreadID.xyyy, r0.xyzw
+
+#line 29
 ret 
-// Approximately 19 instruction slots used
+// Approximately 85 instruction slots used

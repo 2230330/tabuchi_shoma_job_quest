@@ -586,11 +586,11 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             cloud_test = 
             SampleCloudDensity(sample_point, weather_data, 6.0, true /*cheap_sample*/);
             float step_scale = 1.0f;
-            //if (cloud_test <= 0.0)
-            //{
-            //    //地平線は荒く、上空は細かくステップを進める
-            //    step_scale = lerp(1.0f, 3.0f, horizon);
-            //}
+            if (cloud_test <= 0.0)
+            {
+                //地平線は荒く、上空は細かくステップを進める
+                //step_scale = lerp(1.0f, 3.0f, horizon);
+            }
             sample_point += ray_step * step_scale;
         }
         
