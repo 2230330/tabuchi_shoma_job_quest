@@ -70,6 +70,54 @@ void Scene::Update(float elapsed_time)
 			float moveY = (cursor_position.y - old_cursor_position.y) * 0.02f;
 			if (::GetAsyncKeyState(VK_RBUTTON) & 0x8000)
 			{
+				bool move_flag = false;
+                //WASD移動
+				float speed = free_move_speed_;
+				if (::GetAsyncKeyState(VK_SHIFT) & 0x8000)
+					speed *= free_move_boost_;
+
+				float dt = elapsed_time;
+				float move = speed * dt;
+
+				// 今のカメラ向きから前/右/上ベクトルを作る
+				float sx = ::sinf(rotateX), cx = ::cosf(rotateX);
+				float sy = ::sinf(rotateY), cy = ::cosf(rotateY);
+
+				DirectX::XMVECTOR forward = DirectX::XMVector3Normalize(
+					DirectX::XMVectorSet(-cx * sy, -sx, -cx * cy, 0.0f));
+
+				DirectX::XMVECTOR up = DirectX::XMVectorSet(0, 1, 0, 0);
+				DirectX::XMVECTOR right = DirectX::XMVector3Normalize(
+					DirectX::XMVector3Cross(up, forward));  // LH系でこの向きが自然
+
+				DirectX::XMVECTOR delta = DirectX::XMVectorZero();
+
+				if (::GetAsyncKeyState('W') & 0x8000) { delta = DirectX::XMVectorAdd(delta, forward); move_flag = true; }
+				if (::GetAsyncKeyState('S') & 0x8000) { delta = DirectX::XMVectorSubtract(delta, forward); move_flag = true; }
+				if (::GetAsyncKeyState('D') & 0x8000) { delta = DirectX::XMVectorAdd(delta, right); move_flag = true; }
+				if (::GetAsyncKeyState('A') & 0x8000) { delta = DirectX::XMVectorSubtract(delta, right); move_flag = true; }
+
+				// UEっぽく上下移動も
+				if (::GetAsyncKeyState('E') & 0x8000) delta = DirectX::XMVectorAdd(delta, up);
+				if (::GetAsyncKeyState('Q') & 0x8000) delta = DirectX::XMVectorSubtract(delta, up);
+
+				// 斜め移動が速くならないよう正規化
+				DirectX::XMVECTOR len = DirectX::XMVector3Length(delta);
+				float l = DirectX::XMVectorGetX(len);
+				if (l > 0.0001f)
+				{
+					delta = DirectX::XMVectorScale(DirectX::XMVector3Normalize(delta), move);
+
+					DirectX::XMVECTOR focus = DirectX::XMLoadFloat3(&camera_focus);
+					focus = DirectX::XMVectorAdd(focus, delta);
+					DirectX::XMStoreFloat3(&camera_focus, focus);
+				}
+
+				float rotate_speed = 0.5f;
+				if(move_flag)
+				{ 
+					rotate_speed *= 0.1f;
+				}
 				// Y軸回転
 				rotateY += moveX * 0.5f;
 				if (rotateY > DirectX::XM_PI)
@@ -82,6 +130,7 @@ void Scene::Update(float elapsed_time)
 					rotateX = DirectX::XMConvertToRadians(89.9f);
 				else if (rotateX < -DirectX::XMConvertToRadians(89.9f))
 					rotateX = -DirectX::XMConvertToRadians(89.9f);
+
 			}
 			else if (::GetAsyncKeyState(VK_MBUTTON) & 0x8000)
 			{

@@ -2,7 +2,7 @@
 
 #include"../../headers/graphics.h"
 #include"../../headers/render_state.h"
-#include"../../headers/system/render_system.h"
+#include"../../headers/system/render_gltf_system.h"
 #include"../../headers/system/instancing_render_system.h"
 #include"../../headers/system/sprite_render_system.h"
 #include"../../headers/resource_manager.h"
@@ -116,6 +116,7 @@ void RenderSystemManager::RenderAll()
         // IBL “ü—ÍXVi”wŒiSRV¨SkyCube‰»‚ð“à•ïj
         if (sky_flag || cloud_flag)
         {
+            ibl_manager_->SetSkyFlag(sky_flag);
             ibl_manager_->SetCloudFlag(cloud_flag);
             ibl_manager_->UpdateEnvironmentCapture(*sky_framebuffer_);
             ibl_manager_->BuildSkyCubeFromEnvSource();

@@ -19,6 +19,7 @@
 #include "component_cloud_dome.h"
 #include"component_intensity.h"
 #include"component_volumetric_cloud.h"
+#include"component_ajast_pbr_paramter_.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -41,6 +42,7 @@ public:
         registerContainer<ComponentCloudDome>(clouds_);
         registerContainer<ComponentVolumetricCloud>(volumetric_clouds_);
         registerContainer<ComponentIntensity>(intensities_);
+        registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
     }
 
     template<typename T>
@@ -196,4 +198,5 @@ private:
     std::vector<ComponentCloudDome>clouds_;
     std::vector<ComponentVolumetricCloud>volumetric_clouds_;
     std::vector<ComponentIntensity>intensities_;
+    std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
 };

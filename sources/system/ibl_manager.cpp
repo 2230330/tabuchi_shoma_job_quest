@@ -438,7 +438,14 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
     }
 
-    ctx_->PSSetShaderResources(100, 1, cloud_cube_srv_.GetAddressOf());
+    if (cloud_flag_)
+    {
+        ctx_->PSSetShaderResources(100, 1, cloud_cube_srv_.GetAddressOf());
+    }
+    else if (sky_flag_)
+    {
+        ctx_->PSSetShaderResources(100, 1, sky_cube_srv_.GetAddressOf());
+    }
 
     //ç≈å„
     dirty_ = true;

@@ -43,15 +43,14 @@ bool SceneTest::InitializeCore()
         ID3D11Device* device = Graphics::Instance().GetDevice();
         //2dスプライト宣言
         {
+            ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mamizo.png");
 
         }
         //3dオブジェクト宣言
         {
-            model.skinned_mesh = std::make_shared<SkinnedMesh>(
-                device,
-                L".\\resources\\model\\fbx\\nico\\nico.fbx"
-                , true
-            );
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\blue_exagonal_tiles_with_extracted\\scene.gltf");
+
         }
         //shader
         {
@@ -78,9 +77,6 @@ bool SceneTest::InitializeCore()
     }
 
 
-    ID3D11Device*device= Graphics::Instance().GetDevice();
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mamizo.png");
     return true;
 }
 
@@ -156,24 +152,24 @@ void SceneTest::RenderCore(float elapsed_time)
         //3dオブジェクト描画
         {
 
-            //アニメーションキーフレームの更新
-            int clip_index = 0;
-            int frame_index = 0;
-            static float animation_tick = 0;
-            auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
-            {
-                frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
-                if (frame_index > animation.sequence.size() - 1)
-                {
-                    frame_index = 0;
-                    animation_tick = 0;
-                }
-                else
-                {
-                    animation_tick += elapsed_time;
-                }
-            }
-            Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
+            ////アニメーションキーフレームの更新
+            //int clip_index = 0;
+            //int frame_index = 0;
+            //static float animation_tick = 0;
+            //auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
+            //{
+            //    frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
+            //    if (frame_index > animation.sequence.size() - 1)
+            //    {
+            //        frame_index = 0;
+            //        animation_tick = 0;
+            //    }
+            //    else
+            //    {
+            //        animation_tick += elapsed_time;
+            //    }
+            //}
+            //Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
 
             render_sys_mng->RenderAll();
         }

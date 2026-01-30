@@ -74,6 +74,8 @@ private:
 	CONST HWND hwnd;
 	//render_data* renderdata{ nullptr };
 	POINT cursor_position{ 0, 0 };
+	float free_move_speed_ = 8.0f;
+	float free_move_boost_ = 4.0f;
 	float timer{ 0.0f };
 	bool flag{ false };
 	float near_clip_distance{ 0.1f };

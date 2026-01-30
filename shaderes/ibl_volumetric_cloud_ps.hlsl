@@ -406,6 +406,8 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /
      // 太陽直接光
     float3 Ei = ComputeSunIrradiance(air_mass);
     
+    Ei *= lerp(0.5f, 1.5f, sun_elevation); //太陽高度で増減  
+    
     // 地球中心基準のカメラ位置
     float3 position = float3(0.f, earth_radius, 0.f);
     
@@ -666,8 +668,14 @@ float4 main(PSIn pin) : SV_TARGET
             color = background * (1.0f - volume.a) + cloud_color_only;
             
         }
+        
 
     }
+    else
+    {
+        color = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], view_dir.xyz);
+    }
+
 
 
     return float4(color, 1.0f);

@@ -44,34 +44,11 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shaders_[8];
 
-    std::unique_ptr<SpriteBatch>         sprite_batches_[8];
     std::unique_ptr<GeometricPrimitive>  geometric_primitives_[8];
     std::unique_ptr<StaticMesh>          static_meshes_[8];
     std::unique_ptr<FrameBuffer>         framebuffers_[2];
     std::unique_ptr<FullscreenQuad>     bit_block_transfer_;
 
-    struct Model {
-        DirectX::XMFLOAT3 position{ 0,0,0 };
-        DirectX::XMFLOAT3 rotation{ 0,0,0 };
-        DirectX::XMFLOAT3 scale{ 0.5f,0.5f,0.5f };
-        DirectX::XMFLOAT4X4 world;
-        DirectX::XMFLOAT4 color{ 1,1,1,1 };
-
-        std::shared_ptr<SkinnedMesh> skinned_mesh = nullptr;
-    };
-    Model model;
-    struct GltfMesh {
-        //DirectX::XMFLOAT3 position{ 0,0,0 };
-        //DirectX::XMFLOAT3 rotation{ 0,0,0 };
-        //DirectX::XMFLOAT3 scale{ 0.05f,0.05f,0.05f };
-        //DirectX::XMFLOAT4X4 world;
-        //DirectX::XMFLOAT4 color{ 1,1,1,1 };
-
-
-        int entity;
-        std::shared_ptr<GltfModel> gltf_mesh = nullptr;
-    };
-    GltfMesh gltf_model;
 
     std::unique_ptr<ComponentManager> comp_mng;
     std::unique_ptr<EntityManager>enti_mng;

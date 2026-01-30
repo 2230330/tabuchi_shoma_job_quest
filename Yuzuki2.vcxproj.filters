@@ -191,7 +191,7 @@
     <ClInclude Include="headers\system\transform_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\render_system.h">
+    <ClInclude Include="headers\system\render_gltf_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
     <ClInclude Include="headers\system\update_system_manager.h">
@@ -274,6 +274,9 @@
     </ClInclude>
     <ClInclude Include="headers\deferred_g_buffer.h">
       <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h">
+      <Filter>headers\component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -358,7 +361,7 @@
     <ClCompile Include="sources\system\transform_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
-    <ClCompile Include="sources\system\render_system.cpp">
+    <ClCompile Include="sources\system\render_gltf_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\render_system_manager.cpp">
@@ -472,6 +475,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaderes\deferred_rendering.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaderes\physical_based_rendering.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

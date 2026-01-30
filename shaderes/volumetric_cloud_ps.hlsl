@@ -684,6 +684,11 @@ float4 main(VS_OUT pin) : SV_TARGET
         }
 
     }
+    else
+    {
+        //’n•½ü‚æ‚è‰º‚Í‰_‚ğ•`‰æ‚µ‚È‚¢
+        color = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb;
+    }
 
 
     return float4(color, 1.0f);

@@ -41,7 +41,7 @@ public:
     //背景に雲があるのかどうかを知るための関数
     void SetCloudFlag(bool cloud_flag) { cloud_flag_ = cloud_flag; }
     //空があるかどうかを知るための関数
-    void GetSkyFlag(bool sky_flag) { sky_flag_ = sky_flag; }
+    void SetSkyFlag(bool sky_flag) { sky_flag_ = sky_flag; }
 
 private:
     // パラメータ

@@ -83,7 +83,7 @@ void ComponentEditor::DrawImgui()
                 if (comp_mng_.Has<ComponentPosition>(entity.entity))
                 {
                     auto& pos = comp_mng_.GetByEntity<ComponentPosition>(entity.entity);
-                    ImGui::SliderFloat3("Position", &pos.value.x, -10.f, 10.f);
+                    ImGui::DragFloat3("Position", &pos.value.x);
                     ImGui::Separator();
                 }
                 // 回転
@@ -210,6 +210,12 @@ void ComponentEditor::DrawImgui()
                     auto& gltf = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
                     ImGui::Text("GLTF Model");
 
+                    ImGui::Separator();
+                    auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
+
+                    ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
+                    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, -1.0f, 1.0f);
+
                     //インスタンシング描画
                     if (ImGui::Button("instanced"))
                     {
@@ -316,6 +322,8 @@ void ComponentEditor::DrawImgui()
                                                 ComponentGltf gltf{};
                                                 gltf.model = model_ptr;
                                                 comp_mng_.Add(entity.entity, gltf);
+                                                ComponentAdjastPbrParamter ajast_pbr{};
+                                                comp_mng_.Add(entity.entity, ajast_pbr);
                                             }
 
                                         }
