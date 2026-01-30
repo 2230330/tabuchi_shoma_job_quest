@@ -40,7 +40,7 @@
 // {
 //
 //   uint4 light_count;                 // Offset:    0 Size:    16
-//   float4 ambient_color;              // Offset:   16 Size:    16 [unused]
+//   float4 ambient_color;              // Offset:   16 Size:    16
 //   float4x4 light_view_projection;    // Offset:   32 Size:    64 [unused]
 //   float4x4 inverse_light_view_projection;// Offset:   96 Size:    64 [unused]
 //   float2 light_orthographic_size;    // Offset:  160 Size:     8 [unused]
@@ -1162,39 +1162,39 @@ loop
   mov r11.xyz, r11.xyzx  // r11.x <- diffuse.x; r11.y <- diffuse.y; r11.z <- diffuse.z
   mov r10.xyz, r10.xyzx  // r10.x <- specular.x; r10.y <- specular.y; r10.z <- specular.z
 
-#line 198
+#line 199
   add r6.xyz, r6.xyzx, r11.xyzx
 
-#line 199
+#line 200
   add r7.xyz, r7.xyzx, r10.xyzx
 
 #line 174
   iadd r5.w, r5.w, l(1)
 
-#line 200
+#line 201
 endloop 
 
-#line 204
-mov r4.yzw, -r5.xxyz
-dp3 r0.y, r4.yzwy, r0.xzwx
+#line 205
+mov r8.xyz, -r5.xyzx
+dp3 r0.y, r8.xyzx, r0.xzwx
 add r0.y, r0.y, r0.y
 mov r0.y, -r0.y
-mul r8.xyz, r0.yyyy, r0.xzwx
-add r4.yzw, r4.yyzw, r8.xxyz  // r4.y <- R.x; r4.z <- R.y; r4.w <- R.z
+mul r9.xyz, r0.yyyy, r0.xzwx
+add r8.xyz, r8.xyzx, r9.xyzx  // r8.x <- R.x; r8.y <- R.y; r8.z <- R.z
 
-#line 208
+#line 209
 mul r0.y, r1.w, l(8.000000)  // r0.y <- mip
 
-#line 210
-sample_l_indexable(texturecube)(float,float,float,float) r4.yzw, r4.yzwy, t100.wxyz, s3, r0.y
-mov r4.yzw, r4.yyzw  // r4.y <- env.x; r4.z <- env.y; r4.w <- env.z
+#line 211
+sample_l_indexable(texturecube)(float,float,float,float) r8.xyz, r8.xyzx, t100.xyzw, s3, r0.y
+mov r8.xyz, r8.xyzx  // r8.x <- env.x; r8.y <- env.y; r8.z <- env.z
 
-#line 213
+#line 214
 dp3 r0.x, r0.xzwx, r5.xyzx
 max r0.x, r0.x, l(0.000000)
 min r0.x, r0.x, l(1.000000)  // r0.x <- NdotV
 
-#line 214
+#line 215
 nop 
 mov r2.xyz, r2.xyzx
 mov r0.x, r0.x
@@ -1214,45 +1214,59 @@ mul r0.x, r0.x, r1.w
 mul r0.xyz, r0.xxxx, r0.yzwy
 add r0.xyz, r0.xyzx, r2.xyzx  // r0.x <- <CalcFresnel return value>.x; r0.y <- <CalcFresnel return value>.y; r0.z <- <CalcFresnel return value>.z
 
-#line 214 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_ps.hlsl"
+#line 215 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_ps.hlsl"
 mov r0.xyz, r0.xyzx  // r0.x <- F.x; r0.y <- F.y; r0.z <- F.z
 
-#line 217
+#line 218
 mov r0.w, l(-0.040000)
 add r0.w, r0.w, l(1.000000)
 mul r0.w, r0.w, r3.x
 add r0.w, r0.w, l(0.040000)  // r0.w <- reflect_strength
 
-#line 220
-mul r0.xyz, r0.xyzx, r4.yzwy
+#line 221
+mul r0.xyz, r0.xyzx, r8.xyzx
 mul r0.xyz, r0.wwww, r0.xyzx
 add r0.xyz, r0.xyzx, r7.xyzx  // r0.x <- total_specular.x; r0.y <- total_specular.y; r0.z <- total_specular.z
 
-#line 227
+#line 228
 mul r2.xyz, r3.yyyy, r6.xyzx
 mov r3.xzw, -r6.xxyz
 add r2.xyz, r2.xyzx, r3.xzwx
 mul r2.xyz, r2.xyzx, r4.xxxx
 add r2.xyz, r2.xyzx, r6.xyzx  // r2.x <- total_diffuse.x; r2.y <- total_diffuse.y; r2.z <- total_diffuse.z
 
-#line 228
-mul r3.xyz, r3.yyyy, r0.xyzx
-mov r4.yzw, -r0.xxyz
-add r3.xyz, r3.xyzx, r4.yzwy
-mul r3.xyz, r3.xyzx, r4.xxxx
-add r0.xyz, r0.xyzx, r3.xyzx
+#line 229
+mul r3.xzw, r3.yyyy, r0.xxyz
+mov r5.xyz, -r0.xyzx
+add r3.xzw, r3.xxzw, r5.xxyz
+mul r3.xzw, r3.xxzw, r4.xxxx
+add r0.xyz, r0.xyzx, r3.xzwx
 
 #line 231
-add r0.xyz, r0.xyzx, r2.xyzx
-add r0.xyz, r1.xyzx, r0.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
+mul r3.xzw, cb3[1].wwww, cb3[1].xxyz  // r3.x <- ambient.x; r3.z <- ambient.y; r3.w <- ambient.z
 
-#line 235
+#line 232
+mul r3.xzw, r4.yyzw, r3.xxzw
+
+#line 233
+mov r0.w, l(-1.000000)
+add r0.w, r0.w, r3.y
+mul r0.w, r0.w, r4.x
+add r0.w, r0.w, l(1.000000)
+mul r3.xyz, r0.wwww, r3.xzwx  // r3.y <- ambient.y; r3.z <- ambient.z
+
+#line 236
+add r0.xyz, r0.xyzx, r2.xyzx
+add r0.xyz, r1.xyzx, r0.xyzx
+add r0.xyz, r3.xyzx, r0.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
+
+#line 240
 log r0.xyz, r0.xyzx
 mul r0.xyz, r0.xyzx, l(0.454545, 0.454545, 0.454545, 0.000000)
 exp r0.xyz, r0.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 236
+#line 241
 mov o0.xyz, r0.xyzx
 mov o0.w, r2.w
 ret 
-// Approximately 614 instruction slots used
+// Approximately 622 instruction slots used

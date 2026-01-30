@@ -38,7 +38,7 @@ private:
     //•`‰æˆ—
     void RenderCore(float elapsed_time)override;
     //GUI•`‰æˆ—
-    void DrawGui()override;
+    void DrawImguiCore()override;
 
     Camera                               camera_;
     Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer_;

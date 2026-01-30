@@ -25,7 +25,7 @@ cs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_uav_typed_texture3d (float,float,float,float) u0
 dcl_input vThreadID.xyz
-dcl_temps 10
+dcl_temps 16
 dcl_thread_group 8, 8, 8
 //
 // Initial variable locations:
@@ -61,457 +61,428 @@ if_nz r1.x
 #line 17
 endif 
 
+#line 19
+mov r1.x, l(4.000000)  // r1.x <- freq
+
 #line 21
-utof r1.xyz, vThreadID.xyzx
+utof r1.yzw, vThreadID.xxyz
 itof r2.xyz, l(64, 64, 64, 0)
-div r1.xyz, r1.xyzx, r2.xyzx  // r1.x <- uvw.x; r1.y <- uvw.y; r1.z <- uvw.z
+div r1.yzw, r1.yyzw, r2.xxyz  // r1.y <- uvw.x; r1.z <- uvw.y; r1.w <- uvw.z
+
+#line 23
+nop 
+mov r1.yzw, r1.yyzw
+mov r1.x, r1.x
+mov r2.x, l(7)
+
+#line 117 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
+mov r2.y, l(0.554785)  // r2.y <- g
+
+#line 118
+mov r2.z, l(1.000000)  // r2.z <- amp
+
+#line 119
+mov r2.w, l(0)  // r2.w <- noise
+
+#line 120
+mov r3.x, l(0)  // r3.x <- i
+mov r3.y, r1.x  // r3.y <- freq
+mov r3.z, r2.z  // r3.z <- amp
+mov r3.w, r2.w  // r3.w <- noise
+mov r4.x, r3.x  // r4.x <- i
+loop 
+  ilt r4.y, r4.x, r2.x
+  breakc_z r4.y
+
+#line 122
+  nop 
+  mul r4.yzw, r1.yyzw, r3.yyyy
+  mov r3.y, r3.y
+
+#line 85
+  round_ni r5.xyz, r4.yzwy  // r5.x <- p.x; r5.y <- p.y; r5.z <- p.z
+
+#line 86
+  frc r4.yzw, r4.yyzw  // r4.y <- w.x; r4.z <- w.y; r4.w <- w.z
+
+#line 87
+  nop 
+  mov r4.yzw, r4.yyzw
+
+#line 79
+  mul r6.xyz, r4.yzwy, r4.yzwy
+  mul r6.xyz, r4.yzwy, r6.xyzx
+  mul r7.xyz, r4.yzwy, l(6.000000, 6.000000, 6.000000, 0.000000)
+  mov r8.xyz, l(-15.000000,-15.000000,-15.000000,-0.000000)
+  add r7.xyz, r7.xyzx, r8.xyzx
+  mul r7.xyz, r4.yzwy, r7.xyzx
+  add r7.xyz, r7.xyzx, l(10.000000, 10.000000, 10.000000, 0.000000)
+  mul r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- <quintic return value>.x; r6.y <- <quintic return value>.y; r6.z <- <quintic return value>.z
+
+#line 87
+  mov r6.xyz, r6.xyzx  // r6.x <- u.x; r6.y <- u.y; r6.z <- u.z
+
+#line 90
+  nop 
+  add r7.xyz, r5.xyzx, l(0.000000, 0.000000, 0.000000, 0.000000)
+  div r7.xyz, r7.xyzx, r3.yyyy
+  mov r8.xyz, -r7.xyzx
+  max r9.xyz, r7.xyzx, r8.xyzx
+  ge r7.xyz, r7.xyzx, r8.xyzx
+  frc r8.xyz, r9.xyzx
+  mov r9.xyz, -r8.xyzx
+  movc r7.xyz, r7.xyzx, r8.xyzx, r9.xyzx
+  mul r7.xyz, r3.yyyy, r7.xyzx
+
+#line 28
+  ftoi r7.xyz, r7.xyzx
+  imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+  xor r5.w, r7.y, r7.x
+  xor r5.w, r7.z, r5.w
+  imul null, r7.xyz, r0.xyzx, r5.wwww
+
+#line 34
+  utof r7.xyz, r7.xyzx
+  mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r7.xyz, r0.wwww, r7.xyzx
+  add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 90
+  mov r7.xyz, r7.xyzx  // r7.x <- ga.x; r7.y <- ga.y; r7.z <- ga.z
+
+#line 91
+  nop 
+  add r8.xyz, r5.xyzx, l(1.000000, 0.000000, 0.000000, 0.000000)
+  div r8.xyz, r8.xyzx, r3.yyyy
+  mov r9.xyz, -r8.xyzx
+  max r10.xyz, r8.xyzx, r9.xyzx
+  ge r8.xyz, r8.xyzx, r9.xyzx
+  frc r9.xyz, r10.xyzx
+  mov r10.xyz, -r9.xyzx
+  movc r8.xyz, r8.xyzx, r9.xyzx, r10.xyzx
+  mul r8.xyz, r3.yyyy, r8.xyzx
+
+#line 28
+  ftoi r8.xyz, r8.xyzx
+  imul null, r8.xyz, r0.xyzx, r8.xyzx  // r8.x <- q.x; r8.y <- q.y; r8.z <- q.z
+
+#line 31
+  xor r5.w, r8.y, r8.x
+  xor r5.w, r8.z, r5.w
+  imul null, r8.xyz, r0.xyzx, r5.wwww
+
+#line 34
+  utof r8.xyz, r8.xyzx
+  mul r8.xyz, r8.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r8.xyz, r0.wwww, r8.xyzx
+  add r8.xyz, r8.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r8.x <- <hash33 return value>.x; r8.y <- <hash33 return value>.y; r8.z <- <hash33 return value>.z
+
+#line 91
+  mov r8.xyz, r8.xyzx  // r8.x <- gb.x; r8.y <- gb.y; r8.z <- gb.z
+
+#line 92
+  nop 
+  add r9.xyz, r5.xyzx, l(0.000000, 1.000000, 0.000000, 0.000000)
+  div r9.xyz, r9.xyzx, r3.yyyy
+  mov r10.xyz, -r9.xyzx
+  max r11.xyz, r9.xyzx, r10.xyzx
+  ge r9.xyz, r9.xyzx, r10.xyzx
+  frc r10.xyz, r11.xyzx
+  mov r11.xyz, -r10.xyzx
+  movc r9.xyz, r9.xyzx, r10.xyzx, r11.xyzx
+  mul r9.xyz, r3.yyyy, r9.xyzx
+
+#line 28
+  ftoi r9.xyz, r9.xyzx
+  imul null, r9.xyz, r0.xyzx, r9.xyzx  // r9.x <- q.x; r9.y <- q.y; r9.z <- q.z
+
+#line 31
+  xor r5.w, r9.y, r9.x
+  xor r5.w, r9.z, r5.w
+  imul null, r9.xyz, r0.xyzx, r5.wwww
+
+#line 34
+  utof r9.xyz, r9.xyzx
+  mul r9.xyz, r9.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r9.xyz, r0.wwww, r9.xyzx
+  add r9.xyz, r9.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r9.x <- <hash33 return value>.x; r9.y <- <hash33 return value>.y; r9.z <- <hash33 return value>.z
+
+#line 92
+  mov r9.xyz, r9.xyzx  // r9.x <- gc.x; r9.y <- gc.y; r9.z <- gc.z
+
+#line 93
+  nop 
+  add r10.xyz, r5.xyzx, l(1.000000, 1.000000, 0.000000, 0.000000)
+  div r10.xyz, r10.xyzx, r3.yyyy
+  mov r11.xyz, -r10.xyzx
+  max r12.xyz, r10.xyzx, r11.xyzx
+  ge r10.xyz, r10.xyzx, r11.xyzx
+  frc r11.xyz, r12.xyzx
+  mov r12.xyz, -r11.xyzx
+  movc r10.xyz, r10.xyzx, r11.xyzx, r12.xyzx
+  mul r10.xyz, r3.yyyy, r10.xyzx
+
+#line 28
+  ftoi r10.xyz, r10.xyzx
+  imul null, r10.xyz, r0.xyzx, r10.xyzx  // r10.x <- q.x; r10.y <- q.y; r10.z <- q.z
+
+#line 31
+  xor r5.w, r10.y, r10.x
+  xor r5.w, r10.z, r5.w
+  imul null, r10.xyz, r0.xyzx, r5.wwww
+
+#line 34
+  utof r10.xyz, r10.xyzx
+  mul r10.xyz, r10.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r10.xyz, r0.wwww, r10.xyzx
+  add r10.xyz, r10.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r10.x <- <hash33 return value>.x; r10.y <- <hash33 return value>.y; r10.z <- <hash33 return value>.z
+
+#line 93
+  mov r10.xyz, r10.xyzx  // r10.x <- gd.x; r10.y <- gd.y; r10.z <- gd.z
+
+#line 94
+  nop 
+  add r11.xyz, r5.xyzx, l(0.000000, 0.000000, 1.000000, 0.000000)
+  div r11.xyz, r11.xyzx, r3.yyyy
+  mov r12.xyz, -r11.xyzx
+  max r13.xyz, r11.xyzx, r12.xyzx
+  ge r11.xyz, r11.xyzx, r12.xyzx
+  frc r12.xyz, r13.xyzx
+  mov r13.xyz, -r12.xyzx
+  movc r11.xyz, r11.xyzx, r12.xyzx, r13.xyzx
+  mul r11.xyz, r3.yyyy, r11.xyzx
+
+#line 28
+  ftoi r11.xyz, r11.xyzx
+  imul null, r11.xyz, r0.xyzx, r11.xyzx  // r11.x <- q.x; r11.y <- q.y; r11.z <- q.z
+
+#line 31
+  xor r5.w, r11.y, r11.x
+  xor r5.w, r11.z, r5.w
+  imul null, r11.xyz, r0.xyzx, r5.wwww
+
+#line 34
+  utof r11.xyz, r11.xyzx
+  mul r11.xyz, r11.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r11.xyz, r0.wwww, r11.xyzx
+  add r11.xyz, r11.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r11.x <- <hash33 return value>.x; r11.y <- <hash33 return value>.y; r11.z <- <hash33 return value>.z
+
+#line 94
+  mov r11.xyz, r11.xyzx  // r11.x <- ge.x; r11.y <- ge.y; r11.z <- ge.z
+
+#line 95
+  nop 
+  add r12.xyz, r5.xyzx, l(1.000000, 0.000000, 1.000000, 0.000000)
+  div r12.xyz, r12.xyzx, r3.yyyy
+  mov r13.xyz, -r12.xyzx
+  max r14.xyz, r12.xyzx, r13.xyzx
+  ge r12.xyz, r12.xyzx, r13.xyzx
+  frc r13.xyz, r14.xyzx
+  mov r14.xyz, -r13.xyzx
+  movc r12.xyz, r12.xyzx, r13.xyzx, r14.xyzx
+  mul r12.xyz, r3.yyyy, r12.xyzx
+
+#line 28
+  ftoi r12.xyz, r12.xyzx
+  imul null, r12.xyz, r0.xyzx, r12.xyzx  // r12.x <- q.x; r12.y <- q.y; r12.z <- q.z
+
+#line 31
+  xor r5.w, r12.y, r12.x
+  xor r5.w, r12.z, r5.w
+  imul null, r12.xyz, r0.xyzx, r5.wwww
+
+#line 34
+  utof r12.xyz, r12.xyzx
+  mul r12.xyz, r12.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r12.xyz, r0.wwww, r12.xyzx
+  add r12.xyz, r12.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r12.x <- <hash33 return value>.x; r12.y <- <hash33 return value>.y; r12.z <- <hash33 return value>.z
+
+#line 95
+  mov r12.xyz, r12.xyzx  // r12.x <- gf.x; r12.y <- gf.y; r12.z <- gf.z
+
+#line 96
+  nop 
+  add r13.xyz, r5.xyzx, l(0.000000, 1.000000, 1.000000, 0.000000)
+  div r13.xyz, r13.xyzx, r3.yyyy
+  mov r14.xyz, -r13.xyzx
+  max r15.xyz, r13.xyzx, r14.xyzx
+  ge r13.xyz, r13.xyzx, r14.xyzx
+  frc r14.xyz, r15.xyzx
+  mov r15.xyz, -r14.xyzx
+  movc r13.xyz, r13.xyzx, r14.xyzx, r15.xyzx
+  mul r13.xyz, r3.yyyy, r13.xyzx
+
+#line 28
+  ftoi r13.xyz, r13.xyzx
+  imul null, r13.xyz, r0.xyzx, r13.xyzx  // r13.x <- q.x; r13.y <- q.y; r13.z <- q.z
+
+#line 31
+  xor r5.w, r13.y, r13.x
+  xor r5.w, r13.z, r5.w
+  imul null, r13.xyz, r0.xyzx, r5.wwww
+
+#line 34
+  utof r13.xyz, r13.xyzx
+  mul r13.xyz, r13.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r13.xyz, r0.wwww, r13.xyzx
+  add r13.xyz, r13.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r13.x <- <hash33 return value>.x; r13.y <- <hash33 return value>.y; r13.z <- <hash33 return value>.z
+
+#line 96
+  mov r13.xyz, r13.xyzx  // r13.x <- gg.x; r13.y <- gg.y; r13.z <- gg.z
+
+#line 97
+  nop 
+  add r5.xyz, r5.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+  div r5.xyz, r5.xyzx, r3.yyyy
+  mov r14.xyz, -r5.xyzx
+  max r15.xyz, r5.xyzx, r14.xyzx
+  ge r5.xyz, r5.xyzx, r14.xyzx
+  frc r14.xyz, r15.xyzx
+  mov r15.xyz, -r14.xyzx
+  movc r5.xyz, r5.xyzx, r14.xyzx, r15.xyzx
+  mul r5.xyz, r3.yyyy, r5.xyzx
+
+#line 28
+  ftoi r5.xyz, r5.xyzx
+  imul null, r5.xyz, r0.xyzx, r5.xyzx  // r5.x <- q.x; r5.y <- q.y; r5.z <- q.z
+
+#line 31
+  xor r5.x, r5.y, r5.x
+  xor r5.x, r5.z, r5.x
+  imul null, r5.xyz, r0.xyzx, r5.xxxx  // r5.x <- q.x
+
+#line 34
+  utof r5.xyz, r5.xyzx
+  mul r5.xyz, r5.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+  mul r5.xyz, r0.wwww, r5.xyzx
+  add r5.xyz, r5.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r5.x <- <hash33 return value>.x; r5.y <- <hash33 return value>.y; r5.z <- <hash33 return value>.z
+
+#line 97
+  mov r5.xyz, r5.xyzx  // r5.x <- gh.x; r5.y <- gh.y; r5.z <- gh.z
+
+#line 99
+  mov r14.xyz, l(-0.000000,-0.000000,-0.000000,-0.000000)
+  add r14.xyz, r4.yzwy, r14.xyzx
+  dp3 r5.w, r7.xyzx, r14.xyzx  // r5.w <- va
+
+#line 100
+  mov r7.xyz, l(-1.000000,-0.000000,-0.000000,-0.000000)
+  add r7.xyz, r4.yzwy, r7.xyzx
+  dp3 r6.w, r8.xyzx, r7.xyzx  // r6.w <- vb
+
+#line 101
+  mov r7.xyz, l(-0.000000,-1.000000,-0.000000,-0.000000)
+  add r7.xyz, r4.yzwy, r7.xyzx
+  dp3 r7.x, r9.xyzx, r7.xyzx  // r7.x <- vc
+
+#line 102
+  mov r7.yzw, l(-0.000000,-1.000000,-1.000000,-0.000000)
+  add r7.yzw, r4.yyzw, r7.yyzw
+  dp3 r7.y, r10.xyzx, r7.yzwy  // r7.y <- vd
+
+#line 103
+  mov r8.xyz, l(-0.000000,-0.000000,-1.000000,-0.000000)
+  add r8.xyz, r4.yzwy, r8.xyzx
+  dp3 r7.z, r11.xyzx, r8.xyzx  // r7.z <- ve
+
+#line 104
+  mov r8.xyz, l(-1.000000,-0.000000,-1.000000,-0.000000)
+  add r8.xyz, r4.yzwy, r8.xyzx
+  dp3 r7.w, r12.xyzx, r8.xyzx  // r7.w <- vf
+
+#line 105
+  mov r8.xyz, l(-0.000000,-1.000000,-1.000000,-0.000000)
+  add r8.xyz, r4.yzwy, r8.xyzx
+  dp3 r8.x, r13.xyzx, r8.xyzx  // r8.x <- vg
+
+#line 106
+  mov r8.yzw, l(-0.000000,-1.000000,-1.000000,-1.000000)
+  add r4.yzw, r4.yyzw, r8.yyzw
+  dp3 r4.y, r5.xyzx, r4.yzwy  // r4.y <- vh
+
+#line 109
+  mov r4.z, -r5.w
+  add r4.z, r4.z, r6.w
+  mul r4.z, r4.z, r6.x
+  add r4.z, r4.z, r5.w
+  mov r4.w, -r5.w
+  add r4.w, r4.w, r7.x
+  mul r4.w, r4.w, r6.y
+  add r4.z, r4.w, r4.z
+  mul r4.w, r6.y, r6.x
+  mov r5.x, -r6.w
+  add r5.x, r5.x, r5.w
+  mov r5.y, -r7.x
+  add r5.x, r5.y, r5.x
+  add r5.x, r7.y, r5.x
+  mul r4.w, r4.w, r5.x
+  add r4.z, r4.w, r4.z  // r4.z <- ixy
+
+#line 110
+  mov r4.w, -r7.z
+  add r4.w, r4.w, r7.w
+  mul r4.w, r4.w, r6.x
+  add r4.w, r4.w, r7.z
+  mov r5.x, -r7.z
+  add r5.x, r5.x, r8.x
+  mul r5.x, r5.x, r6.y
+  add r4.w, r4.w, r5.x
+  mul r5.x, r6.y, r6.x
+  mov r5.y, -r7.w
+  add r5.y, r5.y, r7.z
+  mov r5.z, -r8.x
+  add r5.y, r5.z, r5.y
+  add r4.y, r4.y, r5.y
+  mul r4.y, r4.y, r5.x
+  add r4.y, r4.y, r4.w  // r4.y <- iz
+
+#line 111
+  mov r4.w, -r4.z
+  add r4.y, r4.w, r4.y
+  mul r4.y, r4.y, r6.z
+  add r4.y, r4.y, r4.z  // r4.y <- <gradient_noise return value>
+
+#line 122
+  mul r4.y, r3.z, r4.y
+  add r3.w, r3.w, r4.y
+
+#line 123
+  mul r3.y, r3.y, l(2.000000)
+
+#line 124
+  mul r3.z, r2.y, r3.z
+
+#line 125
+  iadd r4.x, r4.x, l(1)
+endloop 
+
+#line 126
+mov r3.w, r3.w  // r3.w <- <perlin_fbm return value>
+
+#line 23 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
+mov r1.x, l(-1.000000)
+add r1.x, r1.x, r3.w
+mul r1.x, r1.x, l(0.500000)
+add r1.x, r1.x, l(1.000000)  // r1.x <- pfbm
+
+#line 24
+mul r1.x, r1.x, l(2.000000)
+mov r2.x, l(-1.000000)
+add r1.x, r1.x, r2.x
+mov r2.x, -r1.x
+max r1.x, r1.x, r2.x  // r1.x <- pfbm
 
 #line 27
 nop 
-mov r1.xyz, r1.xyzx
-mov r1.w, l(4.000000)
+mov r1.yzw, r1.yyzw
+mov r2.x, l(4.000000)
 
 #line 220 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
 nop 
-mul r2.xyz, r1.wwww, r1.xyzx
-ftoi r2.w, r1.w
-
-#line 178
-round_ni r3.xyz, r2.xyzx  // r3.x <- idf.x; r3.y <- idf.y; r3.z <- idf.z
-
-#line 179
-ftoi r3.xyz, r3.xyzx  // r3.x <- cid.x; r3.y <- cid.y; r3.z <- cid.z
-
-#line 180
-frc r2.xyz, r2.xyzx  // r2.x <- p.x; r2.y <- p.y; r2.z <- p.z
-
-#line 182
-mov r3.w, l(10000000000.000000)  // r3.w <- minDist2
-
-#line 186
-mov r4.z, l(-1)  // r4.z <- oz
-
-#line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r5.x, r3.w  // r5.x <- minDist2
-mov r5.y, r4.w  // r5.y <- oy
-loop 
-  ige r5.z, l(1), r5.y
-  breakc_z r5.z
-
-#line 188
-  mov r5.z, l(-1)  // r5.z <- ox
-  mov r5.w, r5.x  // r5.w <- minDist2
-  mov r4.x, r5.z  // r4.x <- ox
-  loop 
-    ige r6.x, l(1), r4.x
-    breakc_z r6.x
-
-#line 190
-    mov r4.y, r5.y
-    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
-
-#line 195
-    ineg r6.w, r6.x
-    ineg r7.x, r2.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r2.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r6.x, r7.x, r6.w, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.w, r6.x
-    ineg r7.x, r2.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r2.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
-
-#line 196
-    ineg r6.x, r6.y
-    ineg r6.w, r2.w
-    and r7.w, r6.y, l(0x80000000)
-    imax r6.x, r6.y, r6.x
-    imax r6.y, r2.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r6.x, r6.w, r6.y, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.w, r2.w
-    and r7.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r2.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
-
-#line 197
-    ineg r6.x, r6.z
-    ineg r6.y, r2.w
-    and r6.w, r6.z, l(0x80000000)
-    imax r6.x, r6.z, r6.x
-    imax r6.y, r2.w, r6.y
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r6.x, r6.z, r6.y, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.z, r2.w
-    and r6.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r2.w, r6.z
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
-
-#line 201
-    nop 
-    mov r7.x, r7.x
-    mov r7.y, r7.y
-    mov r7.z, r7.z
-
-#line 173
-    nop 
-    utof r6.xyz, r7.xyzx
-
-#line 28
-    ftoi r6.xyz, r6.xyzx
-    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
-
-#line 31
-    xor r6.x, r6.y, r6.x
-    xor r6.x, r6.z, r6.x
-    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
-
-#line 34
-    utof r6.xyz, r6.xyzx
-    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r6.xyz, r0.wwww, r6.xyzx
-    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
-
-#line 173
-    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
-
-#line 201
-    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
-
-#line 204
-    itof r7.xyz, r4.xyzx
-    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
-
-#line 207
-    mov r6.xyz, -r6.xyzx
-    add r6.xyz, r2.xyzx, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
-
-#line 208
-    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
-
-#line 209
-    min r5.w, r4.y, r5.w
-
-#line 210
-    iadd r4.x, r4.x, l(1)
-  endloop 
-  mov r5.x, r5.w  // r5.x <- minDist2
-  iadd r5.y, r5.y, l(1)
-endloop 
-iadd r4.z, r4.z, l(1)
-
-#line 187
-mov r3.w, l(-1)  // r3.w <- oy
-mov r4.w, r5.x  // r4.w <- minDist2
-mov r5.y, r3.w  // r5.y <- oy
-loop 
-  ige r5.z, l(1), r5.y
-  breakc_z r5.z
-
-#line 188
-  mov r5.z, l(-1)  // r5.z <- ox
-  mov r5.w, r4.w  // r5.w <- minDist2
-  mov r4.x, r5.z  // r4.x <- ox
-  loop 
-    ige r6.x, l(1), r4.x
-    breakc_z r6.x
-
-#line 190
-    mov r4.y, r5.y
-    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
-
-#line 195
-    ineg r6.w, r6.x
-    ineg r7.x, r2.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r2.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r6.x, r7.x, r6.w, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.w, r6.x
-    ineg r7.x, r2.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r2.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
-
-#line 196
-    ineg r6.x, r6.y
-    ineg r6.w, r2.w
-    and r7.w, r6.y, l(0x80000000)
-    imax r6.x, r6.y, r6.x
-    imax r6.y, r2.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r6.x, r6.w, r6.y, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.w, r2.w
-    and r7.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r2.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
-
-#line 197
-    ineg r6.x, r6.z
-    ineg r6.y, r2.w
-    and r6.w, r6.z, l(0x80000000)
-    imax r6.x, r6.z, r6.x
-    imax r6.y, r2.w, r6.y
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r6.x, r6.z, r6.y, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.z, r2.w
-    and r6.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r2.w, r6.z
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
-
-#line 201
-    nop 
-    mov r7.x, r7.x  // r7.x <- cellId.x
-    mov r7.y, r7.y  // r7.y <- cellId.y
-    mov r7.z, r7.z  // r7.z <- cellId.z
-
-#line 173
-    nop 
-    utof r6.xyz, r7.xyzx  // r6.x <- p.x; r6.y <- p.y; r6.z <- p.z
-
-#line 28
-    ftoi r6.xyz, r6.xyzx
-    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
-
-#line 31
-    xor r6.x, r6.y, r6.x
-    xor r6.x, r6.z, r6.x
-    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
-
-#line 34
-    utof r6.xyz, r6.xyzx
-    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r6.xyz, r0.wwww, r6.xyzx
-    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
-
-#line 173
-    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
-
-#line 201
-    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
-
-#line 204
-    itof r7.xyz, r4.xyzx
-    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
-
-#line 207
-    mov r6.xyz, -r6.xyzx
-    add r6.xyz, r2.xyzx, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
-
-#line 208
-    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
-
-#line 209
-    min r5.w, r4.y, r5.w
-
-#line 210
-    iadd r4.x, r4.x, l(1)
-  endloop 
-  mov r4.w, r5.w  // r4.w <- minDist2
-  iadd r5.y, r5.y, l(1)
-endloop 
-iadd r4.z, r4.z, l(1)
-
-#line 187
-mov r3.w, l(-1)  // r3.w <- oy
-mov r5.x, r4.w  // r5.x <- minDist2
-mov r5.y, r3.w  // r5.y <- oy
-loop 
-  ige r5.z, l(1), r5.y
-  breakc_z r5.z
-
-#line 188
-  mov r5.z, l(-1)  // r5.z <- ox
-  mov r5.w, r5.x  // r5.w <- minDist2
-  mov r4.x, r5.z  // r4.x <- ox
-  loop 
-    ige r6.x, l(1), r4.x
-    breakc_z r6.x
-
-#line 190
-    mov r4.y, r5.y
-    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
-
-#line 195
-    ineg r6.w, r6.x
-    ineg r7.x, r2.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r2.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r6.x, r7.x, r6.w, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.w, r6.x
-    ineg r7.x, r2.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r2.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
-
-#line 196
-    ineg r6.x, r6.y
-    ineg r6.w, r2.w
-    and r7.w, r6.y, l(0x80000000)
-    imax r6.x, r6.y, r6.x
-    imax r6.y, r2.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r6.x, r6.w, r6.y, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.w, r2.w
-    and r7.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r2.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
-
-#line 197
-    ineg r6.x, r6.z
-    ineg r6.y, r2.w
-    and r6.w, r6.z, l(0x80000000)
-    imax r6.x, r6.z, r6.x
-    imax r6.y, r2.w, r6.y
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r6.x, r6.z, r6.y, r6.x
-    iadd r6.x, r2.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.z, r2.w
-    and r6.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r2.w, r6.z
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
-
-#line 201
-    nop 
-    mov r7.x, r7.x  // r7.x <- cellId.x
-    mov r7.y, r7.y  // r7.y <- cellId.y
-    mov r7.z, r7.z  // r7.z <- cellId.z
-
-#line 173
-    nop 
-    utof r6.xyz, r7.xyzx  // r6.x <- p.x; r6.y <- p.y; r6.z <- p.z
-
-#line 28
-    ftoi r6.xyz, r6.xyzx
-    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
-
-#line 31
-    xor r6.x, r6.y, r6.x
-    xor r6.x, r6.z, r6.x
-    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
-
-#line 34
-    utof r6.xyz, r6.xyzx
-    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r6.xyz, r0.wwww, r6.xyzx
-    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
-
-#line 173
-    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
-
-#line 201
-    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
-
-#line 204
-    itof r7.xyz, r4.xyzx
-    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
-
-#line 207
-    mov r6.xyz, -r6.xyzx
-    add r6.xyz, r2.xyzx, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
-
-#line 208
-    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
-
-#line 209
-    min r5.w, r4.y, r5.w
-
-#line 210
-    iadd r4.x, r4.x, l(1)
-  endloop 
-  mov r5.x, r5.w  // r5.x <- minDist2
-  iadd r5.y, r5.y, l(1)
-endloop 
-
-#line 213
-mov r2.x, -r5.x
-add r2.x, r2.x, l(1.000000)  // r2.x <- <worley_noise_fixed return value>
-
-#line 220
-mul r2.x, r2.x, l(0.625000)
-nop 
-mul r2.yzw, r1.wwww, r1.xxyz
-mul r2.yzw, r2.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-mul r3.x, r1.w, l(2.000000)
-ftoi r3.x, r3.x
+mul r2.yzw, r1.yyzw, r2.xxxx
+ftoi r3.x, r2.x
 
 #line 178
 round_ni r3.yzw, r2.yyzw  // r3.y <- idf.x; r3.z <- idf.y; r3.w <- idf.z
@@ -943,458 +914,12 @@ mov r2.y, -r4.z
 add r2.y, r2.y, l(1.000000)  // r2.y <- <worley_noise_fixed return value>
 
 #line 220
-mul r2.y, r2.y, l(0.250000)
-add r2.x, r2.y, r2.x
+mul r2.y, r2.y, l(0.625000)
 nop 
-mul r2.yzw, r1.wwww, r1.xxyz
-mul r2.yzw, r2.yyzw, l(0.000000, 4.000000, 4.000000, 4.000000)
-mul r1.w, r1.w, l(4.000000)
-ftoi r1.w, r1.w
-
-#line 178
-round_ni r3.xyz, r2.yzwy  // r3.x <- idf.x; r3.y <- idf.y; r3.z <- idf.z
-
-#line 179
-ftoi r3.xyz, r3.xyzx  // r3.x <- cid.x; r3.y <- cid.y; r3.z <- cid.z
-
-#line 180
-frc r2.yzw, r2.yyzw  // r2.y <- p.x; r2.z <- p.y; r2.w <- p.z
-
-#line 182
-mov r3.w, l(10000000000.000000)  // r3.w <- minDist2
-
-#line 186
-mov r4.z, l(-1)  // r4.z <- oz
-
-#line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r5.x, r3.w  // r5.x <- minDist2
-mov r5.y, r4.w  // r5.y <- oy
-loop 
-  ige r5.z, l(1), r5.y
-  breakc_z r5.z
-
-#line 188
-  mov r5.z, l(-1)  // r5.z <- ox
-  mov r5.w, r5.x  // r5.w <- minDist2
-  mov r4.x, r5.z  // r4.x <- ox
-  loop 
-    ige r6.x, l(1), r4.x
-    breakc_z r6.x
-
-#line 190
-    mov r4.y, r5.y
-    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
-
-#line 195
-    ineg r6.w, r6.x
-    ineg r7.x, r1.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r1.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r6.x, r7.x, r6.w, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.w, r6.x
-    ineg r7.x, r1.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r1.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
-
-#line 196
-    ineg r6.x, r6.y
-    ineg r6.w, r1.w
-    and r7.w, r6.y, l(0x80000000)
-    imax r6.x, r6.y, r6.x
-    imax r6.y, r1.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r6.x, r6.w, r6.y, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.w, r1.w
-    and r7.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r1.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
-
-#line 197
-    ineg r6.x, r6.z
-    ineg r6.y, r1.w
-    and r6.w, r6.z, l(0x80000000)
-    imax r6.x, r6.z, r6.x
-    imax r6.y, r1.w, r6.y
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r6.x, r6.z, r6.y, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.z, r1.w
-    and r6.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r1.w, r6.z
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
-
-#line 201
-    nop 
-    mov r7.x, r7.x
-    mov r7.y, r7.y
-    mov r7.z, r7.z
-
-#line 173
-    nop 
-    utof r6.xyz, r7.xyzx
-
-#line 28
-    ftoi r6.xyz, r6.xyzx
-    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
-
-#line 31
-    xor r6.x, r6.y, r6.x
-    xor r6.x, r6.z, r6.x
-    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
-
-#line 34
-    utof r6.xyz, r6.xyzx
-    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r6.xyz, r0.wwww, r6.xyzx
-    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
-
-#line 173
-    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
-
-#line 201
-    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
-
-#line 204
-    itof r7.xyz, r4.xyzx
-    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
-
-#line 207
-    mov r6.xyz, -r6.xyzx
-    add r6.xyz, r2.yzwy, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
-
-#line 208
-    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
-
-#line 209
-    min r5.w, r4.y, r5.w
-
-#line 210
-    iadd r4.x, r4.x, l(1)
-  endloop 
-  mov r5.x, r5.w  // r5.x <- minDist2
-  iadd r5.y, r5.y, l(1)
-endloop 
-iadd r4.z, r4.z, l(1)
-
-#line 187
-mov r3.w, l(-1)  // r3.w <- oy
-mov r4.w, r5.x  // r4.w <- minDist2
-mov r5.y, r3.w  // r5.y <- oy
-loop 
-  ige r5.z, l(1), r5.y
-  breakc_z r5.z
-
-#line 188
-  mov r5.z, l(-1)  // r5.z <- ox
-  mov r5.w, r4.w  // r5.w <- minDist2
-  mov r4.x, r5.z  // r4.x <- ox
-  loop 
-    ige r6.x, l(1), r4.x
-    breakc_z r6.x
-
-#line 190
-    mov r4.y, r5.y
-    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
-
-#line 195
-    ineg r6.w, r6.x
-    ineg r7.x, r1.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r1.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r6.x, r7.x, r6.w, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.w, r6.x
-    ineg r7.x, r1.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r1.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
-
-#line 196
-    ineg r6.x, r6.y
-    ineg r6.w, r1.w
-    and r7.w, r6.y, l(0x80000000)
-    imax r6.x, r6.y, r6.x
-    imax r6.y, r1.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r6.x, r6.w, r6.y, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.w, r1.w
-    and r7.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r1.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
-
-#line 197
-    ineg r6.x, r6.z
-    ineg r6.y, r1.w
-    and r6.w, r6.z, l(0x80000000)
-    imax r6.x, r6.z, r6.x
-    imax r6.y, r1.w, r6.y
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r6.x, r6.z, r6.y, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.z, r1.w
-    and r6.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r1.w, r6.z
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
-
-#line 201
-    nop 
-    mov r7.x, r7.x  // r7.x <- cellId.x
-    mov r7.y, r7.y  // r7.y <- cellId.y
-    mov r7.z, r7.z  // r7.z <- cellId.z
-
-#line 173
-    nop 
-    utof r6.xyz, r7.xyzx  // r6.x <- p.x; r6.y <- p.y; r6.z <- p.z
-
-#line 28
-    ftoi r6.xyz, r6.xyzx
-    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
-
-#line 31
-    xor r6.x, r6.y, r6.x
-    xor r6.x, r6.z, r6.x
-    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
-
-#line 34
-    utof r6.xyz, r6.xyzx
-    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r6.xyz, r0.wwww, r6.xyzx
-    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
-
-#line 173
-    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
-
-#line 201
-    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
-
-#line 204
-    itof r7.xyz, r4.xyzx
-    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
-
-#line 207
-    mov r6.xyz, -r6.xyzx
-    add r6.xyz, r2.yzwy, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
-
-#line 208
-    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
-
-#line 209
-    min r5.w, r4.y, r5.w
-
-#line 210
-    iadd r4.x, r4.x, l(1)
-  endloop 
-  mov r4.w, r5.w  // r4.w <- minDist2
-  iadd r5.y, r5.y, l(1)
-endloop 
-iadd r4.z, r4.z, l(1)
-
-#line 187
-mov r3.w, l(-1)  // r3.w <- oy
-mov r5.x, r4.w  // r5.x <- minDist2
-mov r5.y, r3.w  // r5.y <- oy
-loop 
-  ige r5.z, l(1), r5.y
-  breakc_z r5.z
-
-#line 188
-  mov r5.z, l(-1)  // r5.z <- ox
-  mov r5.w, r5.x  // r5.w <- minDist2
-  mov r4.x, r5.z  // r4.x <- ox
-  loop 
-    ige r6.x, l(1), r4.x
-    breakc_z r6.x
-
-#line 190
-    mov r4.y, r5.y
-    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
-
-#line 195
-    ineg r6.w, r6.x
-    ineg r7.x, r1.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r1.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r6.x, r7.x, r6.w, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.w, r6.x
-    ineg r7.x, r1.w
-    and r7.y, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.w
-    imax r6.w, r1.w, r7.x
-    udiv null, r6.x, r6.x, r6.w
-    ineg r6.w, r6.x
-    ine r7.x, l(0, 0, 0, 0), r7.y
-    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
-
-#line 196
-    ineg r6.x, r6.y
-    ineg r6.w, r1.w
-    and r7.w, r6.y, l(0x80000000)
-    imax r6.x, r6.y, r6.x
-    imax r6.y, r1.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r6.x, r6.w, r6.y, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.w, r1.w
-    and r7.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r1.w, r6.w
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.w, l(0, 0, 0, 0), r7.w
-    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
-
-#line 197
-    ineg r6.x, r6.z
-    ineg r6.y, r1.w
-    and r6.w, r6.z, l(0x80000000)
-    imax r6.x, r6.z, r6.x
-    imax r6.y, r1.w, r6.y
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r6.x, r6.z, r6.y, r6.x
-    iadd r6.x, r1.w, r6.x
-    ineg r6.y, r6.x
-    ineg r6.z, r1.w
-    and r6.w, r6.x, l(0x80000000)
-    imax r6.x, r6.x, r6.y
-    imax r6.y, r1.w, r6.z
-    udiv null, r6.x, r6.x, r6.y
-    ineg r6.y, r6.x
-    ine r6.z, l(0, 0, 0, 0), r6.w
-    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
-
-#line 201
-    nop 
-    mov r7.x, r7.x  // r7.x <- cellId.x
-    mov r7.y, r7.y  // r7.y <- cellId.y
-    mov r7.z, r7.z  // r7.z <- cellId.z
-
-#line 173
-    nop 
-    utof r6.xyz, r7.xyzx  // r6.x <- p.x; r6.y <- p.y; r6.z <- p.z
-
-#line 28
-    ftoi r6.xyz, r6.xyzx
-    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
-
-#line 31
-    xor r6.x, r6.y, r6.x
-    xor r6.x, r6.z, r6.x
-    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
-
-#line 34
-    utof r6.xyz, r6.xyzx
-    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r6.xyz, r0.wwww, r6.xyzx
-    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
-
-#line 173
-    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
-
-#line 201
-    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
-
-#line 204
-    itof r7.xyz, r4.xyzx
-    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
-
-#line 207
-    mov r6.xyz, -r6.xyzx
-    add r6.xyz, r2.yzwy, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
-
-#line 208
-    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
-
-#line 209
-    min r5.w, r4.y, r5.w
-
-#line 210
-    iadd r4.x, r4.x, l(1)
-  endloop 
-  mov r5.x, r5.w  // r5.x <- minDist2
-  iadd r5.y, r5.y, l(1)
-endloop 
-
-#line 213
-mov r1.w, -r5.x
-add r1.w, r1.w, l(1.000000)  // r1.w <- <worley_noise_fixed return value>
-
-#line 220
-mul r1.w, r1.w, l(0.125000)
-add r2.x, r1.w, r2.x  // r2.x <- <worley_fbm return value>
-
-#line 27 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
-mov r2.x, r2.x  // r2.x <- color.x
-
-#line 28
-nop 
-mov r1.w, l(8.000000)
-
-#line 220 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
-nop 
-mul r3.xyz, r1.wwww, r1.xyzx
-ftoi r3.w, r1.w
+mul r3.xyz, r1.yzwy, r2.xxxx
+mul r3.xyz, r3.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+mul r2.z, r2.x, l(2.000000)
+ftoi r2.z, r2.z
 
 #line 178
 round_ni r4.xyz, r3.xyzx  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
@@ -1406,93 +931,93 @@ ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
 frc r3.xyz, r3.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
 
 #line 182
-mov r4.w, l(10000000000.000000)  // r4.w <- minDist2
+mov r2.w, l(10000000000.000000)  // r2.w <- minDist2
 
 #line 186
 mov r5.z, l(-1)  // r5.z <- oz
 
 #line 187
-mov r5.w, l(-1)  // r5.w <- oy
-mov r6.x, r4.w  // r6.x <- minDist2
-mov r6.y, r5.w  // r6.y <- oy
+mov r3.w, l(-1)  // r3.w <- oy
+mov r4.w, r2.w  // r4.w <- minDist2
+mov r5.w, r3.w  // r5.w <- oy
 loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
 
 #line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r6.x  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r4.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
   loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
 
 #line 190
-    mov r5.y, r6.y
+    mov r5.y, r5.w
     iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
 
 #line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
+    ineg r6.z, r7.x
+    ineg r6.w, r2.z
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
 
 #line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r3.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r3.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
+    ineg r6.z, r7.y
+    ineg r6.w, r2.z
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
 
 #line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r3.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r3.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r3.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
+    ineg r6.z, r7.z
+    ineg r6.w, r2.z
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
 
 #line 201
     nop 
@@ -1509,9 +1034,9 @@ loop
     imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
 
 #line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
 
 #line 34
     utof r7.xyz, r7.xyzx
@@ -1538,98 +1063,98 @@ loop
     dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
 
 #line 209
-    min r6.w, r5.y, r6.w
+    min r6.y, r5.y, r6.y
 
 #line 210
     iadd r5.x, r5.x, l(1)
   endloop 
-  mov r6.x, r6.w  // r6.x <- minDist2
-  iadd r6.y, r6.y, l(1)
+  mov r4.w, r6.y  // r4.w <- minDist2
+  iadd r5.w, r5.w, l(1)
 endloop 
 iadd r5.z, r5.z, l(1)
 
 #line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r5.w, r6.x  // r5.w <- minDist2
-mov r6.y, r4.w  // r6.y <- oy
+mov r2.w, l(-1)  // r2.w <- oy
+mov r3.w, r4.w  // r3.w <- minDist2
+mov r5.w, r2.w  // r5.w <- oy
 loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
 
 #line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r5.w  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r3.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
   loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
 
 #line 190
-    mov r5.y, r6.y
+    mov r5.y, r5.w
     iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
 
 #line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
+    ineg r6.z, r7.x
+    ineg r6.w, r2.z
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
 
 #line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r3.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r3.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
+    ineg r6.z, r7.y
+    ineg r6.w, r2.z
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
 
 #line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r3.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r3.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r3.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
+    ineg r6.z, r7.z
+    ineg r6.w, r2.z
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
 
 #line 201
     nop 
@@ -1646,9 +1171,9 @@ loop
     imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
 
 #line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
 
 #line 34
     utof r7.xyz, r7.xyzx
@@ -1675,98 +1200,98 @@ loop
     dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
 
 #line 209
-    min r6.w, r5.y, r6.w
+    min r6.y, r5.y, r6.y
 
 #line 210
     iadd r5.x, r5.x, l(1)
   endloop 
-  mov r5.w, r6.w  // r5.w <- minDist2
-  iadd r6.y, r6.y, l(1)
+  mov r3.w, r6.y  // r3.w <- minDist2
+  iadd r5.w, r5.w, l(1)
 endloop 
 iadd r5.z, r5.z, l(1)
 
 #line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r6.x, r5.w  // r6.x <- minDist2
-mov r6.y, r4.w  // r6.y <- oy
+mov r2.w, l(-1)  // r2.w <- oy
+mov r4.w, r3.w  // r4.w <- minDist2
+mov r5.w, r2.w  // r5.w <- oy
 loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
 
 #line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r6.x  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r4.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
   loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
 
 #line 190
-    mov r5.y, r6.y
+    mov r5.y, r5.w
     iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
 
 #line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
+    ineg r6.z, r7.x
+    ineg r6.w, r2.z
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
 
 #line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r3.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r3.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
+    ineg r6.z, r7.y
+    ineg r6.w, r2.z
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
 
 #line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r3.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r3.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r3.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
+    ineg r6.z, r7.z
+    ineg r6.w, r2.z
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
 
 #line 201
     nop 
@@ -1783,9 +1308,9 @@ loop
     imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
 
 #line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
 
 #line 34
     utof r7.xyz, r7.xyzx
@@ -1812,909 +1337,27 @@ loop
     dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
 
 #line 209
-    min r6.w, r5.y, r6.w
+    min r6.y, r5.y, r6.y
 
 #line 210
     iadd r5.x, r5.x, l(1)
   endloop 
-  mov r6.x, r6.w  // r6.x <- minDist2
-  iadd r6.y, r6.y, l(1)
-endloop 
-
-#line 213
-mov r3.x, -r6.x
-add r3.x, r3.x, l(1.000000)  // r3.x <- <worley_noise_fixed return value>
-
-#line 220
-mul r3.x, r3.x, l(0.625000)
-nop 
-mul r3.yzw, r1.wwww, r1.xxyz
-mul r3.yzw, r3.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-mul r4.x, r1.w, l(2.000000)
-ftoi r4.x, r4.x
-
-#line 178
-round_ni r4.yzw, r3.yyzw  // r4.y <- idf.x; r4.z <- idf.y; r4.w <- idf.z
-
-#line 179
-ftoi r4.yzw, r4.yyzw  // r4.y <- cid.x; r4.z <- cid.y; r4.w <- cid.z
-
-#line 180
-frc r3.yzw, r3.yyzw  // r3.y <- p.x; r3.z <- p.y; r3.w <- p.z
-
-#line 182
-mov r5.x, l(10000000000.000000)  // r5.x <- minDist2
-
-#line 186
-mov r6.z, l(-1)  // r6.z <- oz
-
-#line 187
-mov r5.y, l(-1)  // r5.y <- oy
-mov r5.z, r5.x  // r5.z <- minDist2
-mov r5.w, r5.y  // r5.w <- oy
-loop 
-  ige r6.w, l(1), r5.w
-  breakc_z r6.w
-
-#line 188
-  mov r6.w, l(-1)  // r6.w <- ox
-  mov r7.x, r5.z  // r7.x <- minDist2
-  mov r6.x, r6.w  // r6.x <- ox
-  loop 
-    ige r7.y, l(1), r6.x
-    breakc_z r7.y
-
-#line 190
-    mov r6.y, r5.w
-    iadd r7.yzw, r4.yyzw, r6.xxyz  // r7.y <- nid.x; r7.z <- nid.y; r7.w <- nid.z
-
-#line 195
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r7.y, r8.y, r8.x, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r8.x, r8.y, r8.x, r7.y  // r8.x <- nid.x
-
-#line 196
-    ineg r7.y, r7.z
-    ineg r8.w, r4.x
-    and r9.x, r7.z, l(0x80000000)
-    imax r7.y, r7.z, r7.y
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r7.y, r8.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r8.w, r4.x
-    and r9.x, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r8.y, r8.w, r7.z, r7.y  // r8.y <- nid.y
-
-#line 197
-    ineg r7.y, r7.w
-    ineg r7.z, r4.x
-    and r8.w, r7.w, l(0x80000000)
-    imax r7.y, r7.w, r7.y
-    imax r7.z, r4.x, r7.z
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.y, r7.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r7.w, r4.x
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r7.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.z, r7.w, r7.z, r7.y  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x
-    mov r8.y, r8.y
-    mov r8.z, r8.z
-
-#line 173
-    nop 
-    utof r7.yzw, r8.xxyz
-
-#line 28
-    ftoi r7.yzw, r7.yyzw
-    imul null, r7.yzw, r0.xxyz, r7.yyzw  // r7.y <- q.x; r7.z <- q.y; r7.w <- q.z
-
-#line 31
-    xor r7.y, r7.z, r7.y
-    xor r7.y, r7.w, r7.y
-    imul null, r7.yzw, r0.xxyz, r7.yyyy  // r7.y <- q.x
-
-#line 34
-    utof r7.yzw, r7.yyzw
-    mul r7.yzw, r7.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-    mul r7.yzw, r0.wwww, r7.yyzw
-    add r7.yzw, r7.yyzw, l(0.000000, -1.000000, -1.000000, -1.000000)  // r7.y <- <hash33 return value>.x; r7.z <- <hash33 return value>.y; r7.w <- <hash33 return value>.z
-
-#line 173
-    add r7.yzw, r7.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)
-    mul r7.yzw, r7.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r7.y <- <jitter01 return value>.x; r7.z <- <jitter01 return value>.y; r7.w <- <jitter01 return value>.z
-
-#line 201
-    mov r7.yzw, r7.yyzw  // r7.y <- j.x; r7.z <- j.y; r7.w <- j.z
-
-#line 204
-    itof r8.xyz, r6.xyzx
-    add r7.yzw, r7.yyzw, r8.xxyz  // r7.y <- feature.x; r7.z <- feature.y; r7.w <- feature.z
-
-#line 207
-    mov r7.yzw, -r7.yyzw
-    add r7.yzw, r3.yyzw, r7.yyzw  // r7.y <- d.x; r7.z <- d.y; r7.w <- d.z
-
-#line 208
-    dp3 r6.y, r7.yzwy, r7.yzwy  // r6.y <- d2
-
-#line 209
-    min r7.x, r6.y, r7.x
-
-#line 210
-    iadd r6.x, r6.x, l(1)
-  endloop 
-  mov r5.z, r7.x  // r5.z <- minDist2
-  iadd r5.w, r5.w, l(1)
-endloop 
-iadd r6.z, r6.z, l(1)
-
-#line 187
-mov r5.x, l(-1)  // r5.x <- oy
-mov r5.y, r5.z  // r5.y <- minDist2
-mov r5.w, r5.x  // r5.w <- oy
-loop 
-  ige r6.w, l(1), r5.w
-  breakc_z r6.w
-
-#line 188
-  mov r6.w, l(-1)  // r6.w <- ox
-  mov r7.x, r5.y  // r7.x <- minDist2
-  mov r6.x, r6.w  // r6.x <- ox
-  loop 
-    ige r7.y, l(1), r6.x
-    breakc_z r7.y
-
-#line 190
-    mov r6.y, r5.w
-    iadd r7.yzw, r4.yyzw, r6.xxyz  // r7.y <- nid.x; r7.z <- nid.y; r7.w <- nid.z
-
-#line 195
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r7.y, r8.y, r8.x, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r8.x, r8.y, r8.x, r7.y  // r8.x <- nid.x
-
-#line 196
-    ineg r7.y, r7.z
-    ineg r8.w, r4.x
-    and r9.x, r7.z, l(0x80000000)
-    imax r7.y, r7.z, r7.y
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r7.y, r8.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r8.w, r4.x
-    and r9.x, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r8.y, r8.w, r7.z, r7.y  // r8.y <- nid.y
-
-#line 197
-    ineg r7.y, r7.w
-    ineg r7.z, r4.x
-    and r8.w, r7.w, l(0x80000000)
-    imax r7.y, r7.w, r7.y
-    imax r7.z, r4.x, r7.z
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.y, r7.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r7.w, r4.x
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r7.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.z, r7.w, r7.z, r7.y  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.yzw, r8.xxyz  // r7.y <- p.x; r7.z <- p.y; r7.w <- p.z
-
-#line 28
-    ftoi r7.yzw, r7.yyzw
-    imul null, r7.yzw, r0.xxyz, r7.yyzw  // r7.y <- q.x; r7.z <- q.y; r7.w <- q.z
-
-#line 31
-    xor r7.y, r7.z, r7.y
-    xor r7.y, r7.w, r7.y
-    imul null, r7.yzw, r0.xxyz, r7.yyyy  // r7.y <- q.x
-
-#line 34
-    utof r7.yzw, r7.yyzw
-    mul r7.yzw, r7.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-    mul r7.yzw, r0.wwww, r7.yyzw
-    add r7.yzw, r7.yyzw, l(0.000000, -1.000000, -1.000000, -1.000000)  // r7.y <- <hash33 return value>.x; r7.z <- <hash33 return value>.y; r7.w <- <hash33 return value>.z
-
-#line 173
-    add r7.yzw, r7.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)
-    mul r7.yzw, r7.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r7.y <- <jitter01 return value>.x; r7.z <- <jitter01 return value>.y; r7.w <- <jitter01 return value>.z
-
-#line 201
-    mov r7.yzw, r7.yyzw  // r7.y <- j.x; r7.z <- j.y; r7.w <- j.z
-
-#line 204
-    itof r8.xyz, r6.xyzx
-    add r7.yzw, r7.yyzw, r8.xxyz  // r7.y <- feature.x; r7.z <- feature.y; r7.w <- feature.z
-
-#line 207
-    mov r7.yzw, -r7.yyzw
-    add r7.yzw, r3.yyzw, r7.yyzw  // r7.y <- d.x; r7.z <- d.y; r7.w <- d.z
-
-#line 208
-    dp3 r6.y, r7.yzwy, r7.yzwy  // r6.y <- d2
-
-#line 209
-    min r7.x, r6.y, r7.x
-
-#line 210
-    iadd r6.x, r6.x, l(1)
-  endloop 
-  mov r5.y, r7.x  // r5.y <- minDist2
-  iadd r5.w, r5.w, l(1)
-endloop 
-iadd r6.z, r6.z, l(1)
-
-#line 187
-mov r5.x, l(-1)  // r5.x <- oy
-mov r5.z, r5.y  // r5.z <- minDist2
-mov r5.w, r5.x  // r5.w <- oy
-loop 
-  ige r6.w, l(1), r5.w
-  breakc_z r6.w
-
-#line 188
-  mov r6.w, l(-1)  // r6.w <- ox
-  mov r7.x, r5.z  // r7.x <- minDist2
-  mov r6.x, r6.w  // r6.x <- ox
-  loop 
-    ige r7.y, l(1), r6.x
-    breakc_z r7.y
-
-#line 190
-    mov r6.y, r5.w
-    iadd r7.yzw, r4.yyzw, r6.xxyz  // r7.y <- nid.x; r7.z <- nid.y; r7.w <- nid.z
-
-#line 195
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r7.y, r8.y, r8.x, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r8.x, r8.y, r8.x, r7.y  // r8.x <- nid.x
-
-#line 196
-    ineg r7.y, r7.z
-    ineg r8.w, r4.x
-    and r9.x, r7.z, l(0x80000000)
-    imax r7.y, r7.z, r7.y
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r7.y, r8.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r8.w, r4.x
-    and r9.x, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r8.y, r8.w, r7.z, r7.y  // r8.y <- nid.y
-
-#line 197
-    ineg r7.y, r7.w
-    ineg r7.z, r4.x
-    and r8.w, r7.w, l(0x80000000)
-    imax r7.y, r7.w, r7.y
-    imax r7.z, r4.x, r7.z
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.y, r7.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r7.w, r4.x
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r7.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.z, r7.w, r7.z, r7.y  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.yzw, r8.xxyz  // r7.y <- p.x; r7.z <- p.y; r7.w <- p.z
-
-#line 28
-    ftoi r7.yzw, r7.yyzw
-    imul null, r7.yzw, r0.xxyz, r7.yyzw  // r7.y <- q.x; r7.z <- q.y; r7.w <- q.z
-
-#line 31
-    xor r7.y, r7.z, r7.y
-    xor r7.y, r7.w, r7.y
-    imul null, r7.yzw, r0.xxyz, r7.yyyy  // r7.y <- q.x
-
-#line 34
-    utof r7.yzw, r7.yyzw
-    mul r7.yzw, r7.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-    mul r7.yzw, r0.wwww, r7.yyzw
-    add r7.yzw, r7.yyzw, l(0.000000, -1.000000, -1.000000, -1.000000)  // r7.y <- <hash33 return value>.x; r7.z <- <hash33 return value>.y; r7.w <- <hash33 return value>.z
-
-#line 173
-    add r7.yzw, r7.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)
-    mul r7.yzw, r7.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r7.y <- <jitter01 return value>.x; r7.z <- <jitter01 return value>.y; r7.w <- <jitter01 return value>.z
-
-#line 201
-    mov r7.yzw, r7.yyzw  // r7.y <- j.x; r7.z <- j.y; r7.w <- j.z
-
-#line 204
-    itof r8.xyz, r6.xyzx
-    add r7.yzw, r7.yyzw, r8.xxyz  // r7.y <- feature.x; r7.z <- feature.y; r7.w <- feature.z
-
-#line 207
-    mov r7.yzw, -r7.yyzw
-    add r7.yzw, r3.yyzw, r7.yyzw  // r7.y <- d.x; r7.z <- d.y; r7.w <- d.z
-
-#line 208
-    dp3 r6.y, r7.yzwy, r7.yzwy  // r6.y <- d2
-
-#line 209
-    min r7.x, r6.y, r7.x
-
-#line 210
-    iadd r6.x, r6.x, l(1)
-  endloop 
-  mov r5.z, r7.x  // r5.z <- minDist2
+  mov r4.w, r6.y  // r4.w <- minDist2
   iadd r5.w, r5.w, l(1)
 endloop 
 
 #line 213
-mov r3.y, -r5.z
-add r3.y, r3.y, l(1.000000)  // r3.y <- <worley_noise_fixed return value>
+mov r2.z, -r4.w
+add r2.z, r2.z, l(1.000000)  // r2.z <- <worley_noise_fixed return value>
 
 #line 220
-mul r3.y, r3.y, l(0.250000)
-add r3.x, r3.y, r3.x
+mul r2.z, r2.z, l(0.250000)
+add r2.y, r2.z, r2.y
 nop 
-mul r3.yzw, r1.wwww, r1.xxyz
-mul r3.yzw, r3.yyzw, l(0.000000, 4.000000, 4.000000, 4.000000)
-mul r1.w, r1.w, l(4.000000)
-ftoi r1.w, r1.w
-
-#line 178
-round_ni r4.xyz, r3.yzwy  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
-
-#line 179
-ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
-
-#line 180
-frc r3.yzw, r3.yyzw  // r3.y <- p.x; r3.z <- p.y; r3.w <- p.z
-
-#line 182
-mov r4.w, l(10000000000.000000)  // r4.w <- minDist2
-
-#line 186
-mov r5.z, l(-1)  // r5.z <- oz
-
-#line 187
-mov r5.w, l(-1)  // r5.w <- oy
-mov r6.x, r4.w  // r6.x <- minDist2
-mov r6.y, r5.w  // r6.y <- oy
-loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
-
-#line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r6.x  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
-  loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
-
-#line 190
-    mov r5.y, r6.y
-    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
-
-#line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r1.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r1.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r1.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r1.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
-
-#line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r1.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r1.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r1.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r1.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
-
-#line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r1.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r1.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r1.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r1.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x
-    mov r8.y, r8.y
-    mov r8.z, r8.z
-
-#line 173
-    nop 
-    utof r7.xyz, r8.xyzx
-
-#line 28
-    ftoi r7.xyz, r7.xyzx
-    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
-
-#line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
-
-#line 34
-    utof r7.xyz, r7.xyzx
-    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r7.xyz, r0.wwww, r7.xyzx
-    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
-
-#line 173
-    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
-
-#line 201
-    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
-
-#line 204
-    itof r8.xyz, r5.xyzx
-    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
-
-#line 207
-    mov r7.xyz, -r7.xyzx
-    add r7.xyz, r3.yzwy, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
-
-#line 208
-    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
-
-#line 209
-    min r6.w, r5.y, r6.w
-
-#line 210
-    iadd r5.x, r5.x, l(1)
-  endloop 
-  mov r6.x, r6.w  // r6.x <- minDist2
-  iadd r6.y, r6.y, l(1)
-endloop 
-iadd r5.z, r5.z, l(1)
-
-#line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r5.w, r6.x  // r5.w <- minDist2
-mov r6.y, r4.w  // r6.y <- oy
-loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
-
-#line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r5.w  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
-  loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
-
-#line 190
-    mov r5.y, r6.y
-    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
-
-#line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r1.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r1.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r1.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r1.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
-
-#line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r1.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r1.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r1.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r1.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
-
-#line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r1.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r1.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r1.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r1.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
-
-#line 28
-    ftoi r7.xyz, r7.xyzx
-    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
-
-#line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
-
-#line 34
-    utof r7.xyz, r7.xyzx
-    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r7.xyz, r0.wwww, r7.xyzx
-    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
-
-#line 173
-    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
-
-#line 201
-    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
-
-#line 204
-    itof r8.xyz, r5.xyzx
-    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
-
-#line 207
-    mov r7.xyz, -r7.xyzx
-    add r7.xyz, r3.yzwy, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
-
-#line 208
-    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
-
-#line 209
-    min r6.w, r5.y, r6.w
-
-#line 210
-    iadd r5.x, r5.x, l(1)
-  endloop 
-  mov r5.w, r6.w  // r5.w <- minDist2
-  iadd r6.y, r6.y, l(1)
-endloop 
-iadd r5.z, r5.z, l(1)
-
-#line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r6.x, r5.w  // r6.x <- minDist2
-mov r6.y, r4.w  // r6.y <- oy
-loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
-
-#line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r6.x  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
-  loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
-
-#line 190
-    mov r5.y, r6.y
-    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
-
-#line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r1.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r1.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r1.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r1.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
-
-#line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r1.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r1.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r1.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r1.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
-
-#line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r1.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r1.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r1.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r1.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r1.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
-
-#line 28
-    ftoi r7.xyz, r7.xyzx
-    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
-
-#line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
-
-#line 34
-    utof r7.xyz, r7.xyzx
-    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r7.xyz, r0.wwww, r7.xyzx
-    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
-
-#line 173
-    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
-
-#line 201
-    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
-
-#line 204
-    itof r8.xyz, r5.xyzx
-    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
-
-#line 207
-    mov r7.xyz, -r7.xyzx
-    add r7.xyz, r3.yzwy, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
-
-#line 208
-    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
-
-#line 209
-    min r6.w, r5.y, r6.w
-
-#line 210
-    iadd r5.x, r5.x, l(1)
-  endloop 
-  mov r6.x, r6.w  // r6.x <- minDist2
-  iadd r6.y, r6.y, l(1)
-endloop 
-
-#line 213
-mov r1.w, -r6.x
-add r1.w, r1.w, l(1.000000)  // r1.w <- <worley_noise_fixed return value>
-
-#line 220
-mul r1.w, r1.w, l(0.125000)
-add r2.y, r1.w, r3.x  // r2.y <- <worley_fbm return value>
-
-#line 28 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
-mov r2.y, r2.y  // r2.y <- color.y
-
-#line 29
-nop 
-mov r1.w, l(16.000000)
-
-#line 220 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
-nop 
-mul r3.xyz, r1.wwww, r1.xyzx
-ftoi r3.w, r1.w
+mul r3.xyz, r1.yzwy, r2.xxxx
+mul r3.xyz, r3.xyzx, l(4.000000, 4.000000, 4.000000, 0.000000)
+mul r2.x, r2.x, l(4.000000)
+ftoi r2.x, r2.x
 
 #line 178
 round_ni r4.xyz, r3.xyzx  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
@@ -2726,897 +1369,22 @@ ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
 frc r3.xyz, r3.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
 
 #line 182
-mov r4.w, l(10000000000.000000)  // r4.w <- minDist2
+mov r2.z, l(10000000000.000000)  // r2.z <- minDist2
 
 #line 186
 mov r5.z, l(-1)  // r5.z <- oz
 
 #line 187
-mov r5.w, l(-1)  // r5.w <- oy
-mov r6.x, r4.w  // r6.x <- minDist2
-mov r6.y, r5.w  // r6.y <- oy
-loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
-
-#line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r6.x  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
-  loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
-
-#line 190
-    mov r5.y, r6.y
-    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
-
-#line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
-
-#line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r3.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r3.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
-
-#line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r3.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r3.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r3.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x
-    mov r8.y, r8.y
-    mov r8.z, r8.z
-
-#line 173
-    nop 
-    utof r7.xyz, r8.xyzx
-
-#line 28
-    ftoi r7.xyz, r7.xyzx
-    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
-
-#line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
-
-#line 34
-    utof r7.xyz, r7.xyzx
-    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r7.xyz, r0.wwww, r7.xyzx
-    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
-
-#line 173
-    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
-
-#line 201
-    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
-
-#line 204
-    itof r8.xyz, r5.xyzx
-    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
-
-#line 207
-    mov r7.xyz, -r7.xyzx
-    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
-
-#line 208
-    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
-
-#line 209
-    min r6.w, r5.y, r6.w
-
-#line 210
-    iadd r5.x, r5.x, l(1)
-  endloop 
-  mov r6.x, r6.w  // r6.x <- minDist2
-  iadd r6.y, r6.y, l(1)
-endloop 
-iadd r5.z, r5.z, l(1)
-
-#line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r5.w, r6.x  // r5.w <- minDist2
-mov r6.y, r4.w  // r6.y <- oy
-loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
-
-#line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r5.w  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
-  loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
-
-#line 190
-    mov r5.y, r6.y
-    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
-
-#line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
-
-#line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r3.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r3.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
-
-#line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r3.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r3.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r3.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
-
-#line 28
-    ftoi r7.xyz, r7.xyzx
-    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
-
-#line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
-
-#line 34
-    utof r7.xyz, r7.xyzx
-    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r7.xyz, r0.wwww, r7.xyzx
-    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
-
-#line 173
-    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
-
-#line 201
-    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
-
-#line 204
-    itof r8.xyz, r5.xyzx
-    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
-
-#line 207
-    mov r7.xyz, -r7.xyzx
-    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
-
-#line 208
-    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
-
-#line 209
-    min r6.w, r5.y, r6.w
-
-#line 210
-    iadd r5.x, r5.x, l(1)
-  endloop 
-  mov r5.w, r6.w  // r5.w <- minDist2
-  iadd r6.y, r6.y, l(1)
-endloop 
-iadd r5.z, r5.z, l(1)
-
-#line 187
-mov r4.w, l(-1)  // r4.w <- oy
-mov r6.x, r5.w  // r6.x <- minDist2
-mov r6.y, r4.w  // r6.y <- oy
-loop 
-  ige r6.z, l(1), r6.y
-  breakc_z r6.z
-
-#line 188
-  mov r6.z, l(-1)  // r6.z <- ox
-  mov r6.w, r6.x  // r6.w <- minDist2
-  mov r5.x, r6.z  // r5.x <- ox
-  loop 
-    ige r7.x, l(1), r5.x
-    breakc_z r7.x
-
-#line 190
-    mov r5.y, r6.y
-    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
-
-#line 195
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r7.x, r8.x, r7.w, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.w, r7.x
-    ineg r8.x, r3.w
-    and r8.y, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.w
-    imax r7.w, r3.w, r8.x
-    udiv null, r7.x, r7.x, r7.w
-    ineg r7.w, r7.x
-    ine r8.x, l(0, 0, 0, 0), r8.y
-    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
-
-#line 196
-    ineg r7.x, r7.y
-    ineg r7.w, r3.w
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.x, r7.y, r7.x
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.x, r7.w, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.w, r3.w
-    and r8.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.w
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
-
-#line 197
-    ineg r7.x, r7.z
-    ineg r7.y, r3.w
-    and r7.w, r7.z, l(0x80000000)
-    imax r7.x, r7.z, r7.x
-    imax r7.y, r3.w, r7.y
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r7.x, r7.z, r7.y, r7.x
-    iadd r7.x, r3.w, r7.x
-    ineg r7.y, r7.x
-    ineg r7.z, r3.w
-    and r7.w, r7.x, l(0x80000000)
-    imax r7.x, r7.x, r7.y
-    imax r7.y, r3.w, r7.z
-    udiv null, r7.x, r7.x, r7.y
-    ineg r7.y, r7.x
-    ine r7.z, l(0, 0, 0, 0), r7.w
-    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
-
-#line 28
-    ftoi r7.xyz, r7.xyzx
-    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
-
-#line 31
-    xor r7.x, r7.y, r7.x
-    xor r7.x, r7.z, r7.x
-    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
-
-#line 34
-    utof r7.xyz, r7.xyzx
-    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-    mul r7.xyz, r0.wwww, r7.xyzx
-    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
-
-#line 173
-    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
-    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
-
-#line 201
-    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
-
-#line 204
-    itof r8.xyz, r5.xyzx
-    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
-
-#line 207
-    mov r7.xyz, -r7.xyzx
-    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
-
-#line 208
-    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
-
-#line 209
-    min r6.w, r5.y, r6.w
-
-#line 210
-    iadd r5.x, r5.x, l(1)
-  endloop 
-  mov r6.x, r6.w  // r6.x <- minDist2
-  iadd r6.y, r6.y, l(1)
-endloop 
-
-#line 213
-mov r3.x, -r6.x
-add r3.x, r3.x, l(1.000000)  // r3.x <- <worley_noise_fixed return value>
-
-#line 220
-mul r3.x, r3.x, l(0.625000)
-nop 
-mul r3.yzw, r1.wwww, r1.xxyz
-mul r3.yzw, r3.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-mul r4.x, r1.w, l(2.000000)
-ftoi r4.x, r4.x
-
-#line 178
-round_ni r4.yzw, r3.yyzw  // r4.y <- idf.x; r4.z <- idf.y; r4.w <- idf.z
-
-#line 179
-ftoi r4.yzw, r4.yyzw  // r4.y <- cid.x; r4.z <- cid.y; r4.w <- cid.z
-
-#line 180
-frc r3.yzw, r3.yyzw  // r3.y <- p.x; r3.z <- p.y; r3.w <- p.z
-
-#line 182
-mov r5.x, l(10000000000.000000)  // r5.x <- minDist2
-
-#line 186
-mov r6.z, l(-1)  // r6.z <- oz
-
-#line 187
-mov r5.y, l(-1)  // r5.y <- oy
-mov r5.z, r5.x  // r5.z <- minDist2
-mov r5.w, r5.y  // r5.w <- oy
-loop 
-  ige r6.w, l(1), r5.w
-  breakc_z r6.w
-
-#line 188
-  mov r6.w, l(-1)  // r6.w <- ox
-  mov r7.x, r5.z  // r7.x <- minDist2
-  mov r6.x, r6.w  // r6.x <- ox
-  loop 
-    ige r7.y, l(1), r6.x
-    breakc_z r7.y
-
-#line 190
-    mov r6.y, r5.w
-    iadd r7.yzw, r4.yyzw, r6.xxyz  // r7.y <- nid.x; r7.z <- nid.y; r7.w <- nid.z
-
-#line 195
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r7.y, r8.y, r8.x, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r8.x, r8.y, r8.x, r7.y  // r8.x <- nid.x
-
-#line 196
-    ineg r7.y, r7.z
-    ineg r8.w, r4.x
-    and r9.x, r7.z, l(0x80000000)
-    imax r7.y, r7.z, r7.y
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r7.y, r8.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r8.w, r4.x
-    and r9.x, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r8.y, r8.w, r7.z, r7.y  // r8.y <- nid.y
-
-#line 197
-    ineg r7.y, r7.w
-    ineg r7.z, r4.x
-    and r8.w, r7.w, l(0x80000000)
-    imax r7.y, r7.w, r7.y
-    imax r7.z, r4.x, r7.z
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.y, r7.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r7.w, r4.x
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r7.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.z, r7.w, r7.z, r7.y  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x
-    mov r8.y, r8.y
-    mov r8.z, r8.z
-
-#line 173
-    nop 
-    utof r7.yzw, r8.xxyz
-
-#line 28
-    ftoi r7.yzw, r7.yyzw
-    imul null, r7.yzw, r0.xxyz, r7.yyzw  // r7.y <- q.x; r7.z <- q.y; r7.w <- q.z
-
-#line 31
-    xor r7.y, r7.z, r7.y
-    xor r7.y, r7.w, r7.y
-    imul null, r7.yzw, r0.xxyz, r7.yyyy  // r7.y <- q.x
-
-#line 34
-    utof r7.yzw, r7.yyzw
-    mul r7.yzw, r7.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-    mul r7.yzw, r0.wwww, r7.yyzw
-    add r7.yzw, r7.yyzw, l(0.000000, -1.000000, -1.000000, -1.000000)  // r7.y <- <hash33 return value>.x; r7.z <- <hash33 return value>.y; r7.w <- <hash33 return value>.z
-
-#line 173
-    add r7.yzw, r7.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)
-    mul r7.yzw, r7.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r7.y <- <jitter01 return value>.x; r7.z <- <jitter01 return value>.y; r7.w <- <jitter01 return value>.z
-
-#line 201
-    mov r7.yzw, r7.yyzw  // r7.y <- j.x; r7.z <- j.y; r7.w <- j.z
-
-#line 204
-    itof r8.xyz, r6.xyzx
-    add r7.yzw, r7.yyzw, r8.xxyz  // r7.y <- feature.x; r7.z <- feature.y; r7.w <- feature.z
-
-#line 207
-    mov r7.yzw, -r7.yyzw
-    add r7.yzw, r3.yyzw, r7.yyzw  // r7.y <- d.x; r7.z <- d.y; r7.w <- d.z
-
-#line 208
-    dp3 r6.y, r7.yzwy, r7.yzwy  // r6.y <- d2
-
-#line 209
-    min r7.x, r6.y, r7.x
-
-#line 210
-    iadd r6.x, r6.x, l(1)
-  endloop 
-  mov r5.z, r7.x  // r5.z <- minDist2
-  iadd r5.w, r5.w, l(1)
-endloop 
-iadd r6.z, r6.z, l(1)
-
-#line 187
-mov r5.x, l(-1)  // r5.x <- oy
-mov r5.y, r5.z  // r5.y <- minDist2
-mov r5.w, r5.x  // r5.w <- oy
-loop 
-  ige r6.w, l(1), r5.w
-  breakc_z r6.w
-
-#line 188
-  mov r6.w, l(-1)  // r6.w <- ox
-  mov r7.x, r5.y  // r7.x <- minDist2
-  mov r6.x, r6.w  // r6.x <- ox
-  loop 
-    ige r7.y, l(1), r6.x
-    breakc_z r7.y
-
-#line 190
-    mov r6.y, r5.w
-    iadd r7.yzw, r4.yyzw, r6.xxyz  // r7.y <- nid.x; r7.z <- nid.y; r7.w <- nid.z
-
-#line 195
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r7.y, r8.y, r8.x, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r8.x, r8.y, r8.x, r7.y  // r8.x <- nid.x
-
-#line 196
-    ineg r7.y, r7.z
-    ineg r8.w, r4.x
-    and r9.x, r7.z, l(0x80000000)
-    imax r7.y, r7.z, r7.y
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r7.y, r8.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r8.w, r4.x
-    and r9.x, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r8.y, r8.w, r7.z, r7.y  // r8.y <- nid.y
-
-#line 197
-    ineg r7.y, r7.w
-    ineg r7.z, r4.x
-    and r8.w, r7.w, l(0x80000000)
-    imax r7.y, r7.w, r7.y
-    imax r7.z, r4.x, r7.z
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.y, r7.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r7.w, r4.x
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r7.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.z, r7.w, r7.z, r7.y  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.yzw, r8.xxyz  // r7.y <- p.x; r7.z <- p.y; r7.w <- p.z
-
-#line 28
-    ftoi r7.yzw, r7.yyzw
-    imul null, r7.yzw, r0.xxyz, r7.yyzw  // r7.y <- q.x; r7.z <- q.y; r7.w <- q.z
-
-#line 31
-    xor r7.y, r7.z, r7.y
-    xor r7.y, r7.w, r7.y
-    imul null, r7.yzw, r0.xxyz, r7.yyyy  // r7.y <- q.x
-
-#line 34
-    utof r7.yzw, r7.yyzw
-    mul r7.yzw, r7.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-    mul r7.yzw, r0.wwww, r7.yyzw
-    add r7.yzw, r7.yyzw, l(0.000000, -1.000000, -1.000000, -1.000000)  // r7.y <- <hash33 return value>.x; r7.z <- <hash33 return value>.y; r7.w <- <hash33 return value>.z
-
-#line 173
-    add r7.yzw, r7.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)
-    mul r7.yzw, r7.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r7.y <- <jitter01 return value>.x; r7.z <- <jitter01 return value>.y; r7.w <- <jitter01 return value>.z
-
-#line 201
-    mov r7.yzw, r7.yyzw  // r7.y <- j.x; r7.z <- j.y; r7.w <- j.z
-
-#line 204
-    itof r8.xyz, r6.xyzx
-    add r7.yzw, r7.yyzw, r8.xxyz  // r7.y <- feature.x; r7.z <- feature.y; r7.w <- feature.z
-
-#line 207
-    mov r7.yzw, -r7.yyzw
-    add r7.yzw, r3.yyzw, r7.yyzw  // r7.y <- d.x; r7.z <- d.y; r7.w <- d.z
-
-#line 208
-    dp3 r6.y, r7.yzwy, r7.yzwy  // r6.y <- d2
-
-#line 209
-    min r7.x, r6.y, r7.x
-
-#line 210
-    iadd r6.x, r6.x, l(1)
-  endloop 
-  mov r5.y, r7.x  // r5.y <- minDist2
-  iadd r5.w, r5.w, l(1)
-endloop 
-iadd r6.z, r6.z, l(1)
-
-#line 187
-mov r5.x, l(-1)  // r5.x <- oy
-mov r5.z, r5.y  // r5.z <- minDist2
-mov r5.w, r5.x  // r5.w <- oy
-loop 
-  ige r6.w, l(1), r5.w
-  breakc_z r6.w
-
-#line 188
-  mov r6.w, l(-1)  // r6.w <- ox
-  mov r7.x, r5.z  // r7.x <- minDist2
-  mov r6.x, r6.w  // r6.x <- ox
-  loop 
-    ige r7.y, l(1), r6.x
-    breakc_z r7.y
-
-#line 190
-    mov r6.y, r5.w
-    iadd r7.yzw, r4.yyzw, r6.xxyz  // r7.y <- nid.x; r7.z <- nid.y; r7.w <- nid.z
-
-#line 195
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r7.y, r8.y, r8.x, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r8.x, r7.y
-    ineg r8.y, r4.x
-    and r8.z, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r8.x
-    imax r8.x, r4.x, r8.y
-    udiv null, r7.y, r7.y, r8.x
-    ineg r8.x, r7.y
-    ine r8.y, l(0, 0, 0, 0), r8.z
-    movc r8.x, r8.y, r8.x, r7.y  // r8.x <- nid.x
-
-#line 196
-    ineg r7.y, r7.z
-    ineg r8.w, r4.x
-    and r9.x, r7.z, l(0x80000000)
-    imax r7.y, r7.z, r7.y
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r7.y, r8.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r8.w, r4.x
-    and r9.x, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r8.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r8.w, l(0, 0, 0, 0), r9.x
-    movc r8.y, r8.w, r7.z, r7.y  // r8.y <- nid.y
-
-#line 197
-    ineg r7.y, r7.w
-    ineg r7.z, r4.x
-    and r8.w, r7.w, l(0x80000000)
-    imax r7.y, r7.w, r7.y
-    imax r7.z, r4.x, r7.z
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r7.y, r7.w, r7.z, r7.y
-    iadd r7.y, r4.x, r7.y
-    ineg r7.z, r7.y
-    ineg r7.w, r4.x
-    and r8.w, r7.y, l(0x80000000)
-    imax r7.y, r7.y, r7.z
-    imax r7.z, r4.x, r7.w
-    udiv null, r7.y, r7.y, r7.z
-    ineg r7.z, r7.y
-    ine r7.w, l(0, 0, 0, 0), r8.w
-    movc r8.z, r7.w, r7.z, r7.y  // r8.z <- nid.z
-
-#line 201
-    nop 
-    mov r8.x, r8.x  // r8.x <- cellId.x
-    mov r8.y, r8.y  // r8.y <- cellId.y
-    mov r8.z, r8.z  // r8.z <- cellId.z
-
-#line 173
-    nop 
-    utof r7.yzw, r8.xxyz  // r7.y <- p.x; r7.z <- p.y; r7.w <- p.z
-
-#line 28
-    ftoi r7.yzw, r7.yyzw
-    imul null, r7.yzw, r0.xxyz, r7.yyzw  // r7.y <- q.x; r7.z <- q.y; r7.w <- q.z
-
-#line 31
-    xor r7.y, r7.z, r7.y
-    xor r7.y, r7.w, r7.y
-    imul null, r7.yzw, r0.xxyz, r7.yyyy  // r7.y <- q.x
-
-#line 34
-    utof r7.yzw, r7.yyzw
-    mul r7.yzw, r7.yyzw, l(0.000000, 2.000000, 2.000000, 2.000000)
-    mul r7.yzw, r0.wwww, r7.yyzw
-    add r7.yzw, r7.yyzw, l(0.000000, -1.000000, -1.000000, -1.000000)  // r7.y <- <hash33 return value>.x; r7.z <- <hash33 return value>.y; r7.w <- <hash33 return value>.z
-
-#line 173
-    add r7.yzw, r7.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)
-    mul r7.yzw, r7.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r7.y <- <jitter01 return value>.x; r7.z <- <jitter01 return value>.y; r7.w <- <jitter01 return value>.z
-
-#line 201
-    mov r7.yzw, r7.yyzw  // r7.y <- j.x; r7.z <- j.y; r7.w <- j.z
-
-#line 204
-    itof r8.xyz, r6.xyzx
-    add r7.yzw, r7.yyzw, r8.xxyz  // r7.y <- feature.x; r7.z <- feature.y; r7.w <- feature.z
-
-#line 207
-    mov r7.yzw, -r7.yyzw
-    add r7.yzw, r3.yyzw, r7.yyzw  // r7.y <- d.x; r7.z <- d.y; r7.w <- d.z
-
-#line 208
-    dp3 r6.y, r7.yzwy, r7.yzwy  // r6.y <- d2
-
-#line 209
-    min r7.x, r6.y, r7.x
-
-#line 210
-    iadd r6.x, r6.x, l(1)
-  endloop 
-  mov r5.z, r7.x  // r5.z <- minDist2
-  iadd r5.w, r5.w, l(1)
-endloop 
-
-#line 213
-mov r3.y, -r5.z
-add r3.y, r3.y, l(1.000000)  // r3.y <- <worley_noise_fixed return value>
-
-#line 220
-mul r3.y, r3.y, l(0.250000)
-add r3.x, r3.y, r3.x
-nop 
-mul r1.xyz, r1.wwww, r1.xyzx
-mul r1.xyz, r1.xyzx, l(4.000000, 4.000000, 4.000000, 0.000000)
-mul r1.w, r1.w, l(4.000000)
-ftoi r1.w, r1.w
-
-#line 178
-round_ni r3.yzw, r1.xxyz  // r3.y <- idf.x; r3.z <- idf.y; r3.w <- idf.z
-
-#line 179
-ftoi r3.yzw, r3.yyzw  // r3.y <- cid.x; r3.z <- cid.y; r3.w <- cid.z
-
-#line 180
-frc r1.xyz, r1.xyzx  // r1.x <- p.x; r1.y <- p.y; r1.z <- p.z
-
-#line 182
-mov r4.x, l(10000000000.000000)  // r4.x <- minDist2
-
-#line 186
-mov r5.z, l(-1)  // r5.z <- oz
-
-#line 187
-mov r4.y, l(-1)  // r4.y <- oy
-mov r4.z, r4.x  // r4.z <- minDist2
-mov r4.w, r4.y  // r4.w <- oy
+mov r2.w, l(-1)  // r2.w <- oy
+mov r3.w, r2.z  // r3.w <- minDist2
+mov r4.w, r2.w  // r4.w <- oy
 loop 
   ige r5.w, l(1), r4.w
   breakc_z r5.w
 
 #line 188
   mov r5.w, l(-1)  // r5.w <- ox
-  mov r6.x, r4.z  // r6.x <- minDist2
+  mov r6.x, r3.w  // r6.x <- minDist2
   mov r5.x, r5.w  // r5.x <- ox
   loop 
     ige r6.y, l(1), r5.x
@@ -3624,24 +1392,24 @@ loop
 
 #line 190
     mov r5.y, r4.w
-    iadd r6.yzw, r3.yyzw, r5.xxyz  // r6.y <- nid.x; r6.z <- nid.y; r6.w <- nid.z
+    iadd r6.yzw, r4.xxyz, r5.xxyz  // r6.y <- nid.x; r6.z <- nid.y; r6.w <- nid.z
 
 #line 195
     ineg r7.x, r6.y
-    ineg r7.y, r1.w
+    ineg r7.y, r2.x
     and r7.z, r6.y, l(0x80000000)
     imax r6.y, r6.y, r7.x
-    imax r7.x, r1.w, r7.y
+    imax r7.x, r2.x, r7.y
     udiv null, r6.y, r6.y, r7.x
     ineg r7.x, r6.y
     ine r7.y, l(0, 0, 0, 0), r7.z
     movc r6.y, r7.y, r7.x, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r7.x, r6.y
-    ineg r7.y, r1.w
+    ineg r7.y, r2.x
     and r7.z, r6.y, l(0x80000000)
     imax r6.y, r6.y, r7.x
-    imax r7.x, r1.w, r7.y
+    imax r7.x, r2.x, r7.y
     udiv null, r6.y, r6.y, r7.x
     ineg r7.x, r6.y
     ine r7.y, l(0, 0, 0, 0), r7.z
@@ -3649,20 +1417,20 @@ loop
 
 #line 196
     ineg r6.y, r6.z
-    ineg r7.w, r1.w
-    and r8.x, r6.z, l(0x80000000)  // vThreadID.x <- dtid.x; vThreadID.y <- dtid.y; vThreadID.z <- dtid.z; r0.x <- UI0
-    imax r6.y, r6.z, r6.y  // r0.y <- UI1
-    imax r6.z, r1.w, r7.w  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
-    udiv null, r6.y, r6.y, r6.z  // r0.w <- UIF
+    ineg r7.w, r2.x
+    and r8.x, r6.z, l(0x80000000)
+    imax r6.y, r6.z, r6.y
+    imax r6.z, r2.x, r7.w
+    udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r7.w, l(0, 0, 0, 0), r8.x
     movc r6.y, r7.w, r6.z, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r6.z, r6.y
-    ineg r7.w, r1.w
+    ineg r7.w, r2.x
     and r8.x, r6.y, l(0x80000000)
     imax r6.y, r6.y, r6.z
-    imax r6.z, r1.w, r7.w
+    imax r6.z, r2.x, r7.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r7.w, l(0, 0, 0, 0), r8.x
@@ -3670,20 +1438,20 @@ loop
 
 #line 197
     ineg r6.y, r6.w
-    ineg r6.z, r1.w
+    ineg r6.z, r2.x
     and r7.w, r6.w, l(0x80000000)
     imax r6.y, r6.w, r6.y
-    imax r6.z, r1.w, r6.z
+    imax r6.z, r2.x, r6.z
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r6.w, l(0, 0, 0, 0), r7.w
     movc r6.y, r6.w, r6.z, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r6.z, r6.y
-    ineg r6.w, r1.w
+    ineg r6.w, r2.x
     and r7.w, r6.y, l(0x80000000)
     imax r6.y, r6.y, r6.z
-    imax r6.z, r1.w, r6.w
+    imax r6.z, r2.x, r6.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r6.w, l(0, 0, 0, 0), r7.w
@@ -3727,7 +1495,7 @@ loop
 
 #line 207
     mov r6.yzw, -r6.yyzw
-    add r6.yzw, r1.xxyz, r6.yyzw  // r6.y <- d.x; r6.z <- d.y; r6.w <- d.z
+    add r6.yzw, r3.xxyz, r6.yyzw  // r6.y <- d.x; r6.z <- d.y; r6.w <- d.z
 
 #line 208
     dp3 r5.y, r6.yzwy, r6.yzwy  // r5.y <- d2
@@ -3738,22 +1506,22 @@ loop
 #line 210
     iadd r5.x, r5.x, l(1)
   endloop 
-  mov r4.z, r6.x  // r4.z <- minDist2
+  mov r3.w, r6.x  // r3.w <- minDist2
   iadd r4.w, r4.w, l(1)
 endloop 
 iadd r5.z, r5.z, l(1)
 
 #line 187
-mov r4.x, l(-1)  // r4.x <- oy
-mov r4.y, r4.z  // r4.y <- minDist2
-mov r4.w, r4.x  // r4.w <- oy
+mov r2.z, l(-1)  // r2.z <- oy
+mov r2.w, r3.w  // r2.w <- minDist2
+mov r4.w, r2.z  // r4.w <- oy
 loop 
   ige r5.w, l(1), r4.w
   breakc_z r5.w
 
 #line 188
   mov r5.w, l(-1)  // r5.w <- ox
-  mov r6.x, r4.y  // r6.x <- minDist2
+  mov r6.x, r2.w  // r6.x <- minDist2
   mov r5.x, r5.w  // r5.x <- ox
   loop 
     ige r6.y, l(1), r5.x
@@ -3761,24 +1529,24 @@ loop
 
 #line 190
     mov r5.y, r4.w
-    iadd r6.yzw, r3.yyzw, r5.xxyz  // r6.y <- nid.x; r6.z <- nid.y; r6.w <- nid.z
+    iadd r6.yzw, r4.xxyz, r5.xxyz  // r6.y <- nid.x; r6.z <- nid.y; r6.w <- nid.z
 
 #line 195
     ineg r7.x, r6.y
-    ineg r7.y, r1.w
+    ineg r7.y, r2.x
     and r7.z, r6.y, l(0x80000000)
     imax r6.y, r6.y, r7.x
-    imax r7.x, r1.w, r7.y
+    imax r7.x, r2.x, r7.y
     udiv null, r6.y, r6.y, r7.x
     ineg r7.x, r6.y
     ine r7.y, l(0, 0, 0, 0), r7.z
     movc r6.y, r7.y, r7.x, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r7.x, r6.y
-    ineg r7.y, r1.w
+    ineg r7.y, r2.x
     and r7.z, r6.y, l(0x80000000)
     imax r6.y, r6.y, r7.x
-    imax r7.x, r1.w, r7.y
+    imax r7.x, r2.x, r7.y
     udiv null, r6.y, r6.y, r7.x
     ineg r7.x, r6.y
     ine r7.y, l(0, 0, 0, 0), r7.z
@@ -3786,20 +1554,20 @@ loop
 
 #line 196
     ineg r6.y, r6.z
-    ineg r7.w, r1.w
+    ineg r7.w, r2.x
     and r8.x, r6.z, l(0x80000000)
     imax r6.y, r6.z, r6.y
-    imax r6.z, r1.w, r7.w
+    imax r6.z, r2.x, r7.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r7.w, l(0, 0, 0, 0), r8.x
     movc r6.y, r7.w, r6.z, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r6.z, r6.y
-    ineg r7.w, r1.w
+    ineg r7.w, r2.x
     and r8.x, r6.y, l(0x80000000)
     imax r6.y, r6.y, r6.z
-    imax r6.z, r1.w, r7.w
+    imax r6.z, r2.x, r7.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r7.w, l(0, 0, 0, 0), r8.x
@@ -3807,20 +1575,20 @@ loop
 
 #line 197
     ineg r6.y, r6.w
-    ineg r6.z, r1.w
+    ineg r6.z, r2.x
     and r7.w, r6.w, l(0x80000000)
     imax r6.y, r6.w, r6.y
-    imax r6.z, r1.w, r6.z
+    imax r6.z, r2.x, r6.z
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r6.w, l(0, 0, 0, 0), r7.w
     movc r6.y, r6.w, r6.z, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r6.z, r6.y
-    ineg r6.w, r1.w
+    ineg r6.w, r2.x
     and r7.w, r6.y, l(0x80000000)
     imax r6.y, r6.y, r6.z
-    imax r6.z, r1.w, r6.w
+    imax r6.z, r2.x, r6.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r6.w, l(0, 0, 0, 0), r7.w
@@ -3864,7 +1632,7 @@ loop
 
 #line 207
     mov r6.yzw, -r6.yyzw
-    add r6.yzw, r1.xxyz, r6.yyzw  // r6.y <- d.x; r6.z <- d.y; r6.w <- d.z
+    add r6.yzw, r3.xxyz, r6.yyzw  // r6.y <- d.x; r6.z <- d.y; r6.w <- d.z
 
 #line 208
     dp3 r5.y, r6.yzwy, r6.yzwy  // r5.y <- d2
@@ -3875,22 +1643,22 @@ loop
 #line 210
     iadd r5.x, r5.x, l(1)
   endloop 
-  mov r4.y, r6.x  // r4.y <- minDist2
+  mov r2.w, r6.x  // r2.w <- minDist2
   iadd r4.w, r4.w, l(1)
 endloop 
 iadd r5.z, r5.z, l(1)
 
 #line 187
-mov r4.x, l(-1)  // r4.x <- oy
-mov r4.z, r4.y  // r4.z <- minDist2
-mov r4.w, r4.x  // r4.w <- oy
+mov r2.z, l(-1)  // r2.z <- oy
+mov r3.w, r2.w  // r3.w <- minDist2
+mov r4.w, r2.z  // r4.w <- oy
 loop 
   ige r5.w, l(1), r4.w
   breakc_z r5.w
 
 #line 188
   mov r5.w, l(-1)  // r5.w <- ox
-  mov r6.x, r4.z  // r6.x <- minDist2
+  mov r6.x, r3.w  // r6.x <- minDist2
   mov r5.x, r5.w  // r5.x <- ox
   loop 
     ige r6.y, l(1), r5.x
@@ -3898,24 +1666,24 @@ loop
 
 #line 190
     mov r5.y, r4.w
-    iadd r6.yzw, r3.yyzw, r5.xxyz  // r6.y <- nid.x; r6.z <- nid.y; r6.w <- nid.z
+    iadd r6.yzw, r4.xxyz, r5.xxyz  // r6.y <- nid.x; r6.z <- nid.y; r6.w <- nid.z
 
 #line 195
     ineg r7.x, r6.y
-    ineg r7.y, r1.w
+    ineg r7.y, r2.x
     and r7.z, r6.y, l(0x80000000)
     imax r6.y, r6.y, r7.x
-    imax r7.x, r1.w, r7.y
+    imax r7.x, r2.x, r7.y
     udiv null, r6.y, r6.y, r7.x
     ineg r7.x, r6.y
     ine r7.y, l(0, 0, 0, 0), r7.z
     movc r6.y, r7.y, r7.x, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r7.x, r6.y
-    ineg r7.y, r1.w
+    ineg r7.y, r2.x
     and r7.z, r6.y, l(0x80000000)
     imax r6.y, r6.y, r7.x
-    imax r7.x, r1.w, r7.y
+    imax r7.x, r2.x, r7.y
     udiv null, r6.y, r6.y, r7.x
     ineg r7.x, r6.y
     ine r7.y, l(0, 0, 0, 0), r7.z
@@ -3923,20 +1691,20 @@ loop
 
 #line 196
     ineg r6.y, r6.z
-    ineg r7.w, r1.w
+    ineg r7.w, r2.x
     and r8.x, r6.z, l(0x80000000)
     imax r6.y, r6.z, r6.y
-    imax r6.z, r1.w, r7.w
+    imax r6.z, r2.x, r7.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r7.w, l(0, 0, 0, 0), r8.x
     movc r6.y, r7.w, r6.z, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r6.z, r6.y
-    ineg r7.w, r1.w
+    ineg r7.w, r2.x
     and r8.x, r6.y, l(0x80000000)
     imax r6.y, r6.y, r6.z
-    imax r6.z, r1.w, r7.w
+    imax r6.z, r2.x, r7.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r7.w, l(0, 0, 0, 0), r8.x
@@ -3944,20 +1712,20 @@ loop
 
 #line 197
     ineg r6.y, r6.w
-    ineg r6.z, r1.w
+    ineg r6.z, r2.x
     and r7.w, r6.w, l(0x80000000)
     imax r6.y, r6.w, r6.y
-    imax r6.z, r1.w, r6.z
+    imax r6.z, r2.x, r6.z
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r6.w, l(0, 0, 0, 0), r7.w
     movc r6.y, r6.w, r6.z, r6.y
-    iadd r6.y, r1.w, r6.y
+    iadd r6.y, r2.x, r6.y
     ineg r6.z, r6.y
-    ineg r6.w, r1.w
+    ineg r6.w, r2.x
     and r7.w, r6.y, l(0x80000000)
     imax r6.y, r6.y, r6.z
-    imax r6.z, r1.w, r6.w
+    imax r6.z, r2.x, r6.w
     udiv null, r6.y, r6.y, r6.z
     ineg r6.z, r6.y
     ine r6.w, l(0, 0, 0, 0), r7.w
@@ -4001,7 +1769,7 @@ loop
 
 #line 207
     mov r6.yzw, -r6.yyzw
-    add r6.yzw, r1.xxyz, r6.yyzw  // r6.y <- d.x; r6.z <- d.y; r6.w <- d.z
+    add r6.yzw, r3.xxyz, r6.yyzw  // r6.y <- d.x; r6.z <- d.y; r6.w <- d.z
 
 #line 208
     dp3 r5.y, r6.yzwy, r6.yzwy  // r5.y <- d2
@@ -4012,27 +1780,2733 @@ loop
 #line 210
     iadd r5.x, r5.x, l(1)
   endloop 
-  mov r4.z, r6.x  // r4.z <- minDist2
+  mov r3.w, r6.x  // r3.w <- minDist2
   iadd r4.w, r4.w, l(1)
 endloop 
 
 #line 213
-mov r0.x, -r4.z
+mov r2.x, -r3.w
+add r2.x, r2.x, l(1.000000)  // r2.x <- <worley_noise_fixed return value>
+
+#line 220
+mul r2.x, r2.x, l(0.125000)
+add r2.x, r2.x, r2.y  // r2.x <- <worley_fbm return value>
+
+#line 27 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
+mov r2.x, r2.x  // r2.x <- color.x
+
+#line 28
+nop 
+mov r1.yzw, r1.yyzw
+mov r2.y, l(8.000000)
+
+#line 220 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
+nop 
+mul r3.xyz, r1.yzwy, r2.yyyy
+ftoi r2.z, r2.y
+
+#line 178
+round_ni r4.xyz, r3.xyzx  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
+
+#line 179
+ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
+
+#line 180
+frc r3.xyz, r3.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
+
+#line 182
+mov r2.w, l(10000000000.000000)  // r2.w <- minDist2
+
+#line 186
+mov r5.z, l(-1)  // r5.z <- oz
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r4.w, r2.w  // r4.w <- minDist2
+mov r5.w, r3.w  // r5.w <- oy
+loop 
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
+
+#line 188
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r4.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
+  loop 
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
+
+#line 190
+    mov r5.y, r5.w
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.z, r7.x
+    ineg r6.w, r2.z
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
+
+#line 196
+    ineg r6.z, r7.y
+    ineg r6.w, r2.z
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
+
+#line 197
+    ineg r6.z, r7.z
+    ineg r6.w, r2.z
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x
+    mov r8.y, r8.y
+    mov r8.z, r8.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.y, r5.y, r6.y
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r4.w, r6.y  // r4.w <- minDist2
+  iadd r5.w, r5.w, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r2.w, l(-1)  // r2.w <- oy
+mov r3.w, r4.w  // r3.w <- minDist2
+mov r5.w, r2.w  // r5.w <- oy
+loop 
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
+
+#line 188
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r3.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
+  loop 
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
+
+#line 190
+    mov r5.y, r5.w
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.z, r7.x
+    ineg r6.w, r2.z
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
+
+#line 196
+    ineg r6.z, r7.y
+    ineg r6.w, r2.z
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
+
+#line 197
+    ineg r6.z, r7.z
+    ineg r6.w, r2.z
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.y, r5.y, r6.y
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r3.w, r6.y  // r3.w <- minDist2
+  iadd r5.w, r5.w, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r2.w, l(-1)  // r2.w <- oy
+mov r4.w, r3.w  // r4.w <- minDist2
+mov r5.w, r2.w  // r5.w <- oy
+loop 
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
+
+#line 188
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r4.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
+  loop 
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
+
+#line 190
+    mov r5.y, r5.w
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.z, r7.x
+    ineg r6.w, r2.z
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
+
+#line 196
+    ineg r6.z, r7.y
+    ineg r6.w, r2.z
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
+
+#line 197
+    ineg r6.z, r7.z
+    ineg r6.w, r2.z
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.z, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.z, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.z
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.y, r5.y, r6.y
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r4.w, r6.y  // r4.w <- minDist2
+  iadd r5.w, r5.w, l(1)
+endloop 
+
+#line 213
+mov r2.z, -r4.w
+add r2.z, r2.z, l(1.000000)  // r2.z <- <worley_noise_fixed return value>
+
+#line 220
+mul r2.z, r2.z, l(0.625000)
+nop 
+mul r3.xyz, r1.yzwy, r2.yyyy
+mul r3.xyz, r3.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+mul r2.w, r2.y, l(2.000000)
+ftoi r2.w, r2.w
+
+#line 178
+round_ni r4.xyz, r3.xyzx  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
+
+#line 179
+ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
+
+#line 180
+frc r3.xyz, r3.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
+
+#line 182
+mov r3.w, l(10000000000.000000)  // r3.w <- minDist2
+
+#line 186
+mov r5.z, l(-1)  // r5.z <- oz
+
+#line 187
+mov r4.w, l(-1)  // r4.w <- oy
+mov r5.w, r3.w  // r5.w <- minDist2
+mov r6.x, r4.w  // r6.x <- oy
+loop 
+  ige r6.y, l(1), r6.x
+  breakc_z r6.y
+
+#line 188
+  mov r6.y, l(-1)  // r6.y <- ox
+  mov r6.z, r5.w  // r6.z <- minDist2
+  mov r5.x, r6.y  // r5.x <- ox
+  loop 
+    ige r6.w, l(1), r5.x
+    breakc_z r6.w
+
+#line 190
+    mov r5.y, r6.x
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.w, r7.x
+    ineg r7.w, r2.w
+    and r8.x, r7.x, l(0x80000000)
+    imax r6.w, r7.x, r6.w
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r6.w, r7.w, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.w, r2.w
+    and r8.x, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r8.x, r7.w, r7.x, r6.w  // r8.x <- nid.x
+
+#line 196
+    ineg r6.w, r7.y
+    ineg r7.x, r2.w
+    and r7.w, r7.y, l(0x80000000)
+    imax r6.w, r7.y, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.w, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r8.y, r7.y, r7.x, r6.w  // r8.y <- nid.y
+
+#line 197
+    ineg r6.w, r7.z
+    ineg r7.x, r2.w
+    and r7.y, r7.z, l(0x80000000)
+    imax r6.w, r7.z, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.y
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.z, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.z
+    movc r8.z, r7.y, r7.x, r6.w  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x
+    mov r8.y, r8.y
+    mov r8.z, r8.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.w, r7.y, r7.x
+    xor r6.w, r7.z, r6.w
+    imul null, r7.xyz, r0.xyzx, r6.wwww
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.z, r5.y, r6.z
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r5.w, r6.z  // r5.w <- minDist2
+  iadd r6.x, r6.x, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r4.w, r5.w  // r4.w <- minDist2
+mov r6.x, r3.w  // r6.x <- oy
+loop 
+  ige r6.y, l(1), r6.x
+  breakc_z r6.y
+
+#line 188
+  mov r6.y, l(-1)  // r6.y <- ox
+  mov r6.z, r4.w  // r6.z <- minDist2
+  mov r5.x, r6.y  // r5.x <- ox
+  loop 
+    ige r6.w, l(1), r5.x
+    breakc_z r6.w
+
+#line 190
+    mov r5.y, r6.x
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.w, r7.x
+    ineg r7.w, r2.w
+    and r8.x, r7.x, l(0x80000000)
+    imax r6.w, r7.x, r6.w
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r6.w, r7.w, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.w, r2.w
+    and r8.x, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r8.x, r7.w, r7.x, r6.w  // r8.x <- nid.x
+
+#line 196
+    ineg r6.w, r7.y
+    ineg r7.x, r2.w
+    and r7.w, r7.y, l(0x80000000)
+    imax r6.w, r7.y, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.w, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r8.y, r7.y, r7.x, r6.w  // r8.y <- nid.y
+
+#line 197
+    ineg r6.w, r7.z
+    ineg r7.x, r2.w
+    and r7.y, r7.z, l(0x80000000)
+    imax r6.w, r7.z, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.y
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.z, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.z
+    movc r8.z, r7.y, r7.x, r6.w  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.w, r7.y, r7.x
+    xor r6.w, r7.z, r6.w
+    imul null, r7.xyz, r0.xyzx, r6.wwww
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.z, r5.y, r6.z
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r4.w, r6.z  // r4.w <- minDist2
+  iadd r6.x, r6.x, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r5.w, r4.w  // r5.w <- minDist2
+mov r6.x, r3.w  // r6.x <- oy
+loop 
+  ige r6.y, l(1), r6.x
+  breakc_z r6.y
+
+#line 188
+  mov r6.y, l(-1)  // r6.y <- ox
+  mov r6.z, r5.w  // r6.z <- minDist2
+  mov r5.x, r6.y  // r5.x <- ox
+  loop 
+    ige r6.w, l(1), r5.x
+    breakc_z r6.w
+
+#line 190
+    mov r5.y, r6.x
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.w, r7.x
+    ineg r7.w, r2.w
+    and r8.x, r7.x, l(0x80000000)
+    imax r6.w, r7.x, r6.w
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r6.w, r7.w, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.w, r2.w
+    and r8.x, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r8.x, r7.w, r7.x, r6.w  // r8.x <- nid.x
+
+#line 196
+    ineg r6.w, r7.y
+    ineg r7.x, r2.w
+    and r7.w, r7.y, l(0x80000000)
+    imax r6.w, r7.y, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.w, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r8.y, r7.y, r7.x, r6.w  // r8.y <- nid.y
+
+#line 197
+    ineg r6.w, r7.z
+    ineg r7.x, r2.w
+    and r7.y, r7.z, l(0x80000000)
+    imax r6.w, r7.z, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.y
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.z, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.z
+    movc r8.z, r7.y, r7.x, r6.w  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.w, r7.y, r7.x
+    xor r6.w, r7.z, r6.w
+    imul null, r7.xyz, r0.xyzx, r6.wwww
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.z, r5.y, r6.z
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r5.w, r6.z  // r5.w <- minDist2
+  iadd r6.x, r6.x, l(1)
+endloop 
+
+#line 213
+mov r2.w, -r5.w
+add r2.w, r2.w, l(1.000000)  // r2.w <- <worley_noise_fixed return value>
+
+#line 220
+mul r2.w, r2.w, l(0.250000)
+add r2.z, r2.w, r2.z
+nop 
+mul r3.xyz, r1.yzwy, r2.yyyy
+mul r3.xyz, r3.xyzx, l(4.000000, 4.000000, 4.000000, 0.000000)
+mul r2.y, r2.y, l(4.000000)
+ftoi r2.y, r2.y
+
+#line 178
+round_ni r4.xyz, r3.xyzx  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
+
+#line 179
+ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
+
+#line 180
+frc r3.xyz, r3.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
+
+#line 182
+mov r2.w, l(10000000000.000000)  // r2.w <- minDist2
+
+#line 186
+mov r5.z, l(-1)  // r5.z <- oz
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r4.w, r2.w  // r4.w <- minDist2
+mov r5.w, r3.w  // r5.w <- oy
+loop 
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
+
+#line 188
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r4.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
+  loop 
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
+
+#line 190
+    mov r5.y, r5.w
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.z, r7.x
+    ineg r6.w, r2.y
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
+
+#line 196
+    ineg r6.z, r7.y
+    ineg r6.w, r2.y
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
+
+#line 197
+    ineg r6.z, r7.z
+    ineg r6.w, r2.y
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x
+    mov r8.y, r8.y
+    mov r8.z, r8.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.y, r5.y, r6.y
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r4.w, r6.y  // r4.w <- minDist2
+  iadd r5.w, r5.w, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r2.w, l(-1)  // r2.w <- oy
+mov r3.w, r4.w  // r3.w <- minDist2
+mov r5.w, r2.w  // r5.w <- oy
+loop 
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
+
+#line 188
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r3.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
+  loop 
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
+
+#line 190
+    mov r5.y, r5.w
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.z, r7.x
+    ineg r6.w, r2.y
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
+
+#line 196
+    ineg r6.z, r7.y
+    ineg r6.w, r2.y
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
+
+#line 197
+    ineg r6.z, r7.z
+    ineg r6.w, r2.y
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.y, r5.y, r6.y
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r3.w, r6.y  // r3.w <- minDist2
+  iadd r5.w, r5.w, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r2.w, l(-1)  // r2.w <- oy
+mov r4.w, r3.w  // r4.w <- minDist2
+mov r5.w, r2.w  // r5.w <- oy
+loop 
+  ige r6.x, l(1), r5.w
+  breakc_z r6.x
+
+#line 188
+  mov r6.x, l(-1)  // r6.x <- ox
+  mov r6.y, r4.w  // r6.y <- minDist2
+  mov r5.x, r6.x  // r5.x <- ox
+  loop 
+    ige r6.z, l(1), r5.x
+    breakc_z r6.z
+
+#line 190
+    mov r5.y, r5.w
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.z, r7.x
+    ineg r6.w, r2.y
+    and r7.w, r7.x, l(0x80000000)
+    imax r6.z, r7.x, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.w, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.w
+    movc r8.x, r7.x, r6.w, r6.z  // r8.x <- nid.x
+
+#line 196
+    ineg r6.z, r7.y
+    ineg r6.w, r2.y
+    and r7.x, r7.y, l(0x80000000)
+    imax r6.z, r7.y, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.y, r7.x, r6.w, r6.z  // r8.y <- nid.y
+
+#line 197
+    ineg r6.z, r7.z
+    ineg r6.w, r2.y
+    and r7.x, r7.z, l(0x80000000)
+    imax r6.z, r7.z, r6.z
+    imax r6.w, r2.y, r6.w
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.x
+    movc r6.z, r7.x, r6.w, r6.z
+    iadd r6.z, r2.y, r6.z
+    ineg r6.w, r6.z
+    ineg r7.x, r2.y
+    and r7.y, r6.z, l(0x80000000)
+    imax r6.z, r6.z, r6.w
+    imax r6.w, r2.y, r7.x
+    udiv null, r6.z, r6.z, r6.w
+    ineg r6.w, r6.z
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r8.z, r7.x, r6.w, r6.z  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.z, r7.y, r7.x
+    xor r6.z, r7.z, r6.z
+    imul null, r7.xyz, r0.xyzx, r6.zzzz
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.y, r5.y, r6.y
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r4.w, r6.y  // r4.w <- minDist2
+  iadd r5.w, r5.w, l(1)
+endloop 
+
+#line 213
+mov r2.y, -r4.w
+add r2.y, r2.y, l(1.000000)  // r2.y <- <worley_noise_fixed return value>
+
+#line 220
+mul r2.y, r2.y, l(0.125000)
+add r2.y, r2.y, r2.z  // r2.y <- <worley_fbm return value>
+
+#line 28 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
+mov r2.y, r2.y  // r2.y <- color.y
+
+#line 29
+nop 
+mov r1.yzw, r1.yyzw
+mov r2.z, l(16.000000)
+
+#line 220 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
+nop 
+mul r3.xyz, r1.yzwy, r2.zzzz
+ftoi r2.w, r2.z
+
+#line 178
+round_ni r4.xyz, r3.xyzx  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
+
+#line 179
+ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
+
+#line 180
+frc r3.xyz, r3.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
+
+#line 182
+mov r3.w, l(10000000000.000000)  // r3.w <- minDist2
+
+#line 186
+mov r5.z, l(-1)  // r5.z <- oz
+
+#line 187
+mov r4.w, l(-1)  // r4.w <- oy
+mov r5.w, r3.w  // r5.w <- minDist2
+mov r6.x, r4.w  // r6.x <- oy
+loop 
+  ige r6.y, l(1), r6.x
+  breakc_z r6.y
+
+#line 188
+  mov r6.y, l(-1)  // r6.y <- ox
+  mov r6.z, r5.w  // r6.z <- minDist2
+  mov r5.x, r6.y  // r5.x <- ox
+  loop 
+    ige r6.w, l(1), r5.x
+    breakc_z r6.w
+
+#line 190
+    mov r5.y, r6.x
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.w, r7.x
+    ineg r7.w, r2.w
+    and r8.x, r7.x, l(0x80000000)
+    imax r6.w, r7.x, r6.w
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r6.w, r7.w, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.w, r2.w
+    and r8.x, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r8.x, r7.w, r7.x, r6.w  // r8.x <- nid.x
+
+#line 196
+    ineg r6.w, r7.y
+    ineg r7.x, r2.w
+    and r7.w, r7.y, l(0x80000000)
+    imax r6.w, r7.y, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.w, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r8.y, r7.y, r7.x, r6.w  // r8.y <- nid.y
+
+#line 197
+    ineg r6.w, r7.z
+    ineg r7.x, r2.w
+    and r7.y, r7.z, l(0x80000000)
+    imax r6.w, r7.z, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.y
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.z, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.z
+    movc r8.z, r7.y, r7.x, r6.w  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x
+    mov r8.y, r8.y
+    mov r8.z, r8.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.w, r7.y, r7.x
+    xor r6.w, r7.z, r6.w
+    imul null, r7.xyz, r0.xyzx, r6.wwww
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.z, r5.y, r6.z
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r5.w, r6.z  // r5.w <- minDist2
+  iadd r6.x, r6.x, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r4.w, r5.w  // r4.w <- minDist2
+mov r6.x, r3.w  // r6.x <- oy
+loop 
+  ige r6.y, l(1), r6.x
+  breakc_z r6.y
+
+#line 188
+  mov r6.y, l(-1)  // r6.y <- ox
+  mov r6.z, r4.w  // r6.z <- minDist2
+  mov r5.x, r6.y  // r5.x <- ox
+  loop 
+    ige r6.w, l(1), r5.x
+    breakc_z r6.w
+
+#line 190
+    mov r5.y, r6.x
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.w, r7.x
+    ineg r7.w, r2.w
+    and r8.x, r7.x, l(0x80000000)
+    imax r6.w, r7.x, r6.w
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r6.w, r7.w, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.w, r2.w
+    and r8.x, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r8.x, r7.w, r7.x, r6.w  // r8.x <- nid.x
+
+#line 196
+    ineg r6.w, r7.y
+    ineg r7.x, r2.w
+    and r7.w, r7.y, l(0x80000000)
+    imax r6.w, r7.y, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.w, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r8.y, r7.y, r7.x, r6.w  // r8.y <- nid.y
+
+#line 197
+    ineg r6.w, r7.z
+    ineg r7.x, r2.w
+    and r7.y, r7.z, l(0x80000000)
+    imax r6.w, r7.z, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.y
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.z, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.z
+    movc r8.z, r7.y, r7.x, r6.w  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.w, r7.y, r7.x
+    xor r6.w, r7.z, r6.w
+    imul null, r7.xyz, r0.xyzx, r6.wwww
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.z, r5.y, r6.z
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r4.w, r6.z  // r4.w <- minDist2
+  iadd r6.x, r6.x, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r5.w, r4.w  // r5.w <- minDist2
+mov r6.x, r3.w  // r6.x <- oy
+loop 
+  ige r6.y, l(1), r6.x
+  breakc_z r6.y
+
+#line 188
+  mov r6.y, l(-1)  // r6.y <- ox
+  mov r6.z, r5.w  // r6.z <- minDist2
+  mov r5.x, r6.y  // r5.x <- ox
+  loop 
+    ige r6.w, l(1), r5.x
+    breakc_z r6.w
+
+#line 190
+    mov r5.y, r6.x
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r6.w, r7.x
+    ineg r7.w, r2.w
+    and r8.x, r7.x, l(0x80000000)
+    imax r6.w, r7.x, r6.w
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r6.w, r7.w, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.w, r2.w
+    and r8.x, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.w
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.w, l(0, 0, 0, 0), r8.x
+    movc r8.x, r7.w, r7.x, r6.w  // r8.x <- nid.x
+
+#line 196
+    ineg r6.w, r7.y
+    ineg r7.x, r2.w
+    and r7.w, r7.y, l(0x80000000)
+    imax r6.w, r7.y, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.w, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.w
+    movc r8.y, r7.y, r7.x, r6.w  // r8.y <- nid.y
+
+#line 197
+    ineg r6.w, r7.z
+    ineg r7.x, r2.w
+    and r7.y, r7.z, l(0x80000000)
+    imax r6.w, r7.z, r6.w
+    imax r7.x, r2.w, r7.x
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.y
+    movc r6.w, r7.y, r7.x, r6.w
+    iadd r6.w, r2.w, r6.w
+    ineg r7.x, r6.w
+    ineg r7.y, r2.w
+    and r7.z, r6.w, l(0x80000000)
+    imax r6.w, r6.w, r7.x
+    imax r7.x, r2.w, r7.y
+    udiv null, r6.w, r6.w, r7.x
+    ineg r7.x, r6.w
+    ine r7.y, l(0, 0, 0, 0), r7.z
+    movc r8.z, r7.y, r7.x, r6.w  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r6.w, r7.y, r7.x
+    xor r6.w, r7.z, r6.w
+    imul null, r7.xyz, r0.xyzx, r6.wwww
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.z, r5.y, r6.z
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r5.w, r6.z  // r5.w <- minDist2
+  iadd r6.x, r6.x, l(1)
+endloop 
+
+#line 213
+mov r2.w, -r5.w
+add r2.w, r2.w, l(1.000000)  // r2.w <- <worley_noise_fixed return value>
+
+#line 220
+mul r2.w, r2.w, l(0.625000)
+nop 
+mul r3.xyz, r1.yzwy, r2.zzzz
+mul r3.xyz, r3.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+mul r3.w, r2.z, l(2.000000)
+ftoi r3.w, r3.w
+
+#line 178
+round_ni r4.xyz, r3.xyzx  // r4.x <- idf.x; r4.y <- idf.y; r4.z <- idf.z
+
+#line 179
+ftoi r4.xyz, r4.xyzx  // r4.x <- cid.x; r4.y <- cid.y; r4.z <- cid.z
+
+#line 180
+frc r3.xyz, r3.xyzx  // r3.x <- p.x; r3.y <- p.y; r3.z <- p.z
+
+#line 182
+mov r4.w, l(10000000000.000000)  // r4.w <- minDist2
+
+#line 186
+mov r5.z, l(-1)  // r5.z <- oz
+
+#line 187
+mov r5.w, l(-1)  // r5.w <- oy
+mov r6.x, r4.w  // r6.x <- minDist2
+mov r6.y, r5.w  // r6.y <- oy
+loop 
+  ige r6.z, l(1), r6.y
+  breakc_z r6.z
+
+#line 188
+  mov r6.z, l(-1)  // r6.z <- ox
+  mov r6.w, r6.x  // r6.w <- minDist2
+  mov r5.x, r6.z  // r5.x <- ox
+  loop 
+    ige r7.x, l(1), r5.x
+    breakc_z r7.x
+
+#line 190
+    mov r5.y, r6.y
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r7.w, r7.x
+    ineg r8.x, r3.w
+    and r8.y, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.w
+    imax r7.w, r3.w, r8.x
+    udiv null, r7.x, r7.x, r7.w
+    ineg r7.w, r7.x
+    ine r8.x, l(0, 0, 0, 0), r8.y
+    movc r7.x, r8.x, r7.w, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.w, r7.x
+    ineg r8.x, r3.w
+    and r8.y, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.w
+    imax r7.w, r3.w, r8.x
+    udiv null, r7.x, r7.x, r7.w
+    ineg r7.w, r7.x
+    ine r8.x, l(0, 0, 0, 0), r8.y
+    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
+
+#line 196
+    ineg r7.x, r7.y
+    ineg r7.w, r3.w
+    and r8.w, r7.y, l(0x80000000)
+    imax r7.x, r7.y, r7.x
+    imax r7.y, r3.w, r7.w
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.w, l(0, 0, 0, 0), r8.w
+    movc r7.x, r7.w, r7.y, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.y, r7.x
+    ineg r7.w, r3.w
+    and r8.w, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.y
+    imax r7.y, r3.w, r7.w
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.w, l(0, 0, 0, 0), r8.w
+    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
+
+#line 197
+    ineg r7.x, r7.z
+    ineg r7.y, r3.w
+    and r7.w, r7.z, l(0x80000000)
+    imax r7.x, r7.z, r7.x
+    imax r7.y, r3.w, r7.y
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.z, l(0, 0, 0, 0), r7.w
+    movc r7.x, r7.z, r7.y, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.y, r7.x
+    ineg r7.z, r3.w
+    and r7.w, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.y  // vThreadID.x <- dtid.x; vThreadID.y <- dtid.y; vThreadID.z <- dtid.z
+    imax r7.y, r3.w, r7.z  // r0.x <- UI0
+    udiv null, r7.x, r7.x, r7.y  // r0.y <- UI1
+    ineg r7.y, r7.x  // r0.x <- UI3.x; r0.y <- UI3.y; r0.z <- UI3.z
+    ine r7.z, l(0, 0, 0, 0), r7.w  // r0.w <- UIF
+    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x
+    mov r8.y, r8.y
+    mov r8.z, r8.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r7.x, r7.y, r7.x
+    xor r7.x, r7.z, r7.x
+    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
+
+#line 34
+    utof r7.xyz, r7.xyzx  // r1.y <- uvw.x; r1.z <- uvw.y; r1.w <- uvw.z
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.w, r5.y, r6.w
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r6.x, r6.w  // r6.x <- minDist2
+  iadd r6.y, r6.y, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r4.w, l(-1)  // r4.w <- oy
+mov r5.w, r6.x  // r5.w <- minDist2
+mov r6.y, r4.w  // r6.y <- oy
+loop 
+  ige r6.z, l(1), r6.y
+  breakc_z r6.z
+
+#line 188
+  mov r6.z, l(-1)  // r6.z <- ox
+  mov r6.w, r5.w  // r6.w <- minDist2
+  mov r5.x, r6.z  // r5.x <- ox
+  loop 
+    ige r7.x, l(1), r5.x
+    breakc_z r7.x
+
+#line 190
+    mov r5.y, r6.y
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r7.w, r7.x
+    ineg r8.x, r3.w
+    and r8.y, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.w
+    imax r7.w, r3.w, r8.x
+    udiv null, r7.x, r7.x, r7.w
+    ineg r7.w, r7.x
+    ine r8.x, l(0, 0, 0, 0), r8.y
+    movc r7.x, r8.x, r7.w, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.w, r7.x
+    ineg r8.x, r3.w
+    and r8.y, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.w
+    imax r7.w, r3.w, r8.x
+    udiv null, r7.x, r7.x, r7.w
+    ineg r7.w, r7.x
+    ine r8.x, l(0, 0, 0, 0), r8.y
+    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
+
+#line 196
+    ineg r7.x, r7.y
+    ineg r7.w, r3.w
+    and r8.w, r7.y, l(0x80000000)
+    imax r7.x, r7.y, r7.x
+    imax r7.y, r3.w, r7.w
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.w, l(0, 0, 0, 0), r8.w
+    movc r7.x, r7.w, r7.y, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.y, r7.x
+    ineg r7.w, r3.w
+    and r8.w, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.y
+    imax r7.y, r3.w, r7.w
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.w, l(0, 0, 0, 0), r8.w
+    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
+
+#line 197
+    ineg r7.x, r7.z
+    ineg r7.y, r3.w
+    and r7.w, r7.z, l(0x80000000)
+    imax r7.x, r7.z, r7.x
+    imax r7.y, r3.w, r7.y
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.z, l(0, 0, 0, 0), r7.w
+    movc r7.x, r7.z, r7.y, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.y, r7.x
+    ineg r7.z, r3.w
+    and r7.w, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.y
+    imax r7.y, r3.w, r7.z
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.z, l(0, 0, 0, 0), r7.w
+    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r7.x, r7.y, r7.x
+    xor r7.x, r7.z, r7.x
+    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.w, r5.y, r6.w
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r5.w, r6.w  // r5.w <- minDist2
+  iadd r6.y, r6.y, l(1)
+endloop 
+iadd r5.z, r5.z, l(1)
+
+#line 187
+mov r4.w, l(-1)  // r4.w <- oy
+mov r6.x, r5.w  // r6.x <- minDist2
+mov r6.y, r4.w  // r6.y <- oy
+loop 
+  ige r6.z, l(1), r6.y
+  breakc_z r6.z
+
+#line 188
+  mov r6.z, l(-1)  // r6.z <- ox
+  mov r6.w, r6.x  // r6.w <- minDist2
+  mov r5.x, r6.z  // r5.x <- ox
+  loop 
+    ige r7.x, l(1), r5.x
+    breakc_z r7.x
+
+#line 190
+    mov r5.y, r6.y
+    iadd r7.xyz, r4.xyzx, r5.xyzx  // r7.x <- nid.x; r7.y <- nid.y; r7.z <- nid.z
+
+#line 195
+    ineg r7.w, r7.x
+    ineg r8.x, r3.w
+    and r8.y, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.w
+    imax r7.w, r3.w, r8.x
+    udiv null, r7.x, r7.x, r7.w
+    ineg r7.w, r7.x
+    ine r8.x, l(0, 0, 0, 0), r8.y
+    movc r7.x, r8.x, r7.w, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.w, r7.x
+    ineg r8.x, r3.w
+    and r8.y, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.w
+    imax r7.w, r3.w, r8.x
+    udiv null, r7.x, r7.x, r7.w
+    ineg r7.w, r7.x
+    ine r8.x, l(0, 0, 0, 0), r8.y
+    movc r8.x, r8.x, r7.w, r7.x  // r8.x <- nid.x
+
+#line 196
+    ineg r7.x, r7.y
+    ineg r7.w, r3.w
+    and r8.w, r7.y, l(0x80000000)
+    imax r7.x, r7.y, r7.x
+    imax r7.y, r3.w, r7.w
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.w, l(0, 0, 0, 0), r8.w
+    movc r7.x, r7.w, r7.y, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.y, r7.x
+    ineg r7.w, r3.w
+    and r8.w, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.y
+    imax r7.y, r3.w, r7.w
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.w, l(0, 0, 0, 0), r8.w
+    movc r8.y, r7.w, r7.y, r7.x  // r8.y <- nid.y
+
+#line 197
+    ineg r7.x, r7.z
+    ineg r7.y, r3.w
+    and r7.w, r7.z, l(0x80000000)
+    imax r7.x, r7.z, r7.x
+    imax r7.y, r3.w, r7.y
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.z, l(0, 0, 0, 0), r7.w
+    movc r7.x, r7.z, r7.y, r7.x
+    iadd r7.x, r3.w, r7.x
+    ineg r7.y, r7.x
+    ineg r7.z, r3.w
+    and r7.w, r7.x, l(0x80000000)
+    imax r7.x, r7.x, r7.y
+    imax r7.y, r3.w, r7.z
+    udiv null, r7.x, r7.x, r7.y
+    ineg r7.y, r7.x
+    ine r7.z, l(0, 0, 0, 0), r7.w
+    movc r8.z, r7.z, r7.y, r7.x  // r8.z <- nid.z
+
+#line 201
+    nop 
+    mov r8.x, r8.x  // r8.x <- cellId.x
+    mov r8.y, r8.y  // r8.y <- cellId.y
+    mov r8.z, r8.z  // r8.z <- cellId.z
+
+#line 173
+    nop 
+    utof r7.xyz, r8.xyzx  // r7.x <- p.x; r7.y <- p.y; r7.z <- p.z
+
+#line 28
+    ftoi r7.xyz, r7.xyzx
+    imul null, r7.xyz, r0.xyzx, r7.xyzx  // r7.x <- q.x; r7.y <- q.y; r7.z <- q.z
+
+#line 31
+    xor r7.x, r7.y, r7.x
+    xor r7.x, r7.z, r7.x
+    imul null, r7.xyz, r0.xyzx, r7.xxxx  // r7.x <- q.x
+
+#line 34
+    utof r7.xyz, r7.xyzx
+    mul r7.xyz, r7.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r7.xyz, r0.wwww, r7.xyzx
+    add r7.xyz, r7.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r7.x <- <hash33 return value>.x; r7.y <- <hash33 return value>.y; r7.z <- <hash33 return value>.z
+
+#line 173
+    add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r7.xyz, r7.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r7.x <- <jitter01 return value>.x; r7.y <- <jitter01 return value>.y; r7.z <- <jitter01 return value>.z
+
+#line 201
+    mov r7.xyz, r7.xyzx  // r7.x <- j.x; r7.y <- j.y; r7.z <- j.z
+
+#line 204
+    itof r8.xyz, r5.xyzx
+    add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- feature.x; r7.y <- feature.y; r7.z <- feature.z
+
+#line 207
+    mov r7.xyz, -r7.xyzx
+    add r7.xyz, r3.xyzx, r7.xyzx  // r7.x <- d.x; r7.y <- d.y; r7.z <- d.z
+
+#line 208
+    dp3 r5.y, r7.xyzx, r7.xyzx  // r5.y <- d2
+
+#line 209
+    min r6.w, r5.y, r6.w
+
+#line 210
+    iadd r5.x, r5.x, l(1)
+  endloop 
+  mov r6.x, r6.w  // r6.x <- minDist2
+  iadd r6.y, r6.y, l(1)
+endloop 
+
+#line 213
+mov r3.x, -r6.x
+add r3.x, r3.x, l(1.000000)  // r3.x <- <worley_noise_fixed return value>
+
+#line 220
+mul r3.x, r3.x, l(0.250000)
+add r2.w, r2.w, r3.x
+nop 
+mul r1.yzw, r1.yyzw, r2.zzzz
+mul r1.yzw, r1.yyzw, l(0.000000, 4.000000, 4.000000, 4.000000)
+mul r2.z, r2.z, l(4.000000)
+ftoi r2.z, r2.z
+
+#line 178
+round_ni r3.xyz, r1.yzwy  // r3.x <- idf.x; r3.y <- idf.y; r3.z <- idf.z
+
+#line 179
+ftoi r3.xyz, r3.xyzx  // r3.x <- cid.x; r3.y <- cid.y; r3.z <- cid.z
+
+#line 180
+frc r1.yzw, r1.yyzw  // r1.y <- p.x; r1.z <- p.y; r1.w <- p.z
+
+#line 182
+mov r3.w, l(10000000000.000000)  // r3.w <- minDist2
+
+#line 186
+mov r4.z, l(-1)  // r4.z <- oz
+
+#line 187
+mov r4.w, l(-1)  // r4.w <- oy
+mov r5.x, r3.w  // r5.x <- minDist2
+mov r5.y, r4.w  // r5.y <- oy
+loop 
+  ige r5.z, l(1), r5.y
+  breakc_z r5.z
+
+#line 188
+  mov r5.z, l(-1)  // r5.z <- ox
+  mov r5.w, r5.x  // r5.w <- minDist2
+  mov r4.x, r5.z  // r4.x <- ox
+  loop 
+    ige r6.x, l(1), r4.x
+    breakc_z r6.x
+
+#line 190
+    mov r4.y, r5.y
+    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
+
+#line 195
+    ineg r6.w, r6.x
+    ineg r7.x, r2.z
+    and r7.y, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.x, r6.x, r6.w
+    ineg r6.w, r6.x
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r6.x, r7.x, r6.w, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.w, r6.x
+    ineg r7.x, r2.z
+    and r7.y, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.x, r6.x, r6.w
+    ineg r6.w, r6.x
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
+
+#line 196
+    ineg r6.x, r6.y
+    ineg r6.w, r2.z
+    and r7.w, r6.y, l(0x80000000)
+    imax r6.x, r6.y, r6.x
+    imax r6.y, r2.z, r6.w
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.w, l(0, 0, 0, 0), r7.w
+    movc r6.x, r6.w, r6.y, r6.x
+    iadd r6.x, r2.z, r6.x  // r1.x <- pfbm
+    ineg r6.y, r6.x
+    ineg r6.w, r2.z
+    and r7.w, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.y
+    imax r6.y, r2.z, r6.w
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.w, l(0, 0, 0, 0), r7.w
+    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
+
+#line 197
+    ineg r6.x, r6.z
+    ineg r6.y, r2.z
+    and r6.w, r6.z, l(0x80000000)
+    imax r6.x, r6.z, r6.x
+    imax r6.y, r2.z, r6.y
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.z, l(0, 0, 0, 0), r6.w
+    movc r6.x, r6.z, r6.y, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.y, r6.x
+    ineg r6.z, r2.z
+    and r6.w, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.y
+    imax r6.y, r2.z, r6.z
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.z, l(0, 0, 0, 0), r6.w
+    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
+
+#line 201
+    nop 
+    mov r7.x, r7.x
+    mov r7.y, r7.y
+    mov r7.z, r7.z
+
+#line 173
+    nop 
+    utof r6.xyz, r7.xyzx
+
+#line 28
+    ftoi r6.xyz, r6.xyzx
+    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
+
+#line 31
+    xor r6.x, r6.y, r6.x
+    xor r6.x, r6.z, r6.x
+    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
+
+#line 34
+    utof r6.xyz, r6.xyzx
+    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r6.xyz, r0.wwww, r6.xyzx
+    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
+
+#line 173
+    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
+
+#line 201
+    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
+
+#line 204
+    itof r7.xyz, r4.xyzx
+    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
+
+#line 207
+    mov r6.xyz, -r6.xyzx
+    add r6.xyz, r1.yzwy, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
+
+#line 208
+    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
+
+#line 209
+    min r5.w, r4.y, r5.w
+
+#line 210
+    iadd r4.x, r4.x, l(1)
+  endloop 
+  mov r5.x, r5.w  // r5.x <- minDist2
+  iadd r5.y, r5.y, l(1)
+endloop 
+iadd r4.z, r4.z, l(1)
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r4.w, r5.x  // r4.w <- minDist2
+mov r5.y, r3.w  // r5.y <- oy
+loop 
+  ige r5.z, l(1), r5.y
+  breakc_z r5.z
+
+#line 188
+  mov r5.z, l(-1)  // r5.z <- ox
+  mov r5.w, r4.w  // r5.w <- minDist2
+  mov r4.x, r5.z  // r4.x <- ox
+  loop 
+    ige r6.x, l(1), r4.x
+    breakc_z r6.x
+
+#line 190
+    mov r4.y, r5.y
+    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
+
+#line 195
+    ineg r6.w, r6.x
+    ineg r7.x, r2.z
+    and r7.y, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.x, r6.x, r6.w
+    ineg r6.w, r6.x
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r6.x, r7.x, r6.w, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.w, r6.x
+    ineg r7.x, r2.z
+    and r7.y, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.x, r6.x, r6.w
+    ineg r6.w, r6.x
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
+
+#line 196
+    ineg r6.x, r6.y
+    ineg r6.w, r2.z
+    and r7.w, r6.y, l(0x80000000)
+    imax r6.x, r6.y, r6.x
+    imax r6.y, r2.z, r6.w
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.w, l(0, 0, 0, 0), r7.w
+    movc r6.x, r6.w, r6.y, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.y, r6.x
+    ineg r6.w, r2.z
+    and r7.w, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.y
+    imax r6.y, r2.z, r6.w
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.w, l(0, 0, 0, 0), r7.w
+    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
+
+#line 197
+    ineg r6.x, r6.z
+    ineg r6.y, r2.z
+    and r6.w, r6.z, l(0x80000000)
+    imax r6.x, r6.z, r6.x
+    imax r6.y, r2.z, r6.y
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.z, l(0, 0, 0, 0), r6.w
+    movc r6.x, r6.z, r6.y, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.y, r6.x
+    ineg r6.z, r2.z
+    and r6.w, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.y
+    imax r6.y, r2.z, r6.z
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.z, l(0, 0, 0, 0), r6.w
+    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
+
+#line 201
+    nop 
+    mov r7.x, r7.x  // r7.x <- cellId.x
+    mov r7.y, r7.y  // r7.y <- cellId.y
+    mov r7.z, r7.z  // r7.z <- cellId.z
+
+#line 173
+    nop 
+    utof r6.xyz, r7.xyzx  // r6.x <- p.x; r6.y <- p.y; r6.z <- p.z
+
+#line 28
+    ftoi r6.xyz, r6.xyzx
+    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
+
+#line 31
+    xor r6.x, r6.y, r6.x
+    xor r6.x, r6.z, r6.x
+    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
+
+#line 34
+    utof r6.xyz, r6.xyzx
+    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r6.xyz, r0.wwww, r6.xyzx
+    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
+
+#line 173
+    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
+
+#line 201
+    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
+
+#line 204
+    itof r7.xyz, r4.xyzx
+    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
+
+#line 207
+    mov r6.xyz, -r6.xyzx
+    add r6.xyz, r1.yzwy, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
+
+#line 208
+    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
+
+#line 209
+    min r5.w, r4.y, r5.w
+
+#line 210
+    iadd r4.x, r4.x, l(1)
+  endloop 
+  mov r4.w, r5.w  // r4.w <- minDist2
+  iadd r5.y, r5.y, l(1)
+endloop 
+iadd r4.z, r4.z, l(1)
+
+#line 187
+mov r3.w, l(-1)  // r3.w <- oy
+mov r5.x, r4.w  // r5.x <- minDist2
+mov r5.y, r3.w  // r5.y <- oy
+loop 
+  ige r5.z, l(1), r5.y
+  breakc_z r5.z
+
+#line 188
+  mov r5.z, l(-1)  // r5.z <- ox
+  mov r5.w, r5.x  // r5.w <- minDist2
+  mov r4.x, r5.z  // r4.x <- ox
+  loop 
+    ige r6.x, l(1), r4.x
+    breakc_z r6.x
+
+#line 190
+    mov r4.y, r5.y
+    iadd r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- nid.x; r6.y <- nid.y; r6.z <- nid.z
+
+#line 195
+    ineg r6.w, r6.x
+    ineg r7.x, r2.z
+    and r7.y, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.x, r6.x, r6.w
+    ineg r6.w, r6.x
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r6.x, r7.x, r6.w, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.w, r6.x
+    ineg r7.x, r2.z
+    and r7.y, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.w
+    imax r6.w, r2.z, r7.x
+    udiv null, r6.x, r6.x, r6.w
+    ineg r6.w, r6.x
+    ine r7.x, l(0, 0, 0, 0), r7.y
+    movc r7.x, r7.x, r6.w, r6.x  // r7.x <- nid.x
+
+#line 196
+    ineg r6.x, r6.y
+    ineg r6.w, r2.z
+    and r7.w, r6.y, l(0x80000000)
+    imax r6.x, r6.y, r6.x
+    imax r6.y, r2.z, r6.w
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.w, l(0, 0, 0, 0), r7.w
+    movc r6.x, r6.w, r6.y, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.y, r6.x
+    ineg r6.w, r2.z
+    and r7.w, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.y
+    imax r6.y, r2.z, r6.w
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.w, l(0, 0, 0, 0), r7.w
+    movc r7.y, r6.w, r6.y, r6.x  // r7.y <- nid.y
+
+#line 197
+    ineg r6.x, r6.z
+    ineg r6.y, r2.z
+    and r6.w, r6.z, l(0x80000000)
+    imax r6.x, r6.z, r6.x
+    imax r6.y, r2.z, r6.y
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.z, l(0, 0, 0, 0), r6.w
+    movc r6.x, r6.z, r6.y, r6.x
+    iadd r6.x, r2.z, r6.x
+    ineg r6.y, r6.x
+    ineg r6.z, r2.z
+    and r6.w, r6.x, l(0x80000000)
+    imax r6.x, r6.x, r6.y
+    imax r6.y, r2.z, r6.z
+    udiv null, r6.x, r6.x, r6.y
+    ineg r6.y, r6.x
+    ine r6.z, l(0, 0, 0, 0), r6.w
+    movc r7.z, r6.z, r6.y, r6.x  // r7.z <- nid.z
+
+#line 201
+    nop 
+    mov r7.x, r7.x  // r7.x <- cellId.x
+    mov r7.y, r7.y  // r7.y <- cellId.y
+    mov r7.z, r7.z  // r7.z <- cellId.z
+
+#line 173
+    nop 
+    utof r6.xyz, r7.xyzx  // r6.x <- p.x; r6.y <- p.y; r6.z <- p.z
+
+#line 28
+    ftoi r6.xyz, r6.xyzx
+    imul null, r6.xyz, r0.xyzx, r6.xyzx  // r6.x <- q.x; r6.y <- q.y; r6.z <- q.z
+
+#line 31
+    xor r6.x, r6.y, r6.x
+    xor r6.x, r6.z, r6.x
+    imul null, r6.xyz, r0.xyzx, r6.xxxx  // r6.x <- q.x
+
+#line 34
+    utof r6.xyz, r6.xyzx
+    mul r6.xyz, r6.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
+    mul r6.xyz, r0.wwww, r6.xyzx
+    add r6.xyz, r6.xyzx, l(-1.000000, -1.000000, -1.000000, 0.000000)  // r6.x <- <hash33 return value>.x; r6.y <- <hash33 return value>.y; r6.z <- <hash33 return value>.z
+
+#line 173
+    add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- <jitter01 return value>.x; r6.y <- <jitter01 return value>.y; r6.z <- <jitter01 return value>.z
+
+#line 201
+    mov r6.xyz, r6.xyzx  // r6.x <- j.x; r6.y <- j.y; r6.z <- j.z
+
+#line 204
+    itof r7.xyz, r4.xyzx
+    add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- feature.x; r6.y <- feature.y; r6.z <- feature.z
+
+#line 207
+    mov r6.xyz, -r6.xyzx
+    add r6.xyz, r1.yzwy, r6.xyzx  // r6.x <- d.x; r6.y <- d.y; r6.z <- d.z
+
+#line 208
+    dp3 r4.y, r6.xyzx, r6.xyzx  // r4.y <- d2
+
+#line 209
+    min r5.w, r4.y, r5.w
+
+#line 210
+    iadd r4.x, r4.x, l(1)
+  endloop 
+  mov r5.x, r5.w  // r5.x <- minDist2
+  iadd r5.y, r5.y, l(1)
+endloop 
+
+#line 213
+mov r0.x, -r5.x
 add r0.x, r0.x, l(1.000000)  // r0.x <- <worley_noise_fixed return value>
 
 #line 220
 mul r0.x, r0.x, l(0.125000)
-add r2.z, r0.x, r3.x  // r2.z <- <worley_fbm return value>
+add r0.x, r0.x, r2.w  // r0.x <- <worley_fbm return value>
 
 #line 29 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
-mov r2.z, r2.z  // r2.z <- color.z
+mov r0.x, r0.x  // r0.x <- color.z
 
 #line 30
-mov r2.w, l(1.000000)  // r2.w <- color.w
+mov r3.w, l(1.000000)  // r3.w <- color.w
+
+#line 32
+nop 
+mov r1.x, r1.x
+mov r0.y, l(0)
+mov r0.z, l(1.000000)
+mov r2.x, r2.x
+mov r0.w, l(1.000000)
+
+#line 14 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
+mov r1.y, -r0.y
+add r1.y, r1.y, r1.x
+mov r0.y, -r0.y
+add r0.y, r0.y, r0.z
+div r0.y, r1.y, r0.y
+mov r0.z, -r2.x
+add r0.z, r0.z, r0.w
+mul r0.y, r0.z, r0.y
+add r3.x, r2.x, r0.y  // r3.x <- <remap return value>
+
+#line 32 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
+mov r3.x, r3.x  // r3.x <- color.x
+
+#line 33
+nop 
+mov r0.y, l(0)
+mov r0.z, l(1.000000)
+mov r2.y, r2.y
+mov r0.w, l(1.000000)
+
+#line 14 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
+mov r1.y, -r0.y
+add r1.y, r1.y, r1.x
+mov r0.y, -r0.y
+add r0.y, r0.y, r0.z
+div r0.y, r1.y, r0.y
+mov r0.z, -r2.y
+add r0.z, r0.z, r0.w
+mul r0.y, r0.z, r0.y
+add r3.y, r2.y, r0.y  // r3.y <- <remap return value>
+
+#line 33 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
+mov r3.y, r3.y  // r3.y <- color.y
+
+#line 34
+nop 
+mov r0.y, l(0)
+mov r0.z, l(1.000000)
+mov r0.x, r0.x
+mov r0.w, l(1.000000)
+
+#line 14 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\perlin_worley_noise.hlsli"
+mov r1.y, -r0.y
+add r1.x, r1.y, r1.x
+mov r0.y, -r0.y
+add r0.y, r0.y, r0.z
+div r0.y, r1.x, r0.y
+mov r0.z, -r0.x
+add r0.z, r0.z, r0.w
+mul r0.y, r0.z, r0.y
+add r3.z, r0.x, r0.y  // r3.z <- <remap return value>
+
+#line 34 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\high_freq_worley_cs.hlsl"
+mov r3.z, r3.z  // r3.z <- color.z
 
 #line 37
-store_uav_typed u0.xyzw, vThreadID.xyzz, r2.xyzw
+store_uav_typed u0.xyzw, vThreadID.xyzz, r3.xyzw
 
 #line 38
 ret 
-// Approximately 2867 instruction slots used
+// Approximately 3183 instruction slots used

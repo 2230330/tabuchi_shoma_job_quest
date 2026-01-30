@@ -195,6 +195,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
             
             float3 diffuse = (float3) 0, specular = (float3) 0;
             DirectBRDF(diffuse_reflectance, F0, N, V, L, LC * attenuation, roughness, diffuse, specular);
+            
             total_diffuse += diffuse;
             total_specular += specular;
         }
@@ -227,8 +228,12 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     total_diffuse = lerp(total_diffuse, total_diffuse * occlusion_factor, occlusion_strength);
     total_specular = lerp(total_specular, total_specular * occlusion_factor, occlusion_strength);
     
+    float3 ambient = ambient_color.rgb*ambient_color.a;
+    ambient *= diffuse_reflectance;
+    ambient *= lerp(1.0f, occlusion_factor, occlusion_strength);
+    
     //êFê∂ê¨
-    float3 color = total_diffuse + total_specular + (emisive_color);
+    float3 color = total_diffuse + total_specular + (emisive_color)+ambient;
     
     
     //sRGBãÛä‘Ç÷

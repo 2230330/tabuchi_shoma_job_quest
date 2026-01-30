@@ -26,7 +26,7 @@ LightManager::LightManager()
 	}
 
 	//フォワードレンダリング用
-	for (int i = 0; i < ForwardLightConstants::light_max; i++)
+	for (int i = 0; i < forward_light_max; i++)
 	{
 		PointLight point_light;
 		point_lights_.emplace_back(point_light);
@@ -42,7 +42,7 @@ void LightManager::SetForwardLightConstant(int start_slot)
 
 	ForwardLightConstants constant;
 	constant.directional_light = direction_light_;
-	constant.ambient_color = { 0.2f,.2f,.2f,1.f };
+	constant.ambient_color = ambient_color_;
     constant.light_view_position = light_view_projection_;
     constant.inverse_light_view_position = inverse_light_view_projection_;
     constant.light_orthographic_size = { shadow_map_size_,shadow_map_size_ };
@@ -51,7 +51,7 @@ void LightManager::SetForwardLightConstant(int start_slot)
 	for (auto& light : point_lights_)
 	{
 		constant.point_light[constant.light_count.y] = light;
-		if (++constant.light_count.y == ForwardLightConstants::light_max)
+		if (++constant.light_count.y == forward_light_max)
 		{
 			break;
 		}
@@ -61,7 +61,7 @@ void LightManager::SetForwardLightConstant(int start_slot)
 		constant.spot_light[constant.light_count.z] = light;
 		constant.spot_light[constant.light_count.z].inner_corn = cosf(light.inner_corn);
 		constant.spot_light[constant.light_count.z].outer_corn = cosf(light.outer_corn);
-		if (++constant.light_count.z == ForwardLightConstants::light_max)
+		if (++constant.light_count.z == forward_light_max)
 			break;
 	}
 
@@ -106,6 +106,12 @@ void LightManager::DrawImgui()
 {
 	if (ImGui::Begin("light manager"))
 	{
+		if (ImGui::TreeNode("ambient_color"))
+		{
+			if (ImGui::ColorEdit4("ambient", &ambient_color_.x));
+			ImGui::TreePop();
+		}
+
 		//ディレクションライト
 		if (ImGui::TreeNode("directional light"))
 		{
@@ -119,7 +125,7 @@ void LightManager::DrawImgui()
 			}
 			if (moove_light_)
 			{
-				if (ImGui::DragFloat("day_length_seconds", &day_length_seconds_, 1.0f, 240));
+				if (ImGui::DragFloat("day_length_seconds", &day_length_seconds_,1.0f));
 			}
 			
 			ImGui::TreePop();
@@ -190,9 +196,13 @@ void LightManager::Update(float elapsed_time)
 	//ディレクションライトを太陽の様に動かす
 	if (moove_light_)
 	{
-        time_of_day += elapsed_time / day_length_seconds_;
-		if (time_of_day > 1.0f)
-			time_of_day -= 1.0f;
+		if (day_length_seconds_ >= 0.01f||day_length_seconds_<=-0.01f)
+		{
+			time_of_day += elapsed_time / day_length_seconds_;
+			if (time_of_day > 1.0f)
+				time_of_day -= 1.0f;
+		}
+
 
 		float theta = time_of_day * DirectX::XM_2PI;
 		//太陽の軌道円を作る

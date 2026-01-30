@@ -70,7 +70,7 @@ void SpriteRenderSystem::Render()
     comp_mng_.ForEach<ComponentTexture>([&](uint32_t entity_id, ComponentTexture& tex)
         {
             if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id)&&
-                !comp_mng_.Has<ComponentCloudDome>(entity_id))
+                !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
             {
 
 

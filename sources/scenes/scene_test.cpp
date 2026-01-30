@@ -181,7 +181,7 @@ void SceneTest::RenderCore(float elapsed_time)
     }
 }
 
-void SceneTest::DrawGui()
+void SceneTest::DrawImguiCore()
 {
     float screen_width = Graphics::Instance().GetScreenWidth();
     float screen_height = Graphics::Instance().GetScreenHeight();

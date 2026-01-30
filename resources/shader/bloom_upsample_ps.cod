@@ -45,7 +45,7 @@
 // SV_TARGET                0   xyzw        0   TARGET   float   xyzw
 //
 ps_5_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_constantbuffer CB4[1], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
@@ -57,119 +57,19 @@ dcl_resource_texture2d (float,float,float,float) t5
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
 dcl_temps 2
-//
-// Initial variable locations:
-//   v0.x <- position.x; v0.y <- position.y; v0.z <- position.z; v0.w <- position.w; 
-//   v1.x <- texcoord.x; v1.y <- texcoord.y; 
-//   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
-//
-#line 16 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\bloom_upsample_ps.hlsl"
-itof r0.xyz, l(0, 0, 0, 0)  // r0.x <- sampled_color.x; r0.y <- sampled_color.y; r0.z <- sampled_color.z
-
-#line 17
-itof r0.w, l(0)  // r0.w <- total_weight
-
-#line 23
-mov r1.x, l(1.000000)
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
-
-#line 24
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t0.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
-
-#line 25
-add r0.w, r0.w, r1.x
-
-#line 23
-mov r1.x, l(1.000000)
-mov r1.y, l(2.000000)
-mul r1.x, r1.y, r1.x
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
-
-#line 24
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t1.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
-
-#line 25
-add r0.w, r0.w, r1.x
-
-#line 23
-mov r1.x, l(1.000000)
-mov r1.y, l(2.000000)
-mul r1.y, r1.y, r1.y
-mul r1.x, r1.y, r1.x
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
-
-#line 24
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t2.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
-
-#line 25
-add r0.w, r0.w, r1.x
-
-#line 23
-mov r1.x, l(1.000000)
-mov r1.y, l(2.000000)
-mul r1.x, r1.y, r1.x
-mul r1.y, r1.y, r1.y
-mul r1.x, r1.y, r1.x
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
-
-#line 24
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t3.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
-
-#line 25
-add r0.w, r0.w, r1.x
-
-#line 23
-mov r1.x, l(1.000000)
-mov r1.y, l(2.000000)
-mul r1.y, r1.y, r1.y
-mul r1.y, r1.y, r1.y
-mul r1.x, r1.y, r1.x
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
-
-#line 24
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t4.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
-
-#line 25
-add r0.w, r0.w, r1.x
-
-#line 23
-mov r1.x, l(1.000000)
-mov r1.y, l(2.000000)
-mul r1.x, r1.y, r1.x
-mul r1.y, r1.y, r1.y
-mul r1.y, r1.y, r1.y
-mul r1.x, r1.y, r1.x
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
-
-#line 24
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t5.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
-
-#line 25
-add r0.w, r0.w, r1.x
-
-#line 28
-div r0.xyz, r0.xyzx, r0.wwww
-
-#line 29
+sample_indexable(texture2d)(float,float,float,float) r0.xyz, v1.xyxx, t0.xyzw, s3
+sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t1.xyzw, s3
+mad r0.xyz, r1.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000), r0.xyzx
+sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t2.xyzw, s3
+mad r0.xyz, r1.xyzx, l(0.250000, 0.250000, 0.250000, 0.000000), r0.xyzx
+sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t3.xyzw, s3
+mad r0.xyz, r1.xyzx, l(0.125000, 0.125000, 0.125000, 0.000000), r0.xyzx
+sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t4.xyzw, s3
+mad r0.xyz, r1.xyzx, l(0.062500, 0.062500, 0.062500, 0.000000), r0.xyzx
+sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t5.xyzw, s3
+mad r0.xyz, r1.xyzx, l(0.031250, 0.031250, 0.031250, 0.000000), r0.xyzx
 mul r0.xyz, r0.xyzx, cb4[0].yyyy
-
-#line 31
-mov r0.w, l(1.000000)  // r0.w <- alpha
-
-#line 33
-mov o0.xyz, r0.xyzx
-mov o0.w, r0.w
+mul o0.xyz, r0.xyzx, l(0.507937, 0.507937, 0.507937, 0.000000)
+mov o0.w, l(1.000000)
 ret 
-// Approximately 62 instruction slots used
+// Approximately 15 instruction slots used

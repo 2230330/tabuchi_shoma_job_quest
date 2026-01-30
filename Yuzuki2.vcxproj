@@ -135,7 +135,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -192,7 +192,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -214,7 +214,7 @@
     <ClInclude Include="headers\archetype\archetype_manager.h" />
     <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
-    <ClInclude Include="headers\component\component_cloud_dome.h" />
+    <ClInclude Include="headers\component\component_volumetric_cloud.h" />
     <ClInclude Include="headers\component\component_color.h" />
     <ClInclude Include="headers\component\component_editor.h" />
     <ClInclude Include="headers\component\component_gltf.h" />
@@ -230,7 +230,6 @@
     <ClInclude Include="headers\component\component_scale.h" />
     <ClInclude Include="headers\component\component_sky_atmosphere.h" />
     <ClInclude Include="headers\component\component_texture.h" />
-    <ClInclude Include="headers\component\component_volumetric_cloud.h" />
     <ClInclude Include="headers\component\i_component.h" />
     <ClInclude Include="headers\constant_buffer_slot.h" />
     <ClInclude Include="headers\deferred_g_buffer.h" />

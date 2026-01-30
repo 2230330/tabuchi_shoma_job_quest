@@ -210,6 +210,23 @@ void Scene::Render(float elapsed_time)
 	RenderCore(elapsed_time);
 }
 
+void Scene::DrawGui()
+{
+	static bool prev_z = false;
+	bool now_z = (::GetAsyncKeyState('Z') & 0x8000) != 0;
+
+	if (now_z&&!prev_z)
+	{
+		imgui_draw_flag_ = !imgui_draw_flag_;
+	}
+	if (imgui_draw_flag_)
+	{
+		DrawImguiCore();
+	}
+
+	prev_z = now_z;
+}
+
 void Scene::SetSceneConstant(
 	int start_slot ,
 	bool is_update_resource,

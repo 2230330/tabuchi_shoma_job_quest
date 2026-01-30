@@ -27,7 +27,7 @@ private:
 
     //初期に1度だけ呼び出し、ノイズマップを作成
     void CreateNoiseTextures(ID3D11Device* device);
-    void UpdateConstants(const ComponentCloudDome& cloud);
+    void UpdateConstants(const ComponentVolumetricCloud& cloud);
 
     ComponentManager& comp_mng_;
 
@@ -45,7 +45,7 @@ private:
         //密度
         float density_scale = 0.05f; // [0.01, 0.2]
         //雲の覆う割合
-        float cloud_coverage_scale = 0.2f; // [0.1, 1.0]
+        float cloud_coverage_scale = 0.25f; 
         //雨雲の光吸収の強さ
         float rain_cloud_absorption_scale = 0.5;
         //雲の種類、厚さを調整する

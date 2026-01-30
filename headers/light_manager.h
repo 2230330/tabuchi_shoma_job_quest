@@ -63,7 +63,7 @@ private:
     DirectionLight direction_light_;
     float azimuth_ = 0.f;//ライトの水平角度
     float elevation_ = DirectX::XMConvertToRadians(-90);//ライトの仰角
-    DirectX::XMFLOAT4 ambient_color_ = { 1,1,1,1 };
+    DirectX::XMFLOAT4 ambient_color_ = { 0.2,0.2,0.2,1 };
     //ライト空間用
     DirectX::XMFLOAT4X4 light_view_projection_{};
     DirectX::XMFLOAT4X4 inverse_light_view_projection_{};
@@ -79,19 +79,19 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer>forward_light_constant_buffer_;
     Microsoft::WRL::ComPtr<ID3D11Buffer>deferred_light_constant_buffer_;
 
+    static constexpr int forward_light_max = 8;
     struct ForwardLightConstants
     {
-        static constexpr int light_max = 8;
+        DirectX::XMUINT4  light_count{ 0,0,0,0 };
         DirectX::XMFLOAT4 ambient_color;
         //ｘ：空き、ｙ：ポイントライト数、ｚ：スポットライト数、ｗ：空き
-        DirectX::XMUINT4  light_count{ 0,0,0,0 };
         DirectX::XMFLOAT4X4 light_view_position;//ライトビュー空間でのカメラ位置
         DirectX::XMFLOAT4X4 inverse_light_view_position;//逆行列
         DirectX::XMFLOAT2 light_orthographic_size;//ライトの直交投影のサイズ(x:width,y:height)
         DirectX::XMFLOAT2 light_depth_range;//ライトの直交投影の深度範囲(x:near,y:far)
         DirectionLight directional_light;
-        PointLight point_light[light_max];
-        SpotLight spot_light[light_max];
+        PointLight point_light[forward_light_max];
+        SpotLight spot_light[forward_light_max];
 
     };
 

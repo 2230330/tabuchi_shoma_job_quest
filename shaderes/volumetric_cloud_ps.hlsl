@@ -519,7 +519,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     (1.0f
                     * beers_law
                     * powdered_sugar
-                    * lerp(0.1f, 30.0f, henyey_greenstein_phase) // 太陽光位相関数
+                    * lerp(1.f, 30.0f, henyey_greenstein_phase) // 太陽光位相関数
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
                     + Ei;
@@ -561,7 +561,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     
                     
                     //早期終了判定
-                    if (transmittence <= 1e-6f)
+                    if (transmittence <= 1e-2f)
                     {
                         break;
                     }
@@ -586,11 +586,11 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             cloud_test = 
             SampleCloudDensity(sample_point, weather_data, 6.0, true /*cheap_sample*/);
             float step_scale = 1.0f;
-            if (cloud_test <= 0.0)
-            {
-                //地平線は荒く、上空は細かくステップを進める
-                step_scale = lerp(1.0f, 3.0f, horizon);
-            }
+            //if (cloud_test <= 0.0)
+            //{
+            //    //地平線は荒く、上空は細かくステップを進める
+            //    step_scale = lerp(1.0f, 3.0f, horizon);
+            //}
             sample_point += ray_step * step_scale;
         }
         

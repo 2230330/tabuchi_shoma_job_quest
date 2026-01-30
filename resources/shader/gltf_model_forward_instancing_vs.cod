@@ -77,7 +77,7 @@
 // TEXCOORD                 0   xy          4     NONE   float   xy  
 //
 vs_5_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_constantbuffer CB1[18], immediateIndexed
 dcl_constantbuffer CB0[4], immediateIndexed
 dcl_input v0.xyz
@@ -93,175 +93,60 @@ dcl_output o1.xyzw
 dcl_output o2.xyzw
 dcl_output o3.xyzw
 dcl_output o4.xy
-dcl_temps 11
-//
-// Initial variable locations:
-//   v0.x <- vin.position.x; v0.y <- vin.position.y; v0.z <- vin.position.z; v0.w <- vin.position.w; 
-//   v1.x <- vin.normal.x; v1.y <- vin.normal.y; v1.z <- vin.normal.z; v1.w <- vin.normal.w; 
-//   v2.x <- vin.tangent.x; v2.y <- vin.tangent.y; v2.z <- vin.tangent.z; v2.w <- vin.tangent.w; 
-//   v3.x <- vin.texcoord.x; v3.y <- vin.texcoord.y; 
-//   v4.x <- vin.joints.x; v4.y <- vin.joints.y; v4.z <- vin.joints.z; v4.w <- vin.joints.w; 
-//   v5.x <- vin.weights.x; v5.y <- vin.weights.y; v5.z <- vin.weights.z; v5.w <- vin.weights.w; 
-//   v6.x <- vin.world0.x; v6.y <- vin.world0.y; v6.z <- vin.world0.z; v6.w <- vin.world0.w; 
-//   v7.x <- vin.world1.x; v7.y <- vin.world1.y; v7.z <- vin.world1.z; v7.w <- vin.world1.w; 
-//   v8.x <- vin.world2.x; v8.y <- vin.world2.y; v8.z <- vin.world2.z; v8.w <- vin.world2.w; 
-//   v9.x <- vin.world3.x; v9.y <- vin.world3.y; v9.z <- vin.world3.z; v9.w <- vin.world3.w; 
-//   v10.x <- vin.previous_world0.x; v10.y <- vin.previous_world0.y; v10.z <- vin.previous_world0.z; v10.w <- vin.previous_world0.w; 
-//   v11.x <- vin.previous_world1.x; v11.y <- vin.previous_world1.y; v11.z <- vin.previous_world1.z; v11.w <- vin.previous_world1.w; 
-//   v12.x <- vin.previous_world2.x; v12.y <- vin.previous_world2.y; v12.z <- vin.previous_world2.z; v12.w <- vin.previous_world2.w; 
-//   v13.x <- vin.previous_world3.x; v13.y <- vin.previous_world3.y; v13.z <- vin.previous_world3.z; v13.w <- vin.previous_world3.w; 
-//   o4.x <- <main return value>.texcoord.x; o4.y <- <main return value>.texcoord.y; 
-//   o3.x <- <main return value>.w_tangent.x; o3.y <- <main return value>.w_tangent.y; o3.z <- <main return value>.w_tangent.z; o3.w <- <main return value>.w_tangent.w; 
-//   o2.x <- <main return value>.w_normal.x; o2.y <- <main return value>.w_normal.y; o2.z <- <main return value>.w_normal.z; o2.w <- <main return value>.w_normal.w; 
-//   o1.x <- <main return value>.w_position.x; o1.y <- <main return value>.w_position.y; o1.z <- <main return value>.w_position.z; o1.w <- <main return value>.w_position.w; 
-//   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
-//
-#line 5 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_forward_instancing_vs.hlsl"
-mov r0.x, v2.w  // r0.x <- sigma
-
-#line 10
-mov r1.xyzw, v6.xyzw  // r1.x <- world_matrix._m00; r1.y <- world_matrix._m01; r1.z <- world_matrix._m02; r1.w <- world_matrix._m03
-
-#line 11
-mov r2.xyzw, v7.xyzw  // r2.x <- world_matrix._m10; r2.y <- world_matrix._m11; r2.z <- world_matrix._m12; r2.w <- world_matrix._m13
-
-#line 12
-mov r3.xyzw, v8.xyzw  // r3.x <- world_matrix._m20; r3.y <- world_matrix._m21; r3.z <- world_matrix._m22; r3.w <- world_matrix._m23
-
-#line 13
-mov r4.xyzw, v9.xyzw  // r4.x <- world_matrix._m30; r4.y <- world_matrix._m31; r4.z <- world_matrix._m32; r4.w <- world_matrix._m33
-
-#line 14
-mul r5.xyzw, r1.xyzw, cb0[0].xxxx
-mul r6.xyzw, r2.xyzw, cb0[0].yyyy
-add r5.xyzw, r5.xyzw, r6.xyzw
-mul r6.xyzw, r3.xyzw, cb0[0].zzzz
-add r5.xyzw, r5.xyzw, r6.xyzw
-mul r6.xyzw, r4.xyzw, cb0[0].wwww
-add r5.xyzw, r5.xyzw, r6.xyzw
-mul r6.xyzw, r1.xyzw, cb0[1].xxxx
-mul r7.xyzw, r2.xyzw, cb0[1].yyyy
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r3.xyzw, cb0[1].zzzz
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r4.xyzw, cb0[1].wwww
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r1.xyzw, cb0[2].xxxx
-mul r8.xyzw, r2.xyzw, cb0[2].yyyy
-add r7.xyzw, r7.xyzw, r8.xyzw
-mul r8.xyzw, r3.xyzw, cb0[2].zzzz
-add r7.xyzw, r7.xyzw, r8.xyzw
-mul r8.xyzw, r4.xyzw, cb0[2].wwww
-add r7.xyzw, r7.xyzw, r8.xyzw
-mul r1.xyzw, r1.xyzw, cb0[3].xxxx
-mul r2.xyzw, r2.xyzw, cb0[3].yyyy
-add r1.xyzw, r1.xyzw, r2.xyzw
-mul r2.xyzw, r3.xyzw, cb0[3].zzzz
-add r1.xyzw, r1.xyzw, r2.xyzw
-mul r2.xyzw, r4.xyzw, cb0[3].wwww
-add r1.xyzw, r1.xyzw, r2.xyzw
-mov r2.x, r5.x  // r2.x <- world_matrix._m00
-mov r2.y, r6.x  // r2.y <- world_matrix._m10
-mov r2.z, r7.x  // r2.z <- world_matrix._m20
-mov r2.w, r1.x  // r2.w <- world_matrix._m30
-mov r3.x, r5.y  // r3.x <- world_matrix._m01
-mov r3.y, r6.y  // r3.y <- world_matrix._m11
-mov r3.z, r7.y  // r3.z <- world_matrix._m21
-mov r3.w, r1.y  // r3.w <- world_matrix._m31
-mov r4.x, r5.z  // r4.x <- world_matrix._m02
-mov r4.y, r6.z  // r4.y <- world_matrix._m12
-mov r4.z, r7.z  // r4.z <- world_matrix._m22
-mov r4.w, r1.z  // r4.w <- world_matrix._m32
-mov r1.x, r5.w  // r1.x <- world_matrix._m03
-mov r1.y, r6.w  // r1.y <- world_matrix._m13
-mov r1.z, r7.w  // r1.z <- world_matrix._m23
-mov r1.w, r1.w  // r1.w <- world_matrix._m33
-
-#line 16
-itof r5.w, l(1)  // r5.w <- vin.position.w
-
-#line 17
-mul r6.xyzw, r2.xxxx, cb1[14].xyzw
-mul r7.xyzw, r3.xxxx, cb1[15].xyzw
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r4.xxxx, cb1[16].xyzw
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r1.xxxx, cb1[17].xyzw
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r2.yyyy, cb1[14].xyzw
-mul r8.xyzw, r3.yyyy, cb1[15].xyzw
-add r7.xyzw, r7.xyzw, r8.xyzw
-mul r8.xyzw, r4.yyyy, cb1[16].xyzw
-add r7.xyzw, r7.xyzw, r8.xyzw
-mul r8.xyzw, r1.yyyy, cb1[17].xyzw
-add r7.xyzw, r7.xyzw, r8.xyzw
-mul r8.xyzw, r2.zzzz, cb1[14].xyzw
-mul r9.xyzw, r3.zzzz, cb1[15].xyzw
-add r8.xyzw, r8.xyzw, r9.xyzw
-mul r9.xyzw, r4.zzzz, cb1[16].xyzw
-add r8.xyzw, r8.xyzw, r9.xyzw
-mul r9.xyzw, r1.zzzz, cb1[17].xyzw
-add r8.xyzw, r8.xyzw, r9.xyzw
-mul r9.xyzw, r2.wwww, cb1[14].xyzw
-mul r10.xyzw, r3.wwww, cb1[15].xyzw
-add r9.xyzw, r9.xyzw, r10.xyzw
-mul r10.xyzw, r4.wwww, cb1[16].xyzw
-add r9.xyzw, r9.xyzw, r10.xyzw
-mul r10.xyzw, r1.wwww, cb1[17].xyzw
-add r9.xyzw, r9.xyzw, r10.xyzw
-mul r6.xyzw, r6.xyzw, v0.xxxx
-mul r7.xyzw, r7.xyzw, v0.yyyy
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r8.xyzw, v0.zzzz
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r5.wwww, r9.xyzw
-add r6.xyzw, r6.xyzw, r7.xyzw  // r6.x <- vout.position.x; r6.y <- vout.position.y; r6.z <- vout.position.z; r6.w <- vout.position.w
-
-#line 18
-mov r5.xyz, v0.xyzx
-dp4 r7.x, r5.xyzw, r2.xyzw  // r7.x <- vout.w_position.x
-dp4 r7.y, r5.xyzw, r3.xyzw  // r7.y <- vout.w_position.y
-dp4 r7.z, r5.xyzw, r4.xyzw  // r7.z <- vout.w_position.z
-dp4 r7.w, r5.xyzw, r1.xyzw  // r7.w <- vout.w_position.w
-
-#line 20
-itof r5.w, l(0)  // r5.w <- vin.normal.w
-
-#line 21
-mov r5.xyz, v1.xyzx
-dp4 r8.x, r5.xyzw, r2.xyzw
-dp4 r8.y, r5.xyzw, r3.xyzw
-dp4 r8.z, r5.xyzw, r4.xyzw
-dp4 r8.w, r5.xyzw, r1.xyzw
-dp4 r0.y, r8.xyzw, r8.xyzw
-rsq r0.y, r0.y
-mul r5.xyzw, r0.yyyy, r8.xyzw  // r5.x <- vout.w_normal.x; r5.y <- vout.w_normal.y; r5.z <- vout.w_normal.z; r5.w <- vout.w_normal.w
-
-#line 23
-itof r8.w, l(0)  // r8.w <- vin.tangent.w
-
-#line 24
-mov r8.xyz, v2.xyzx
-dp4 r2.x, r8.xyzw, r2.xyzw
-dp4 r2.y, r8.xyzw, r3.xyzw
-dp4 r2.z, r8.xyzw, r4.xyzw
-dp4 r2.w, r8.xyzw, r1.xyzw
-dp4 r0.y, r2.xyzw, r2.xyzw
-rsq r0.y, r0.y
-mul r0.yzw, r0.yyyy, r2.xxyz  // r0.y <- vout.w_tangent.x; r0.z <- vout.w_tangent.y; r0.w <- vout.w_tangent.z
-
-#line 25
-mov r0.x, r0.x  // r0.x <- vout.w_tangent.w
-
-#line 27
-mov r1.xy, v3.xyxx  // r1.x <- vout.texcoord.x; r1.y <- vout.texcoord.y
-
-#line 30
-mov o0.xyzw, r6.xyzw
-mov o1.xyzw, r7.xyzw
-mov o2.xyzw, r5.xyzw
-mov o3.xyz, r0.yzwy
-mov o3.w, r0.x
-mov o4.xy, r1.xyxx
+dcl_temps 7
+mul r0.xyzw, v7.xyzw, cb0[3].yyyy
+mad r0.xyzw, cb0[3].xxxx, v6.xyzw, r0.xyzw
+mad r0.xyzw, cb0[3].zzzz, v8.xyzw, r0.xyzw
+mad r0.xyzw, cb0[3].wwww, v9.xyzw, r0.xyzw
+mul r1.xyzw, r0.yyyy, cb1[15].xyzw
+mad r1.xyzw, r0.xxxx, cb1[14].xyzw, r1.xyzw
+mad r1.xyzw, r0.zzzz, cb1[16].xyzw, r1.xyzw
+mad r1.xyzw, r0.wwww, cb1[17].xyzw, r1.xyzw
+mul r2.xyzw, v7.xyzw, cb0[1].yyyy
+mad r2.xyzw, cb0[1].xxxx, v6.xyzw, r2.xyzw
+mad r2.xyzw, cb0[1].zzzz, v8.xyzw, r2.xyzw
+mad r2.xyzw, cb0[1].wwww, v9.xyzw, r2.xyzw
+mul r3.xyzw, r2.yyyy, cb1[15].xyzw
+mad r3.xyzw, r2.xxxx, cb1[14].xyzw, r3.xyzw
+mad r3.xyzw, r2.zzzz, cb1[16].xyzw, r3.xyzw
+mad r3.xyzw, r2.wwww, cb1[17].xyzw, r3.xyzw
+mul r3.xyzw, r3.xyzw, v0.yyyy
+mul r4.xyzw, v7.xyzw, cb0[0].yyyy
+mad r4.xyzw, cb0[0].xxxx, v6.xyzw, r4.xyzw
+mad r4.xyzw, cb0[0].zzzz, v8.xyzw, r4.xyzw
+mad r4.xyzw, cb0[0].wwww, v9.xyzw, r4.xyzw
+mul r5.xyzw, r4.yyyy, cb1[15].xyzw
+mad r5.xyzw, r4.xxxx, cb1[14].xyzw, r5.xyzw
+mad r5.xyzw, r4.zzzz, cb1[16].xyzw, r5.xyzw
+mad r5.xyzw, r4.wwww, cb1[17].xyzw, r5.xyzw
+mad r3.xyzw, v0.xxxx, r5.xyzw, r3.xyzw
+mul r5.xyzw, v7.xyzw, cb0[2].yyyy
+mad r5.xyzw, cb0[2].xxxx, v6.xyzw, r5.xyzw
+mad r5.xyzw, cb0[2].zzzz, v8.xyzw, r5.xyzw
+mad r5.xyzw, cb0[2].wwww, v9.xyzw, r5.xyzw
+mul r6.xyzw, r5.yyyy, cb1[15].xyzw
+mad r6.xyzw, r5.xxxx, cb1[14].xyzw, r6.xyzw
+mad r6.xyzw, r5.zzzz, cb1[16].xyzw, r6.xyzw
+mad r6.xyzw, r5.wwww, cb1[17].xyzw, r6.xyzw
+mad r3.xyzw, v0.zzzz, r6.xyzw, r3.xyzw
+add o0.xyzw, r1.xyzw, r3.xyzw
+mul r1.xyzw, r2.xyzw, v0.yyyy
+mad r1.xyzw, v0.xxxx, r4.xyzw, r1.xyzw
+mad r1.xyzw, v0.zzzz, r5.xyzw, r1.xyzw
+add o1.xyzw, r0.xyzw, r1.xyzw
+mul r0.xyzw, r2.xyzw, v1.yyyy
+mul r1.xyzw, r2.xyzw, v2.yyyy
+mad r1.xyzw, v2.xxxx, r4.xyzw, r1.xyzw
+mad r0.xyzw, v1.xxxx, r4.xyzw, r0.xyzw
+mad r0.xyzw, v1.zzzz, r5.xyzw, r0.xyzw
+mad r1.xyzw, v2.zzzz, r5.xyzw, r1.xyzw
+dp4 r2.x, r0.xyzw, r0.xyzw
+rsq r2.x, r2.x
+mul o2.xyzw, r0.xyzw, r2.xxxx
+dp4 r0.x, r1.xyzw, r1.xyzw
+rsq r0.x, r0.x
+mul o3.xyz, r0.xxxx, r1.xyzx
+mov o3.w, v2.w
+mov o4.xy, v3.xyxx
 ret 
-// Approximately 117 instruction slots used
+// Approximately 55 instruction slots used
