@@ -24,7 +24,8 @@ public:
     //•`‰æˆ—
     void Render(float elapsed_time);
     //GUI•`‰æˆ—
-    virtual void DrawGui() {};
+    void DrawGui();
+
 
 	void SetWheel(float wheel) { this->wheel = wheel; }
 
@@ -33,6 +34,7 @@ protected:
 	virtual bool UninitializeCore() { return true; }
 	virtual void UpdateCore(float elapsed_time){}
 	virtual void RenderCore(float elapsed_time){}
+	virtual void DrawImguiCore(){}
 
 	void SetSceneConstant(
 		int start_slot = 1,
@@ -72,8 +74,13 @@ protected:
 
 private:
 	CONST HWND hwnd;
+
+	bool imgui_draw_flag_ = true;
+
 	//render_data* renderdata{ nullptr };
 	POINT cursor_position{ 0, 0 };
+	float free_move_speed_ = 8.0f;
+	float free_move_boost_ = 4.0f;
 	float timer{ 0.0f };
 	bool flag{ false };
 	float near_clip_distance{ 0.1f };

@@ -2,7 +2,7 @@
 
 #include"../../headers/graphics.h"
 #include"../../headers/render_state.h"
-#include"../../headers/system/render_system.h"
+#include"../../headers/system/render_gltf_system.h"
 #include"../../headers/system/instancing_render_system.h"
 #include"../../headers/system/sprite_render_system.h"
 #include"../../headers/resource_manager.h"
@@ -61,6 +61,9 @@ void RenderSystemManager::RenderAll()
     auto* ctx = Graphics::Instance().GetDeviceContext();
 
     // === 背景（低頻度） ===
+    bool sky_flag = sky_render_system_->GetSkyFlag();
+    bool cloud_flag = cloud_render_system_->HasRenderableCloud();
+
     if (back_sample_count_ < back_sample_rimit_) {
         back_sample_count_++;
     }
@@ -72,7 +75,6 @@ void RenderSystemManager::RenderAll()
         sky_framebuffer_->Activate(ctx);
         sky_render_system_->Render();
 
-        bool sky_flag = sky_render_system_->GetSkyFlag();
 
         sky_framebuffer_->Deactivate(ctx);
 
@@ -82,7 +84,6 @@ void RenderSystemManager::RenderAll()
         cloud_render_system_->SetSkyColorSRV(sky_framebuffer_->GetShaderResourceView(0).Get());
         cloud_render_system_->Render();
 
-        bool cloud_flag = cloud_render_system_->HasRenderableCloud();
         
         //雲がなかった場合、大気をそのまま描画する
         if (!cloud_flag)
@@ -113,24 +114,27 @@ void RenderSystemManager::RenderAll()
         back_framebuffer_->Deactivate(ctx);
 
 
-        // IBL 入力更新（背景SRV→SkyCube化を内包）
-        if (sky_flag || cloud_flag)
-        {
-            ibl_manager_->SetCloudFlag(cloud_flag);
-            ibl_manager_->UpdateEnvironmentCapture(*sky_framebuffer_);
-            ibl_manager_->BuildSkyCubeFromEnvSource();
+    }
 
-            if (ibl_manager_->IsDirty()) {
-                // Diffuse SH（軽い）
-                ibl_manager_->UpdateDiffuseSH();
+    //スカイキューブ作成
+            // IBL 入力更新（背景SRV→SkyCube化を内包）
+    if (sky_flag || cloud_flag)
+    {
+        ibl_manager_->SetSkyFlag(sky_flag);
+        ibl_manager_->SetCloudFlag(cloud_flag);
+        ibl_manager_->UpdateEnvironmentCapture(*sky_framebuffer_);
+        ibl_manager_->BuildSkyCubeFromEnvSource();
 
-                // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
-                for (int s = 0; s < ibl_steps_per_frame_; ++s) {
-                    ibl_manager_->UpdateSpecularPrefilter();
-                }
+        if (ibl_manager_->IsDirty()) {
+            // Diffuse SH（軽い）
+            ibl_manager_->UpdateDiffuseSH();
 
-                Graphics::Instance().SetRenderTargets(); //IBL更新でコンテキストが汚れるのでリセット
+            // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
+            for (int s = 0; s < ibl_steps_per_frame_; ++s) {
+                ibl_manager_->UpdateSpecularPrefilter();
             }
+
+            Graphics::Instance().SetRenderTargets(); //IBL更新でコンテキストが汚れるのでリセット
         }
     }
 
@@ -175,6 +179,8 @@ void RenderSystemManager::RunPass(RenderPass pass)
         {
             if (system->GetPass() == pass)
             {
+                
+
                 system->Render();
             }
         }

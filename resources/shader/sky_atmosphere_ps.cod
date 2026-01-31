@@ -178,25 +178,14 @@ dp3 r1.z, r7.xyzx, r7.xyzx
 rsq r1.z, r1.z
 mul r7.xyz, r1.zzzz, r7.xyzx  // r7.x <- view_dir.x; r7.y <- view_dir.y; r7.z <- view_dir.z
 
-#line 226
-lt r1.z, r7.y, l(0.000000)
-if_nz r1.z
-
-#line 228
-  itof o0.xyzw, l(0, 0, 0, 1)
-  ret 
-
-#line 229
-endif 
-
 #line 232
 nop 
-mov r8.xyz, r4.xyzx
+mov r4.xyz, r4.xyzx
 mov r7.xyz, r7.xyzx
 mov r6.xyz, r6.xyzx
 
 #line 94
-mov r8.xyz, r8.xyzx  // r8.x <- sample_pos.x; r8.y <- sample_pos.y; r8.z <- sample_pos.z
+mov r8.xyz, r4.xyzx  // r8.x <- sample_pos.x; r8.y <- sample_pos.y; r8.z <- sample_pos.z
 
 #line 96
 dp3 r1.z, r8.xyzx, r8.xyzx
@@ -951,7 +940,7 @@ add r1.xyz, r1.xyzx, l(0.100000, 0.100000, 0.200000, 0.000000)
 add r0.xyz, r0.xyzx, r1.xyzx
 
 #line 248
-mov o0.xyz, r0.xyzx  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z
-mov o0.w, l(1.000000)  // o0.w <- <main return value>.w
+mov o0.xyz, r0.xyzx
+mov o0.w, l(1.000000)
 ret 
-// Approximately 521 instruction slots used
+// Approximately 516 instruction slots used

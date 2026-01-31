@@ -509,7 +509,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     (1.0f
                     * beers_law
                     * powdered_sugar
-                    * lerp(0.1f, 30.0f, henyey_greenstein_phase) // ‘¾—zŒõˆÊ‘ŠŠÖ”
+                    * lerp(1.f, 30.0f, henyey_greenstein_phase) // ‘¾—zŒõˆÊ‘ŠŠÖ”
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
                     + Ei;
@@ -551,7 +551,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     
                     
                     //‘ŠúI—¹”»’è
-                    if (transmittence <= 1e-6f)
+                    if (transmittence <= 1e-2f)
                     {
                         break;
                     }
@@ -579,7 +579,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             if (cloud_test <= 0.0)
             {
                 //’n•½ü‚Ír‚­Aã‹ó‚Í×‚©‚­ƒXƒeƒbƒv‚ği‚ß‚é
-                step_scale = lerp(1.0f, 3.0f, horizon);
+                //step_scale = lerp(1.0f, 3.0f, horizon);
             }
             sample_point += ray_step * step_scale;
         }
@@ -673,6 +673,11 @@ float4 main(VS_OUT pin) : SV_TARGET
             
         }
 
+    }
+    else
+    {
+        //’n•½ü‚æ‚è‰º‚Í‰_‚ğ•`‰æ‚µ‚È‚¢
+        color = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb;
     }
 
 

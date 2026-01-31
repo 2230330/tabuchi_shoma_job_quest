@@ -24,7 +24,6 @@ bool SceneTest::InitializeCore()
     //各種マネージャの設定
     {
         comp_mng = std::make_unique<ComponentManager>();
-        enti_mng = std::make_unique<EntityManager>();
         world = std::make_unique<World>();
         comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
@@ -47,11 +46,9 @@ bool SceneTest::InitializeCore()
         }
         //3dオブジェクト宣言
         {
-            model.skinned_mesh = std::make_shared<SkinnedMesh>(
-                device,
-                L".\\resources\\model\\fbx\\nico\\nico.fbx"
-                , true
-            );
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\blue_exagonal_tiles_with_extracted\\scene.gltf");
+
         }
         //shader
         {
@@ -71,16 +68,24 @@ bool SceneTest::InitializeCore()
                 );
             }
         }
-        //
+        //大気散乱と雲
         {
-            bit_block_transfer_ = std::make_unique<FullscreenQuad>(device);
+            int entity = world->GetEntityManager()->Add();
+            ComponentPosition position{};
+            comp_mng->Add<ComponentPosition>(entity, position);
+            ComponentRotation rotation{};
+            comp_mng->Add<ComponentRotation>(entity, rotation);
+            ComponentScale scale;
+            scale.value = { 1.f, 1.f, 1.f };
+            comp_mng->Add(entity, scale);
+            ComponentLocalToWorld l2w{};
+            comp_mng->Add(entity, l2w);
+            ComponentSkyAtmosphere sky;
+            comp_mng->Add(entity, sky);
         }
     }
 
 
-    ID3D11Device*device= Graphics::Instance().GetDevice();
-    ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
-    ResourceManager::Instance().LoadTextureFromFile(device, L".\\resources\\sprite\\mamizo.png");
     return true;
 }
 
@@ -156,24 +161,24 @@ void SceneTest::RenderCore(float elapsed_time)
         //3dオブジェクト描画
         {
 
-            //アニメーションキーフレームの更新
-            int clip_index = 0;
-            int frame_index = 0;
-            static float animation_tick = 0;
-            auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
-            {
-                frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
-                if (frame_index > animation.sequence.size() - 1)
-                {
-                    frame_index = 0;
-                    animation_tick = 0;
-                }
-                else
-                {
-                    animation_tick += elapsed_time;
-                }
-            }
-            Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
+            ////アニメーションキーフレームの更新
+            //int clip_index = 0;
+            //int frame_index = 0;
+            //static float animation_tick = 0;
+            //auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
+            //{
+            //    frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
+            //    if (frame_index > animation.sequence.size() - 1)
+            //    {
+            //        frame_index = 0;
+            //        animation_tick = 0;
+            //    }
+            //    else
+            //    {
+            //        animation_tick += elapsed_time;
+            //    }
+            //}
+            //Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
 
             render_sys_mng->RenderAll();
         }
@@ -185,7 +190,7 @@ void SceneTest::RenderCore(float elapsed_time)
     }
 }
 
-void SceneTest::DrawGui()
+void SceneTest::DrawImguiCore()
 {
     float screen_width = Graphics::Instance().GetScreenWidth();
     float screen_height = Graphics::Instance().GetScreenHeight();

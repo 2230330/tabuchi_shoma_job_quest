@@ -37,7 +37,7 @@ void ComponentEditor::DrawImgui()
         }
 
         //大気の追加
-        if (ImGui::Button("add atmosphere"))
+        if (ImGui::Button("atmosphere"))
         {
 
             if (has_sky_<0)
@@ -56,7 +56,7 @@ void ComponentEditor::DrawImgui()
                 ComponentSkyAtmosphere sky;
                 comp_mng_.Add(entity, sky);
 
-                has_sky_ = entity;
+                //has_sky_ = entity;
             }
             else
             {
@@ -64,6 +64,27 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.RemoveAllComponents(has_sky_); // すべてのコンポーネントを削除
 
                 has_sky_ = -1;
+            }
+        }
+        //雲の追加
+        if (ImGui::Button("cloud"))
+        {
+
+            if (has_cloud_ < 0)
+            {
+                uint32_t entity = enti_mng_.Add();
+
+                ComponentVolumetricCloud cloud_dome;
+                comp_mng_.Add(entity, cloud_dome);
+
+                has_cloud_ = entity;
+            }
+            else
+            {
+                enti_mng_.Remove(has_cloud_); // alive = false にする
+                comp_mng_.RemoveAllComponents(has_cloud_); // すべてのコンポーネントを削除
+
+                has_cloud_ = -1;
             }
         }
 
@@ -83,7 +104,7 @@ void ComponentEditor::DrawImgui()
                 if (comp_mng_.Has<ComponentPosition>(entity.entity))
                 {
                     auto& pos = comp_mng_.GetByEntity<ComponentPosition>(entity.entity);
-                    ImGui::SliderFloat3("Position", &pos.value.x, -10.f, 10.f);
+                    ImGui::DragFloat3("Position", &pos.value.x);
                     ImGui::Separator();
                 }
                 // 回転
@@ -111,36 +132,16 @@ void ComponentEditor::DrawImgui()
                 if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
                 {
                     ImGui::Text("Sky Atmosphere Component");
-                    //雲の追加
-                    if (ImGui::Button("add cloud"))
-                    {
+                    has_sky_ = entity.entity;
 
-                        if (has_cloud_ < 0)
-                        {
-                            uint32_t entity = enti_mng_.Add();
 
-                            ComponentCloudDome cloud_dome;
-                            comp_mng_.Add(entity, cloud_dome);
-                            //ComponentVolumetricCloud volumetric_cloud;
-                            //comp_mng_.Add(entity, volumetric_cloud);
-
-                            has_cloud_ = entity;
-                        }
-                        else
-                        {
-                            enti_mng_.Remove(has_cloud_); // alive = false にする
-                            comp_mng_.RemoveAllComponents(has_cloud_); // すべてのコンポーネントを削除
-
-                            has_cloud_ = -1;
-                        }
-                    }
                     ImGui::Separator();
                 }
 
                 //雲のみの処理なので、上の方に置いておきます
-                if (comp_mng_.Has<ComponentCloudDome>(entity.entity))
+                if (comp_mng_.Has<ComponentVolumetricCloud>(entity.entity))
                 {
-                    auto& c = comp_mng_.GetByEntity<ComponentCloudDome>(entity.entity);
+                    auto& c = comp_mng_.GetByEntity<ComponentVolumetricCloud>(entity.entity);
 
                     if (ImGui::CollapsingHeader("Cloud Ray Marching Settings", ImGuiTreeNodeFlags_DefaultOpen))
                     {
@@ -152,7 +153,7 @@ void ComponentEditor::DrawImgui()
 
                         ImGui::Text("Wind");
                         ImGui::DragFloat2("Wind Direction", reinterpret_cast<float*>(&c.wind_direction), 0.01f, -1.0f, 1.0f);
-                        ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 100.0f);
+                        ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 20.f);
 
                         ImGui::Separator();
 
@@ -164,7 +165,7 @@ void ComponentEditor::DrawImgui()
 
                         ImGui::Text("Density / Coverage");
                         ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.5f);
-                        ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.0f, 1.0f);
+                        ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.0f, 0.8f);
                         ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 10.0f);
                         ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
 
@@ -210,6 +211,12 @@ void ComponentEditor::DrawImgui()
                     auto& gltf = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
                     ImGui::Text("GLTF Model");
 
+                    ImGui::Separator();
+                    auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
+
+                    ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
+                    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, -1.0f, 1.0f);
+
                     //インスタンシング描画
                     if (ImGui::Button("instanced"))
                     {
@@ -235,39 +242,7 @@ void ComponentEditor::DrawImgui()
                     auto& texture = comp_mng_.GetByEntity<ComponentTexture>(entity.entity);
                     if (ImGui::TreeNode("Texture Model"))
                     {
-                        if (ImGui::CollapsingHeader("Select Texture"))
-                        {
-                            const auto& texs = ResourceManager::Instance().GetTextures();
-                            if (texs.empty())
-                            {
-                                ImGui::Text("No texture loaded.");
-                            }
-                            else
-                            {
-                                for (const auto& [name, tex_ptr] : texs)
-                                {
-                                    int size = WideCharToMultiByte(CP_UTF8, 0,
-                                        name.data(), static_cast<int>(name.size()), nullptr, 0, nullptr, nullptr);
-                                    std::string tex_name;
-                                    tex_name.resize(size);
-                                    WideCharToMultiByte(CP_UTF8, 0,
-                                        name.data(), static_cast<int>(name.size()), tex_name.data(), size, nullptr, nullptr);
-                                    if (ImGui::Button(tex_name.c_str()))
-                                    {
-                                        if (!tex_ptr)
-                                        {
-                                            ImGui::Text("texture ptr is null.");
-                                        }
-                                        else
-                                        {
-                                            texture.texture = tex_ptr;
-                                            texture.name = tex_name;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+
 
                         if (texture.texture != nullptr)
                         {
@@ -287,68 +262,64 @@ void ComponentEditor::DrawImgui()
                 }
 
                 //コンポーネントの追加
-                if (ImGui::TreeNode("Add Component"))
+                if (has_sky_!=entity.entity|| !has_cloud_!=entity.entity)
                 {
-
-                    //モデル関係の取
+                    if (ImGui::TreeNode("Add Component"))
                     {
-                        if (!comp_mng_.Has<ComponentGltf>(entity.entity))
-                        {
-                            if (ImGui::TreeNode("GLTF Model"))
-                            {
-                                const auto& models = ResourceManager::Instance().GetGltfs();
-                                //もしGLTFのモデルが空なら
-                                if (models.empty())
-                                {
-                                    ImGui::Text("No models loaded.");
-                                }
-                                else
-                                {
-                                    for (const auto& [name, model_ptr] : models)
-                                    {
-                                        if (ImGui::Button(name.c_str()))
-                                        {
-                                            if (!model_ptr) {
-                                                ImGui::Text("Model ptr is null.");
-                                            }
-                                            else
-                                            {
-                                                ComponentGltf gltf{};
-                                                gltf.model = model_ptr;
-                                                comp_mng_.Add(entity.entity, gltf);
-                                            }
 
+                        //モデル関係の取
+                        {
+                            if (!comp_mng_.Has<ComponentGltf>(entity.entity))
+                            {
+                                if (ImGui::TreeNode("GLTF Model"))
+                                {
+                                    const auto& models = ResourceManager::Instance().GetGltfs();
+                                    //もしGLTFのモデルが空なら
+                                    if (models.empty())
+                                    {
+                                        ImGui::Text("No models loaded.");
+                                    }
+                                    else
+                                    {
+                                        for (const auto& [name, model_ptr] : models)
+                                        {
+                                            if (ImGui::Button(name.c_str()))
+                                            {
+                                                if (!model_ptr) {
+                                                    ImGui::Text("Model ptr is null.");
+                                                }
+                                                else
+                                                {
+                                                    ComponentGltf gltf{};
+                                                    gltf.model = model_ptr;
+                                                    comp_mng_.Add(entity.entity, gltf);
+                                                    ComponentAdjastPbrParamter ajast_pbr{};
+                                                    comp_mng_.Add(entity.entity, ajast_pbr);
+                                                }
+
+                                            }
                                         }
                                     }
+                                    ImGui::TreePop();
                                 }
-                                ImGui::TreePop();
                             }
-                        }
-                        if (!comp_mng_.Has<ComponentTexture>(entity.entity)){
-                            if (ImGui::Button("Add Texture"))
-                            {
-                                ComponentTexture tex_comp{};
-                                tex_comp.texture = nullptr;
-                                tex_comp.name = "";
-                                comp_mng_.Add(entity.entity, tex_comp);
-                                break;
+                            if (!comp_mng_.Has<ComponentTexture>(entity.entity)) {
+
+                                if (ImGui::Button("Add Texture"))
+                                {
+                                    ComponentTexture tex_comp{};
+                                    tex_comp.texture = nullptr;
+                                    tex_comp.name = "";
+                                    comp_mng_.Add(entity.entity, tex_comp);
+                                    break;
+                                }
+
                             }
 
                         }
 
+                        ImGui::TreePop();
                     }
-                    {
-                        if (!comp_mng_.Has<ComponentColor>(entity.entity))
-                        {
-                            if(ImGui::Button("Color component"))
-                            {
-                                ComponentColor color;
-                                comp_mng_.Add(entity.entity, color);
-                            }
-                        }
-                    }
-
-                    ImGui::TreePop();
                 }
 
                 // エンティティ削除ボタン

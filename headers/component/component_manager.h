@@ -16,9 +16,9 @@
 #include "component_texture.h"
 #include "component_instanced.h"
 #include "component_sky_atmosphere.h"
-#include "component_cloud_dome.h"
+#include "component_volumetric_cloud.h"
 #include"component_intensity.h"
-#include"component_volumetric_cloud.h"
+#include"component_ajast_pbr_paramter_.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -38,9 +38,9 @@ public:
         registerContainer<ComponentTexture>(textures_);
         registerContainer<ComponentInstanced>(instanced_);
         registerContainer<ComponentSkyAtmosphere>(skys_);
-        registerContainer<ComponentCloudDome>(clouds_);
-        registerContainer<ComponentVolumetricCloud>(volumetric_clouds_);
+        registerContainer<ComponentVolumetricCloud>(clouds_);
         registerContainer<ComponentIntensity>(intensities_);
+        registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
     }
 
     template<typename T>
@@ -193,7 +193,7 @@ private:
     std::vector<ComponentTexture>textures_;
     std::vector<ComponentInstanced>instanced_;
     std::vector<ComponentSkyAtmosphere>skys_;
-    std::vector<ComponentCloudDome>clouds_;
-    std::vector<ComponentVolumetricCloud>volumetric_clouds_;
+    std::vector<ComponentVolumetricCloud>clouds_;
     std::vector<ComponentIntensity>intensities_;
+    std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
 };

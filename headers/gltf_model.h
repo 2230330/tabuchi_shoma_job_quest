@@ -128,6 +128,12 @@ public:
 		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT3>> translations;
 	};
 
+    void SetAdjastParam(float metalness, float roughness)
+	{
+        adjast_param_constants_.adjust_metalness = metalness;
+        adjast_param_constants_.adjust_roughness = roughness;
+	}
+
 	GltfModel(ID3D11Device* device, const std::string& filename);
 	virtual ~GltfModel() = default;
 
@@ -142,6 +148,12 @@ public:
 	const std::string& GetFilename()const
 	{
 		return filename_;
+	}
+
+	//キューブマップ情報の取得
+	void SetCubeMap(ID3D11ShaderResourceView* cube_map_srv)
+	{
+        cube_map_srv_ = cube_map_srv;
 	}
 
 private:
@@ -188,6 +200,13 @@ private:
 	{
 		DirectX::XMFLOAT4X4 matrices[PRIMITIVE_MAX_JOINTS];
 	};
+	struct AdjastParamConstants
+	{
+		float adjust_metalness{ 0.0f };//金属質調整
+		float adjust_roughness{ 0.0f };//粗さ調整
+        float pad[2];
+	};
+	AdjastParamConstants adjast_param_constants_;
 
 	void FetchNodes(const tinygltf::Model& gltf_model);
 	void FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_model);
@@ -218,7 +237,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> input_layout;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> instancing_input_layout;//インスタンシング描画
-	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_cbuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_joint_cbuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_cbuffer_;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_joint_cbuffer_;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>adjast_param_cbuffer_;
+
+	//キューブマップの実装
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cube_map_srv_=nullptr;		
 };
 #endif // !PART2_GLTF_MODEL_H

@@ -228,7 +228,7 @@ float3 coarse_weather)
 
                 transmittence *= T_step;
 
-                if (transmittence < 0.1f)
+                if (transmittence < 1e-2f)
                     break;
             }
             else
@@ -246,7 +246,7 @@ float3 coarse_weather)
             if (cloud_test <= 0.0)
             {
                 //地平線は荒く、上空は細かくステップを進める
-                step_scale = lerp(2.0f, 6.0f, horizon);
+                //step_scale = lerp(2.0f, 6.0f, horizon);
             }
             sample_point += ray_step * step_scale;
         }
@@ -315,7 +315,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         return float4(0, 0, 0, 1);
 
     // 被覆率に応じてステップ数を縮小（低コスト）
-    int steps = max(4, (int) (base_steps * lerp(1.0, 1.0f, saturate(1.0 - coarse_coverage))));
+    int steps = max(1, (int) (base_steps * lerp(0.1, 1.0f, saturate(1.0 - coarse_coverage))));
     float3 ray_step = ray_dir * (shell_dist / steps);
 
     float cloud_presence = RayMarch(ray_origin, ray_step, steps, coarse_weather);

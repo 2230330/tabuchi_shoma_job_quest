@@ -60,6 +60,18 @@
     <Filter Include="Shaders\ComputeShader">
       <UniqueIdentifier>{e48e0d9a-f8ba-440c-9b8f-27481d70fac4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Header">
+      <UniqueIdentifier>{1085787a-5663-475c-95b6-7e94708816a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\VertexShader">
+      <UniqueIdentifier>{2a538a6e-800e-46e6-9e29-8f6b9b7a4637}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\PixelShader">
+      <UniqueIdentifier>{d8329141-8142-4109-8994-e96bb2fdf426}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\GeometryShader">
+      <UniqueIdentifier>{b409e5cc-bc7e-41a2-a3df-3db4c62abc5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\geometric_primitive.h">
@@ -191,7 +203,7 @@
     <ClInclude Include="headers\system\transform_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\render_system.h">
+    <ClInclude Include="headers\system\render_gltf_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
     <ClInclude Include="headers\system\update_system_manager.h">
@@ -260,13 +272,10 @@
     <ClInclude Include="headers\system\cloud_render_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\component\component_cloud_dome.h">
+    <ClInclude Include="headers\component\component_volumetric_cloud.h">
       <Filter>headers\component</Filter>
     </ClInclude>
     <ClInclude Include="headers\component\component_intensity.h">
-      <Filter>headers\component</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\component\component_volumetric_cloud.h">
       <Filter>headers\component</Filter>
     </ClInclude>
     <ClInclude Include="headers\system\ibl_manager.h">
@@ -274,6 +283,9 @@
     </ClInclude>
     <ClInclude Include="headers\deferred_g_buffer.h">
       <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h">
+      <Filter>headers\component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -358,7 +370,7 @@
     <ClCompile Include="sources\system\transform_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
-    <ClCompile Include="sources\system\render_system.cpp">
+    <ClCompile Include="sources\system\render_gltf_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\render_system_manager.cpp">
@@ -408,155 +420,77 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaderes\geometric_primitive.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\sprite.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\static_mesh.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\skinned_mesh.hlsli">
-      <Filter>Shaders</Filter>
+    <None Include="shaderes\bloom.hlsli">
+      <Filter>Shaders\Header</Filter>
     </None>
     <None Include="shaderes\fullscreen_quad.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\gltf_model.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\bidirectional_reflectance_distribution_function.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\image_based_lighting.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\bloom.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\gbuffer.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\gltf_model_gbuffer.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\light.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\scene_constant_buffer.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\forward_light.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\shading_functions.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\sprite_batch.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\sky_atmosphere.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\volumetric_cloud.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\noise_functions.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\perlin_worley_noise.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaderes\swirly_curl_noise.hlsli">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Header</Filter>
     </None>
     <None Include="shaderes\deferred_rendering.hlsli">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\forward_light.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\geometric_primitive.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\gltf_model_gbuffer.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\gltf_model.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\light.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\image_based_lighting.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\perlin_worley_noise.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\noise_functions.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\physical_based_rendering.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\scene_constant_buffer.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\shading_functions.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\sprite_batch.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\sprite.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\skinned_mesh.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\static_mesh.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\swirly_curl_noise.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\volumetric_cloud.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\bidirectional_reflectance_distribution_function.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\gbuffer.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\sky_atmosphere.hlsli">
+      <Filter>Shaders\Header</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\geometric_primitive_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\sprite_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\sprite_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\static_mesh_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\static_mesh_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\skinned_mesh_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\skinned_mesh_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\fullscreen_quad_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\fullscreen_quad_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\luminance_extraction_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\blur_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gltf_model_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gltf_model_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\glow_extraction_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\downsample_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\bloom_upsample_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gaussian_blur_horizontal_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gaussian_blur_vertical_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\synthesis_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gltf_model_gbuffer_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gltf_model_forward_instancing_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\sprite_batch_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\sprite_batch_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\sky_atmosphere_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\sky_atmosphere_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
@@ -581,41 +515,122 @@
     <FxCompile Include="shaderes\compute_shaders\ibl_brdf_lut_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\ibl_prefilter_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\latlong_to_cubemap_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\ibl_screen_vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\ibl_screen_gs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\latlong_to_cubemap_ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\ibl_sky_atmosphere_ps.hlsl">
-      <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_2_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\cloud_screen_shadow_ps.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="shaderes\fullscreen_quad_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\celestial_light_ps.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="shaderes\geometric_primitive_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\light_space_cloud_occlusion_ps.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="shaderes\gltf_model_gbuffer_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\ibl_volumetric_cloud_ps.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="shaderes\gltf_model_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_screen_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\skinned_mesh_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sky_atmosphere_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_batch_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\static_mesh_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_forward_instancing_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\synthesis_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\static_mesh_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sprite_batch_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\sky_atmosphere_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\skinned_mesh_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\radial_god_lay_ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\luminance_extraction_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\light_space_cloud_occlusion_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\latlong_to_cubemap_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_volumetric_cloud_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_sky_atmosphere_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_prefilter_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\glow_extraction_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gaussian_blur_vertical_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gaussian_blur_horizontal_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\fullscreen_quad_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\downsample_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\cloud_screen_shadow_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\celestial_light_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\blur_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\bloom_upsample_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_screen_gs.hlsl">
+      <Filter>Shaders\GeometryShader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

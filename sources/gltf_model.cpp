@@ -97,14 +97,21 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	HRESULT hr;
-	hr = device->CreateBuffer(&buffer_desc, nullptr, primitive_cbuffer.ReleaseAndGetAddressOf());
+	hr = device->CreateBuffer(&buffer_desc, nullptr, primitive_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
 	buffer_desc.ByteWidth = sizeof(PrimitiveJointConstants);
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	hr = device->CreateBuffer(&buffer_desc, NULL, primitive_joint_cbuffer.ReleaseAndGetAddressOf());
+	hr = device->CreateBuffer(&buffer_desc, NULL, primitive_joint_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    buffer_desc.ByteWidth = sizeof(AdjastParamConstants);
+    buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+    buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    hr = device->CreateBuffer(&buffer_desc, NULL, adjast_param_cbuffer_.ReleaseAndGetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
 
 }
 void GltfModel::FetchNodes(const tinygltf::Model& gltf_model)
@@ -406,6 +413,10 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
 
 	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
+	//immediate_context->PSSetShaderResources(100, 1, cube_map_srv_.GetAddressOf());
+    immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
+	immediate_context->PSSetConstantBuffers(
+		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
 
 	immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
 	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
@@ -427,8 +438,8 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 					XMMatrixInverse(NULL, XMLoadFloat4x4(&node.global_transform))
 				);
 			}
-			immediate_context->UpdateSubresource(primitive_joint_cbuffer.Get(), 0, 0, &primitive_joint_data, 0, 0);
-			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer.GetAddressOf());
+			immediate_context->UpdateSubresource(primitive_joint_cbuffer_.Get(), 0, 0, &primitive_joint_data, 0, 0);
+			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer_.GetAddressOf());
 		}
 		if (node.mesh > -1)
 		{
@@ -467,9 +478,9 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 				primitive_data.has_tangent = primitive.has("TANGENT");
 				primitive_data.skin = node.skin;
 				DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
-				immediate_context->UpdateSubresource(primitive_cbuffer.Get(), 0, 0, &primitive_data, 0, 0);
-				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
-				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
+				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
+				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
+				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 
 				// UNIT.36
 				const Material& material{ materials_.at(primitive.material) };
@@ -526,6 +537,11 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	{
 		traverse(node_index);
 	}
+
+    ID3D11ShaderResourceView* null_srv[] = { nullptr };
+    immediate_context->PSSetShaderResources(0, 1, null_srv);
+    immediate_context->PSSetShaderResources(1, 1, null_srv);
+
 }
 
 void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location)
@@ -535,6 +551,9 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
 
 	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
+	immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
+	immediate_context->PSSetConstantBuffers(
+		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
 
 	immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
 	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
@@ -556,8 +575,8 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 					XMMatrixInverse(NULL, XMLoadFloat4x4(&node.global_transform))
 				);
 			}
-			immediate_context->UpdateSubresource(primitive_joint_cbuffer.Get(), 0, 0, &primitive_joint_data, 0, 0);
-			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer.GetAddressOf());
+			immediate_context->UpdateSubresource(primitive_joint_cbuffer_.Get(), 0, 0, &primitive_joint_data, 0, 0);
+			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer_.GetAddressOf());
 		}
 		if (node.mesh > -1)
 		{
@@ -604,9 +623,9 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 				primitive_data.skin = node.skin;
 				primitive_data.world = node.global_transform;
 				//DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
-				immediate_context->UpdateSubresource(primitive_cbuffer.Get(), 0, 0, &primitive_data, 0, 0);
-				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
-				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer.GetAddressOf());
+				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
+				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
+				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 
 				const Material& material{ materials_.at(primitive.material) };
 				const int texture_indices[]

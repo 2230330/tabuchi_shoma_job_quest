@@ -288,11 +288,6 @@ void IBLManager::Initialize(ID3D11Device* dev)
         {
             low_freq_perlin_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), low_freq_noise_tex_path);
         }
-        const wchar_t* mid_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\mid_freq_worley.dds";
-        _ASSERT_EXPR(std::filesystem::exists(mid_freq_noise_tex_path), "ファイルが存在しません");
-        {
-            mid_freq_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), mid_freq_noise_tex_path);
-        }
         const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ファイルが存在しません");
         {
@@ -420,6 +415,15 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
         ctx_->OMSetRenderTargets(0, nullptr, nullptr);
 
+    }
+
+    if (cloud_flag_)
+    {
+        ctx_->PSSetShaderResources(100, 1, cloud_cube_srv_.GetAddressOf());
+    }
+    else if (sky_flag_)
+    {
+        ctx_->PSSetShaderResources(100, 1, sky_cube_srv_.GetAddressOf());
     }
 
     //最後

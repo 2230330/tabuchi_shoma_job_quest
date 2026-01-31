@@ -252,7 +252,7 @@ float4 main(PSIn pin) : SV_TARGET
     //地平線以下
     if (view_dir.y < 0.0f)
     {
-        return float4(0, 0, 0, 1);
+        //return float4(0, 0, 0, 1);
     }
     
     //疑似多重散乱の事前計算

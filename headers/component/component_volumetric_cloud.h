@@ -1,21 +1,28 @@
 #pragma once
 #include"i_component.h"
-#include<DirectXMath.h>
 
 struct ComponentVolumetricCloud :public IComponent
 {
-    //雲タイプ別の制御
-    DirectX::XMFLOAT4 layout_cloud_type{ 1.0f,1.0f,1.0f,1.0f };
-    //レイアウト領域が繰り返される距離の制御
-    float layout_cloud_global_scale{ 256 };
-    //其々の雲のタイプのグローバルパターンテクスチャのスケール制御
-    DirectX::XMFLOAT4 layout_cloud_per_type_scale{ 1.0f,1.0f,1.0f,1.0f };
-    //レイアウト領域テクスチャのオフセット及び回転の制御
-    DirectX::XMFLOAT4 layout_global_texture_placement{ 0.0f,0.0f,0.0f,0.0f };
-    //風の強さを制御,アルファで均一に増加
-    DirectX::XMFLOAT4 layout_window_controls{ 0.1f,0.0f,0.1f,0.1f };
-    //マスクテクスチャが其々のタイプの雲に及ぼす影響、アルファは全体的な強さ
-    DirectX::XMFLOAT4 layout_cloud_type_mask{ 0.0f,0.0f,0.0f,1.f };
-    //空を覆う雲の量
-    float layout_global_coverage{ -0.2f };
+    int iteration{ 128 };//雲が存在する限界点
+	DirectX::XMFLOAT2 wind_direction = { 1.0f, 1.0f };
+	DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6371500.0f, 6373000.0f }; // highest and lowest altitudes at which clouds are distributed
+
+	float wind_speed = 1.0f; // [0.0, 20.0]
+
+	float density_scale = 0.05f; // [0.01, 0.2]
+	float cloud_coverage_scale = 0.25f; // [0.1, 1.0]
+	float rain_cloud_absorption_scale = 0.5;
+	float cloud_type_scale = 1.0f;
+
+	float earth_radius = 6370000.0f; // earth radius
+	float horizon_distance_scale = 1.0f;
+	float low_frequency_perlin_worley_sampling_scale = 0.00004f;
+	float high_frequency_worley_sampling_scale = 0.0004f;
+	float cloud_density_long_distance_scale = 18.0f;
+	int enable_powdered_sugar_efffect = false;
+
+	int ray_marching_steps = 128;
+	int auto_ray_marching_steps = false;
+
+	bool shadow_flag = false;
 };
