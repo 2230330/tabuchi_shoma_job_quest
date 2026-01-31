@@ -105,7 +105,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\debug;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;.\external\fbx\2020.3.7\lib\x64\debug;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -124,7 +124,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -135,7 +135,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -162,7 +162,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\debug;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;.\external\fbx\2020.3.7\lib\x64\debug;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -181,7 +181,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -192,7 +192,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
