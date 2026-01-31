@@ -28,8 +28,8 @@ extern ImWchar glyphRangesJapanese[];
 
 const long kScreenWidth{ 1280 };
 const long kScreenHeight{ 720 };
-const bool kFullScreen{ false };
-const LPCWSTR kApplicationName{ L"part2" };
+const bool kFullScreen{ true };
+const LPCWSTR kApplicationName{ L"ecc_tabuchi" };
 
 class Framework
 {
@@ -67,7 +67,7 @@ private:
 
 private:
     std::unique_ptr<Scene>          scene_;
-
+    float wheel{ 0 }; //マウスホイール
 
 };
 

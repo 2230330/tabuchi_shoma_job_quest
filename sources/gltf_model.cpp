@@ -10,7 +10,9 @@
 
 #include"../headers/misc.h"
 #include"../headers/shader.h"
-#include"../headers/texture.h"
+#include"../headers/resource_manager.h"
+#include"../headers/constant_buffer_slot.h"
+#include"../headers/resource_manager.h"
 
 bool NullLoadImageData
 (tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char*, int, void*)
@@ -66,6 +68,28 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	};
 	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_vs.cso", vertex_shader_.ReleaseAndGetAddressOf(), 
 		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
+
+	//インスタンシング描画を埋め込みたい
+	D3D11_INPUT_ELEMENT_DESC instancing_input_element_desc[]
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 3, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "JOINTS", 0, DXGI_FORMAT_R16G16B16A16_UINT, 4, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "WEIGHTS", 0,DXGI_FORMAT_R32G32B32A32_FLOAT, 5, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "WORLD_MATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 6,  0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "WORLD_MATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 6, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "WORLD_MATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 6, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "WORLD_MATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 6, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "PREVIOUS_WORLD_MATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 7,  0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "PREVIOUS_WORLD_MATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "PREVIOUS_WORLD_MATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "PREVIOUS_WORLD_MATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+	};	
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
+		instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
+
 	shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
 
 	D3D11_BUFFER_DESC buffer_desc{};
@@ -73,14 +97,21 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	HRESULT hr;
-	hr = device->CreateBuffer(&buffer_desc, nullptr, primitive_cbuffer.ReleaseAndGetAddressOf());
+	hr = device->CreateBuffer(&buffer_desc, nullptr, primitive_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
 	buffer_desc.ByteWidth = sizeof(PrimitiveJointConstants);
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	hr = device->CreateBuffer(&buffer_desc, NULL, primitive_joint_cbuffer.ReleaseAndGetAddressOf());
+	hr = device->CreateBuffer(&buffer_desc, NULL, primitive_joint_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    buffer_desc.ByteWidth = sizeof(AdjastParamConstants);
+    buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+    buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    hr = device->CreateBuffer(&buffer_desc, NULL, adjast_param_cbuffer_.ReleaseAndGetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
 
 }
 void GltfModel::FetchNodes(const tinygltf::Model& gltf_model)
@@ -382,6 +413,10 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
 
 	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
+	//immediate_context->PSSetShaderResources(100, 1, cube_map_srv_.GetAddressOf());
+    immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
+	immediate_context->PSSetConstantBuffers(
+		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
 
 	immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
 	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
@@ -403,8 +438,8 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 					XMMatrixInverse(NULL, XMLoadFloat4x4(&node.global_transform))
 				);
 			}
-			immediate_context->UpdateSubresource(primitive_joint_cbuffer.Get(), 0, 0, &primitive_joint_data, 0, 0);
-			immediate_context->VSSetConstantBuffers(2, 1, primitive_joint_cbuffer.GetAddressOf());
+			immediate_context->UpdateSubresource(primitive_joint_cbuffer_.Get(), 0, 0, &primitive_joint_data, 0, 0);
+			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer_.GetAddressOf());
 		}
 		if (node.mesh > -1)
 		{
@@ -443,9 +478,9 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 				primitive_data.has_tangent = primitive.has("TANGENT");
 				primitive_data.skin = node.skin;
 				DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
-				immediate_context->UpdateSubresource(primitive_cbuffer.Get(), 0, 0, &primitive_data, 0, 0);
-				immediate_context->VSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
-				immediate_context->PSSetConstantBuffers(0, 1, primitive_cbuffer.GetAddressOf());
+				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
+				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
+				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 
 				// UNIT.36
 				const Material& material{ materials_.at(primitive.material) };
@@ -486,6 +521,151 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 					}
 
 					immediate_context->DrawIndexed(static_cast<UINT>(primitive.index_buffer_view.count), 0, 0);
+				}
+				else
+				{
+					immediate_context->Draw(static_cast<UINT>(primitive.vertex_buffer_views.at("POSITION").count), 0);
+				}
+			}
+		}
+		for (std::vector<int>::value_type child_index : node.children)
+		{
+			traverse(child_index);
+		}
+	} };
+	for (std::vector<int>::value_type node_index : scenes.at(default_scene_).nodes)
+	{
+		traverse(node_index);
+	}
+
+    ID3D11ShaderResourceView* null_srv[] = { nullptr };
+    immediate_context->PSSetShaderResources(0, 1, null_srv);
+    immediate_context->PSSetShaderResources(1, 1, null_srv);
+
+}
+
+void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location)
+{
+	using namespace DirectX;
+
+	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
+
+	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
+	immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
+	immediate_context->PSSetConstantBuffers(
+		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
+
+	immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
+	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	immediate_context->IASetInputLayout(instancing_input_layout.Get());
+	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	std::function<void(int)> traverse{ [&](int node_index)->void {
+		const Node& node{nodes.at(node_index)};
+		if (node.skin > -1)
+		{
+			const Skin& skin{ skins_.at(node.skin) };
+			_ASSERT_EXPR(skin.joints.size() <= PRIMITIVE_MAX_JOINTS, L"The size of the joint array is insufficient, please expand it.");
+			PrimitiveJointConstants primitive_joint_data{};
+			for (size_t joint_index = 0; joint_index < skin.joints.size(); ++joint_index)
+			{
+				DirectX::XMStoreFloat4x4(&primitive_joint_data.matrices[joint_index],
+					XMLoadFloat4x4(&skin.inverse_bind_matrices.at(joint_index)) *
+					XMLoadFloat4x4(&nodes.at(skin.joints.at(joint_index)).global_transform) *
+					XMMatrixInverse(NULL, XMLoadFloat4x4(&node.global_transform))
+				);
+			}
+			immediate_context->UpdateSubresource(primitive_joint_cbuffer_.Get(), 0, 0, &primitive_joint_data, 0, 0);
+			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer_.GetAddressOf());
+		}
+		if (node.mesh > -1)
+		{
+			const Mesh& mesh{ meshes_.at(node.mesh) };
+			for (const Mesh::primitive& primitive : mesh.primitives)
+			{
+				ID3D11Buffer* vertex_buffers[]{
+					primitive.has("POSITION") ? buffers_.at(primitive.vertex_buffer_views.at("POSITION").buffer).Get() : 0,
+					primitive.has("NORMAL") ? buffers_.at(primitive.vertex_buffer_views.at("NORMAL").buffer).Get() : 0,
+					primitive.has("TANGENT") ? buffers_.at(primitive.vertex_buffer_views.at("TANGENT").buffer).Get() : 0,
+					primitive.has("TEXCOORD_0") ? buffers_.at(primitive.vertex_buffer_views.at("TEXCOORD_0").buffer).Get() : 0,
+					primitive.has("JOINTS_0") ? buffers_.at(primitive.vertex_buffer_views.at("JOINTS_0").buffer).Get() : 0,
+					primitive.has("WEIGHTS_0") ? buffers_.at(primitive.vertex_buffer_views.at("WEIGHTS_0").buffer).Get() : 0,
+					world_matrices_buffer,
+					world_matrices_buffer,
+				};
+				UINT strides[]{
+					primitive.has("POSITION") ? static_cast<UINT>(primitive.vertex_buffer_views.at("POSITION").stride_in_bytes) : 0,
+					primitive.has("NORMAL") ? static_cast<UINT>(primitive.vertex_buffer_views.at("NORMAL").stride_in_bytes) : 0,
+					primitive.has("TANGENT") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TANGENT").stride_in_bytes) : 0,
+					primitive.has("TEXCOORD_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TEXCOORD_0").stride_in_bytes) : 0,
+					primitive.has("JOINTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("JOINTS_0").stride_in_bytes) : 0,
+					primitive.has("WEIGHTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("WEIGHTS_0").stride_in_bytes) : 0,
+					sizeof(DirectX::XMFLOAT4X4),
+					sizeof(DirectX::XMFLOAT4X4),
+				};
+				UINT offsets[]{
+					primitive.has("POSITION") ? static_cast<UINT>(primitive.vertex_buffer_views.at("POSITION").byte_offset) : 0,
+					primitive.has("NORMAL") ? static_cast<UINT>(primitive.vertex_buffer_views.at("NORMAL").byte_offset) : 0,
+					primitive.has("TANGENT") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TANGENT").byte_offset) : 0,
+					primitive.has("TEXCOORD_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TEXCOORD_0").byte_offset) : 0,
+					primitive.has("JOINTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("JOINTS_0").byte_offset) : 0,
+					primitive.has("WEIGHTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("WEIGHTS_0").byte_offset) : 0,
+					0,
+					0,
+				};
+				//UINT offsets[_countof(vertex_buffers)]{ 0 };
+				immediate_context->IASetVertexBuffers(0, _countof(vertex_buffers), vertex_buffers, strides, offsets);
+
+
+				PrimitiveConstants primitive_data{};
+				primitive_data.material = primitive.material;
+				primitive_data.has_tangent = primitive.has("TANGENT");
+				primitive_data.skin = node.skin;
+				primitive_data.world = node.global_transform;
+				//DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
+				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
+				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
+				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
+
+				const Material& material{ materials_.at(primitive.material) };
+				const int texture_indices[]
+				{
+					material.data.pbr_metallic_roughness.basecolor_texture.index,
+					material.data.pbr_metallic_roughness.metallic_roughness_texture.index,
+					material.data.normal_texture.index,
+					material.data.emissive_texture.index,
+					material.data.occlusion_texture.index,
+				};
+				ID3D11ShaderResourceView* null_shader_resource_view{};
+				std::vector<ID3D11ShaderResourceView*> shader_resource_views(_countof(texture_indices));
+				for (int texture_index = 0; texture_index < shader_resource_views.size(); ++texture_index)
+				{
+					shader_resource_views.at(texture_index) = texture_indices[texture_index] > -1
+						? texture_resource_views_.at(textures_.at(texture_indices[texture_index]).source).Get()
+						: null_shader_resource_view;
+				}
+				immediate_context->PSSetShaderResources(1, static_cast<UINT>(shader_resource_views.size()), shader_resource_views.data());
+
+				if (primitive.index_buffer_view.count > 0)
+				{
+					if (primitive.index_buffer_view.format == DXGI_FORMAT_R8_UINT)
+					{
+						immediate_context->IASetIndexBuffer(
+							buffers_.at(primitive.index_buffer_view.buffer).Get(),
+							DXGI_FORMAT_R16_UINT, static_cast<UINT>(primitive.index_buffer_view.byte_offset));
+
+					}
+					else
+					{
+
+					immediate_context->IASetIndexBuffer(
+						buffers_.at(primitive.index_buffer_view.buffer).Get(),
+						primitive.index_buffer_view.format, static_cast<UINT>(primitive.index_buffer_view.byte_offset));
+
+					}
+
+					immediate_context->DrawIndexedInstanced(static_cast<UINT>(primitive.index_buffer_view.count), 
+						instance_count, 0,0,start_instance_location);
 				}
 				else
 				{
@@ -598,23 +778,24 @@ void GltfModel::FetchTextures(ID3D11Device* device, const tinygltf::Model& gltf_
 			const tinygltf::Buffer& buffer{ gltf_model.buffers.at(buffer_view.buffer) };
 			const byte* data = buffer.data.data() + buffer_view.byteOffset;
 
-			ID3D11ShaderResourceView* texture_resource_view{};
-			hr = LoadTexture::LoadTextureFromMemory(device, data, buffer_view.byteLength, &texture_resource_view);
+			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> texture_resource_view{};
+			texture_resource_view = ResourceManager::Instance().LoadTextureFromMemory(device, data, buffer_view.byteLength);
 			if (hr == S_OK)
 			{
-				texture_resource_views_.emplace_back().Attach(texture_resource_view);
+				texture_resource_views_.emplace_back(texture_resource_view);
 			}
 		}
 		else
 		{
 			const std::filesystem::path path(filename_);
-			ID3D11ShaderResourceView* shader_resource_view{};
+			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_view{};
 			D3D11_TEXTURE2D_DESC texture2d_desc;
 			std::wstring filename{ path.parent_path().concat(L"/").wstring() + std::wstring(gltf_image.uri.begin(), gltf_image.uri.end()) };
-			hr = LoadTexture::LoadTextureFromFile(device, filename.c_str(), &shader_resource_view, &texture2d_desc);
+			shader_resource_view = ResourceManager::Instance().LoadTextureFromFile(device, filename.c_str());
+			texture2d_desc = ResourceManager::Instance().Texture2dDesc(shader_resource_view.Get());
 			if (hr == S_OK)
 			{
-				texture_resource_views_.emplace_back().Attach(shader_resource_view);
+				texture_resource_views_.emplace_back(shader_resource_view);
 			}
 		}
 	}

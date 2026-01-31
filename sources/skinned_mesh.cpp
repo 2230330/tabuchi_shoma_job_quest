@@ -9,7 +9,8 @@
 #include"fbxsdk/core/fbxproperty.h"
 #include"../headers/misc.h"
 #include"../headers/shader.h"
-#include"../headers/texture.h"
+#include"../headers/resource_manager.h"
+#include"../headers/constant_buffer_slot.h"
 
 inline std::string ConvertWstringToString(const std::wstring& wstr)
 {
@@ -181,7 +182,7 @@ void SkinnedMesh::Render(ID3D11DeviceContext* immediate_context,
 
             DirectX::XMStoreFloat4(&data.material_color, DirectX::XMVectorMultiply(DirectX::XMLoadFloat4(&material_color) , DirectX::XMLoadFloat4(&material.Kd)));
             immediate_context->UpdateSubresource(constant_buffer_.Get(), 0, 0, &data, 0, 0);
-            immediate_context->VSSetConstantBuffers(0, 1, constant_buffer_.GetAddressOf());
+            immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerObject), 1, constant_buffer_.GetAddressOf());
 
             immediate_context->PSSetShaderResources(0, 1, material.shader_resource_view[0].GetAddressOf());
             immediate_context->PSSetShaderResources(1, 1, material.shader_resource_view[1].GetAddressOf());
@@ -483,13 +484,15 @@ void SkinnedMesh::CreateComObjects(ID3D11Device* device, const wchar_t* fbx_file
                 std::filesystem::path path(fbx_filename);
                 path.replace_filename(iterator->second.texture_filenames[texture_index]);
                 D3D11_TEXTURE2D_DESC texture2d_desc;
-                LoadTexture::LoadTextureFromFile(device, path.c_str(), 
-                    iterator->second.shader_resource_view[texture_index].GetAddressOf(),&texture2d_desc);
+                iterator->second.shader_resource_view[texture_index]=ResourceManager::Instance().
+                    LoadTextureFromFile(device, path.c_str());
+                texture2d_desc = ResourceManager::Instance().
+                    Texture2dDesc(iterator->second.shader_resource_view[texture_index].Get());
                 
             }
             else
             {
-                iterator->second.shader_resource_view[texture_index] = LoadTexture::MakeDummyTexture(device, texture_index == 1 ? 0xFFFF7F7F : 0xFFFFFFFF, 16);
+                iterator->second.shader_resource_view[texture_index] = ResourceManager::Instance().MakeDummyTexture(device, texture_index == 1 ? 0xFFFF7F7F : 0xFFFFFFFF, 16);
             }
         }
     }
@@ -497,9 +500,9 @@ void SkinnedMesh::CreateComObjects(ID3D11Device* device, const wchar_t* fbx_file
     if (materials_.size()<=0)
     {
         Material dummy_material;
-        dummy_material.shader_resource_view[0]= LoadTexture::MakeDummyTexture(device, 0xFFFFFFFF, 16);
-        dummy_material.shader_resource_view[1]= LoadTexture::MakeDummyTexture(device, 0xFFFFFFFF, 16);
-        dummy_material.shader_resource_view[2]= LoadTexture::MakeDummyTexture(device, 0xFFFFFFFF, 16);
+        dummy_material.shader_resource_view[0]= ResourceManager::Instance().MakeDummyTexture(device, 0xFFFFFFFF, 16);
+        dummy_material.shader_resource_view[1]= ResourceManager::Instance().MakeDummyTexture(device, 0xFFFFFFFF, 16);
+        dummy_material.shader_resource_view[2]= ResourceManager::Instance().MakeDummyTexture(device, 0xFFFFFFFF, 16);
         materials_.insert({ 0,dummy_material });
     }
 

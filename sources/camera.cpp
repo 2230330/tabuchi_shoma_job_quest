@@ -1,17 +1,18 @@
 #include"../headers/camera.h"
+#include"../headers/graphics.h"
 
 Camera::Camera()
 {
     //ƒJƒƒ‰Ý’è
     this->SetPerspectiveFov(
         DirectX::XMConvertToRadians(45),
-        1280.f / 720.f,
+        Graphics::Instance().GetScreenWidth() / Graphics::Instance().GetScreenHeight(),
         0.1f,
         1000.f
     );
     this->SetLookAt(
         { 0,0,-5 },
-        { 0,0,0 },
+        { 0,1.f,0 },
         { 0,1,0 }
     );
 }

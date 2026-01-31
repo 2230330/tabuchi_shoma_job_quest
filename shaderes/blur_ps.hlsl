@@ -1,8 +1,10 @@
 #include"../shaderes/fullscreen_quad.hlsli"
-#define POINT 0
-#define LINEAR 1 
-#define ANISOTROPIC 2
-SamplerState sampler_states[3] : register(s0);
+#define POINT_WRAP 0
+#define POINT_CLAMP 1
+#define LINEAR_WRAP 2
+#define LINEAR_CLAMP 3
+#define ANISOTROPIC 4
+SamplerState sampler_states[5] : register(s0);
 Texture2D texture_maps[4] : register(t0);
 float4 main(VS_OUT pin) : SV_TARGET
 {
@@ -17,7 +19,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 blur_color = 0;
     float gaussian_kernel_total = 0;
 
-    const int gaussian_half_kernel_size = 10;
+    const int gaussian_half_kernel_size = 5;
     const float gaussian_sigma = 1.0;
     [unroll]
     for (int x = -gaussian_half_kernel_size; x <= +gaussian_half_kernel_size; x += 1)
@@ -27,7 +29,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         {
             float gaussian_kernel = exp(-(x * x + y * y) / (2.0 * gaussian_sigma * gaussian_sigma)) /
             (2 * 3.14159265358979 * gaussian_sigma * gaussian_sigma);
-            blur_color += texture_maps[1].Sample(sampler_states[LINEAR], pin.texcoord +
+            blur_color += texture_maps[1].Sample(sampler_states[LINEAR_WRAP], pin.texcoord +
                 float2(x * 1.0 / width, y * 1.0 / height)).rgb * gaussian_kernel;
             gaussian_kernel_total += gaussian_kernel;
         }

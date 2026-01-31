@@ -25,50 +25,42 @@ void Graphics::Initialize(HWND hwnd)
         D3D_FEATURE_LEVEL feature_levels[] =
         {
             D3D_FEATURE_LEVEL_11_0,
-            D3D_FEATURE_LEVEL_10_1,
-            D3D_FEATURE_LEVEL_10_0,
-            D3D_FEATURE_LEVEL_9_3,
-            D3D_FEATURE_LEVEL_9_2,
-            D3D_FEATURE_LEVEL_9_1,
+            //D3D_FEATURE_LEVEL_10_1,
+            //D3D_FEATURE_LEVEL_10_0,
+            //D3D_FEATURE_LEVEL_9_3,
+            //D3D_FEATURE_LEVEL_9_2,
+            //D3D_FEATURE_LEVEL_9_1,
         };
 
         //スワップチェーンを作成するための設定オプション
         DXGI_SWAP_CHAIN_DESC swap_chain_desc;
         {
-            swap_chain_desc.BufferCount = 2;
-            swap_chain_desc.BufferDesc.Width = screen_width;
-            swap_chain_desc.BufferDesc.Height = screen_height;
+
+            swap_chain_desc.BufferCount = 1;
+            swap_chain_desc.BufferDesc.Width = static_cast<UINT>(Graphics::Instance().GetScreenWidth());
+            swap_chain_desc.BufferDesc.Height = static_cast<UINT>(Graphics::Instance().GetScreenHeight());
+            swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
             swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;
             swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;
-            swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            swap_chain_desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-            swap_chain_desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+            swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+            swap_chain_desc.OutputWindow = hwnd;
             swap_chain_desc.SampleDesc.Count = 1;
             swap_chain_desc.SampleDesc.Quality = 0;
-            swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            swap_chain_desc.OutputWindow = this->hwnd_;
-            swap_chain_desc.Windowed = TRUE;
-            swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-            swap_chain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+            swap_chain_desc.Windowed = true;
+
+            swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+            swap_chain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
         }
         D3D_FEATURE_LEVEL feature_level;
 
         //デバイス＆スワップチェーンの生成
-        hr = D3D11CreateDeviceAndSwapChain(
-            nullptr,
-            D3D_DRIVER_TYPE_HARDWARE,
-            nullptr,
-            create_device_flags,
-            feature_levels,
-            ARRAYSIZE(feature_levels),
-            D3D11_SDK_VERSION,
-            &swap_chain_desc,
-            swap_chain_.GetAddressOf(),
-            device_.GetAddressOf(),
-            &feature_level,
-            immediate_context_.GetAddressOf()
-        );
+        hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, create_device_flags,
+            feature_levels, ARRAYSIZE(feature_levels), D3D11_SDK_VERSION, &swap_chain_desc,
+            swap_chain_.GetAddressOf(), device_.GetAddressOf(), NULL, immediate_context_.GetAddressOf());
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+
     }
 
     //レンダーターゲットビューの生成
@@ -133,6 +125,7 @@ void Graphics::Initialize(HWND hwnd)
 
     //レンダーステート生成
     render_state_ = std::make_unique<RenderState>(this->device_.Get());
+
 }
 
 //画面のクリア
@@ -153,5 +146,89 @@ void Graphics::SetRenderTargets()
 //画面表示
 void Graphics::Present(UINT sync_interval)
 {
-    swap_chain_->Present(sync_interval, DXGI_PRESENT_ALLOW_TEARING);
+    HRESULT hr{ S_OK };
+    if (sync_interval==0)
+    {
+        hr = swap_chain_->Present(sync_interval, 0);
+    }
+    else
+    {
+        hr = swap_chain_->Present(sync_interval, 0);
+    }
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+}
+
+void Graphics::SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers)
+{
+    immediate_context_->VSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->HSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->DSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->GSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->PSSetConstantBuffers(start_slot, num, constant_buffers);
+    immediate_context_->CSSetConstantBuffers(start_slot, num, constant_buffers);
+}
+
+void Graphics::SetShaderResource(int start_slot, int num, ID3D11ShaderResourceView* const* shader_resources)
+{
+    immediate_context_->VSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->HSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->DSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->GSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->PSSetShaderResources(start_slot, num, shader_resources);
+    immediate_context_->CSSetShaderResources(start_slot, num, shader_resources);
+}
+
+void Graphics::SetSampler(int start_slot, int num, ID3D11SamplerState* const* sampler_state)
+{
+    immediate_context_->VSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->HSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->DSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->GSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->PSSetSamplers(start_slot, num, sampler_state);
+    immediate_context_->CSSetSamplers(start_slot, num, sampler_state);
+}
+
+void Graphics::ClearShaderSlots()
+{
+    immediate_context_->VSSetShader(nullptr, nullptr, 0);
+    immediate_context_->HSSetShader(nullptr, nullptr, 0);
+    immediate_context_->DSSetShader(nullptr, nullptr, 0);
+    immediate_context_->GSSetShader(nullptr, nullptr, 0);
+    immediate_context_->PSSetShader(nullptr, nullptr, 0);
+    immediate_context_->CSSetShader(nullptr, nullptr, 0);
+}
+//コンスタントバッファを消すための関数
+//スロットに要素を入れるときは、必ずナンバーまで記載する事
+//でなければ、範囲外になってしまう場合がある
+void Graphics::ClearConstantBuffers(int start_slot, int num)
+{
+    ID3D11Buffer* clear_constant_bufferes[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};
+    immediate_context_->VSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->HSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->DSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->GSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->PSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+    immediate_context_->CSSetConstantBuffers(start_slot, num, clear_constant_bufferes);
+}
+
+void Graphics::ClearShaderResourceViews(int start_slot, int num)
+{
+    ID3D11ShaderResourceView* clear_shader_resource_view[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
+    immediate_context_->VSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->HSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->DSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->GSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->PSSetShaderResources(start_slot, num, clear_shader_resource_view);
+    immediate_context_->CSSetShaderResources(start_slot, num, clear_shader_resource_view);
+}
+
+void Graphics::ClearSampler(int start_slot, int num)
+{
+    ID3D11SamplerState* clear_sampler[D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT]{};
+    immediate_context_->VSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->HSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->DSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->GSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->PSSetSamplers(start_slot, num, clear_sampler);
+    immediate_context_->CSSetSamplers(start_slot, num, clear_sampler);
 }

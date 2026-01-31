@@ -5,85 +5,118 @@
 //コンストラクタ
 RenderState::RenderState(ID3D11Device* device)
 {
-	// ポイントサンプリング＆テクスチャ繰り返しあり
+	//サンプリングステイト
 	{
 		D3D11_SAMPLER_DESC desc;
-		desc.MipLODBias = 0.0f;
-		desc.MaxAnisotropy = 1;
-		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		desc.MinLOD = -D3D11_FLOAT32_MAX;
-		desc.MaxLOD = D3D11_FLOAT32_MAX;
-		desc.BorderColor[0] = 1.0f;
-		desc.BorderColor[1] = 1.0f;
-		desc.BorderColor[2] = 1.0f;
-		desc.BorderColor[3] = 1.0f;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-		HRESULT hr = device->CreateSamplerState(&desc,
-			sampler_state_[static_cast<int>(SamplerState::point_wrap)].GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-	}
-	// ポイントサンプリング＆テクスチャ繰り返しなし
-	{
-		D3D11_SAMPLER_DESC desc;
-		desc.MipLODBias = 0.0f;
-		desc.MaxAnisotropy = 1;
-		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		desc.MinLOD = -D3D11_FLOAT32_MAX;
-		desc.MaxLOD = D3D11_FLOAT32_MAX;
-		desc.BorderColor[0] = 1.0f;
-		desc.BorderColor[1] = 1.0f;
-		desc.BorderColor[2] = 1.0f;
-		desc.BorderColor[3] = 1.0f;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-		HRESULT hr = device->CreateSamplerState(&desc,
-			sampler_state_[static_cast<int>(SamplerState::point_clamp)].GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-	}
-	// リニアサンプリング＆テクスチャ繰り返しあり
-	{
-		D3D11_SAMPLER_DESC desc;
-		desc.MipLODBias = 0.0f;
-		desc.MaxAnisotropy = 1;
-		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		desc.MinLOD = -D3D11_FLOAT32_MAX;
-		desc.MaxLOD = D3D11_FLOAT32_MAX;
-		desc.BorderColor[0] = 1.0f;
-		desc.BorderColor[1] = 1.0f;
-		desc.BorderColor[2] = 1.0f;
-		desc.BorderColor[3] = 1.0f;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
-		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		HRESULT hr = device->CreateSamplerState(&desc,
-			sampler_state_[static_cast<int>(SamplerState::linear_wrap)].GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-	}
-	// リニアサンプリング＆テクスチャ繰り返しなし
-	{
-		D3D11_SAMPLER_DESC desc;
-		desc.MipLODBias = 0.0f;
-		desc.MaxAnisotropy = 1;
-		desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		desc.MinLOD = -D3D11_FLOAT32_MAX;
-		desc.MaxLOD = D3D11_FLOAT32_MAX;
-		desc.BorderColor[0] = 1.0f;
-		desc.BorderColor[1] = 1.0f;
-		desc.BorderColor[2] = 1.0f;
-		desc.BorderColor[3] = 1.0f;
-		desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-		desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		HRESULT hr = device->CreateSamplerState(&desc,
-			sampler_state_[static_cast<int>(SamplerState::linear_clamp)].GetAddressOf());
-		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		// ポイントサンプリング＆テクスチャ繰り返しあり
+		{
+			desc.MipLODBias = 0.0f;
+			desc.MaxAnisotropy = 1;
+			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+			desc.BorderColor[0] = .0f;
+			desc.BorderColor[1] = .0f;
+			desc.BorderColor[2] = .0f;
+			desc.BorderColor[3] = .0f;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+			HRESULT hr = device->CreateSamplerState(&desc,
+				sampler_state_[static_cast<int>(SamplerState::point_wrap)].GetAddressOf());
+			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
+		// ポイントサンプリング＆テクスチャ繰り返しなし
+		{
+			desc.MipLODBias = 0.0f;
+			desc.MaxAnisotropy = 1;
+			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+			desc.BorderColor[0] = .0f;
+			desc.BorderColor[1] = .0f;
+			desc.BorderColor[2] = .0f;
+			desc.BorderColor[3] = .0f;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+			HRESULT hr = device->CreateSamplerState(&desc,
+				sampler_state_[static_cast<int>(SamplerState::point_clamp)].GetAddressOf());
+			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
+		// リニアサンプリング＆テクスチャ繰り返しあり
+		{
+			desc.MipLODBias = 0.0f;
+			desc.MaxAnisotropy = 1;
+			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+			desc.BorderColor[0] = .0f;
+			desc.BorderColor[1] = .0f;
+			desc.BorderColor[2] = .0f;
+			desc.BorderColor[3] = .0f;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			HRESULT hr = device->CreateSamplerState(&desc,
+				sampler_state_[static_cast<int>(SamplerState::linear_wrap)].GetAddressOf());
+			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
+		// リニアサンプリング＆テクスチャ繰り返しなし
+		{
+			desc.MipLODBias = 0.0f;
+			desc.MaxAnisotropy = 1;
+			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+			desc.BorderColor[0] = .0f;
+			desc.BorderColor[1] = .0f;
+			desc.BorderColor[2] = .0f;
+			desc.BorderColor[3] = .0f;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			HRESULT hr = device->CreateSamplerState(&desc,
+				sampler_state_[static_cast<int>(SamplerState::linear_clamp)].GetAddressOf());
+			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
+		//
+		{
+			desc.MipLODBias = 0;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxLOD = -D3D11_FLOAT32_MAX;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			desc.BorderColor[0] = .0f;
+			desc.BorderColor[1] = .0f;
+			desc.BorderColor[2] = .0f;
+			desc.BorderColor[3] = .0f;
+			desc.Filter = D3D11_FILTER_ANISOTROPIC;
+			HRESULT hr = device->CreateSamplerState(&desc,
+				sampler_state_[static_cast<int>(SamplerState::anisotropic)].GetAddressOf());
+			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
+		//リニアサンプリング、ミラー(ボリューメトリッククラウド様に作成)
+		{
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+			desc.BorderColor[0] = 0.0f;
+			desc.BorderColor[1] = 0.0f;
+			desc.BorderColor[2] = 0.0f;
+			desc.BorderColor[3] = 0.0f;
+			HRESULT hr = device->CreateSamplerState(&desc,
+                sampler_state_[static_cast<int>(SamplerState::linear_mirror)].GetAddressOf());
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
 	}
 
 	// 深度テストあり＆深度書き込みあり
@@ -150,7 +183,7 @@ RenderState::RenderState(ID3D11Device* device)
 		desc.AlphaToCoverageEnable = false;
 		desc.IndependentBlendEnable = false;
 		desc.RenderTarget[0].BlendEnable = true;
-		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 		desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 		desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 		desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
@@ -167,11 +200,11 @@ RenderState::RenderState(ID3D11Device* device)
 		desc.AlphaToCoverageEnable = false;
 		desc.IndependentBlendEnable = false;
 		desc.RenderTarget[0].BlendEnable = true;
-		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-		desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+		desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 		desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-		desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-		desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+		desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 		desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 		desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		HRESULT hr = device->CreateBlendState(&desc,
@@ -184,7 +217,7 @@ RenderState::RenderState(ID3D11Device* device)
 		desc.AlphaToCoverageEnable = false;
 		desc.IndependentBlendEnable = false;
 		desc.RenderTarget[0].BlendEnable = true;
-		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 		desc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 		desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;
 		desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;

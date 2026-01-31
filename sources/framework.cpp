@@ -6,14 +6,16 @@
 
 Framework::Framework(HWND hwnd):hwnd_(hwnd)
 {
-    Graphics::Instance().Initialize(hwnd_);
-
-    this->scene_ = std::make_unique<SceneTest>();
 
 }
 
 bool Framework::Initialize()
 {
+    Graphics::Instance().Initialize(hwnd_);
+
+    this->scene_ = std::make_unique<SceneTest>(hwnd_);
+
+    if (scene_)return scene_->Initialize();
     return true;
 }
 
@@ -26,6 +28,8 @@ void Framework::Update(float elapsed_time)
 #endif
     
     //シーン更新処理
+    scene_->SetWheel(wheel);
+    wheel = 0;
     scene_->Update(elapsed_time);
 
 #ifdef USE_IMGUI
@@ -47,25 +51,27 @@ void Framework::Render(float elapsed_time)
         scene_->Render(elapsed_time);
     }
 
-    scene_->DrawGui();
 
 
 #ifdef USE_IMGUI
+    scene_->DrawGui();
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif
 
-#if 0
-    UINT sync_interval{ 1 };
-#endif
     UINT sync_interval{ 0 };
-    //swap_cahin_->Present(sync_interval, 1);
     Graphics::Instance().Present(sync_interval);
 
 }
 
 bool Framework::Uninitialize()
 {
+    if (scene_)
+    {
+        bool r = scene_->Uninitialize();
+        Graphics::Instance().Shutdown();
+    }
+
     return true;
 }
 
@@ -180,6 +186,9 @@ LRESULT CALLBACK Framework::HandleMessage(HWND hwnd,UINT msg,WPARAM wParam,LPARA
     case WM_EXITSIZEMOVE:
         tictoc_.Start();
         break;
+    case WM_MOUSEWHEEL:
+        //マウスホイールの動きを捉えるよう
+        wheel = GET_WHEEL_DELTA_WPARAM(wParam);
     default:
         /*タイトルバーが一文字しか表示されない問題でWに変更しました*/
         /*return DefWindowProc(hwnd, msg, wparam, lparam); */

@@ -14,6 +14,11 @@
 #include "component_primitive.h"
 #include "component_material.h"
 #include "component_texture.h"
+#include "component_instanced.h"
+#include "component_sky_atmosphere.h"
+#include "component_volumetric_cloud.h"
+#include"component_intensity.h"
+#include"component_ajast_pbr_paramter_.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -31,6 +36,11 @@ public:
         registerContainer<ComponentPrimitive>(primitives_);
         registerContainer<ComponentMaterial>(materials_);
         registerContainer<ComponentTexture>(textures_);
+        registerContainer<ComponentInstanced>(instanced_);
+        registerContainer<ComponentSkyAtmosphere>(skys_);
+        registerContainer<ComponentVolumetricCloud>(clouds_);
+        registerContainer<ComponentIntensity>(intensities_);
+        registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
     }
 
     template<typename T>
@@ -43,7 +53,7 @@ public:
     template<typename T>
     int Add(uint16_t entity_id, const T& component) {
         auto& container = getContainer<T>();
-        container.push_back(component);
+        container.emplace_back(component);
         int id = static_cast<int>(container.size() - 1);
         entity_to_component_[std::type_index(typeid(T))][entity_id] = id;
         return id;
@@ -60,6 +70,38 @@ public:
     const T& Get(int id) const {
         const auto& container = getContainer<T>();
         return container.at(id);
+    }
+
+    //要素の削除関数
+    template<typename T>
+    void Remove(uint32_t entity_id) {
+        auto type = std::type_index(typeid(T));
+        auto mit = entity_to_component_.find(type);
+        if (mit == entity_to_component_.end()) return;
+
+        auto& mapping = mit->second;
+        auto it = mapping.find(entity_id);
+        if (it == mapping.end()) return;
+
+        int index_to_remove = it->second;
+        auto& container = getContainer<T>();
+        int last_index = static_cast<int>(container.size() - 1);
+
+        if (index_to_remove != last_index) {
+            // swap with last
+            std::swap(container[index_to_remove], container[last_index]);
+
+            // 更新対象の entity を探す
+            for (auto& [eid, idx] : mapping) {
+                if (idx == last_index) {
+                    idx = index_to_remove;
+                    break;
+                }
+            }
+        }
+
+        container.pop_back();
+        mapping.erase(entity_id);
     }
 
     //一緒に登録したエンティティで要素を取り出すゲッター
@@ -85,7 +127,7 @@ public:
     }
     //エンティティがそのコンポーネントを所有しているかの確認
     template<typename T>
-    bool Has(uint32_t entity_id) 
+    inline bool Has(uint32_t entity_id) 
     {
         auto it = entity_to_component_.find(std::type_index(typeid(T)));
         if (it == entity_to_component_.end()) return false;
@@ -149,4 +191,9 @@ private:
     std::vector<ComponentPrimitive>primitives_;
     std::vector<ComponentMaterial>materials_;
     std::vector<ComponentTexture>textures_;
+    std::vector<ComponentInstanced>instanced_;
+    std::vector<ComponentSkyAtmosphere>skys_;
+    std::vector<ComponentVolumetricCloud>clouds_;
+    std::vector<ComponentIntensity>intensities_;
+    std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
 };

@@ -20,6 +20,21 @@ public:
         return instance_;
     }
 
+    void Shutdown()
+    {
+        if (immediate_context_) {
+            immediate_context_->ClearState();
+            immediate_context_->Flush();
+        }
+
+        swap_chain_.Reset();
+        render_target_view_.Reset();
+        depth_stencil_view_.Reset();
+        immediate_context_.Reset();
+        device_.Reset();
+
+    }
+
     //初期化
     void Initialize(HWND hwnd);
 
@@ -44,6 +59,21 @@ public:
     float GetScreenHeight()const { return this->screen_height_; }
     //レンダーステート取得
     RenderState* GetRenderState() { return this->render_state_.get(); }
+
+    //コンスタントバッファビュー設定
+    void SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers);
+    //シェーダーリソースビュー設定
+    void SetShaderResource(int start_slot, int num, ID3D11ShaderResourceView* const* shader_resources);
+    //サンプラーステート設定
+    void SetSampler(int start_slot, int num, ID3D11SamplerState* const* sampler_state);
+    //シェーダー解錠
+    void ClearShaderSlots();
+    //コンスタントバッファビューの解除
+    void ClearConstantBuffers(int start_slot = 0, int num = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT);
+    //シェーダーリソースビューの解除
+    void ClearShaderResourceViews(int start_slot=0, int num = D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT);
+    //サンプラーステートの解除
+    void ClearSampler(int start_slot = 0, int num = D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT);
 
 private:
     //メンバ変数

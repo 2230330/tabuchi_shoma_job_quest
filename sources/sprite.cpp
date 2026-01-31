@@ -5,7 +5,7 @@
 #include<sstream>
 
 #include"../headers/misc.h"
-#include"../headers/texture.h"
+#include"../headers/resource_manager.h"
 #include"../headers/shader.h"
 
 Sprite::Sprite(ID3D11Device* device,const wchar_t*filename)
@@ -54,8 +54,8 @@ Sprite::Sprite(ID3D11Device* device,const wchar_t*filename)
 
     if(filename!=nullptr)
     { 
-        LoadTexture::LoadTextureFromFile(device, filename, shader_resource_view_.GetAddressOf(),&texture2d_desc_);
-        texture2d_desc_ = LoadTexture::Texture2dDesc(shader_resource_view_.Get());
+        shader_resource_view_=ResourceManager::Instance().LoadTextureFromFile(device, filename);
+        texture2d_desc_ = ResourceManager::Instance().Texture2dDesc(shader_resource_view_.Get());
     }
     
 }

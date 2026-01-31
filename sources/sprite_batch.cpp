@@ -3,7 +3,7 @@
 
 
 #include"../headers/misc.h"
-#include"../headers/texture.h"
+#include"../headers/resource_manager.h"
 #include"../headers/shader.h"
 
 SpriteBatch::SpriteBatch(ID3D11Device* device, const wchar_t* filename, size_t maxSprites,char*psFile)
@@ -40,8 +40,8 @@ SpriteBatch::SpriteBatch(ID3D11Device* device, const wchar_t* filename, size_t m
     cso_name = ".\\resources\\shader\\sprite_ps.cso";
     shader_from_cso::CreatePsFromCso(device,cso_name,pixel_shader_[0].GetAddressOf());
 
-    LoadTexture::LoadTextureFromFile(device, filename, shader_resource_view_.GetAddressOf(),&texture2d_desc_);
-    texture2d_desc_ = LoadTexture::Texture2dDesc(shader_resource_view_.Get());
+    shader_resource_view_=ResourceManager::Instance().LoadTextureFromFile(device, filename);
+    texture2d_desc_ = ResourceManager::Instance().Texture2dDesc(shader_resource_view_.Get());
 }
 
 SpriteBatch::~SpriteBatch()
@@ -83,6 +83,8 @@ void SpriteBatch::end(ID3D11DeviceContext* immediate_context)
 
     immediate_context->DrawInstanced(static_cast<UINT>(vertex_count), 1,0,0);
 
+    ID3D11ShaderResourceView* shader_resouce_view[]{ nullptr };
+    immediate_context->PSSetShaderResources(0, 1, shader_resouce_view);
     vertices_.clear();
 }
 

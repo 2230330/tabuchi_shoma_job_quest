@@ -1,10 +1,11 @@
 #include"skinned_mesh.hlsli"
 
-//Unit18
-#define POINT 0 
-#define LINEAR 1
-#define ANISOTROPIC 2
-SamplerState sampler_states[3] : register(s0);
+#define POINT_WRAP 0
+#define POINT_CLAMP 1
+#define LINEAR_WRAP 2
+#define LINEAR_CLAMP 3
+#define ANISOTROPIC 4
+SamplerState sampler_states[5] : register(s0);
 Texture2D texture_maps[4] : register(t0);
 float4 main(VS_OUT pin) : SV_TARGET
 {
@@ -23,7 +24,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     T = normalize(T - N * dot(N, T));
     float3 B = normalize(cross(N, T) * sigma);
 
-    float4 normal = texture_maps[1].Sample(sampler_states[LINEAR], pin.texcoord);
+    float4 normal = texture_maps[1].Sample(sampler_states[LINEAR_CLAMP], pin.texcoord);
     normal = (normal * 2.0) - 1.0;
     N = normalize((normal.x * T) + (normal.y * B) + (normal.z * N));
 

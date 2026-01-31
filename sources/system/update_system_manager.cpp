@@ -1,6 +1,5 @@
 #include"../../headers/system/update_system_manager.h"
 #include"../../headers/system/transform_system.h"
-#include"../../headers/system/render_system.h"
 
 //新しいシステムはここで登録する
 UpdateSystemManager::UpdateSystemManager(ComponentManager& comp_mng)
