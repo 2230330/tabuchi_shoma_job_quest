@@ -139,6 +139,8 @@ PSGBufferOut main(VS_OUT pin, bool is_front_face : SV_IsFrontFace)
         roughness *= sampled.g;
         metalness *= sampled.b;
     }
+    roughness = clamp(roughness + adjust_roughness, 0.0001f, 1.0f);
+    metalness = clamp(metalness + adjust_metalness, 0.0f, 2.0f);
 	
 	//	Œõ‚ÌŽÕ•Á’l‚ðŽæ“¾
     float occlusion_factor = 1.0f;

@@ -53,8 +53,8 @@ dcl_input vThreadIDInGroup.xy
 dcl_temps 5
 dcl_indexableTemp x0[9], 4
 dcl_indexableTemp x1[9], 4
-dcl_tgsm_structured g0, 3072, 9
-dcl_thread_group 16, 16, 1
+dcl_tgsm_structured g0, 192, 9
+dcl_thread_group 4, 4, 1
 //
 // Initial variable locations:
 //   vThreadID.x <- dtid.x; vThreadID.y <- dtid.y; vThreadID.z <- dtid.z; 
@@ -70,7 +70,7 @@ utof r0.y, r0.x
 div r0.y, l(1.000000), r0.y  // r0.y <- invDim
 
 #line 91
-mov r0.z, l(16)
+mov r0.z, l(4)
 imul null, r0.z, r0.z, vThreadIDInGroup.y
 iadd r0.z, r0.z, vThreadIDInGroup.x
 mov r0.z, r0.z  // r0.z <- idx
@@ -461,7 +461,7 @@ endif
 sync_g_t
 
 #line 120
-mov r0.x, l(128)  // r0.x <- stride
+mov r0.x, l(8)  // r0.x <- stride
 mov r0.y, r0.x  // r0.y <- stride
 loop 
   mov r0.w, l(0)

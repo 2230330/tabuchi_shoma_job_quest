@@ -74,8 +74,8 @@ float TexelSolidAngle(float2 uv01, float invDim)
     return area / denom;
 }
 
-#define GROUP_X 16
-#define GROUP_Y 16
+#define GROUP_X 4
+#define GROUP_Y 4
 
 groupshared float3 gAccum[9][GROUP_X * GROUP_Y];
 

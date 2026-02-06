@@ -484,13 +484,13 @@ if_nz r6.w
 #line 60
 endif 
 
-#line 62
+#line 63
 add r0.xyz, r1.xyzx, r2.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 63
+#line 64
 itof r0.w, l(1)  // r0.w <- alpha
 
-#line 64
+#line 65
 itof r1.w, l(0)
 eq r0.x, r0.x, r1.w
 itof r1.w, l(0)
@@ -501,11 +501,11 @@ eq r0.y, r0.y, r0.z
 and r0.x, r0.y, r0.x
 if_nz r0.x
 
-#line 65
+#line 66
   itof r0.w, l(0)
 endif 
 
-#line 66
+#line 67
 add o0.xyz, r1.xyzx, r2.xyzx
 mov o0.w, r0.w
 ret 

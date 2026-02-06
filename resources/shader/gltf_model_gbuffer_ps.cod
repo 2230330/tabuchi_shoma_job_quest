@@ -26,6 +26,15 @@
 //
 // }
 //
+// cbuffer ADJAST_METARIAL_CONSTANT_BUFFER
+// {
+//
+//   float adjust_metalness;            // Offset:    0 Size:     4
+//   float adjust_roughness;            // Offset:    4 Size:     4
+//   float2 pad0;                       // Offset:    8 Size:     8 [unused]
+//
+// }
+//
 // cbuffer PRIMITIVE_CONSTANT_BUFFER
 // {
 //
@@ -119,6 +128,7 @@
 // material_textures[4]              texture  float4          2d             t5      1 
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
+// ADJAST_METARIAL_CONSTANT_BUFFER    cbuffer      NA          NA           cb13      1 
 //
 //
 //
@@ -150,6 +160,7 @@
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[18], immediateIndexed
+dcl_constantbuffer CB13[1], immediateIndexed
 dcl_constantbuffer CB0[9], immediateIndexed
 dcl_sampler s2, mode_default
 dcl_sampler s4, mode_default
@@ -432,79 +443,89 @@ if_nz r0.x
 #line 141
 endif 
 
-#line 144
+#line 142
+add r0.x, r3.x, cb13[0].y
+max r0.x, r0.x, l(0.000100)
+min r5.y, r0.x, l(1.000000)  // r5.y <- roughness
+
+#line 143
+add r0.x, r3.y, cb13[0].x
+max r0.x, r0.x, l(0.000000)
+min r5.z, r0.x, l(2.000000)  // r5.z <- metalness
+
+#line 146
 mov r5.x, l(1.000000)  // r5.x <- occlusion_factor
 
-#line 145
+#line 147
 ilt r0.x, l(-1), r4.x
 if_nz r0.x
 
-#line 147
+#line 149
   sample_indexable(texture2d)(float,float,float,float) r0.x, v4.xyxx, t5.xyzw, s2  // r0.x <- sampled.x
 
-#line 148
+#line 150
   mul r5.x, r0.x, r5.x
 
-#line 149
+#line 151
 endif 
 
-#line 150
+#line 152
 mov r5.w, r5.w  // r5.w <- occlusion_strength
 
-#line 154
+#line 156
 mov r2.xyz, r2.xyzx  // r2.x <- data.base_color.x; r2.y <- data.base_color.y; r2.z <- data.base_color.z
 
-#line 155
+#line 157
 mov r0.y, r0.y  // r0.y <- data.shading_model
 
-#line 156
+#line 158
 mov r1.xyz, r1.xyzx  // r1.x <- data.emissive_color.x; r1.y <- data.emissive_color.y; r1.z <- data.emissive_color.z
 
-#line 157
+#line 159
 mov r6.xyz, r6.xyzx  // r6.x <- data.w_normal.x; r6.y <- data.w_normal.y; r6.z <- data.w_normal.z
 
-#line 158
-mov r4.xyz, v1.xyzx  // r4.x <- data.w_position.x; r4.y <- data.w_position.y; r4.z <- data.w_position.z
+#line 160
+mov r3.xyz, v1.xyzx  // r3.x <- data.w_position.x; r3.y <- data.w_position.y; r3.z <- data.w_position.z
 
-#line 159
+#line 161
 nop 
 mov r0.xzw, v5.xxyw
-mov r7.xyz, v6.xywx
+mov r4.xyz, v6.xywx
 
 #line 50 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"
 div r0.xz, r0.xxzx, r0.wwww
 
 #line 51
-div r3.zw, r7.xxxy, r7.zzzz  // r3.z <- previous_clip_position.x; r3.w <- previous_clip_position.y
+div r4.xy, r4.xyxx, r4.zzzz
 
 #line 52
 mul r0.xz, r0.xxzx, l(0.500000, 0.000000, -0.500000, 0.000000)
 add r0.xz, r0.xxzx, l(0.500000, 0.000000, 0.500000, 0.000000)  // r0.x <- current_clip_position.x; r0.z <- current_clip_position.y
 
 #line 53
-mul r3.zw, r3.zzzw, l(0.000000, 0.000000, 0.500000, -0.500000)
-add r3.zw, r3.zzzw, l(0.000000, 0.000000, 0.500000, 0.500000)  // r3.z <- previous_clip_position.x; r3.w <- previous_clip_position.y
+mul r4.xy, r4.xyxx, l(0.500000, -0.500000, 0.000000, 0.000000)
+add r4.xy, r4.xyxx, l(0.500000, 0.500000, 0.000000, 0.000000)  // r4.x <- previous_clip_position.x; r4.y <- previous_clip_position.y
 
 #line 54
-mov r3.zw, -r3.zzzw
-add r7.xy, r0.xzxx, r3.zwzz  // r7.x <- <calculate_uvspace_velocity return value>.x; r7.y <- <calculate_uvspace_velocity return value>.y
+mov r4.xy, -r4.xyxx
+add r4.xy, r0.xzxx, r4.xyxx  // r4.x <- <calculate_uvspace_velocity return value>.x; r4.y <- <calculate_uvspace_velocity return value>.y
 
-#line 159 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_gbuffer_ps.hlsl"
-mov r7.xy, r7.xyxx  // r7.x <- data.velocity.x; r7.y <- data.velocity.y
-
-#line 162
-mov r5.y, r3.x  // r5.y <- data.roughness
-
-#line 163
-mov r5.z, r3.y  // r5.z <- data.metalness
+#line 161 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_gbuffer_ps.hlsl"
+mov r4.xy, r4.xyxx  // r4.x <- data.velocity.x; r4.y <- data.velocity.y
 
 #line 164
-mov r5.x, r5.x  // r5.x <- data.occlusion_factor
+mov r5.y, r5.y  // r5.y <- data.roughness
 
 #line 165
-mov r5.w, r5.w  // r5.w <- data.occlusion_strength
+mov r5.z, r5.z  // r5.z <- data.metalness
 
 #line 166
+mov r5.x, r5.x  // r5.x <- data.occlusion_factor
+
+#line 167
+mov r5.w, r5.w  // r5.w <- data.occlusion_strength
+
+#line 168
 nop 
 mov r5.y, r5.y
 mov r5.z, r5.z
@@ -513,12 +534,12 @@ mov r5.w, r5.w
 mov r2.xyz, r2.xyzx
 mov r1.xyz, r1.xyzx
 mov r6.xyz, r6.xyzx
-mov r4.xyz, r4.xyzx
+mov r3.xyz, r3.xyzx
 mov r0.y, r0.y
-mov r7.xy, r7.xyxx
-mov r3.x, cb1[14].z
+mov r4.xy, r4.xyxx
+mov r7.x, cb1[14].z
 mov r8.x, cb1[14].w
-mov r3.y, cb1[15].z
+mov r7.y, cb1[15].z
 mov r8.y, cb1[15].w
 mov r9.xy, cb1[16].zwzz
 mov r9.zw, cb1[17].zzzw
@@ -556,11 +577,11 @@ mov r5.z, r5.z  // r5.z <- ret.parameter.z
 mov r5.w, r5.w  // r5.w <- ret.parameter.w
 
 #line 83
-mov r4.w, l(1.000000)
-mov r3.zw, r9.xxxz
-dp4 r0.y, r4.xyzw, r3.xyzw  // r0.y <- position.z
+mov r3.w, l(1.000000)
+mov r7.zw, r9.xxxz
+dp4 r0.y, r3.xyzw, r7.xyzw  // r0.y <- position.z
 mov r8.zw, r9.yyyw
-dp4 r0.w, r4.xyzw, r8.xyzw  // r0.w <- position.w
+dp4 r0.w, r3.xyzw, r8.xyzw  // r0.w <- position.w
 
 #line 84
 nop 
@@ -576,16 +597,16 @@ div r0.x, l(1.000000), r0.x  // r0.x <- <convert_projection_depth_to_linear_dept
 mov r0.x, r0.x  // r0.x <- ret.depth
 
 #line 86
-mov r7.x, r7.x  // r7.x <- ret.velocity.x
+mov r4.x, r4.x  // r4.x <- ret.velocity.x
 
 #line 87
-mov r7.y, r7.y  // r7.y <- ret.velocity.y
+mov r4.y, r4.y  // r4.y <- ret.velocity.y
 
 #line 88
-itof r7.z, l(1)  // r7.z <- ret.velocity.z
+itof r4.z, l(1)  // r4.z <- ret.velocity.z
 
 #line 89
-itof r7.w, l(1)  // r7.w <- ret.velocity.w
+itof r4.w, l(1)  // r4.w <- ret.velocity.w
 
 #line 90
 mov r2.xyz, r2.xyzx  // r2.x <- <EncodeGBuffer return value>.base_color.x; r2.y <- <EncodeGBuffer return value>.base_color.y; r2.z <- <EncodeGBuffer return value>.base_color.z
@@ -598,18 +619,18 @@ mov r5.x, r5.x  // r5.x <- <EncodeGBuffer return value>.parameter.x
 mov r5.y, r5.y  // r5.y <- <EncodeGBuffer return value>.parameter.y
 mov r5.z, r5.z  // r5.z <- <EncodeGBuffer return value>.parameter.z
 mov r5.w, r5.w  // r5.w <- <EncodeGBuffer return value>.parameter.w
-mov r7.x, r7.x  // r7.x <- <EncodeGBuffer return value>.velocity.x
-mov r7.y, r7.y  // r7.y <- <EncodeGBuffer return value>.velocity.y
-mov r7.z, r7.z  // r7.z <- <EncodeGBuffer return value>.velocity.z
-mov r7.w, r7.w  // r7.w <- <EncodeGBuffer return value>.velocity.w
+mov r4.x, r4.x  // r4.x <- <EncodeGBuffer return value>.velocity.x
+mov r4.y, r4.y  // r4.y <- <EncodeGBuffer return value>.velocity.y
+mov r4.z, r4.z  // r4.z <- <EncodeGBuffer return value>.velocity.z
+mov r4.w, r4.w  // r4.w <- <EncodeGBuffer return value>.velocity.w
 mov r0.x, r0.x  // r0.x <- <EncodeGBuffer return value>.depth
 
-#line 166 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_gbuffer_ps.hlsl"
+#line 168 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_gbuffer_ps.hlsl"
 mov o0.xyzw, r2.xyzw
 mov o1.xyzw, r1.xyzw
 mov o2.xyzw, r6.xyzw
 mov o3.xyzw, r5.xyzw
-mov o5.xyzw, r7.xyzw
+mov o5.xyzw, r4.xyzw
 mov o4.x, r0.x
 ret 
-// Approximately 244 instruction slots used
+// Approximately 250 instruction slots used

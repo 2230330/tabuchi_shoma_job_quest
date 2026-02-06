@@ -147,7 +147,7 @@ void LightManager::DrawImgui()
 				std::string name = "point_light" + std::to_string(i);
 				if (ImGui::TreeNode(name.c_str()))
 				{
-					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::DragFloat4("position", &light.position.x));
 					if (ImGui::ColorEdit4("color", &light.color.x));
 					if (ImGui::SliderFloat("range", &light.range, 0.0f, 20.f));
 					if (ImGui::SliderFloat("intensity", &light.intensity, 0.0f, 10.f));
@@ -168,7 +168,7 @@ void LightManager::DrawImgui()
 				std::string name = "spot light" + std::to_string(i);
 				if (ImGui::TreeNode(name.c_str()))
 				{
-					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::DragFloat4("position", &light.position.x));
 					if (ImGui::SliderFloat4("direction", &light.direction.x,-10.f,10.f));
 					if (ImGui::ColorEdit4("color", &light.color.x));
 					if (ImGui::SliderFloat("inner_corn", &light.inner_corn,

@@ -58,6 +58,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         total_diffuse = lerp(total_diffuse, total_diffuse * data.occlusion_factor, data.occlusion_strength);
         total_specular = lerp(total_specular, total_specular * data.occlusion_factor, data.occlusion_strength);
     }
+
     
     float3 color = total_diffuse + total_specular;
     float alpha = 1;

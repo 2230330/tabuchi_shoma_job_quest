@@ -488,9 +488,9 @@ void IBLManager::UpdateDiffuseSH()
     ID3D11SamplerState* samp = samp_linear_clamp_.Get();
     ctx_->CSSetSamplers(0, 1, &samp);
 
-    const UINT sampleDim = 16; // 16 or 32 推奨（軽さ優先なら16）
-    const UINT groupX = 16;
-    const UINT groupY = 16;
+    const UINT sampleDim = 4; // 16 or 32 推奨（軽さ優先なら16）
+    const UINT groupX = 4;
+    const UINT groupY = 4;
 
     for (UINT face = 0; face < 6; ++face)
     {
@@ -620,10 +620,10 @@ void IBLManager::UpdateSpecularPrefilter()
             //DDS保存
             if (want_save_dds_)
             {
-                SaveTextureToDDS(
-                    prefilter_tex_.Get(),
-                    L".\\resources\\sprite\\cube_maps\\prefiltered_env.dds", false
-                );
+                //SaveTextureToDDS(
+                //    prefilter_tex_.Get(),
+                //    L".\\resources\\sprite\\cube_maps\\prefiltered_env.dds", false
+                //);
 
                 //if(cloud_flag_)
                 //{
