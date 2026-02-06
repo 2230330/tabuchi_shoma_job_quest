@@ -134,7 +134,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         dev_->CreateBuffer(&cbd, nullptr, cb_sky_cube_.GetAddressOf());
     }
 
-    // --- SH 定数バッファ（b2） ---
+    // --- SH 定数バッフ ---
     {
         D3D11_BUFFER_DESC bd{};
         bd.ByteWidth = sizeof(SH9Constants);
@@ -143,8 +143,8 @@ void IBLManager::Initialize(ID3D11Device* dev)
         dev_->CreateBuffer(&bd, nullptr, cb_sh_.GetAddressOf());
 
         SH9Constants init{};
-        for (int i = 0; i < 9; ++i) init.c[i] = DirectX::XMFLOAT3(0, 0, 0);
-        init.c[0] = DirectX::XMFLOAT3(0.03f, 0.03f, 0.03f);
+        for (int i = 0; i < 9; ++i) init.c[i] = DirectX::XMFLOAT4(0, 0, 0,0);
+        init.c[0] = DirectX::XMFLOAT4(0.03f, 0.03f, 0.03f,0.f);
         ctx_->UpdateSubresource(cb_sh_.Get(), 0, nullptr, &init, 0, 0);
     }
 
@@ -527,8 +527,8 @@ void IBLManager::UpdateDiffuseSH()
     {
         const DirectX::XMFLOAT4* faceData = reinterpret_cast<const DirectX::XMFLOAT4*>(mapped.pData);
 
-        DirectX::XMFLOAT3 sh[9];
-        for (int i = 0; i < 9; ++i) sh[i] = DirectX::XMFLOAT3(0, 0, 0);
+        DirectX::XMFLOAT4 sh[9];
+        for (int i = 0; i < 9; ++i) sh[i] = DirectX::XMFLOAT4(0, 0, 0,0);
 
         // sum all faces
         for (int face = 0; face < 6; ++face)
@@ -648,13 +648,12 @@ void IBLManager::UpdateSpecularPrefilter()
 
 void IBLManager::BindForObjectPass(ID3D11DeviceContext* ctx)
 {
-    ID3D11ShaderResourceView* srvs[3] = {
-        nullptr,
+    ID3D11ShaderResourceView* srvs[2] = {
         srv_pref_env_.Get(),
         srv_brdf_lut_.Get(),
     };
-    ctx->PSSetShaderResources(33, 3, srvs);
-    ctx->PSSetConstantBuffers(static_cast<uint32_t>(ConstantBufferSlot::kSH9), 1, cb_sh_.GetAddressOf());
+    ctx->PSSetShaderResources(34, _countof(srvs), srvs);
+    ctx->PSSetConstantBuffers(ConstantBufferSlot::kSH9, 1, cb_sh_.GetAddressOf());
 
     ID3D11SamplerState* s[1] = { samp_linear_clamp_.Get() };
     ctx->PSSetSamplers(0, 1, s);

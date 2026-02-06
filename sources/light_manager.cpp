@@ -265,4 +265,76 @@ void LightManager::Update(float elapsed_time)
 	DirectX::XMMATRIX VP = V * P;
 	DirectX::XMStoreFloat4x4(&light_view_projection_, VP);
 	DirectX::XMStoreFloat4x4(&inverse_light_view_projection_, DirectX::XMMatrixInverse(nullptr, VP));
+
+	BuildDeferredLights();
+}
+void LightManager::BuildDeferredLights()
+{
+	deferred_lights_.clear();
+
+	// Ambient
+	{
+		//環境光の場合
+		//work_data[0]=color
+		//work_data[1]=dummy
+		//work_data[2]=dummy
+		//work_data[3]=xyz=dummy,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = ambient_color_;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_ambient_light);
+
+		deferred_lights_.emplace_back(l);
+
+	}
+
+	// Directional
+	{
+		//平行光源の場合
+		//work_data[0]=direction
+		//work_data[1]=color
+		//work_data[2]=dummy
+		//work_data[3]=xyz=dummy,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = direction_light_.direction;
+		l.lights.work_data[1] = direction_light_.color;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_derectional_light);
+		l.light_view_projection = light_view_projection_;
+
+		deferred_lights_.emplace_back(l);
+	}
+
+	// Point
+	for (auto& p : point_lights_)
+	{
+		//点光源
+		//work_data[0]=position
+		//work_data[1]=color
+		//work_data[2]=x=range,yzw=dummy
+		//work_data[3]=xyz=dummy,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = p.position;
+		l.lights.work_data[1] = p.color;
+		l.lights.work_data[2].x = p.range;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_point_light);
+
+		deferred_lights_.emplace_back(l);
+	}
+
+	// Spot
+	for (auto& s : spot_lights_)
+	{
+
+		//スポットライトの場合
+		//work_data[0]=position
+		//work_data[1]=direction
+		//work_data[2]=color
+		//work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = s.position;
+		l.lights.work_data[1] = s.direction;
+		l.lights.work_data[2] = s.color;
+		l.lights.work_data[3] = { s.range,s.inner_corn,s.outer_corn,static_cast<float>(light_kind_spot_light) };
+
+		deferred_lights_.emplace_back(l);
+	}
 }

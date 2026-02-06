@@ -135,7 +135,8 @@ void RenderSystemManager::RenderAll()
         ibl_manager_->UpdateEnvironmentCapture(*sky_framebuffer_);
         ibl_manager_->BuildSkyCubeFromEnvSource();
 
-        if (ibl_manager_->IsDirty()) {
+        if (ibl_manager_->IsDirty()) 
+        {
 
 
             // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）

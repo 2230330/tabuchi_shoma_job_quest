@@ -264,7 +264,7 @@ float4 SampleDiffuseIEM(float3 v, TextureCube diffuse_iem_cube_map, SamplerState
 //IBLManager::cb_sh_
 cbuffer SHBuffer : register(b6)
 {
-    float3 shC[9];
+    float4 shC[9];//wÇÕÉ_É~Å[
 }
 float3 EvalSH9Irradiance(float3 n)
 {
@@ -286,7 +286,7 @@ float3 EvalSH9Irradiance(float3 n)
     [unroll]
     for (int i = 0; i < 9;i++)
     {
-        irradiance + shC[i] * shBasis[i];
+        irradiance += shC[i] * shBasis[i];
     }
 
     return max(irradiance, 0);

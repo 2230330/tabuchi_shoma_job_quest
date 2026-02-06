@@ -48,6 +48,8 @@ public:
 
     //デファード用ライトコンスタントをセット
     void BindDeferredLightConstant(int start_slot,UINT index);
+    //Update内で動く、ディファードレンダリング用ライトの組みなおし
+    void BuildDeferredLights();
 
     size_t GetDeferredLightsSize() const{ return deferred_lights_.size(); }
 

@@ -125,8 +125,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>sh_face_srv_;
     Microsoft::WRL::ComPtr<ID3D11Buffer>sh_face_readback_;
     struct SH9Constants {
-        DirectX::XMFLOAT3 c[9];
-        float _pad; // 16byte アライメント
+        DirectX::XMFLOAT4 c[9];//wはダミー
     };
     Microsoft::WRL::ComPtr<ID3D11Buffer>cb_sh_;        // b2: SH(9係数)
     Microsoft::WRL::ComPtr<ID3D11Buffer>cb_sh_cs_;
