@@ -22,6 +22,7 @@
 //   row_major float4x4 previous_view_projection_transform;// Offset:  480 Size:    64 [unused]
 //   float2 sun_uv;                     // Offset:  544 Size:     8 [unused]
 //   float sun_visible;                 // Offset:  552 Size:     4 [unused]
+//   float padding0;                    // Offset:  556 Size:     4 [unused]
 //
 // }
 //
@@ -29,10 +30,11 @@
 // {
 //
 //   row_major float4x4 world;          // Offset:    0 Size:    64 [unused]
-//   int material;                      // Offset:   64 Size:     4
-//   bool has_tangent;                  // Offset:   68 Size:     4
-//   int skin;                          // Offset:   72 Size:     4 [unused]
-//   int pad;                           // Offset:   76 Size:     4 [unused]
+//   row_major float4x4 previous_world; // Offset:   64 Size:    64 [unused]
+//   int material;                      // Offset:  128 Size:     4
+//   int has_tangent;                   // Offset:  132 Size:     4
+//   int skin;                          // Offset:  136 Size:     4 [unused]
+//   int pad;                           // Offset:  140 Size:     4 [unused]
 //
 // }
 //
@@ -161,7 +163,6 @@
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // sampler_states[2]                 sampler      NA          NA             s2      1 
-// sampler_states[3]                 sampler      NA          NA             s3      1 
 // sampler_states[4]                 sampler      NA          NA             s4      1 
 // materials                         texture  struct         r/o             t0      1 
 // material_textures[0]              texture  float4          2d             t1      1 
@@ -186,7 +187,9 @@
 // NORMAL                   0   xyzw        2     NONE   float   xyz 
 // TANGENT                  0   xyzw        3     NONE   float   xyzw
 // TEXCOORD                 0   xy          4     NONE   float   xy  
-// SV_IsFrontFace           0   x           5    FFACE    uint   x   
+// CLIP_POSITION            0   xyzw        5     NONE   float       
+// CLIP_POSITION            1   xyzw        6     NONE   float       
+// SV_IsFrontFace           0   x           7    FFACE    uint   x   
 //
 //
 // Output signature:
@@ -198,11 +201,10 @@
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[3], immediateIndexed
-dcl_constantbuffer CB0[5], immediateIndexed
+dcl_constantbuffer CB0[9], immediateIndexed
 dcl_constantbuffer CB3[69], dynamicIndexed
 dcl_constantbuffer CB13[1], immediateIndexed
 dcl_sampler s2, mode_default
-dcl_sampler s3, mode_default
 dcl_sampler s4, mode_default
 dcl_resource_structured t0, 96
 dcl_resource_texture2d (float,float,float,float) t1
@@ -215,7 +217,7 @@ dcl_input_ps linear v1.xyz
 dcl_input_ps linear v2.xyz
 dcl_input_ps linear v3.xyzw
 dcl_input_ps linear v4.xy
-dcl_input_ps_sgv constant v5.x, is_front_face
+dcl_input_ps_sgv constant v7.x, is_front_face
 dcl_output o0.xyzw
 dcl_temps 17
 //
@@ -225,7 +227,9 @@ dcl_temps 17
 //   v2.x <- pin.w_normal.x; v2.y <- pin.w_normal.y; v2.z <- pin.w_normal.z; v2.w <- pin.w_normal.w; 
 //   v3.x <- pin.w_tangent.x; v3.y <- pin.w_tangent.y; v3.z <- pin.w_tangent.z; v3.w <- pin.w_tangent.w; 
 //   v4.x <- pin.texcoord.x; v4.y <- pin.texcoord.y; 
-//   v5.x <- is_front_face; 
+//   v5.x <- pin.current_clip_position.x; v5.y <- pin.current_clip_position.y; v5.z <- pin.current_clip_position.z; v5.w <- pin.current_clip_position.w; 
+//   v6.x <- pin.previous_clip_position.x; v6.y <- pin.previous_clip_position.y; v6.z <- pin.previous_clip_position.z; v6.w <- pin.previous_clip_position.w; 
+//   v7.x <- is_front_face; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
 #line 5 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
@@ -235,7 +239,7 @@ mov r0.x, l(2.200000)  // r0.x <- GammaFactor
 mov r0.y, l(3.141593)  // r0.y <- PI
 
 #line 66 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model_ps.hlsl"
-mov r0.z, cb0[4].x
+mov r0.z, cb0[8].x
 ld_structured_indexable(structured_buffer, stride=96)(mixed,mixed,mixed,mixed) r1.x, r0.z, l(0), t0.xxxx  // r1.x <- m.emissive_factor.x
 ld_structured_indexable(structured_buffer, stride=96)(mixed,mixed,mixed,mixed) r1.y, r0.z, l(4), t0.xxxx  // r1.y <- m.emissive_factor.y
 ld_structured_indexable(structured_buffer, stride=96)(mixed,mixed,mixed,mixed) r1.z, r0.z, l(8), t0.xxxx  // r1.z <- m.emissive_factor.z
@@ -302,15 +306,15 @@ rsq r0.x, r0.x
 mul r0.xzw, r0.xxxx, v2.xxyz  // r0.x <- N.x; r0.z <- N.y; r0.w <- N.z
 
 #line 87
-ine r4.z, l(0, 0, 0, 0), cb0[4].y
-dp3 r5.x, v3.xyzx, v3.xyzx
-rsq r5.x, r5.x
-mul r5.xyz, r5.xxxx, v3.xyzx
-itof r6.xyz, l(1, 0, 0, 0)
-movc r5.xyz, r4.zzzz, r5.xyzx, r6.xyzx  // r5.x <- T.x; r5.y <- T.y; r5.z <- T.z
+ine r5.xyz, l(0, 0, 0, 0), cb0[8].yyyy
+dp3 r4.z, v3.xyzx, v3.xyzx
+rsq r4.z, r4.z
+mul r6.xyz, r4.zzzz, v3.xyzx
+itof r7.xyz, l(1, 0, 0, 0)
+movc r5.xyz, r5.xyzx, r6.xyzx, r7.xyzx  // r5.x <- T.x; r5.y <- T.y; r5.z <- T.z
 
 #line 88
-ine r4.z, l(0, 0, 0, 0), cb0[4].y
+ine r4.z, l(0, 0, 0, 0), cb0[8].y
 movc r4.z, r4.z, v3.w, l(1.000000)  // r4.z <- sigma
 
 #line 89
@@ -333,7 +337,7 @@ rsq r4.z, r4.z
 mul r6.xyz, r4.zzzz, r6.xyzx  // r6.x <- B.x; r6.y <- B.y; r6.z <- B.z
 
 #line 92
-if_z v5.x
+if_z v7.x
 
 #line 94
   mov r5.xyz, -r5.xyzx
@@ -1186,7 +1190,7 @@ add r8.xyz, r8.xyzx, r9.xyzx  // r8.x <- R.x; r8.y <- R.y; r8.z <- R.z
 mul r0.y, r1.w, l(8.000000)  // r0.y <- mip
 
 #line 211
-sample_l_indexable(texturecube)(float,float,float,float) r8.xyz, r8.xyzx, t100.xyzw, s3, r0.y
+sample_l_indexable(texturecube)(float,float,float,float) r8.xyz, r8.xyzx, t100.xyzw, s2, r0.y
 mov r8.xyz, r8.xyzx  // r8.x <- env.x; r8.y <- env.y; r8.z <- env.z
 
 #line 214

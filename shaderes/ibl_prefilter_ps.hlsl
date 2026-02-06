@@ -113,16 +113,30 @@ struct PSIn
     float2 uv : TEXCOORD0;
 };
 
+float DistributionGGX(float3 N, float3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = saturate(dot(N, H));
+    float NdotH2 = NdotH * NdotH;
+
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    return a2 / (PI * denom * denom + 1e-6);
+}
+
 float4 main(PSIn i) : SV_Target
 {
     float3 N = DirectionFromCubeUV(FaceIndex, i.uv);
     float3 V = N;
 
-    const uint BASE = 256;
-    uint SAMPLE_COUNT = max(32u, BASE >> (uint) (Roughness * 5.0));
+    const uint SAMPLE_COUNT = 1024;
 
-    float3 accum = float3(0.0, 0.0, 0.0);
-    float weight = 0.0;
+    float3 prefilteredColor = 0;
+    float totalWeight = 0;
+
+    // 環境マップの解像度（例：入力キューブの1辺）
+    // C++側から渡すのが理想（EnvResolution）
+    float resolution = 256.0;
 
     for (uint s = 0; s < SAMPLE_COUNT; ++s)
     {
@@ -133,15 +147,24 @@ float4 main(PSIn i) : SV_Target
         float NdotL = saturate(dot(N, L));
         if (NdotL > 0.0)
         {
-            // mip の概算：roughness に比例 (MipCount を使うなら Roughness * (MipCount-1) 等に調整)
-            float lod = Roughness * (MipCount-1.0f); // C++ 側 mipCount に合わせて必要であれば変更
-            float3 c = SampleEnv(L, lod);
+            float NdotH = saturate(dot(N, H));
+            float HdotV = saturate(dot(H, V));
 
-            accum += c * NdotL;
-            weight += NdotL;
+            float D = DistributionGGX(N, H, Roughness);
+            float pdf = (D * NdotH / (4.0 * HdotV)) + 1e-6;
+
+            float saTexel = 4.0 * PI / (6.0 * resolution * resolution);
+            float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf);
+
+            float mipLevel = (Roughness == 0.0) ? 0.0 : 0.5 * log2(saSample / saTexel);
+
+            float3 c = SampleEnv(L, mipLevel);
+
+            prefilteredColor += c * NdotL;
+            totalWeight += NdotL;
         }
     }
 
-    float3 result = accum / max(weight, 1e-4);
-    return float4(result, 1.0);
+    prefilteredColor /= max(totalWeight, 1e-4);
+    return float4(prefilteredColor, 1.0);
 }

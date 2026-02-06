@@ -57,6 +57,9 @@ private:
     //DDSにセーブ
     void SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,bool force_srgb=false);
 
+    //SH9用バッファ生成
+    void CreateSHResources(ID3D11Device* device);
+
 private:
     // フラグ
     bool dirty_ = true;  // Specular/SH の再生成が必要なとき true
@@ -70,7 +73,7 @@ private:
 
     // シェーダ
     Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_brdf_lut_;        // BRDF LUT 生成
-    Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_latlong_to_cube_; // LatLong -> Cube 変換
+    //Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_latlong_to_cube_; // LatLong -> Cube 変換
     Microsoft::WRL::ComPtr<ID3D11VertexShader>  ibl_screen_vs_;      // 全面描画
     Microsoft::WRL::ComPtr<ID3D11PixelShader>   ps_prefilter_;       // Prefilter
 
@@ -116,11 +119,17 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv_pref_env_; // t1: Specular Prefiltered Env
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv_brdf_lut_; // t2: BRDF LUT
     // SH 係数（float3 × 9）
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader>cs_sh9_;
+    Microsoft::WRL::ComPtr<ID3D11Buffer>sh_face_buffer_;
+    Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>sh_face_uav_;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>sh_face_srv_;
+    Microsoft::WRL::ComPtr<ID3D11Buffer>sh_face_readback_;
     struct SH9Constants {
         DirectX::XMFLOAT3 c[9];
         float _pad; // 16byte アライメント
     };
-    Microsoft::WRL::ComPtr<ID3D11Buffer>             cb_sh_;        // b2: SH(9係数)
+    Microsoft::WRL::ComPtr<ID3D11Buffer>cb_sh_;        // b2: SH(9係数)
+    Microsoft::WRL::ComPtr<ID3D11Buffer>cb_sh_cs_;
 
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView>cube_rtv_all_;//全スライス一括
     Microsoft::WRL::ComPtr<ID3D11GeometryShader>latlong_to_cube_gs_;

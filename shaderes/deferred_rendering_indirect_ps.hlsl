@@ -1,0 +1,67 @@
+#include"scene_constant_buffer.hlsli"
+#include"gbuffer.hlsli"
+#include"fullscreen_quad.hlsli"
+#include"shading_functions.hlsli"
+
+Texture2D<float4> gbuffer_base_color : register(t0);
+Texture2D<float4> gbuffer_emissive_color : register(t1);
+Texture2D<float4> gbuffer_normal : register(t2);
+Texture2D<float4> gbuffer_parameter : register(t3);
+Texture2D<float> gbuffer_depth : register(t4);
+Texture2D<float4> gbuffer_velocity : register(t5);
+
+#define POINT_WRAP 0
+#define POINT_CLAMP 1
+#define LINEAR_WRAP 2
+#define LINEAR_CLAMP 3
+#define ANISOTROPIC 4
+#define LINEAR_MIRROR 5
+SamplerState sampler_states[6] : register(s0);
+
+//  IBL用テクスチャ
+TextureCube specular_pmrem : register(t34);
+Texture2D lut_ggx : register(t35);
+
+float4 main(VS_OUT pin) : SV_TARGET
+{
+    //  GBufferテクスチャから情報をデコードする
+    PSGBufferTextures gbuffer_textures;
+    gbuffer_textures.base_color = gbuffer_base_color;
+    gbuffer_textures.emissive_color = gbuffer_emissive_color;
+    gbuffer_textures.normal = gbuffer_normal;
+    gbuffer_textures.parameter = gbuffer_parameter;
+    gbuffer_textures.depth = gbuffer_depth;
+    gbuffer_textures.velocity = gbuffer_velocity;
+    gbuffer_textures.state = sampler_states[POINT_WRAP];
+    GBufferData data;
+    data = DecodeGBuffer(gbuffer_textures, pin.texcoord, inverse_view_projection_transform, z_buffer_parameteres);
+
+    float3 total_diffuse = (float3) 0, total_specular = (float3) 0;
+    if (data.shading_model != shading_model_unlit)
+    {
+        float3 albedo = data.base_color;
+        float3 emissive_color = data.emissive_color;
+        float3 N = normalize(data.w_normal);
+        float3 V = normalize(data.w_position.xyz - camera_position.xyz);
+
+	    //	入射光のうち拡散反射になる割合
+        float3 diffuse_reflectance = lerp(albedo.rgb, 0.0f, data.metalness);
+
+	    //	垂直反射時のフレネル反射率(非金属でも最低4%は鏡面反射する)
+        float3 F0 = lerp(0.04f, albedo.rgb, data.metalness);
+
+	    //	IBL処理
+        total_diffuse += DiffuseIBL_SH(N, V, data.roughness, diffuse_reflectance, F0);
+        total_specular += SpecularIBL(N, V, data.roughness, F0, lut_ggx, specular_pmrem, sampler_states[LINEAR_WRAP]);
+
+    	//	自己遮蔽
+        total_diffuse = lerp(total_diffuse, total_diffuse * data.occlusion_factor, data.occlusion_strength);
+        total_specular = lerp(total_specular, total_specular * data.occlusion_factor, data.occlusion_strength);
+    }
+
+    float3 color = total_diffuse + total_specular;
+    float alpha = 1;
+    if (color.r == 0 && color.g == 0 && color.b == 0)
+        alpha = 0;
+    return float4(total_diffuse + total_specular, alpha);
+}

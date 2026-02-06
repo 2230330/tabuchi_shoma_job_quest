@@ -11,6 +11,7 @@
 #include"../../headers/graphics.h"
 #include "../../headers/resource_manager.h"
 #include"../../headers/misc.h"
+#include"../../headers/constant_buffer_slot.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 
@@ -87,10 +88,12 @@ void IBLManager::Initialize(ID3D11Device* dev)
     }
 
     // --- LatLong→Cube 変換 CS（ロード） ---
-    {
-        cs_latlong_to_cube_ = 
-            ResourceManager::Instance().LoadComputeShader(dev_.Get(), L".\\resources\\shader\\latlong_to_cubemap_cs.cso");
-    }
+    // //背景情報をこちら側で生成することにしたので、
+    // //平面情報をキューブマップにすることは無くなりました。
+    //{
+    //    cs_latlong_to_cube_ = 
+    //        ResourceManager::Instance().LoadComputeShader(dev_.Get(), L".\\resources\\shader\\latlong_to_cubemap_cs.cso");
+    //}
 
     // --- Prefilter 用 VS/PS と b0 ---
     {
@@ -103,15 +106,16 @@ void IBLManager::Initialize(ID3D11Device* dev)
 
         //geometry shader
         // GeometryShader(.cso) を読み込み
-        Microsoft::WRL::ComPtr<ID3DBlob> gsBlob;
-        if (SUCCEEDED(D3DReadFileToBlob(L".\\resources\\shader\\ibl_screen_gs.cso", gsBlob.GetAddressOf())))
-        {
-            dev_->CreateGeometryShader(gsBlob->GetBufferPointer(), gsBlob->GetBufferSize(), nullptr, latlong_to_cube_gs_.GetAddressOf());
-        }
+        //Microsoft::WRL::ComPtr<ID3DBlob> gsBlob;
+        //if (SUCCEEDED(D3DReadFileToBlob(L".\\resources\\shader\\ibl_screen_gs.cso", gsBlob.GetAddressOf())))
+        //{
+        //    dev_->CreateGeometryShader(gsBlob->GetBufferPointer(), gsBlob->GetBufferSize(), nullptr, latlong_to_cube_gs_.GetAddressOf());
+        //}
 
-        // LatLong->Cubemap用PS
-        latlong_to_cube_ps_ = 
-            ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\latlong_to_cubemap_ps.cso");
+        // LatLong->Cubemap用PS//使わなくなりました。
+        //latlong_to_cube_ps_ = 
+        //    ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\latlong_to_cubemap_ps.cso");
+        //背景生成用
         sky_cube_ps_ = 
             ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\ibl_sky_atmosphere_ps.cso");
         cloud_cube_ps_ =
@@ -320,6 +324,9 @@ void IBLManager::Initialize(ID3D11Device* dev)
     dirty_ = true;
     prefilter_next_face_ = 0;
     prefilter_next_mip_ = 0;
+
+    //SH9生成
+    CreateSHResources(dev_.Get());
 }
 
 // 背景更新直後に呼ぶ：背景スクリーン（back_fb）の SRV を受け取る
@@ -332,7 +339,7 @@ void IBLManager::UpdateEnvironmentCapture(const FrameBuffer& back_fb)
     //want_save_dds_ = true;
 }
 
-// 背景ソース（LatLong/Equirect 2D）→ SkyCube（未フィルタ）へ変換（mip0）
+//背景ソースの生成
 void IBLManager::BuildSkyCubeFromEnvSource()
 {
 
@@ -442,13 +449,14 @@ void IBLManager::BuildSkyCubeFromEnvSource()
         ctx_->PSSetShaderResources(100, 1, sky_cube_srv_.GetAddressOf());
     }
 
-    //最後
-    dirty_ = true;
+
 
     sky_cube_next_face_++;
     if (sky_cube_next_face_ >= kCubeFaces)
     {
         sky_cube_next_face_ = 0;
+        //最後
+        dirty_ = true;
         want_save_dds_ = true;
 
     }
@@ -456,11 +464,94 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
 void IBLManager::UpdateDiffuseSH()
 {
-    // まずは簡易：L0 のみ（後で SH 積分に置換可）
-    SH9Constants sh{};
-    for (int i = 0; i < 9; ++i) sh.c[i] = DirectX::XMFLOAT3(0, 0, 0);
-    sh.c[0] = DirectX::XMFLOAT3(0.03f, 0.03f, 0.03f);
-    ctx_->UpdateSubresource(cb_sh_.Get(), 0, nullptr, &sh, 0, 0);
+    if (!cs_sh9_ || !sky_cube_srv_ || !sh_face_uav_ || !sh_face_buffer_ || !sh_face_readback_)
+        return;
+
+    // 出力UAVクリア
+    // StructuredBuffer UAVは ClearUnorderedAccessViewFloat
+    //float clear[4] = { 0,0,0,0 };
+    //ctx_->ClearUnorderedAccessViewFloat(sh_face_uav_.Get(), clear);
+    //ComputeShader側でゼロクリア
+
+    // bind
+    ID3D11ShaderResourceView* srv[] = {
+        (cloud_flag_) ? cloud_cube_srv_.Get() : sky_cube_srv_.Get()
+    };
+    ctx_->CSSetShader(cs_sh9_.Get(), nullptr, 0);
+    ctx_->CSSetShaderResources(0, 1, srv);
+
+    ID3D11UnorderedAccessView* uav = sh_face_uav_.Get();
+    UINT initialCounts = 0;
+    ctx_->CSSetUnorderedAccessViews(0, 1, &uav, &initialCounts);
+
+    // sampler
+    ID3D11SamplerState* samp = samp_linear_clamp_.Get();
+    ctx_->CSSetSamplers(0, 1, &samp);
+
+    const UINT sampleDim = 16; // 16 or 32 推奨（軽さ優先なら16）
+    const UINT groupX = 16;
+    const UINT groupY = 16;
+
+    for (UINT face = 0; face < 6; ++face)
+    {
+        // update CS cbuffer
+        D3D11_MAPPED_SUBRESOURCE ms{};
+        ctx_->Map(cb_sh_cs_.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &ms);
+        uint32_t* p = reinterpret_cast<uint32_t*>(ms.pData);
+        p[0] = sampleDim;
+        p[1] = face;
+        p[2] = 0;
+        p[3] = 0;
+        ctx_->Unmap(cb_sh_cs_.Get(), 0);
+
+        ID3D11Buffer* cb = cb_sh_cs_.Get();
+        ctx_->CSSetConstantBuffers(0, 1, &cb);
+
+        // Dispatch: 1 group = 16x16 threads
+        // sampleDimは16固定にしておくと無駄がない
+        ctx_->Dispatch(1, 1, 1);
+    }
+
+    // unbind to avoid hazards
+    ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+    ID3D11UnorderedAccessView* nullUAV[1] = { nullptr };
+    ctx_->CSSetShaderResources(0, 1, nullSRV);
+    ctx_->CSSetUnorderedAccessViews(0, 1, nullUAV, nullptr);
+    ctx_->CSSetShader(nullptr, nullptr, 0);
+
+    // readback (small)
+    ctx_->CopyResource(sh_face_readback_.Get(), sh_face_buffer_.Get());
+
+    D3D11_MAPPED_SUBRESOURCE mapped{};
+    if (SUCCEEDED(ctx_->Map(sh_face_readback_.Get(), 0, D3D11_MAP_READ, 0, &mapped)))
+    {
+        const DirectX::XMFLOAT4* faceData = reinterpret_cast<const DirectX::XMFLOAT4*>(mapped.pData);
+
+        DirectX::XMFLOAT3 sh[9];
+        for (int i = 0; i < 9; ++i) sh[i] = DirectX::XMFLOAT3(0, 0, 0);
+
+        // sum all faces
+        for (int face = 0; face < 6; ++face)
+        {
+            for (int i = 0; i < 9; ++i)
+            {
+                const DirectX::XMFLOAT4 v = faceData[face * 9 + i];
+                sh[i].x += v.x;
+                sh[i].y += v.y;
+                sh[i].z += v.z;
+            }
+        }
+
+        ctx_->Unmap(sh_face_readback_.Get(), 0);
+
+        // 正規化係数（cubemap積分なので 4π でスケールされる想定）
+        // ここは「見た目を合わせる」ための調整ポイント。
+        // 一般的にはこのままでも動きます。
+        SH9Constants out{};
+        for (int i = 0; i < 9; ++i) out.c[i] = sh[i];
+
+        ctx_->UpdateSubresource(cb_sh_.Get(), 0, nullptr, &out, 0, 0);
+    }
 }
 
 // 1フレームに 1 face×1 mip を焼く（軽量分割）
@@ -495,7 +586,9 @@ void IBLManager::UpdateSpecularPrefilter()
     ctx_->UpdateSubresource(cb_prefilter_.Get(), 0, nullptr, &cb, 0, 0);
 
     // 入力は SkyCube（TextureCube）
-    ID3D11ShaderResourceView* srvs[1] = { sky_cube_srv_.Get() };
+    ID3D11ShaderResourceView* srvs[1] = { 
+        (cloud_flag_)?cloud_cube_srv_.Get():sky_cube_srv_.Get() 
+    };
     ID3D11SamplerState* samps[1] = { samp_linear_clamp_.Get() };
     ctx_->PSSetShaderResources(0, 1, srvs);
     ctx_->PSSetSamplers(0, 1, samps);
@@ -527,15 +620,25 @@ void IBLManager::UpdateSpecularPrefilter()
             //DDS保存
             if (want_save_dds_)
             {
-                //SaveTextureToDDS(
-                //    prefilter_tex_.Get(),
-                //    L".\\resources\\sprite\\cube_maps\\prefiltered_env.dds", false
-                //);
-
                 SaveTextureToDDS(
-                    cloud_cube_tex_.Get(),
-                    L".\\resources\\sprite\\cube_maps\\sky_cube.dds", false
+                    prefilter_tex_.Get(),
+                    L".\\resources\\sprite\\cube_maps\\prefiltered_env.dds", false
                 );
+
+                //if(cloud_flag_)
+                //{
+                //    SaveTextureToDDS(
+                //        cloud_cube_tex_.Get(),
+                //        L".\\resources\\sprite\\cube_maps\\sky_cube.dds", false
+                //    );
+                //}
+                //else if (sky_flag_)
+                //{
+                //    SaveTextureToDDS(
+                //        sky_cube_tex_.Get(),
+                //        L".\\resources\\sprite\\cube_maps\\sky_cube.dds", false
+                //    );
+                //}
 
                 want_save_dds_ = false;
             }
@@ -548,10 +651,10 @@ void IBLManager::BindForObjectPass(ID3D11DeviceContext* ctx)
     ID3D11ShaderResourceView* srvs[3] = {
         nullptr,
         srv_pref_env_.Get(),
-        srv_brdf_lut_.Get()
+        srv_brdf_lut_.Get(),
     };
-    ctx->PSSetShaderResources(0, 3, srvs);
-    ctx->PSSetConstantBuffers(2, 1, cb_sh_.GetAddressOf());
+    ctx->PSSetShaderResources(33, 3, srvs);
+    ctx->PSSetConstantBuffers(static_cast<uint32_t>(ConstantBufferSlot::kSH9), 1, cb_sh_.GetAddressOf());
 
     ID3D11SamplerState* s[1] = { samp_linear_clamp_.Get() };
     ctx->PSSetSamplers(0, 1, s);
@@ -594,4 +697,62 @@ void IBLManager::SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,
         return;
     }
 
+}
+
+//コンピュートシェーダーでSH9を計算することにした
+void IBLManager::CreateSHResources(ID3D11Device* device)
+{
+    // 6 faces * 9 coeffs
+    const UINT elemCount = 6 * 9;
+    const UINT stride = sizeof(DirectX::XMFLOAT4);
+    const UINT byteSize = elemCount * stride;
+
+    HRESULT hr{ S_OK };
+
+    D3D11_BUFFER_DESC bd{};
+    bd.ByteWidth = elemCount * sizeof(DirectX::XMFLOAT4);
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+    bd.CPUAccessFlags = 0;
+    bd.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    bd.StructureByteStride = sizeof(DirectX::XMFLOAT4);
+
+    hr=device->CreateBuffer(&bd, nullptr, sh_face_buffer_.ReleaseAndGetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
+    uavd.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    uavd.Buffer.FirstElement = 0;
+    uavd.Buffer.NumElements = elemCount;
+    uavd.Format = DXGI_FORMAT_UNKNOWN;
+    hr=device->CreateUnorderedAccessView(sh_face_buffer_.Get(), &uavd, sh_face_uav_.ReleaseAndGetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    // readback staging
+    D3D11_BUFFER_DESC sbd = bd;
+    sbd.Usage = D3D11_USAGE_STAGING;
+    sbd.BindFlags = 0;
+    sbd.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    sbd.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    hr=device->CreateBuffer(&sbd, nullptr, sh_face_readback_.ReleaseAndGetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    // CS用CB (SampleDim, FaceIndex)
+    D3D11_BUFFER_DESC cbd{};
+    cbd.ByteWidth = 16;
+    cbd.Usage = D3D11_USAGE_DYNAMIC;
+    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    hr=device->CreateBuffer(&cbd, nullptr, cb_sh_cs_.ReleaseAndGetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    // PS用SH定数CB
+    D3D11_BUFFER_DESC cbd2{};
+    cbd2.ByteWidth = sizeof(SH9Constants);
+    cbd2.Usage = D3D11_USAGE_DEFAULT;
+    cbd2.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    hr=device->CreateBuffer(&cbd2, nullptr, cb_sh_.ReleaseAndGetAddressOf());
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    cs_sh9_ = ResourceManager::Instance().LoadComputeShader(device, L".\\resources\\shader\\ibl_sh9_cs.cso");
 }

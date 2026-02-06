@@ -66,7 +66,7 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 		{ "JOINTS", 0, DXGI_FORMAT_R16G16B16A16_UINT, 4, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "WEIGHTS", 0,DXGI_FORMAT_R32G32B32A32_FLOAT, 5, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
-	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_vs.cso", vertex_shader_.ReleaseAndGetAddressOf(), 
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_vs.cso", vertex_shader_.ReleaseAndGetAddressOf(), 
 		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 
 	//インスタンシング描画を埋め込みたい
@@ -87,26 +87,29 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 		{ "PREVIOUS_WORLD_MATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "PREVIOUS_WORLD_MATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 	};	
-	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
 		instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
+	//shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
+	//	instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
 
-	shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
+	shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_gbuffer_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
+	//shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
 
 	D3D11_BUFFER_DESC buffer_desc{};
-	buffer_desc.ByteWidth = sizeof(PrimitiveConstants);
+	buffer_desc.ByteWidth = (sizeof(PrimitiveConstants) + 15) / 16 * 16;
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	HRESULT hr;
 	hr = device->CreateBuffer(&buffer_desc, nullptr, primitive_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-	buffer_desc.ByteWidth = sizeof(PrimitiveJointConstants);
+	buffer_desc.ByteWidth = (sizeof(PrimitiveJointConstants) + 15) / 16 * 16;
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	hr = device->CreateBuffer(&buffer_desc, NULL, primitive_joint_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-    buffer_desc.ByteWidth = sizeof(AdjastParamConstants);
+	buffer_desc.ByteWidth = (sizeof(AdjastParamConstants) + 15) / 16 * 16;
     buffer_desc.Usage = D3D11_USAGE_DEFAULT;
     buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     hr = device->CreateBuffer(&buffer_desc, NULL, adjast_param_cbuffer_.ReleaseAndGetAddressOf());
@@ -178,7 +181,7 @@ void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 		XMMATRIX S{ XMMatrixScaling(node.scale.x, node.scale.y, node.scale.z) };
 		XMMATRIX R{ XMMatrixRotationQuaternion(XMVectorSet(node.rotation.x, node.rotation.y, node.rotation.z, node.rotation.w)) };
 		XMMATRIX T{ XMMatrixTranslation(node.translation.x, node.translation.y, node.translation.z) };
-		DirectX::XMStoreFloat4x4(&node.global_transform, S * R * T * XMLoadFloat4x4(&parent_global_transforms.top()));
+		XMStoreFloat4x4(&node.global_transform, S * R * T * XMLoadFloat4x4(&parent_global_transforms.top()));
 		for (int child_index : node.children)
 		{
 			parent_global_transforms.push(node.global_transform);
@@ -186,7 +189,7 @@ void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 			parent_global_transforms.pop();
 		}
 	} };
-	for (std::vector<int>::value_type node_index : scenes.at(default_scene_).nodes)
+	for (std::vector<int>::value_type node_index : scenes.at(0).nodes)
 	{
 		parent_global_transforms.push({ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 });
 		traverse(node_index);
@@ -472,12 +475,12 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 				};
 				immediate_context->IASetVertexBuffers(0, _countof(vertex_buffers), vertex_buffers, strides, offsets);
 
-
 				PrimitiveConstants primitive_data{};
 				primitive_data.material = primitive.material;
 				primitive_data.has_tangent = primitive.has("TANGENT");
 				primitive_data.skin = node.skin;
 				DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
+				DirectX::XMStoreFloat4x4(&primitive_data.previous_world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
 				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
 				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
@@ -622,7 +625,7 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 				primitive_data.has_tangent = primitive.has("TANGENT");
 				primitive_data.skin = node.skin;
 				primitive_data.world = node.global_transform;
-				//DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
+				primitive_data.previous_world = node.global_transform;
 				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
 				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());

@@ -5,7 +5,7 @@
 #include<wrl.h>
 
 //サンプラーステート
-enum class SamplerState
+enum  SamplerState:int
 {
     point_wrap,
     point_clamp,

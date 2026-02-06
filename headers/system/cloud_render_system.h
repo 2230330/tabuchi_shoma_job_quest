@@ -75,18 +75,9 @@ private:
     //’áü”gƒmƒCƒY
     const int low_freq_perlin_worley_dimensions{ 256 };
     const int low_freq_perlin_worley_numthreads{ 8 };
-    //’†ü”g
-    const int mid_freq_perlin_worley_dimensions{ 128 };
-    const int mid_freq_perlin_worley_numthreads{ 8 };
     //‚ü”gƒmƒCƒY
     const int high_freq_worley_dimensions{ 64 };
     const int high_freq_worley_numthreads{ 8 };
-    //curlƒmƒCƒY
-    const int curl_dimensions{ 128 };
-    const int curl_numthreads{ 8 };
-    //‰_‚Ì‚“x•ª•zƒeƒNƒXƒ`ƒƒ
-    const int layout_cloud_height_profile_dimensions{ 64 };
-    const int layout_cloud_height_profile_numthreads{ 8 };
 
 
     struct CurlParams

@@ -1,13 +1,14 @@
 #pragma once
 #include<stdint.h>
 
-enum class ConstantBufferSlot :uint8_t {
+enum  ConstantBufferSlot :uint8_t {
     kPerObject = 0,
     kPerFrame,
     kPerMaterial,
     kForwardLight,
     kDeferredLight,
     kPostEffect,
+    kSH9,
 
     kCustomStart = 10,
     kSkyRayleigh = kCustomStart + 1,

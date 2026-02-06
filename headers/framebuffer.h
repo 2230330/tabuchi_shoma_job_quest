@@ -5,6 +5,8 @@
 #include<cstdint>
 #include<wrl.h>
 #include<DirectXMath.h>
+#include<memory>
+#include"render_state.h"
 
 //オフスクリーンレンダリング用クラス
 class FrameBuffer
@@ -58,11 +60,16 @@ private:
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view_;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depth_stencil_view_;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_views_[2];
+    std::unique_ptr<RenderState>render_state_=nullptr;
     D3D11_VIEWPORT viewport_;
     UINT viewport_count_{ D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE };
     D3D11_VIEWPORT cached_viewports_[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
     //cached_render_target_viewは配列に変更
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> cached_render_target_views_[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> cached_depth_stencil_view_;
+
+    //アクティブ前に入っていたRTVの数
+    UINT cached_num_rtvs_ = 0;
+
 };
 #endif // !PART2_FRAMEBUFFER_H

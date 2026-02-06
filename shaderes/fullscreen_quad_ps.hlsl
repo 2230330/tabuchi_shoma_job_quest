@@ -20,7 +20,8 @@ float4 main(VS_OUT pin) : SV_TARGET
     float4 obj = object_texture.Sample(sampler_states[LINEAR_CLAMP], uv);
 
     // α合成（オブジェクトが前）
-    float3 color = lerp(back.rgb, obj.rgb, obj.a);
+    //float3 color = lerp(back.rgb, obj.rgb, obj.a);
+    float3 color = obj.rgb + back.rgb * (1.0f - obj.a);
 
     return float4(color, 1.0f);
 }

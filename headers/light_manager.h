@@ -41,13 +41,16 @@ public:
     void SetDirectionLight(DirectionLight& light) { this->direction_light_ = light; }
 
     //ディレクションライト取得
-    DirectionLight GetDirectionLight()const { return this->direction_light_; }
+    const DirectionLight& GetDirectionLight()const { return this->direction_light_; }
 
     //ライトコンスタントを楽に送り出せるように
     void SetForwardLightConstant(int start_slot);
 
     //デファード用ライトコンスタントをセット
-    void SetDeferredLightConstant(int start_slot);
+    void BindDeferredLightConstant(int start_slot,UINT index);
+
+    size_t GetDeferredLightsSize() const{ return deferred_lights_.size(); }
+
 
     //ライトのIMGUI管理
     void DrawImgui();
@@ -132,7 +135,7 @@ private:
     };
     struct DeferredLightContstants
     {
-        IntegrateLight lights;
+        IntegrateLight lights{};
 
         //シャドウマップ関係
         int use_shadow{ 0 };//　影を擁しているかどうか
@@ -141,6 +144,7 @@ private:
         UINT shadow_dummy{0};
         DirectX::XMFLOAT4X4 light_view_projection{}; //ライトの位置から見た射影行列
     };
+    std::vector<DeferredLightContstants>deferred_lights_;
 };
 
 #endif //!PART2_LIGHT_MANAGER_H

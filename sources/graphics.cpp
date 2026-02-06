@@ -128,6 +128,13 @@ void Graphics::Initialize(HWND hwnd)
 
 }
 
+void Graphics::Finalize()
+{ 
+    this->ClearShaderResourceViews(0, 128);
+    immediate_context_->ClearState();
+    immediate_context_->Flush();
+}
+
 //‰æ–Ê‚ÌƒNƒŠƒA
 void Graphics::ViewClear(float r, float g, float b, float a)
 {

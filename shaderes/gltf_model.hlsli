@@ -33,27 +33,21 @@ struct VS_OUT
     float4 w_normal : NORMAL;
     float4 w_tangent : TANGENT;
     float2 texcoord : TEXCOORD;
+    float4 current_clip_position : CLIP_POSITION0;
+    float4 previous_clip_position : CLIP_POSITION1;
 };
 #include"scene_constant_buffer.hlsli"
 
 cbuffer PRIMITIVE_CONSTANT_BUFFER : register(b0)
 {
     row_major float4x4 world;
+    row_major float4x4 previous_world;
     int material;
-    bool has_tangent;
+    int has_tangent;
     int skin;
     int pad;
 };
 
-//cbuffer SCENE_CONSTANT_BUFFER : register(b1)
-//{
-//    row_major float4x4 view_projection;
-//    float4 light_direction;
-//    float4 camera_position;
-//    float4 light_color;
-//    float light_intensity;
-//    float3 dummy;
-//};
 
 static const uint PRIMITIVE_MAX_JOINTS = 512;
 cbuffer PRIMITIVE_JOINT_CONSTANTS : register(b2)

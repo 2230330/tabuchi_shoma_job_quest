@@ -260,6 +260,39 @@ float4 SampleDiffuseIEM(float3 v, TextureCube diffuse_iem_cube_map, SamplerState
 {
     return diffuse_iem_cube_map.Sample(state, v);
 }
+ 
+//IBLManager::cb_sh_
+cbuffer SHBuffer : register(b6)
+{
+    float3 shC[9];
+}
+float3 EvalSH9Irradiance(float3 n)
+{
+    //SH‹K’è
+    float x = n.x, y = n.y, z = n.z;
+    
+    float shBasis[9];
+    shBasis[0] = 0.282095f;
+    shBasis[1] = 0.488603f * y;
+    shBasis[2] = 0.488603f * z;
+    shBasis[3] = 0.488603f * x;
+    shBasis[4] = 1.092548f * x * y;
+    shBasis[5] = 1.092548f * y * z;
+    shBasis[6] = 0.315392f * (3 * z * z - 1);
+    shBasis[7] = 1.092548f * x * z;
+    shBasis[8] = 0.546274f * (x * x - y * y);
+    
+    float3 irradiance = 0;
+    [unroll]
+    for (int i = 0; i < 9;i++)
+    {
+        irradiance + shC[i] * shBasis[i];
+    }
+
+    return max(irradiance, 0);
+}
+
+
 //----------------------------------------
 //ƒLƒ…[ƒuƒ}ƒbƒv‚©‚ç•úŽË‹P“x‚ðŽæ“¾
 //----------------------------------------
@@ -308,6 +341,19 @@ TextureCube diffuse_iem_cube_map, SamplerState state)
     float3 irradiance = SampleDiffuseIEM(normal, diffuse_iem_cube_map, state).rgb;
     return diffuse_reflectance * irradiance * kD;
 }
+//SH9ŒW”‚Å‚ÌŠgŽU”½ŽËIBL
+float3 DiffuseIBL_SH(float3 normal,float3 eye_vector,float roughness,float3 diffuse_reflectance,float3 f0)
+{
+    float3 N = normal;
+    float3 V = -eye_vector;
+    
+    float NdotV = max(0.0001f, dot(N, V));
+    float3 kD = 1.0f - CalcFresnelRoughness(f0, NdotV, roughness);
+    
+    float3 irradiance = EvalSH9Irradiance(N);
+    return diffuse_reflectance * irradiance * kD;
+}
+
 //-----------------------------------------
 //‹¾–Ê”½ŽËIBL
 //-----------------------------------------

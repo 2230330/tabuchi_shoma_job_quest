@@ -5,11 +5,14 @@
 #include"i_render_system.h"
 #include"../../headers/system/sky_render_system.h"
 #include"../../headers/system/cloud_render_system.h"
+#include"../../headers/system/deferred_render_system.h"
 #include"ibl_manager.h"
 #include"../component/component_manager.h"
 #include"../world/world.h"
 #include"../fullscreen_quad.h"
 #include"../framebuffer.h"
+#include"../deferred_g_buffer.h"
+#include"../light_manager.h"
 //コンポーネントを回すためのクラス
 class RenderSystemManager {
 public:
@@ -22,6 +25,7 @@ public:
     //その内マルチタスクにしたいなぁ
     void RenderAll();
 
+    void SetLightManager(LightManager* light_manager) { this->light_manager_ = light_manager; }
 private:
     //レンダリングシステム群
     void RunPass(RenderPass pass);
@@ -30,6 +34,7 @@ private:
     //背景用描画システムは別枠で管理する
     std::unique_ptr<SkyRenderSystem>sky_render_system_;
     std::unique_ptr<CloudRenderSystem>cloud_render_system_;
+    std::unique_ptr<DeferredRenderSystem>deferred_render_system_;
     ComponentManager& comp_mng_;
 
     //フルスクリーンクワッド(背景用)
@@ -37,9 +42,13 @@ private:
     std::unique_ptr<FrameBuffer> back_framebuffer_;
     std::unique_ptr<FrameBuffer> object_framebuffer_;
     std::unique_ptr<FrameBuffer> sky_framebuffer_;
+    std::unique_ptr<DeferredGBuffer> deferred_framebuffer_;
 
     //IBLマネージャ
     std::unique_ptr<IBLManager> ibl_manager_ ;
+
+    //ライト情報 
+    LightManager* light_manager_ = nullptr;
     
     //スカイキューブの分割
     int ibl_steps_per_frame_ = 1;

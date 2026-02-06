@@ -56,7 +56,7 @@ void ComponentEditor::DrawImgui()
                 ComponentSkyAtmosphere sky;
                 comp_mng_.Add(entity, sky);
 
-                //has_sky_ = entity;
+                has_sky_ = entity;
             }
             else
             {

@@ -24,6 +24,13 @@ LightManager::LightManager()
 			forward_light_constant_buffer_.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
+	//ディファードレンダリング用定数バッファ
+	{
+		buffer_desc.ByteWidth = sizeof(DeferredLightContstants);
+		hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr,
+			deferred_light_constant_buffer_.GetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+	}
 
 	//フォワードレンダリング用
 	for (int i = 0; i < forward_light_max; i++)
@@ -34,6 +41,29 @@ LightManager::LightManager()
 		SpotLight spot_light;
 		spot_lights_.emplace_back(spot_light);
 	}
+
+	//環境光を先に入力しておきます。
+	IntegrateLight ambient =
+	{
+		ambient_color_,
+		{0,0,0,0},
+		{0,0,0,0},
+		{0,0,0,static_cast<float>(light_kind_ambient_light)}
+	};
+	DeferredLightContstants ambient_data;
+	ambient_data.lights = ambient;
+	deferred_lights_.emplace_back(ambient_data);
+
+	//平行光源を先に入力しておきます。
+	IntegrateLight directional = {
+		direction_light_.direction,
+		direction_light_.color,
+		{0,0,0,0},
+		{0,0,0,static_cast<float>(light_kind_derectional_light)}
+	};
+	DeferredLightContstants directional_data;
+	directional_data.lights = directional;
+	deferred_lights_.emplace_back(directional_data);
 }
 
 
@@ -69,38 +99,15 @@ void LightManager::SetForwardLightConstant(int start_slot)
 	Graphics::Instance().SetConstantBuffer(start_slot, 1, forward_light_constant_buffer_.GetAddressOf());
 }
 
-void LightManager::SetDeferredLightConstant(int start_slot)
+void LightManager::BindDeferredLightConstant(int start_slot, UINT index)
 {
-	DeferredLightContstants constant;
+	auto* ctx = Graphics::Instance().GetDeviceContext();
 
-	//環境光
-	{
-		constant.lights.work_data[0] = ambient_color_;
-        constant.lights.work_data[3].w = light_kind_ambient_light;
-		Graphics::Instance().GetDeviceContext()
-			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
-        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
-	}
-
-    //ディレクションライト
-	{
-		constant.lights.work_data[0] = direction_light_.direction;
-		constant.lights.work_data[1] = direction_light_.color;
-		constant.lights.work_data[3].w = light_kind_derectional_light;
-
-        constant.use_shadow = 1;
-		constant.shadow_attenuation = 0.5f;
-        constant.shadow_bias = 0.001f;
-
-        constant.light_view_projection = light_view_projection_;
-
-        Graphics::Instance().GetDeviceContext()
-			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
-        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
-
-	}
+	ctx->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &deferred_lights_[index], 0, 0);
+	Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
 
 }
+
 
 void LightManager::DrawImgui()
 {

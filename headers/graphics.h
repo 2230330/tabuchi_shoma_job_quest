@@ -38,6 +38,8 @@ public:
     //‰Šú‰»
     void Initialize(HWND hwnd);
 
+    void Finalize();
+
     //‰æ–Ê‚ÌƒNƒŠƒA
     void ViewClear(float r, float g, float b, float a);
 

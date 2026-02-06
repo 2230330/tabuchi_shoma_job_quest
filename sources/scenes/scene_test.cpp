@@ -29,6 +29,7 @@ bool SceneTest::InitializeCore()
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
         light_manager_ = std::make_unique<LightManager>();
+        render_sys_mng->SetLightManager(light_manager_.get());
 
         uint32_t w = static_cast<uint32_t>(Graphics::Instance().GetScreenWidth());
         uint32_t h = static_cast<uint32_t>(Graphics::Instance().GetScreenHeight());

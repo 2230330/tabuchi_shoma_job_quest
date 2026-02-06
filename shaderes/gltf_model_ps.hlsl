@@ -208,7 +208,7 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         // ※ cubemapにmipがある前提（prefilter済みが理想）
         float mip = roughness * 8.0f; // 8.0f は mip段数に合わせて調整
 
-        float3 env = cubemap_texture.SampleLevel(sampler_states[LINEAR_CLAMP], R, mip).rgb;
+        float3 env = cubemap_texture.SampleLevel(sampler_states[LINEAR_WRAP], R, mip).rgb;
 
         // Fresnel（角度依存で反射が強くなる）
         float NdotV = saturate(dot(N, V));

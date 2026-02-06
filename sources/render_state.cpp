@@ -11,9 +11,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// ポイントサンプリング＆テクスチャ繰り返しあり
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -30,9 +30,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// ポイントサンプリング＆テクスチャ繰り返しなし
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -49,9 +49,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// リニアサンプリング＆テクスチャ繰り返しあり
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -68,9 +68,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// リニアサンプリング＆テクスチャ繰り返しなし
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -89,8 +89,8 @@ RenderState::RenderState(ID3D11Device* device)
 			desc.MipLODBias = 0;
 			desc.MaxAnisotropy = 16;
 			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
-			desc.MaxLOD = -D3D11_FLOAT32_MAX;
+			desc.MinLOD = 0;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;

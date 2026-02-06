@@ -30,6 +30,7 @@
 //   row_major float4x4 previous_view_projection_transform;// Offset:  480 Size:    64 [unused]
 //   float2 sun_uv;                     // Offset:  544 Size:     8 [unused]
 //   float sun_visible;                 // Offset:  552 Size:     4 [unused]
+//   float padding0;                    // Offset:  556 Size:     4 [unused]
 //
 // }
 //

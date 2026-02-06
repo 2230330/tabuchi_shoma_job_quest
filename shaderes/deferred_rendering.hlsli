@@ -7,7 +7,7 @@
 
 #include "gbuffer.hlsli"
 
-
+#include"shading_models.hlsli"
 
 static const int light_kind_directional = 0;
 static const int light_kind_point_light = 1;
@@ -87,7 +87,7 @@ spot_lights convert_spot_lights()
 {
     spot_lights data;
     data.position = light_data.work_data[0];
-    data.direction = normalize(light_data.work_data[1].xyz);
+    data.direction = normalize(light_data.work_data[1]);
     data.color = light_data.work_data[2];
     data.range = light_data.work_data[3].x;
     data.inner_corn = light_data.work_data[3].y;

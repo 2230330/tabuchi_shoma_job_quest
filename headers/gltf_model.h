@@ -190,6 +190,7 @@ private:
 	struct PrimitiveConstants
 	{
 		DirectX::XMFLOAT4X4 world;
+		DirectX::XMFLOAT4X4 previous_world;
 		int material{ -1 };
 		int has_tangent{ 0 };
 		int skin{ -1 };

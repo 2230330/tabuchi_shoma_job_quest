@@ -18,7 +18,9 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     cloud_render_system_ = std::make_unique<CloudRenderSystem>(comp_mng_, RenderPass_Background);
     AddSystem(std::make_unique<GltfRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<InstancingRenderSystem>(comp_mng_,RenderPass_Object));
-    AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Object));
+    AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Lighting));
+    deferred_render_system_ = std::make_unique<DeferredRenderSystem>( RenderPass_Lighting);
+
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
@@ -32,6 +34,11 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)//背景は小さく描画、アップサンプリングで合成
     );
     object_framebuffer_ = std::make_unique<FrameBuffer>(
+        Graphics::Instance().GetDevice(),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
+    );
+    deferred_framebuffer_ = std::make_unique<DeferredGBuffer>(
         Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
@@ -59,6 +66,7 @@ void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)
 void RenderSystemManager::RenderAll()
 {
     auto* ctx = Graphics::Instance().GetDeviceContext();
+    deferred_render_system_->SetLightManager(light_manager_);
 
     // === 背景（低頻度） ===
     bool sky_flag = sky_render_system_->GetSkyFlag();
@@ -93,14 +101,16 @@ void RenderSystemManager::RenderAll()
         }
         
         // 天体光描画
-        ID3D11ShaderResourceView* srvs[]={nullptr};
-        if(cloud_flag)
         {
-            srvs[0] = {
-                cloud_render_system_->GetCloudShadowSRV(),
-            };
+            ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
+            if (cloud_flag)
+            {
+                cloud_shadow_srv[0] = {
+                    cloud_render_system_->GetCloudShadowSRV(),
+                };
+            }
+            bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
         }
-        bit_block_transfer_->blit(ctx, srvs, 0, 1, celestial_light_ps_.Get());
 
         //雲オンリーのゴッドレイ(未完成)
         //if (cloud_flag)
@@ -126,26 +136,39 @@ void RenderSystemManager::RenderAll()
         ibl_manager_->BuildSkyCubeFromEnvSource();
 
         if (ibl_manager_->IsDirty()) {
-            // Diffuse SH（軽い）
-            ibl_manager_->UpdateDiffuseSH();
+
 
             // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
             for (int s = 0; s < ibl_steps_per_frame_; ++s) {
                 ibl_manager_->UpdateSpecularPrefilter();
             }
 
+            // Diffuse SH
+            ibl_manager_->UpdateDiffuseSH();
             Graphics::Instance().SetRenderTargets(); //IBL更新でコンテキストが汚れるのでリセット
         }
     }
 
     // === オブジェクト（毎フレーム） ===
-    object_framebuffer_->Clear(ctx);
-    object_framebuffer_->Activate(ctx);
+    deferred_framebuffer_->Clear(ctx);
+    deferred_framebuffer_->Activate(ctx);
+
 
     // IBL を PS にバインド（t1: PrefEnv, t2: BRDF LUT, b2: SH）
     ibl_manager_->BindForObjectPass(ctx);
 
     RunPass(RenderPass::RenderPass_Object);
+    deferred_framebuffer_->Deactivate(ctx);
+
+    for (int i = 0; i < DeferredGBuffer::Target::Count; i++)
+    {
+        deferred_render_system_->SetSRV(deferred_framebuffer_->GetSRV(i), i);
+    }
+
+    object_framebuffer_->Clear(ctx);
+    object_framebuffer_->Activate(ctx);
+    deferred_render_system_->Render();
+
     object_framebuffer_->Deactivate(ctx);
 
     // === 合成
@@ -156,6 +179,7 @@ void RenderSystemManager::RenderAll()
         back_framebuffer_->GetShaderResourceView(0).Get(),
         object_framebuffer_->GetShaderResourceView(0).Get(),
     };
+    Graphics::Instance().SetRenderTargets();
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
     Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));

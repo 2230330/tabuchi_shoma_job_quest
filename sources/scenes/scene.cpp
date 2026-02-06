@@ -18,7 +18,7 @@ Scene::Scene(const HWND hwnd)
 		buffer_desc.MiscFlags = 0;
 		buffer_desc.StructureByteStride = 0;
 		{
-			buffer_desc.ByteWidth = sizeof(scene_constants);
+			buffer_desc.ByteWidth = (sizeof(scene_constants)+15)/16*16;
 			hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr, scene_constant_buffer.GetAddressOf());
 			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
