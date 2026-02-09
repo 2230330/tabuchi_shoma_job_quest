@@ -32,7 +32,7 @@
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // sampler_states[0]                 sampler      NA          NA             s0      1 
-// sampler_states[2]                 sampler      NA          NA             s2      1 
+// sampler_states[3]                 sampler      NA          NA             s3      1 
 // gbuffer_base_color                texture  float4          2d             t0      1 
 // gbuffer_normal                    texture  float4          2d             t2      1 
 // gbuffer_parameter                 texture  float4          2d             t3      1 
@@ -62,7 +62,7 @@ ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[30], immediateIndexed
 dcl_sampler s0, mode_default
-dcl_sampler s2, mode_default
+dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t2
 dcl_resource_texture2d (float,float,float,float) t3
@@ -246,23 +246,23 @@ if_nz r6.w
   nop 
   nop 
 
-#line 334 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 335 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
   mov r6.xyz, r3.xyzx  // r6.x <- N.x; r6.y <- N.y; r6.z <- N.z
 
-#line 335
+#line 336
   mov r7.xyz, -r0.xyzx  // r7.x <- V.x; r7.y <- V.y; r7.z <- V.z
 
-#line 338
+#line 339
   dp3 r1.w, r6.xyzx, r7.xyzx
   max r1.w, r1.w, l(0.000100)  // r1.w <- NdotV
 
-#line 339
+#line 340
   nop 
   mov r5.xyz, r5.xyzx
   mov r1.w, r1.w
   mov r0.w, r0.w
 
-#line 319
+#line 320
   mov r0.w, -r0.w
   add r0.w, r0.w, l(1.000000)
   max r7.xyz, r5.xyzx, r0.wwww
@@ -280,21 +280,21 @@ if_nz r6.w
   mul r7.xyz, r0.wwww, r7.xyzx
   add r7.xyz, r5.xyzx, r7.xyzx  // r7.x <- <CalcFresnelRoughness return value>.x; r7.y <- <CalcFresnelRoughness return value>.y; r7.z <- <CalcFresnelRoughness return value>.z
 
-#line 339
+#line 340
   mov r7.xyz, -r7.xyzx
   add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)  // r7.x <- kD.x; r7.y <- kD.y; r7.z <- kD.z
 
-#line 341
+#line 342
   nop 
   mov r6.xyz, r6.xyzx
 
-#line 261
-  sample_indexable(texturecube)(float,float,float,float) r6.xyz, r6.xyzx, t33.xyzw, s2  // r6.x <- <SampleDiffuseIEM return value>.x; r6.y <- <SampleDiffuseIEM return value>.y; r6.z <- <SampleDiffuseIEM return value>.z
-
-#line 341
-  mov r6.xyz, r6.xyzx  // r6.x <- irradiance.x; r6.y <- irradiance.y; r6.z <- irradiance.z
+#line 262
+  sample_indexable(texturecube)(float,float,float,float) r6.xyz, r6.xyzx, t33.xyzw, s3  // r6.x <- <SampleDiffuseIEM return value>.x; r6.y <- <SampleDiffuseIEM return value>.y; r6.z <- <SampleDiffuseIEM return value>.z
 
 #line 342
+  mov r6.xyz, r6.xyzx  // r6.x <- irradiance.x; r6.y <- irradiance.y; r6.z <- irradiance.z
+
+#line 343
   mul r4.xyz, r4.xyzx, r6.xyzx
   mul r4.xyz, r7.xyzx, r4.xyzx  // r4.x <- <DiffuseIBL return value>.x; r4.y <- <DiffuseIBL return value>.y; r4.z <- <DiffuseIBL return value>.z
 
@@ -311,17 +311,17 @@ if_nz r6.w
   nop 
   nop 
 
-#line 370 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 371 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
   mov r3.xyz, r3.xyzx  // r3.x <- N.x; r3.y <- N.y; r3.z <- N.z
 
-#line 371
+#line 372
   mov r0.xyz, -r0.xyzx  // r0.x <- V.x; r0.y <- V.y; r0.z <- V.z
 
-#line 373
+#line 374
   dp3 r0.w, r3.xyzx, r0.xyzx
   max r8.y, r0.w, l(0.000100)  // r8.y <- NdotV
 
-#line 374
+#line 375
   mov r0.xyz, -r0.xyzx
   dp3 r0.w, r0.xyzx, r3.xyzx
   add r0.w, r0.w, r0.w
@@ -332,42 +332,42 @@ if_nz r6.w
   rsq r0.w, r0.w
   mul r0.xyz, r0.wwww, r0.xyzx  // r0.x <- R.x; r0.y <- R.y; r0.z <- R.z
 
-#line 375
+#line 376
   nop 
   mov r0.xyz, r0.xyzx
   mov r8.x, r8.x
 
-#line 307
+#line 308
   resinfo_indexable(texturecube)(float,float,float,float)_uint r0.w, l(0), t34.xyzw  // r0.w <- mip_maps
 
-#line 308
+#line 309
   mov r1.w, l(1)
   ineg r1.w, r1.w
   iadd r0.w, r0.w, r1.w
   utof r0.w, r0.w
   mul r0.w, r0.w, r8.x  // r0.w <- lod
 
-#line 309
-  sample_l_indexable(texturecube)(float,float,float,float) r0.xyz, r0.xyzx, t34.xyzw, s2, r0.w  // r0.x <- <SampleSpecularPMREM return value>.x; r0.y <- <SampleSpecularPMREM return value>.y; r0.z <- <SampleSpecularPMREM return value>.z
+#line 310
+  sample_l_indexable(texturecube)(float,float,float,float) r0.xyz, r0.xyzx, t34.xyzw, s3, r0.w  // r0.x <- <SampleSpecularPMREM return value>.x; r0.y <- <SampleSpecularPMREM return value>.y; r0.z <- <SampleSpecularPMREM return value>.z
 
-#line 375
+#line 376
   mov r0.xyz, r0.xyzx  // r0.x <- specular_light.x; r0.y <- specular_light.y; r0.z <- specular_light.z
 
-#line 377
+#line 378
   max r3.xy, r8.yxyy, l(0.000000, 0.000000, 0.000000, 0.000000)
   min r3.xy, r3.xyxx, l(1.000000, 1.000000, 0.000000, 0.000000)  // r3.x <- brdf_sample_point.x; r3.y <- brdf_sample_point.y
 
-#line 378
+#line 379
   nop 
   mov r3.xy, r3.xyxx
 
 #line 251
-  sample_indexable(texture2d)(float,float,float,float) r3.xy, r3.xyxx, t35.xyzw, s2  // r3.x <- <SampleLutGGX return value>.x; r3.y <- <SampleLutGGX return value>.y
-
-#line 378
-  mov r3.xy, r3.xyxx  // r3.x <- eny_brdf.x; r3.y <- eny_brdf.y
+  sample_l_indexable(texture2d)(float,float,float,float) r3.xy, r3.xyxx, t35.xyzw, s3, l(0.000000)  // r3.x <- <SampleLutGGX return value>.x; r3.y <- <SampleLutGGX return value>.y
 
 #line 379
+  mov r3.xy, r3.xyxx  // r3.x <- eny_brdf.x; r3.y <- eny_brdf.y
+
+#line 380
   mul r3.xzw, r3.xxxx, r5.xxyz
   add r3.xyz, r3.yyyy, r3.xzwx
   mul r0.xyz, r0.xyzx, r3.xyzx  // r0.x <- <SpecularIBL return value>.x; r0.y <- <SpecularIBL return value>.y; r0.z <- <SpecularIBL return value>.z

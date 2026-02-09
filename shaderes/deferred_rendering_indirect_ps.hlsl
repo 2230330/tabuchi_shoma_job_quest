@@ -54,9 +54,9 @@ float4 main(VS_OUT pin) : SV_TARGET
 	    //	IBLèàóù
         //total_diffuse += DiffuseIBL_SH(N, V, data.roughness, diffuse_reflectance, F0);
         total_diffuse += DiffuseIBL(N, V, data.roughness, diffuse_reflectance, F0,
-        diffuse_pmrem, sampler_states[LINEAR_WRAP]);
+        diffuse_pmrem, sampler_states[LINEAR_CLAMP]);
         total_specular += SpecularIBL(N, V, data.roughness, F0,
-        lut_ggx, specular_pmrem, sampler_states[LINEAR_WRAP]);
+        lut_ggx, specular_pmrem, sampler_states[LINEAR_CLAMP]);
 
     	//	é©å»é’ï¡
         total_diffuse = lerp(total_diffuse, total_diffuse * data.occlusion_factor,data.occlusion_strength);

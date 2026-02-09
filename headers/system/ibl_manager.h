@@ -41,7 +41,7 @@ private:
     // パラメータ
     static constexpr UINT kCubeFaces = 6;
     static constexpr UINT kPrefilterSize = 256; // Specular キューブ
-    static constexpr UINT kBrdfLutSize = 128; // BRDF LUT
+    static constexpr UINT kBrdfLutSize = 512; // BRDF LUT
     static constexpr UINT kSkyCubeSize = 256; // SkyCube 解像度（背景表示/IBL入力に十分）
 
     // ヘルパ

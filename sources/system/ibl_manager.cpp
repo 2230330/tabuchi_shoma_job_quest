@@ -213,7 +213,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         }
     }
 
-    // --- SkyCube（未フィルタ：背景表示/IBL入力） ---
+    // --- SkyCube
     {
         const UINT mipCount = CalcMipCount(kSkyCubeSize);
 

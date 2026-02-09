@@ -248,7 +248,8 @@ void DirectBRDF(
 //state :参照時のサンプラーステート
 float4 SampleLutGGX(float2 brdf_sample_point, Texture2D lut_ggx_map, SamplerState state)
 {
-    return lut_ggx_map.Sample(state, brdf_sample_point);
+    return lut_ggx_map.SampleLevel(state, brdf_sample_point,0.0);
+    //return lut_ggx_map.Sample(state, brdf_sample_point);
 }
 //----------------------------------------
 //キューブマップから照度を取得
