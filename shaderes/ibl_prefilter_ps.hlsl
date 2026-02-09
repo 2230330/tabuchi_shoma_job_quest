@@ -19,6 +19,7 @@ cbuffer PrefilterCB : register(b0)
     uint FaceIndex;
     float Roughness;
     float MipCount; // C++ 側 mip count を使うなら設定
+    float EnvResolution;
 }
 
 static const float PI = 3.14159265359;
@@ -134,9 +135,8 @@ float4 main(PSIn i) : SV_Target
     float3 prefilteredColor = 0;
     float totalWeight = 0;
 
-    // 環境マップの解像度（例：入力キューブの1辺）
-    // C++側から渡すのが理想（EnvResolution）
-    float resolution = 256.0;
+    // 環境マップの解像度
+    float resolution = EnvResolution;
 
     for (uint s = 0; s < SAMPLE_COUNT; ++s)
     {

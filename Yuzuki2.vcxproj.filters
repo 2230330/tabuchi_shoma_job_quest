@@ -656,5 +656,8 @@
     <FxCompile Include="shaderes\deferred_rendering_emissive_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
+    <FxCompile Include="shaderes\ibl_diffuse_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

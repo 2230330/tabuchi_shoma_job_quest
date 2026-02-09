@@ -59,23 +59,30 @@ void EvalSH9(float3 n, out float sh[9])
     sh[8] = 0.546274f * (x * x - y * y);
 }
 
-//------------------------------------------------------------
-// Cubemap texel solid angle (approx)
-//------------------------------------------------------------
-float TexelSolidAngle(float2 uv01, float invDim)
+//立体角
+//float TexelSolidAngle(float2 uv01, float invDim)
+//{
+//    float2 p = uv01 * 2.0f - 1.0f;
+//    float x = p.x;
+//    float y = p.y;
+
+//    float denom = pow(1.0f + x * x + y * y, 1.5f);
+//    float area = (2.0f * invDim) * (2.0f * invDim);
+
+//    return area / denom;
+//}
+float TexelSolidAngle(float2 uv,float inv_dim)
 {
-    float2 p = uv01 * 2.0f - 1.0f;
-    float x = p.x;
-    float y = p.y;
-
-    float denom = pow(1.0f + x * x + y * y, 1.5f);
-    float area = (2.0f * invDim) * (2.0f * invDim);
-
+    float2 p = uv * 2 - 1;
+    float r2 = 1 + dot(p, p);
+    float inv_sqrt = rsqrt(r2);
+    float denom = r2 * inv_sqrt;
+    float area = (2 * inv_dim) * (2 * inv_dim);
     return area / denom;
 }
 
-#define GROUP_X 4
-#define GROUP_Y 4
+#define GROUP_X 16
+#define GROUP_Y 16
 
 groupshared float3 gAccum[9][GROUP_X * GROUP_Y];
 
@@ -102,7 +109,10 @@ void main(
         float2 uv = (float2(gtid.xy) + 0.5f) * invDim;
         float3 dir = DirFromFaceUV(FaceIndex, uv);
 
-        float3 L = EnvCube.SampleLevel(LinearClamp, dir, 0).rgb;
+        float3 L = EnvCube.SampleLevel(LinearClamp, dir, 2).rgb;
+        //明るさのみを取得したいので、各色の最大値を取る
+        float luminance = dot(L, float3(0.2126, 0.7152, 0.0722));
+        L = luminance.xxx;
 
         float sh[9];
         EvalSH9(dir, sh);

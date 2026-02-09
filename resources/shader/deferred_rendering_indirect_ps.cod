@@ -26,13 +26,6 @@
 //
 // }
 //
-// cbuffer SHBuffer
-// {
-//
-//   float4 shC[9];                     // Offset:    0 Size:   144
-//
-// }
-//
 //
 // Resource Bindings:
 //
@@ -44,10 +37,10 @@
 // gbuffer_normal                    texture  float4          2d             t2      1 
 // gbuffer_parameter                 texture  float4          2d             t3      1 
 // gbuffer_depth                     texture   float          2d             t4      1 
+// diffuse_pmrem                     texture  float4        cube            t33      1 
 // specular_pmrem                    texture  float4        cube            t34      1 
 // lut_ggx                           texture  float4          2d            t35      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
-// SHBuffer                          cbuffer      NA          NA            cb6      1 
 //
 //
 //
@@ -68,29 +61,25 @@
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[30], immediateIndexed
-dcl_constantbuffer CB6[9], immediateIndexed
 dcl_sampler s0, mode_default
 dcl_sampler s2, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t2
 dcl_resource_texture2d (float,float,float,float) t3
 dcl_resource_texture2d (float,float,float,float) t4
+dcl_resource_texturecube (float,float,float,float) t33
 dcl_resource_texturecube (float,float,float,float) t34
 dcl_resource_texture2d (float,float,float,float) t35
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
 dcl_temps 10
-dcl_indexableTemp x0[9], 4
 //
 // Initial variable locations:
 //   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 29 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
-nop 
-
-#line 30
+#line 30 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
 nop 
 
 #line 31
@@ -108,7 +97,10 @@ nop
 #line 35
 nop 
 
-#line 37
+#line 36
+nop 
+
+#line 38
 nop 
 mov r0.xy, v1.xyxx
 mov r1.x, cb1[26].x
@@ -203,66 +195,68 @@ mov r7.xyz, r7.xyzx  // r7.x <- <DecodeGBuffer return value>.w_normal.x; r7.y <-
 mov r6.w, r6.w  // r6.w <- <DecodeGBuffer return value>.shading_model
 mov r0.xyz, r0.xyzx  // r0.x <- <DecodeGBuffer return value>.w_position.x; r0.y <- <DecodeGBuffer return value>.w_position.y; r0.z <- <DecodeGBuffer return value>.w_position.z
 
-#line 37 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 38 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
 mov r6.xyz, r6.xyzx  // r6.x <- data.base_color.x; r6.y <- data.base_color.y; r6.z <- data.base_color.z
 mov r7.xyz, r7.xyzx  // r7.x <- data.w_normal.x; r7.y <- data.w_normal.y; r7.z <- data.w_normal.z
 mov r0.xyz, r0.xyzx  // r0.x <- data.w_position.x; r0.y <- data.w_position.y; r0.z <- data.w_position.z
 mov r6.w, r6.w  // r6.w <- data.shading_model
 mov r8.xyzw, r8.xyzw  // r8.x <- data.roughness; r8.y <- data.metalness; r8.z <- data.occlusion_factor; r8.w <- data.occlusion_strength
 
-#line 39
+#line 40
 itof r1.xyz, l(0, 0, 0, 0)  // r1.x <- total_diffuse.x; r1.y <- total_diffuse.y; r1.z <- total_diffuse.z
 itof r2.xyz, l(0, 0, 0, 0)  // r2.x <- total_specular.x; r2.y <- total_specular.y; r2.z <- total_specular.z
 
-#line 40
+#line 41
 if_nz r6.w
 
-#line 42
+#line 43
   mov r6.xyz, r6.xyzx  // r6.x <- albedo.x; r6.y <- albedo.y; r6.z <- albedo.z
 
-#line 44
+#line 45
   dp3 r0.w, r7.xyzx, r7.xyzx
   rsq r0.w, r0.w
   mul r3.xyz, r0.wwww, r7.xyzx  // r3.x <- N.x; r3.y <- N.y; r3.z <- N.z
 
-#line 45
+#line 46
   mov r4.xyz, -cb1[2].xyzx
   add r0.xyz, r0.xyzx, r4.xyzx
   dp3 r0.w, r0.xyzx, r0.xyzx
   rsq r0.w, r0.w
   mul r0.xyz, r0.wwww, r0.xyzx  // r0.x <- V.x; r0.y <- V.y; r0.z <- V.z
 
-#line 48
+#line 49
   mov r4.xyz, -r6.xyzx
   add r4.xyz, r4.xyzx, l(0.000000, 0.000000, 0.000000, 0.000000)
   mul r4.xyz, r4.xyzx, r8.yyyy
   add r4.xyz, r4.xyzx, r6.xyzx  // r4.x <- diffuse_reflectance.x; r4.y <- diffuse_reflectance.y; r4.z <- diffuse_reflectance.z
 
-#line 51
+#line 52
   mov r5.xyz, l(-0.040000,-0.040000,-0.040000,-0.000000)
   add r5.xyz, r5.xyzx, r6.xyzx
   mul r5.xyz, r5.xyzx, r8.yyyy
   add r5.xyz, r5.xyzx, l(0.040000, 0.040000, 0.040000, 0.000000)  // r5.x <- F0.x; r5.y <- F0.y; r5.z <- F0.z
 
-#line 54
+#line 56
   nop 
   mov r3.xyz, r3.xyzx
   mov r0.xyz, r0.xyzx
   mov r0.w, r8.x
   mov r4.xyz, r4.xyzx
   mov r5.xyz, r5.xyzx
+  nop 
+  nop 
 
-#line 347 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 334 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
   mov r6.xyz, r3.xyzx  // r6.x <- N.x; r6.y <- N.y; r6.z <- N.z
 
-#line 348
+#line 335
   mov r7.xyz, -r0.xyzx  // r7.x <- V.x; r7.y <- V.y; r7.z <- V.z
 
-#line 350
+#line 338
   dp3 r1.w, r6.xyzx, r7.xyzx
   max r1.w, r1.w, l(0.000100)  // r1.w <- NdotV
 
-#line 351
+#line 339
   nop 
   mov r5.xyz, r5.xyzx
   mov r1.w, r1.w
@@ -286,114 +280,28 @@ if_nz r6.w
   mul r7.xyz, r0.wwww, r7.xyzx
   add r7.xyz, r5.xyzx, r7.xyzx  // r7.x <- <CalcFresnelRoughness return value>.x; r7.y <- <CalcFresnelRoughness return value>.y; r7.z <- <CalcFresnelRoughness return value>.z
 
-#line 351
+#line 339
   mov r7.xyz, -r7.xyzx
   add r7.xyz, r7.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)  // r7.x <- kD.x; r7.y <- kD.y; r7.z <- kD.z
 
-#line 353
+#line 341
   nop 
   mov r6.xyz, r6.xyzx
 
-#line 272
-  mov r6.x, r6.x  // r6.x <- x
-  mov r6.y, r6.y  // r6.y <- y
-  mov r6.z, r6.z  // r6.z <- z
+#line 261
+  sample_indexable(texturecube)(float,float,float,float) r6.xyz, r6.xyzx, t33.xyzw, s2  // r6.x <- <SampleDiffuseIEM return value>.x; r6.y <- <SampleDiffuseIEM return value>.y; r6.z <- <SampleDiffuseIEM return value>.z
 
-#line 275
-  mov x0[0].x, l(0.282095)
-
-#line 276
-  mul r0.w, r6.y, l(0.488603)
-  mov x0[1].x, r0.w
-
-#line 277
-  mul r0.w, r6.z, l(0.488603)
-  mov x0[2].x, r0.w
-
-#line 278
-  mul r0.w, r6.x, l(0.488603)
-  mov x0[3].x, r0.w
-
-#line 279
-  mul r0.w, r6.x, l(1.092548)
-  mul r0.w, r6.y, r0.w
-  mov x0[4].x, r0.w
-
-#line 280
-  mul r0.w, r6.y, l(1.092548)
-  mul r0.w, r6.z, r0.w
-  mov x0[5].x, r0.w
-
-#line 281
-  itof r0.w, l(3)
-  mul r0.w, r6.z, r0.w
-  mul r0.w, r6.z, r0.w
-  itof r1.w, l(1)
-  mov r1.w, -r1.w
-  add r0.w, r0.w, r1.w
-  mul r0.w, r0.w, l(0.315392)
-  mov x0[6].x, r0.w
-
-#line 282
-  mul r0.w, r6.x, l(1.092548)
-  mul r0.w, r6.z, r0.w
-  mov x0[7].x, r0.w
-
-#line 283
-  mul r0.w, r6.x, r6.x
-  mul r1.w, r6.y, r6.y
-  mov r1.w, -r1.w
-  add r0.w, r0.w, r1.w
-  mul r0.w, r0.w, l(0.546274)
-  mov x0[8].x, r0.w
-
-#line 285
-  itof r6.xyz, l(0, 0, 0, 0)  // r6.x <- irradiance.x; r6.y <- irradiance.y; r6.z <- irradiance.z
-
-#line 289
-  mov r0.w, x0[0].x
-  mul r9.xyz, r0.wwww, cb6[0].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[1].x
-  mul r9.xyz, r0.wwww, cb6[1].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[2].x
-  mul r9.xyz, r0.wwww, cb6[2].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[3].x
-  mul r9.xyz, r0.wwww, cb6[3].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[4].x
-  mul r9.xyz, r0.wwww, cb6[4].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[5].x
-  mul r9.xyz, r0.wwww, cb6[5].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[6].x
-  mul r9.xyz, r0.wwww, cb6[6].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[7].x
-  mul r9.xyz, r0.wwww, cb6[7].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-  mov r0.w, x0[8].x
-  mul r9.xyz, r0.wwww, cb6[8].xyzx
-  add r6.xyz, r6.xyzx, r9.xyzx
-
-#line 292
-  itof r9.xyz, l(0, 0, 0, 0)
-  max r6.xyz, r6.xyzx, r9.xyzx  // r6.x <- <EvalSH9Irradiance return value>.x; r6.y <- <EvalSH9Irradiance return value>.y; r6.z <- <EvalSH9Irradiance return value>.z
-
-#line 353
+#line 341
   mov r6.xyz, r6.xyzx  // r6.x <- irradiance.x; r6.y <- irradiance.y; r6.z <- irradiance.z
 
-#line 354
+#line 342
   mul r4.xyz, r4.xyzx, r6.xyzx
-  mul r4.xyz, r7.xyzx, r4.xyzx  // r4.x <- <DiffuseIBL_SH return value>.x; r4.y <- <DiffuseIBL_SH return value>.y; r4.z <- <DiffuseIBL_SH return value>.z
+  mul r4.xyz, r7.xyzx, r4.xyzx  // r4.x <- <DiffuseIBL return value>.x; r4.y <- <DiffuseIBL return value>.y; r4.z <- <DiffuseIBL return value>.z
 
-#line 54 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 56 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
   add r4.xyz, r1.xyzx, r4.xyzx  // r4.x <- total_diffuse.x; r4.y <- total_diffuse.y; r4.z <- total_diffuse.z
 
-#line 55
+#line 58
   nop 
   mov r3.xyz, r3.xyzx
   mov r0.xyz, r0.xyzx
@@ -464,33 +372,33 @@ if_nz r6.w
   add r3.xyz, r3.yyyy, r3.xzwx
   mul r0.xyz, r0.xyzx, r3.xyzx  // r0.x <- <SpecularIBL return value>.x; r0.y <- <SpecularIBL return value>.y; r0.z <- <SpecularIBL return value>.z
 
-#line 55 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 58 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
   add r0.xyz, r0.xyzx, r2.xyzx  // r0.x <- total_specular.x; r0.y <- total_specular.y; r0.z <- total_specular.z
 
-#line 58
+#line 62
   mul r3.xyz, r8.zzzz, r4.xyzx
   mov r5.xyz, -r4.xyzx
   add r3.xyz, r3.xyzx, r5.xyzx
   mul r3.xyz, r3.xyzx, r8.wwww
   add r1.xyz, r3.xyzx, r4.xyzx  // r1.x <- total_diffuse.x; r1.y <- total_diffuse.y; r1.z <- total_diffuse.z
 
-#line 59
+#line 63
   mul r3.xyz, r8.zzzz, r0.xyzx
   mov r4.xyz, -r0.xyzx
   add r3.xyz, r3.xyzx, r4.xyzx
   mul r3.xyz, r3.xyzx, r8.wwww
   add r2.xyz, r0.xyzx, r3.xyzx  // r2.x <- total_specular.x; r2.y <- total_specular.y; r2.z <- total_specular.z
 
-#line 60
+#line 64
 endif 
 
-#line 63
+#line 67
 add r0.xyz, r1.xyzx, r2.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 64
+#line 68
 itof r0.w, l(1)  // r0.w <- alpha
 
-#line 65
+#line 69
 itof r1.w, l(0)
 eq r0.x, r0.x, r1.w
 itof r1.w, l(0)
@@ -501,12 +409,12 @@ eq r0.y, r0.y, r0.z
 and r0.x, r0.y, r0.x
 if_nz r0.x
 
-#line 66
+#line 70
   itof r0.w, l(0)
 endif 
 
-#line 67
+#line 71
 add o0.xyz, r1.xyzx, r2.xyzx
 mov o0.w, r0.w
 ret 
-// Approximately 261 instruction slots used
+// Approximately 201 instruction slots used

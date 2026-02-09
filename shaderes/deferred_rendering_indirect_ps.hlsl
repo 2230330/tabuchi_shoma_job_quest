@@ -19,6 +19,7 @@ Texture2D<float4> gbuffer_velocity : register(t5);
 SamplerState sampler_states[6] : register(s0);
 
 //  IBL用テクスチャ
+TextureCube diffuse_pmrem : register(t33);
 TextureCube specular_pmrem : register(t34);
 Texture2D lut_ggx : register(t35);
 
@@ -51,11 +52,14 @@ float4 main(VS_OUT pin) : SV_TARGET
         float3 F0 = lerp(0.04f, albedo.rgb, data.metalness);
 
 	    //	IBL処理
-        total_diffuse += DiffuseIBL_SH(N, V, data.roughness, diffuse_reflectance, F0);
-        total_specular += SpecularIBL(N, V, data.roughness, F0, lut_ggx, specular_pmrem, sampler_states[LINEAR_WRAP]);
+        //total_diffuse += DiffuseIBL_SH(N, V, data.roughness, diffuse_reflectance, F0);
+        total_diffuse += DiffuseIBL(N, V, data.roughness, diffuse_reflectance, F0,
+        diffuse_pmrem, sampler_states[LINEAR_WRAP]);
+        total_specular += SpecularIBL(N, V, data.roughness, F0,
+        lut_ggx, specular_pmrem, sampler_states[LINEAR_WRAP]);
 
     	//	自己遮蔽
-        total_diffuse = lerp(total_diffuse, total_diffuse * data.occlusion_factor, data.occlusion_strength);
+        total_diffuse = lerp(total_diffuse, total_diffuse * data.occlusion_factor,data.occlusion_strength);
         total_specular = lerp(total_specular, total_specular * data.occlusion_factor, data.occlusion_strength);
     }
 

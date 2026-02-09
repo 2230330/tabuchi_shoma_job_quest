@@ -151,6 +151,19 @@ float4 main(VS_OUT pin) : SV_TARGET
                 }
             }
             break;
+        case light_kind_ambient:
+          {  
+                float3 ambient_color = convert_ambient_lights();
+                LightingData lighting_data;
+                lighting_data.color = ambient_color;
+                lighting_data.camera_position = camera_position.xyz;
+                lighting_data.direction = camera_direction;
+                lighting_data.attenuation = 1.0;
+                DirectLighting result = integrate_bxdf(data, lighting_data);
+                diffuse += result.diffuse;
+                specular += result.specular;
+            }
+            break;
     }
     
 

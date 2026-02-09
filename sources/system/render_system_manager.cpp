@@ -68,6 +68,14 @@ void RenderSystemManager::RenderAll()
     auto* ctx = Graphics::Instance().GetDeviceContext();
     deferred_render_system_->SetLightManager(light_manager_);
 
+    // === オブジェクト（毎フレーム） ===
+    deferred_framebuffer_->Clear(ctx);
+    deferred_framebuffer_->Activate(ctx);
+
+    RunPass(RenderPass::RenderPass_Object);
+    deferred_framebuffer_->Deactivate(ctx);
+
+
     // === 背景（低頻度） ===
     bool sky_flag = sky_render_system_->GetSkyFlag();
     bool cloud_flag = cloud_render_system_->HasRenderableCloud();
@@ -132,15 +140,15 @@ void RenderSystemManager::RenderAll()
     {
         ibl_manager_->SetSkyFlag(sky_flag);
         ibl_manager_->SetCloudFlag(cloud_flag);
-        ibl_manager_->UpdateEnvironmentCapture(*sky_framebuffer_);
         ibl_manager_->BuildSkyCubeFromEnvSource();
 
-        if (ibl_manager_->IsDirty()) 
+        //if (ibl_manager_->IsDirty()) 
         {
 
 
             // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
-            for (int s = 0; s < ibl_steps_per_frame_; ++s) {
+            //for (int s = 0; s < ibl_steps_per_frame_; ++s) 
+            {
                 ibl_manager_->UpdateSpecularPrefilter();
             }
 
@@ -148,18 +156,11 @@ void RenderSystemManager::RenderAll()
             ibl_manager_->UpdateDiffuseSH();
             Graphics::Instance().SetRenderTargets(); //IBL更新でコンテキストが汚れるのでリセット
         }
+
+        // IBL を PS にバインド（t1: PrefEnv, t2: BRDF LUT, b2: SH）
+        ibl_manager_->BindForObjectPass(ctx);
     }
 
-    // === オブジェクト（毎フレーム） ===
-    deferred_framebuffer_->Clear(ctx);
-    deferred_framebuffer_->Activate(ctx);
-
-
-    // IBL を PS にバインド（t1: PrefEnv, t2: BRDF LUT, b2: SH）
-    ibl_manager_->BindForObjectPass(ctx);
-
-    RunPass(RenderPass::RenderPass_Object);
-    deferred_framebuffer_->Deactivate(ctx);
 
     for (int i = 0; i < DeferredGBuffer::Target::Count; i++)
     {

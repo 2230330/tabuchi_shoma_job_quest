@@ -53,8 +53,8 @@ dcl_input vThreadIDInGroup.xy
 dcl_temps 5
 dcl_indexableTemp x0[9], 4
 dcl_indexableTemp x1[9], 4
-dcl_tgsm_structured g0, 192, 9
-dcl_thread_group 4, 4, 1
+dcl_tgsm_structured g0, 3072, 9
+dcl_thread_group 16, 16, 1
 //
 // Initial variable locations:
 //   vThreadID.x <- dtid.x; vThreadID.y <- dtid.y; vThreadID.z <- dtid.z; 
@@ -62,20 +62,20 @@ dcl_thread_group 4, 4, 1
 //   vThreadGroupID.x <- gid.x; vThreadGroupID.y <- gid.y; vThreadGroupID.z <- gid.z; 
 //   x0 <- sh
 //
-#line 88 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\ibl_sh9_cs.hlsl"
+#line 95 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\ibl_sh9_cs.hlsl"
 mov r0.x, cb0[0].x  // r0.x <- dim
 
-#line 89
+#line 96
 utof r0.y, r0.x
 div r0.y, l(1.000000), r0.y  // r0.y <- invDim
 
-#line 91
-mov r0.z, l(4)
+#line 98
+mov r0.z, l(16)
 imul null, r0.z, r0.z, vThreadIDInGroup.y
 iadd r0.z, r0.z, vThreadIDInGroup.x
 mov r0.z, r0.z  // r0.z <- idx
 
-#line 96
+#line 103
 imul null, r0.w, r0.z, l(12)
 itof r1.xyz, l(0, 0, 0, 0)
 store_structured g0.x, l(0), r0.w, r1.x
@@ -140,20 +140,20 @@ store_structured g0.x, l(8), r1.x, r1.y
 iadd r0.w, r0.w, l(8)
 store_structured g0.x, l(8), r0.w, r1.z
 
-#line 98
+#line 105
 ult r0.w, vThreadIDInGroup.x, r0.x
 ult r0.x, vThreadIDInGroup.y, r0.x
 and r0.x, r0.x, r0.w  // r0.x <- valid
 
-#line 100
+#line 107
 if_nz r0.x
 
-#line 102
+#line 109
   utof r0.xw, vThreadIDInGroup.xxxy
   add r0.xw, r0.xxxw, l(0.500000, 0.000000, 0.000000, 0.500000)
   mul r1.xz, r0.yyyy, r0.xxwx  // r1.x <- uv.x; r1.z <- uv.y
 
-#line 103
+#line 110
   nop 
   mov r0.x, cb0[0].y
   mov r1.xz, r1.xxzx
@@ -249,14 +249,22 @@ if_nz r0.x
     endif 
   endif 
 
-#line 103
+#line 110
   mov r3.xyz, r3.xyzx  // r3.x <- dir.x; r3.y <- dir.y; r3.z <- dir.z
 
-#line 105
-  itof r0.x, l(0)
-  sample_l_indexable(texturecube)(float,float,float,float) r2.xyz, r3.xyzx, t0.xyzw, s0, r0.x  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
+#line 112
+  itof r0.x, l(2)
+  sample_l_indexable(texturecube)(float,float,float,float) r2.xyz, r3.xyzx, t0.xyzw, s0, r0.x
+  mov r2.xyz, r2.xyzx  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
 
-#line 108
+#line 114
+  dp3 r2.z, r2.xyzx, l(0.212600, 0.715200, 0.072200, 0.000000)  // r2.z <- luminance
+  mov r2.xyz, r2.zzzz
+
+#line 115
+  mov r2.xyz, r2.xyzx  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
+
+#line 118
   nop 
   mov r3.xyz, r3.xyzx
 
@@ -315,7 +323,7 @@ if_nz r0.x
   mul r0.x, r0.x, l(0.546274)
   mov x1[8].x, r0.x
 
-#line 108
+#line 118
   mov r0.x, x1[0].x
   mov r0.w, x1[1].x
   mov r1.y, x1[2].x
@@ -335,43 +343,43 @@ if_nz r0.x
   mov x0[7].x, r3.z
   mov x0[8].x, r3.w
 
-#line 110
+#line 120
   nop 
   mov r1.xz, r1.xxzx
   mov r0.y, r0.y
 
-#line 67
-  mul r0.xw, r1.xxxz, l(2.000000, 0.000000, 0.000000, 2.000000)
-  mov r1.xy, l(-1.000000,-1.000000,-0.000000,-0.000000)
+#line 76
+  itof r0.xw, l(2, 0, 0, 2)
+  mul r0.xw, r0.xxxw, r1.xxxz
+  itof r1.xy, l(1, 1, 0, 0)
+  mov r1.xy, -r1.xyxx
   add r0.xw, r0.xxxw, r1.xxxy  // r0.x <- p.x; r0.w <- p.y
 
-#line 68
-  mov r0.x, r0.x  // r0.x <- x
+#line 77
+  itof r1.x, l(1)
+  dp2 r0.x, r0.xwxx, r0.xwxx
+  add r0.x, r0.x, r1.x  // r0.x <- r2
 
-#line 69
-  mov r0.w, r0.w  // r0.w <- y
+#line 78
+  rsq r0.w, r0.x  // r0.w <- inv_sqrt
 
-#line 71
-  mul r0.x, r0.x, r0.x
-  add r0.x, r0.x, l(1.000000)
-  mul r0.w, r0.w, r0.w
-  add r0.x, r0.w, r0.x
-  log r0.x, r0.x
-  mul r0.x, r0.x, l(1.500000)
-  exp r0.x, r0.x  // r0.x <- denom
+#line 79
+  mul r0.x, r0.w, r0.x  // r0.x <- denom
 
-#line 72
-  mul r0.w, r0.y, l(2.000000)
-  mul r0.y, r0.y, l(2.000000)
+#line 80
+  itof r0.w, l(2)
+  mul r0.w, r0.y, r0.w
+  itof r1.x, l(2)
+  mul r0.y, r0.y, r1.x
   mul r0.y, r0.y, r0.w  // r0.y <- area
 
-#line 74
+#line 81
   div r0.x, r0.y, r0.x  // r0.x <- <TexelSolidAngle return value>
 
-#line 110
+#line 120
   mov r0.x, r0.x  // r0.x <- w
 
-#line 114
+#line 124
   imul null, r0.y, r0.z, l(12)
   mov r0.w, x0[0].x
   mul r0.w, r0.x, r0.w
@@ -454,25 +462,25 @@ if_nz r0.x
   iadd r0.x, r0.y, l(8)
   store_structured g0.x, l(8), r0.x, r1.z
 
-#line 115
+#line 125
 endif 
 
-#line 117
+#line 127
 sync_g_t
 
-#line 120
-mov r0.x, l(8)  // r0.x <- stride
+#line 130
+mov r0.x, l(128)  // r0.x <- stride
 mov r0.y, r0.x  // r0.y <- stride
 loop 
   mov r0.w, l(0)
   ult r0.w, r0.w, r0.y
   breakc_z r0.w
 
-#line 122
+#line 132
   ult r0.w, r0.z, r0.y
   if_nz r0.w
 
-#line 126
+#line 136
     imul null, r0.w, r0.z, l(12)
     iadd r1.x, r0.y, r0.z
     imul null, r1.x, r1.x, l(12)
@@ -654,28 +662,28 @@ loop
     iadd r0.w, r0.w, l(8)
     store_structured g0.x, l(8), r0.w, r1.z
 
-#line 127
+#line 137
   endif 
 
-#line 128
+#line 138
   sync_g_t
 
-#line 129
+#line 139
   mov r0.w, l(1)
   ushr r0.y, r0.y, r0.w
 endloop 
 
-#line 132
+#line 142
 if_z r0.z
 
-#line 134
+#line 144
   mov r0.x, l(9)
   imul null, r0.x, r0.x, cb0[0].y  // r0.x <- base
 
-#line 137
+#line 147
   mov r0.y, l(0)  // r0.y <- i
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(0), l(0), g0.xxxx
   ld_structured r1.x, l(0), l(4), g0.xxxx
@@ -685,10 +693,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(1), l(0), g0.xxxx
   ld_structured r1.x, l(1), l(4), g0.xxxx
@@ -698,10 +706,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(2), l(0), g0.xxxx
   ld_structured r1.x, l(2), l(4), g0.xxxx
@@ -711,10 +719,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(3), l(0), g0.xxxx
   ld_structured r1.x, l(3), l(4), g0.xxxx
@@ -724,10 +732,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(4), l(0), g0.xxxx
   ld_structured r1.x, l(4), l(4), g0.xxxx
@@ -737,10 +745,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(5), l(0), g0.xxxx
   ld_structured r1.x, l(5), l(4), g0.xxxx
@@ -750,10 +758,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(6), l(0), g0.xxxx
   ld_structured r1.x, l(6), l(4), g0.xxxx
@@ -763,10 +771,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.z, r0.y, r0.x
   ld_structured r0.w, l(7), l(0), g0.xxxx
   ld_structured r1.x, l(7), l(4), g0.xxxx
@@ -776,10 +784,10 @@ if_z r0.z
   store_structured u0.x, r0.z, l(8), r1.y
   store_structured u0.x, r0.z, l(12), l(0)
 
-#line 140
+#line 150
   iadd r0.y, r0.y, l(1)
 
-#line 139
+#line 149
   iadd r0.x, r0.y, r0.x
   ld_structured r0.y, l(8), l(0), g0.xxxx
   ld_structured r0.z, l(8), l(4), g0.xxxx
@@ -789,9 +797,9 @@ if_z r0.z
   store_structured u0.x, r0.x, l(8), r0.w
   store_structured u0.x, r0.x, l(12), l(0)
 
-#line 141
+#line 151
 endif 
 
-#line 142
+#line 152
 ret 
-// Approximately 583 instruction slots used
+// Approximately 587 instruction slots used

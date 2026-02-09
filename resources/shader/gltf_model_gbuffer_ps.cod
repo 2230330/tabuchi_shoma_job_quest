@@ -451,7 +451,7 @@ min r5.y, r0.x, l(1.000000)  // r5.y <- roughness
 #line 143
 add r0.x, r3.y, cb13[0].x
 max r0.x, r0.x, l(0.000000)
-min r5.z, r0.x, l(2.000000)  // r5.z <- metalness
+min r5.z, r0.x, l(1.000000)  // r5.z <- metalness
 
 #line 146
 mov r5.x, l(1.000000)  // r5.x <- occlusion_factor
