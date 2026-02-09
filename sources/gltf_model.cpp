@@ -87,7 +87,7 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 		{ "PREVIOUS_WORLD_MATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "PREVIOUS_WORLD_MATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 	};	
-	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
 		instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
 	//shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
 	//	instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
@@ -416,7 +416,6 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
 
 	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
-	//immediate_context->PSSetShaderResources(100, 1, cube_map_srv_.GetAddressOf());
     immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
 	immediate_context->PSSetConstantBuffers(
 		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
@@ -685,6 +684,10 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 	{
 		traverse(node_index);
 	}
+
+	ID3D11ShaderResourceView* null_srv[] = { nullptr };
+	immediate_context->PSSetShaderResources(0, 1, null_srv);
+	immediate_context->PSSetShaderResources(1, 1, null_srv);
 }
 
 void GltfModel::FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf_model)

@@ -42,28 +42,6 @@ LightManager::LightManager()
 		spot_lights_.emplace_back(spot_light);
 	}
 
-	//ŠÂ‹«Œõ‚ğæ‚É“ü—Í‚µ‚Ä‚¨‚«‚Ü‚·B
-	IntegrateLight ambient =
-	{
-		ambient_color_,
-		{0,0,0,0},
-		{0,0,0,0},
-		{0,0,0,static_cast<float>(light_kind_ambient_light)}
-	};
-	DeferredLightContstants ambient_data;
-	ambient_data.lights = ambient;
-	deferred_lights_.emplace_back(ambient_data);
-
-	//•½sŒõŒ¹‚ğæ‚É“ü—Í‚µ‚Ä‚¨‚«‚Ü‚·B
-	IntegrateLight directional = {
-		direction_light_.direction,
-		direction_light_.color,
-		{0,0,0,0},
-		{0,0,0,static_cast<float>(light_kind_derectional_light)}
-	};
-	DeferredLightContstants directional_data;
-	directional_data.lights = directional;
-	deferred_lights_.emplace_back(directional_data);
 }
 
 

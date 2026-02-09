@@ -118,7 +118,7 @@ void ComponentEditor::DrawImgui()
                 if (comp_mng_.Has<ComponentScale>(entity.entity))
                 {
                     auto& scale = comp_mng_.GetByEntity<ComponentScale>(entity.entity);
-                    ImGui::SliderFloat3("Scale", &scale.value.x, 0.01f,10.0f);
+                    ImGui::DragFloat3("Scale", &scale.value.x, 0.01f);
                     ImGui::Separator();
                 }
                 // êF

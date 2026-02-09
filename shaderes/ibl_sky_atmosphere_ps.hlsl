@@ -8,7 +8,6 @@
 #define ANISOTROPIC 4
 SamplerState sampler_states[5] : register(s0);
 
-
 static const float PI = 3.14159265358979323846f;
 
 static const float RAYLEIGH_SCALE_HEIGHT = 8000.f;
@@ -112,7 +111,7 @@ float3 PrecomputeMultiScattering(float3 position /*’n‹…”¼Œa‰ÁZÏ‚İ*/, float3 vi
     float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0))); //‚O“V’¸A1’n
     float mie_boost = 0.5f * horizon_factor * (0.01f + air_mass * 0.05f);
     
-    float cos_theta = lerp(dot(view_dir, light_dir), -0.4f, 1.0f);
+    float cos_theta = lerp(dot(view_dir, light_dir), -.4f, 1.0f);
     float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10‚ğ0`1‚É³‹K‰»
     float phase = ((RayleighPhase(cos_theta) * (lerp(10.0f, 2.f, sunset_factor))
     + MiePhase(cos_theta, 0.5) * mie_boost) / (4.0f * PI));
@@ -151,24 +150,23 @@ float3 PrecomputeMultiScattering(float3 position /*’n‹…”¼Œa‰ÁZÏ‚İ*/, float3 vi
 float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
 {
     
-    float cos_theta = clamp(dot(view_dir, light_dir), -0.f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
+    float cos_theta = clamp(dot(view_dir, light_dir), -0.4f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
     float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
     float sun_theta = acos(sun_elevation) * (180.0f / PI); //“x‚É•ÏŠ·
     //kasten-Young 1989‹ß—
     float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant‹ß—
     //air_mass = min(air_mass, 50.0f); // ‹É’[‚È’l‚ğ§ŒÀ
 
-    float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10‚ğ0`1‚É³‹K‰»
+    float sunset_factor = saturate((air_mass - 1.0f) / 10.0f); //1~10‚ğ0`1‚É³‹K‰»
     float3 Ei = ComputeSunIrradiance(air_mass);
-    
     
     //‘¾—z‚É‹ß‚¢‚Ù‚Ç1.0
     float angle_factor = pow(saturate(cos_theta), 2.0f);
-    float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(30.0f, 10.f, sunset_factor));
+    float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(20.0f, 10.f, sunset_factor));
     //—[Ä‚¯‚ğì‚éÛA—[Ä‚¯‚Í‘¾—z‚ÌŒX‚«‚É‚æ‚éƒ~[U—‚Ì‹­‰»‚ªå‚È—vˆö‚Ìˆ×A
     //‘¾—z‚ÌŒX‚«‚Å‹­‚­‚·‚é
     float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0)));
-    float mie_boost = 0.001f + horizon_factor * (0.01f + air_mass * 0.05f);
+    float mie_boost = horizon_factor * (0.01f + air_mass * 0.05f);
     float phase_mie = MiePhase(cos_theta, 0.8f) * mie_boost;
     
     //Â‹ó‚Ì‚Í•Ï‰»‚ª­‚È‚¢‚Ì‚ÅƒTƒ“ƒvƒ‹”‚ğŒ¸‚ç‚µA
@@ -188,7 +186,7 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         float h = length(sample_pos) - EARTH_RADIUS;
 
         //100ƒ[ƒgƒ‹’n‰º‚È‚ç‚ÎAl—¶‚É“ü‚ê‚È‚­‚Ä‚à—Ç‚¢
-        if (h < 0.0f)
+        if (h < -100.0f)
         {
             continue;
         }
@@ -200,7 +198,6 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
     
-    result /= result + 1.0f; 
     
     return result;
 }
@@ -249,12 +246,6 @@ float4 main(PSIn pin) : SV_TARGET
     float3 view_dir = DirectionFromCubeUV(FaceIndex, pin.uv);
     
     
-    //’n•½üˆÈ‰º
-    if (view_dir.y < 0.0f)
-    {
-        //return float4(0, 0, 0, 1);
-    }
-    
     //‹^—‘½dU—‚Ì–‘OŒvZ
     float3 multi_scattering = PrecomputeMultiScattering(position, view_dir, sun_dir);
     
@@ -264,7 +255,13 @@ float4 main(PSIn pin) : SV_TARGET
     view_dir,
     sun_dir);
     
-    sky_color += single_scattering + (multi_scattering);
+    sky_color += single_scattering + (multi_scattering); //ŠÂ‹«Œõ“I‚É­‚µ‘«‚·
     
+    //–é‚ÌŠÈˆÕÀ‘•
+    float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
+    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
+
+    sky_color += lerp(float3(0.1f, 0.1f, 0.2f), 0, sun_elevation);
+
     return float4(sky_color.xyz, 1.0f);
 }

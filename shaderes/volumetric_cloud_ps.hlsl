@@ -270,7 +270,7 @@ float SampleCloudOpticalDepthAlongCone(
     for (int i = 0; i < loop_samples; i++)
     {
         float distance_t = i / (float) (loop_samples - 1);
-        float base_cone_width = step_length * lerp(0.4, 1.2, distance_t);
+        float base_cone_width = step_length * lerp(0.8, 1.2, distance_t);
 
         float3 weather_data = SampleWeatherData(sample_point.xz);
 
@@ -386,7 +386,7 @@ float3 ComputeSunIrradiance(float air_mass)
 // レイマーチングによる大気散乱と雲のレンダリング
 float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*背景の空の色*/)
 {
-    const float TRANSMITTANCE_EPS = 1e-2f;  //これ以下でほぼ遮蔽
+    const float TRANSMITTANCE_EPS = 1e-3f;  //これ以下でほぼ遮蔽
     const int ZERO_INSIDE_EXIT_COUNT = 6;   //雲内部で密度が連続する回数の閾値
     const float MAX_DISTANCE = length(ray_step*steps);
     
@@ -396,13 +396,13 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
     //レイの方向
     const float3 ray_direction = normalize(ray_step);
 	
-	// レイ開始位置を少しランダムにして横筋を目立たなくする（ディザリング）
+	// レイ開始位置を少しランダムにして横筋を目立たなくする
     float3 sample_point =ray_origin + ray_step * Hash(ray_origin * 6.0);
 	
     //太陽方向と位相関数
     float3 sun = -directional_light.direction.xyz;
     float3 sun_direction = normalize(sun);
-    float cos_theta = clamp(dot(ray_direction, sun_direction), -0.f, 1.0f); //視線と太陽の角度
+    float cos_theta = clamp(dot(ray_direction, sun_direction), -1.f, 1.0f); //視線と太陽の角度
     float g = 0.6f;
     //float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
     float henyey_greenstein_phase = MiePhase(cos_theta, g);
@@ -439,7 +439,6 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
     int zero_density_sample_count = 0;
     
     float dist = 0.0f;	
-    float alpha = 0;
 
     //メインのレイマーチングループ
 	[loop]
@@ -497,14 +496,15 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
 
 
                     //光学的厚み
-                    float shadow_strength = 10.0f; //影が薄くなるので強めにする
+                    float shadow_strength = 7.0f; //影が薄くなるので強めにする
                     float light_density_scale = density_scale * shadow_strength;
-                    float optical_thickness = (light_density_scale * (optical_depth_along_light_ray+density_along_light_ray));
+                    float optical_thickness = (light_density_scale * 
+                    (optical_depth_along_light_ray+density_along_light_ray));
                     
                     float rain_cloud_absorption = exp(-weather_data.g) * rain_cloud_absorption_scale;
 
                     //地平線方向では吸収を弱める
-                    float horizon_optical_scale = lerp(1.0f, 0.4f, horizon_soft);
+                    float horizon_optical_scale = lerp(1.0f, 0.7f, horizon_soft);
                     float beers_law = exp(-optical_thickness * horizon_optical_scale * rain_cloud_absorption);
 
 					// 雲内部を明るくする近似
@@ -527,7 +527,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     * lerp(1.f, 15.0f, henyey_greenstein_phase) // 太陽光位相関数
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
-                    +Ei*0.8f;
+                    +Ei;
 
                     // 合計ライト
                     float3 lighting=0.0f;
@@ -587,7 +587,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             if (cloud_test <= 0.0)
             {
                 //地平線は荒く、上空は細かくステップを進める
-                step_scale = lerp(1.0f, 3.0f, horizon);
+                step_scale = lerp(1.0f, 2.0f, horizon);
                 zero_density_sample_count++;
             }
             else
@@ -601,7 +601,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
         
         //早期終了判定
         dist = length(sample_point - ray_origin);
-        if(dist>=MAX_DISTANCE)
+        if (dist >= MAX_DISTANCE)
         {
             break;
         }
@@ -610,14 +610,10 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             break;
         }
         
-        alpha = saturate(1.0 - transmittence);
-        if(alpha>=0.9)
-        {
-            break;
-        }
 
     }    
         	    
+    float alpha = saturate(1.0f - transmittence);
     
     return max(0.0, float4(color, alpha));
 }
@@ -684,10 +680,10 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         // 遠くの雲を空にブレンド
         {
-            // 地平線方向でフェードを強める（任意だが非常に効く）
+            ////地平線方向でフェードを強める
             float view_up = saturate(dot(ray_dir, float3(0, 1, 0)));
             float horizon = 1.0 - view_up;
-            float horizon_fade = ((horizon * horizon) * (horizon * horizon));
+            float horizon_fade = ((horizon * horizon) * (horizon * horizon)) * ((horizon * horizon) * (horizon * horizon));
             
             //雲の色を空に近づけるが、遮蔽は意地
             float3 cloud_color_only =

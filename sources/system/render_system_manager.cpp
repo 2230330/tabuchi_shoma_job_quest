@@ -38,6 +38,11 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
     );
+    final_framebuffer_ = std::make_unique<FrameBuffer>(
+        Graphics::Instance().GetDevice(),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
+    );
     deferred_framebuffer_ = std::make_unique<DeferredGBuffer>(
         Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
@@ -54,6 +59,9 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     light_shafts_ps_ =
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
             L".\\resources\\shader\\radial_god_lay_ps.cso");
+    fxaa_ps_ =
+        ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
+            L".\\resources\\shader\\fast_approximate_anti_aliasing_ps.cso");
 
 }
 
@@ -174,19 +182,35 @@ void RenderSystemManager::RenderAll()
     object_framebuffer_->Deactivate(ctx);
 
     // === 合成
-    //final_framebuffer_->Clear(ctx);
-    //final_framebuffer_->Activate(ctx);
+    
+    final_framebuffer_->Clear(ctx);
+    final_framebuffer_->Activate(ctx);
 
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),
         object_framebuffer_->GetShaderResourceView(0).Get(),
     };
-    Graphics::Instance().SetRenderTargets();
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
+    final_framebuffer_->Deactivate(ctx);
     Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
+    
 
-    //final_framebuffer_->Deactivate(ctx);
+    ////FXAAによるアンチエイジング
+    RenderState render_state(Graphics::Instance().GetDevice());
+    ctx->OMSetBlendState(render_state.GetBlendState(BlendState::transparency),nullptr,0xFFFFFFFF);
+
+    ID3D11ShaderResourceView* fxaa_srvs[]
+    {
+        final_framebuffer_->GetShaderResourceView(0).Get(),
+    };
+    Graphics::Instance().SetShaderResource(0, _countof(fxaa_srvs), fxaa_srvs);
+    bit_block_transfer_->
+        blit(ctx, fxaa_srvs, 0, _countof(fxaa_srvs), fxaa_ps_.Get());
+
+    history_color_srv_ = final_framebuffer_->GetShaderResourceView(0).Get();
+    Graphics::Instance().ClearShaderResourceViews(0, _countof(fxaa_srvs));
+
 
     //// 最終出力へ
     //srvs[0] = final_framebuffer_->GetShaderResourceView(0).Get();

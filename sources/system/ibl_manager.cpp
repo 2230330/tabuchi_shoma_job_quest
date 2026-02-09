@@ -120,20 +120,6 @@ void IBLManager::Initialize(ID3D11Device* dev)
         dev_->CreateBuffer(&cbd, nullptr, cb_sky_cube_.GetAddressOf());
     }
 
-    // --- 定数バッフ ---
-    //{
-    //    D3D11_BUFFER_DESC bd{};
-    //    bd.ByteWidth = sizeof(SH9Constants);
-    //    bd.Usage = D3D11_USAGE_DEFAULT;
-    //    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    //    dev_->CreateBuffer(&bd, nullptr, cb_sh_.GetAddressOf());
-
-    //    SH9Constants init{};
-    //    for (int i = 0; i < 9; ++i) init.c[i] = DirectX::XMFLOAT4(0, 0, 0,0);
-    //    init.c[0] = DirectX::XMFLOAT4(0.03f, 0.03f, 0.03f,0.f);
-    //    ctx_->UpdateSubresource(cb_sh_.Get(), 0, nullptr, &init, 0, 0);
-    //}
-
     // --- Specular Prefilter 出力キューブ（mip 付き） ---
     {
         const UINT mipCount = CalcMipCount(kPrefilterSize);

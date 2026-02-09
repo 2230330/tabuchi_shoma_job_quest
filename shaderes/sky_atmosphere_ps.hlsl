@@ -20,7 +20,7 @@ static const float OZONE_CENTER_HEIGHT = 50000.f;
 static const float EARTH_RADIUS = 6360000.0f; // 地球半径 [m]
 static const float SUN_DISTANCE = 150000000000.0f; // 太陽までの距離 [m]
 static const float ATMOSPHERE_HEIGHT = 100000.0f; // 大気の高さ [m]
-static const int MAX_SAMPLES = 16;
+static const int MAX_SAMPLES = 64;
 
 //簡易的レイリー散乱
 float3 SigmaRayleigh(float h)
@@ -114,7 +114,7 @@ float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, f
     float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0))); //０＝天頂、1＝地
     float mie_boost = 0.5f * horizon_factor * (0.01f + air_mass * 0.05f);
     
-    float cos_theta = lerp(dot(view_dir, light_dir), -0.4f, 1.0f);
+    float cos_theta = lerp(dot(view_dir, light_dir), -.4f, 1.0f);
     float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
     float phase = ((RayleighPhase(cos_theta) * (lerp(10.0f, 2.f, sunset_factor))
     + MiePhase(cos_theta, 0.5) * mie_boost) / (4.0f * PI));
@@ -153,23 +153,23 @@ float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, f
 float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
 {
     
-    float cos_theta = clamp(dot(view_dir, light_dir), -0.f, 1.0f); //視線と太陽の角度
+    float cos_theta = clamp(dot(view_dir, light_dir), -0.4f, 1.0f); //視線と太陽の角度
     float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // 太陽の高さ
     float sun_theta = acos(sun_elevation) * (180.0f / PI); //度に変換
     //kasten-Young 1989近似
     float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant近似
     //air_mass = min(air_mass, 50.0f); // 極端な値を制限
 
-    float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10を0～1に正規化
+    float sunset_factor = saturate((air_mass - 1.0f) / 10.0f); //1~10を0～1に正規化
     float3 Ei = ComputeSunIrradiance(air_mass);
     
     //太陽に近いほど1.0
     float angle_factor = pow(saturate(cos_theta), 2.0f);
-    float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(30.0f, 10.f, sunset_factor));
+    float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(20.0f, 10.f, sunset_factor));
     //夕焼けを作る際、夕焼けは太陽の傾きによるミー散乱の強化が主な要因の為、
     //太陽の傾きで強くする
     float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0)));
-    float mie_boost = 0.001f + horizon_factor * (0.01f + air_mass * 0.05f);
+    float mie_boost =horizon_factor * (0.01f + air_mass * 0.05f);
     float phase_mie = MiePhase(cos_theta, 0.8f) * mie_boost;
     
     //青空の時は変化が少ないのでサンプル数を減らし、
@@ -189,7 +189,7 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         float h = length(sample_pos) - EARTH_RADIUS;
 
         //100メートル地下ならば、考慮に入れなくても良い
-        if (h < 0.0f)
+        if (h < -100.0f)
         {
             continue;
         }
@@ -201,7 +201,6 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
     
-    result /= result + 1.0f; //トーンマッピング
     
     return result;
 }
@@ -220,13 +219,6 @@ float4 main(VS_OUT pin):SV_TARGET
     float3 sun_dir = normalize(sun_pos.xyz-pin.world_pos.xyz);//頂点ー＞太陽
     //カメラから天球の各頂点への方向
     float3 view_dir = normalize(pin.world_pos.xyz - camera_position.xyz); //camera->頂点まで方向
-    
-    
-    //地平線以下
-    if (view_dir.y < 0.0f)
-    {
-        //return float4(0, 0, 0, 1);
-    }
     
     //疑似多重散乱の事前計算
     float3 multi_scattering = PrecomputeMultiScattering(position, view_dir, sun_dir);
