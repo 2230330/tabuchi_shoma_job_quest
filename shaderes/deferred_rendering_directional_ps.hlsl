@@ -155,7 +155,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     }
     
 
-    float3 color = diffuse + specular+data.emissive_color.rgb;
+    float3 color = diffuse + specular;
     float alpha = (color.r + color.g + color.b) / 3.0f;
     if (color.r == 0.f && color.g == 0.f && color.b == 0.f)
     {

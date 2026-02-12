@@ -100,7 +100,9 @@ void main(
     // 初期化（全スレッド必須）
     [unroll]
     for (int i = 0; i < 9; ++i)
+    {
         gAccum[i][idx] = float3(0, 0, 0);
+    }
 
     bool valid = (gtid.x < dim) && (gtid.y < dim);
 

@@ -53,7 +53,6 @@ float MiePhase(float cos_theta,float g)
 {
     //ヘニエイ・グリーンスタイン関数
     float g2 = g * g;
-    
     return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
 }
 
