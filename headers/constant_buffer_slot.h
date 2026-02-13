@@ -11,7 +11,7 @@ enum  ConstantBufferSlot :uint8_t {
     kSH9,
 
     kCustomStart = 10,
-    kSkyRayleigh = kCustomStart + 1,
+    kSkyAtmosphere = kCustomStart + 1,
     kCloudDome = kCustomStart + 2,
     kPbrAjdjastParamter = kCustomStart + 3,
     

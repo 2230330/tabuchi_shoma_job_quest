@@ -129,11 +129,57 @@ void ComponentEditor::DrawImgui()
                     ImGui::Separator();
                 }
 
+                //ëÂãCéUóêí≤êÆóp
                 if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
                 {
                     ImGui::Text("Sky Atmosphere Component");
                     has_sky_ = entity.entity;
 
+                    auto& sky = comp_mng_.Get<ComponentSkyAtmosphere>(entity.entity);
+
+                    ImGui::Separator();
+                    ImGui::Text("Scattering Scale Heights");
+
+                    ImGui::DragFloat("Rayleigh Scale Height (m)",
+                        &sky.rayleigh_scale_height,
+                        100.0f, 1000.0f, 20000.0f, "%.0f");
+
+                    ImGui::DragFloat("Mie Scale Height (m)",
+                        &sky.mie_scale_height,
+                        50.0f, 100.0f, 10000.0f, "%.0f");
+
+                    ImGui::Separator();
+                    ImGui::Text("Ozone Layer");
+
+                    ImGui::DragFloat("Ozone Half Width (m)",
+                        &sky.ozone_scale_half_width,
+                        500.0f, 1000.0f, 50000.0f, "%.0f");
+
+                    ImGui::DragFloat("Ozone Center Height (m)",
+                        &sky.ozone_center_height,
+                        1000.0f, 10000.0f, 100000.0f, "%.0f");
+
+                    ImGui::Separator();
+                    ImGui::Text("Planet Settings");
+
+                    ImGui::DragFloat("Earth Radius (m)",
+                        &sky.earth_height,
+                        1000.0f, 6000000.0f, 7000000.0f, "%.0f");
+
+                    ImGui::DragFloat("Atmosphere Height (m)",
+                        &sky.atmosphere_height,
+                        100.0f, 10000.0f, 200000.0f, "%.0f");
+
+                    ImGui::DragFloat("Sun Distance (m)",
+                        &sky.sun_distance,
+                        1e7f, 1e9f, 3e11f, "%.0e");
+
+                    ImGui::Separator();
+                    ImGui::Text("Sampling");
+
+                    ImGui::SliderInt("Max Sample Count",
+                        &sky.max_sample,
+                        1, 128);
 
                     ImGui::Separator();
                 }

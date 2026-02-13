@@ -2,6 +2,7 @@
 #include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
 
+//宇宙など、空の後ろに欲しい画像を入れる
 Texture2D sky_texture : register(t0);
 
 #define POINT_WRAP 0
@@ -12,32 +13,22 @@ Texture2D sky_texture : register(t0);
 SamplerState sampler_states[5] : register(s0);
 
 static const float PI = 3.14159265358979323846f;
-
-static const float RAYLEIGH_SCALE_HEIGHT = 8000.f;
-static const float MIE_SCALE_HEIGHT = 1200.f;
-static const float OZONE_SCALE_HALF_WIDTH = 15000.f;
-static const float OZONE_CENTER_HEIGHT = 50000.f;
-static const float EARTH_RADIUS = 6360000.0f; // 地球半径 [m]
-static const float SUN_DISTANCE = 150000000000.0f; // 太陽までの距離 [m]
-static const float ATMOSPHERE_HEIGHT = 100000.0f; // 大気の高さ [m]
-static const int MAX_SAMPLES = 64;
-
 //簡易的レイリー散乱
 float3 SigmaRayleigh(float h)
 {
     
-    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / RAYLEIGH_SCALE_HEIGHT);
+    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / rayleigh_scale_height);
 }
 //簡易的ミー散乱
 float3 SigmaMie(float h)
 {
-    return float3(3.996e-6, 3.31e-6, 1e-6f) * exp(-(h) / MIE_SCALE_HEIGHT);
+    return float3(3.996e-6, 3.31e-6, 1e-6f) * exp(-(h) / mie_scale_height);
 }
 //オゾン吸収係数
 float3 SigmaOzone(float h)
 {
     float3 coeff = float3(0.650e-6, 1.881e-6, 0.085e-6);
-    float ozoneFactor = max(0.0, 1.0 - (abs(h-OZONE_CENTER_HEIGHT)/OZONE_SCALE_HALF_WIDTH));
+    float ozoneFactor = max(0.0, 1.0 - (abs(h-ozone_center_height)/ozone_scale_half_width));
     return coeff * ozoneFactor;
 }
 //フェーズ関数(レイリー散乱)
@@ -62,7 +53,7 @@ float3 TransmittanceApprox(float3 startPos, float3 endPos)
     float distance = max(50e3f,length(endPos - startPos));
     // 高度に依存した sigma_t_avg を評価するのが理想だが、まずは sample midpoint を使う
     float3 midPos = (startPos + endPos) * 0.5f;
-    float h = max(0.0f,length(midPos) - EARTH_RADIUS);
+    float h = max(0.0f,length(midPos) - earth_height);
     float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
     return exp(-sigma_t * distance); // component-wise exp
 }
@@ -92,7 +83,7 @@ float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, f
 {
     float3 sample_pos = position;
     //高度計算
-    float h = length(sample_pos) - EARTH_RADIUS; //自身の位置-地球半径
+    float h = length(sample_pos) - earth_height; //自身の位置-地球半径
     //100メートル地下ならば、計算する必要はない
     if (h < -100.f)
         return float3(0.f, 0.f, 0.f);
@@ -119,13 +110,13 @@ float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, f
     + MiePhase(cos_theta, 0.5) * mie_boost) / (4.0f * PI));
     
     //太陽方向
-    float3 T1 = TransmittanceApprox(sample_pos, sample_pos + light_dir * ATMOSPHERE_HEIGHT);
+    float3 T1 = TransmittanceApprox(sample_pos, sample_pos + light_dir * atmosphere_height);
     //中継点方向
     float3 T2 = TransmittanceApprox(position, sample_pos);
     
     //光学的厚さ τを簡易的に推定
     //積分をしたくないので設定
-    float approx_sun_distance = ATMOSPHERE_HEIGHT; //大気圏厚み
+    float approx_sun_distance = atmosphere_height; //大気圏厚み
     float sigma_t_avg = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f; //チャンネル平均
     float tau_sun = min(sigma_t_avg * approx_sun_distance, 2.0f); //単純近似の光学的深さ
     
@@ -173,19 +164,19 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
     
     //青空の時は変化が少ないのでサンプル数を減らし、
     //変化の多い地平線付近だけ多めにする
-    float samples_f = lerp(MAX_SAMPLES / 2, (float) MAX_SAMPLES, horizon_factor);
+    float samples_f = lerp(max_sample / 2, (float) max_sample, horizon_factor);
     int adaptive_samples = max(1, (int) round(samples_f)); // round() -> float, cast -> int
 
-    float step_size = ATMOSPHERE_HEIGHT / adaptive_samples;
+    float step_size = atmosphere_height / adaptive_samples;
     float3 result = float3(0.0, 0.0, 0.0);
     for (int i = 0; i < adaptive_samples; ++i)
     {
         float u = (i + 0.5f) / adaptive_samples;
-        float t = ATMOSPHERE_HEIGHT * (1.0f - pow(1.0f - u, 2.0f)); // 下層に多く
+        float t = atmosphere_height * (1.0f - pow(1.0f - u, 2.0f)); // 下層に多く
         //float t = i * step_size;
 
         float3 sample_pos = camera_pos + view_dir * t;
-        float h = length(sample_pos) - EARTH_RADIUS;
+        float h = length(sample_pos) - earth_height;
 
         //100メートル地下ならば、考慮に入れなくても良い
         if (h < -100.0f)
@@ -195,7 +186,7 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
         
         float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
         float3 T1 = TransmittanceApprox(camera_pos, sample_pos);
-        float3 T2 = TransmittanceApprox(sample_pos, sample_pos + light_dir * ATMOSPHERE_HEIGHT);
+        float3 T2 = TransmittanceApprox(sample_pos, sample_pos + light_dir * atmosphere_height);
         
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
@@ -212,9 +203,9 @@ float4 main(VS_OUT pin):SV_TARGET
     //大気散乱    
     float3 sky_color = float3(0, 0, 0);
 
-    float3 position =  float3(0.f, height+EARTH_RADIUS, 0.f);
+    float3 position =  float3(0.f, height+earth_height, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
-    float3 sun_pos = light_dir * SUN_DISTANCE; //太陽の位置()
+    float3 sun_pos = light_dir * sun_distance; //太陽の位置()
     float3 sun_dir = normalize(sun_pos.xyz-pin.world_pos.xyz);//頂点ー＞太陽
     //カメラから天球の各頂点への方向
     float3 view_dir = normalize(pin.world_pos.xyz - camera_position.xyz); //camera->頂点まで方向
