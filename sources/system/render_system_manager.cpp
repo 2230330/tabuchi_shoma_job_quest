@@ -150,7 +150,7 @@ void RenderSystemManager::RenderAll()
         ibl_manager_->SetCloudFlag(cloud_flag);
         ibl_manager_->BuildSkyCubeFromEnvSource();
 
-        //if (ibl_manager_->IsDirty()) 
+        if (ibl_manager_->IsDirty()) 
         {
 
 

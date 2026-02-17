@@ -650,9 +650,6 @@
     <FxCompile Include="shaderes\deferred_rendering_indirect_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\compute_shaders\ibl_sh9_cs.hlsl">
-      <Filter>Shaders\ComputeShader</Filter>
-    </FxCompile>
     <FxCompile Include="shaderes\deferred_rendering_directional_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
