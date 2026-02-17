@@ -275,9 +275,6 @@
     <ClInclude Include="headers\component\component_volumetric_cloud.h">
       <Filter>headers\component</Filter>
     </ClInclude>
-    <ClInclude Include="headers\component\component_intensity.h">
-      <Filter>headers\component</Filter>
-    </ClInclude>
     <ClInclude Include="headers\system\ibl_manager.h">
       <Filter>headers\system</Filter>
     </ClInclude>

@@ -17,7 +17,6 @@
 #include "component_instanced.h"
 #include "component_sky_atmosphere.h"
 #include "component_volumetric_cloud.h"
-#include"component_intensity.h"
 #include"component_ajast_pbr_paramter_.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
@@ -39,7 +38,6 @@ public:
         registerContainer<ComponentInstanced>(instanced_);
         registerContainer<ComponentSkyAtmosphere>(skys_);
         registerContainer<ComponentVolumetricCloud>(clouds_);
-        registerContainer<ComponentIntensity>(intensities_);
         registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
     }
 
@@ -194,6 +192,5 @@ private:
     std::vector<ComponentInstanced>instanced_;
     std::vector<ComponentSkyAtmosphere>skys_;
     std::vector<ComponentVolumetricCloud>clouds_;
-    std::vector<ComponentIntensity>intensities_;
     std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
 };

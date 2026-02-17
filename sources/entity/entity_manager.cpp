@@ -15,6 +15,19 @@ uint32_t EntityManager::Add() {
     return id;
 }
 
+uint32_t EntityManager::AddWithID(uint32_t id)
+{
+    if (id >= entities_.size())
+        entities_.resize(id + 1);
+
+    entities_[id].entity = id;
+    entities_[id].alive = true;
+
+    count_ = std::max(count_, id + 1);
+
+    return id;
+}
+
 //‚¦‚ñ‚Ä‚¡‚Ä‚¡‚Ìíœ
 void EntityManager::Remove(uint32_t id) {
     if (id < entities_.size()) {
