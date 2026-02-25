@@ -289,7 +289,7 @@ void ComponentEditor::DrawImgui()
                     auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
 
                     ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
-                    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, -1.0f, 1.0f);
+                    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, .0f, 1.0f);
 
                     //インスタンシング描画
                     if (ImGui::Button("instanced"))

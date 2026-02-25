@@ -167,7 +167,6 @@ void SkyRenderSystem::Render()
             // 描画呼び出し
             context->DrawIndexed(index_count_, 0, 0);
 
-            Graphics::Instance().ClearConstantBuffers(static_cast<int>(ConstantBufferSlot::kSkyAtmosphere), 1);
         }
 
         });

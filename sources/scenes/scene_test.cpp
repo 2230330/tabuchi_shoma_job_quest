@@ -50,7 +50,6 @@ bool SceneTest::InitializeCore()
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\blue_exagonal_tiles_with_extracted\\scene.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\cube.glb");
-            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\low_poly_tree_scene_free_extracted\\scene.gltf");
 
         }
         //shader
