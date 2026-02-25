@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <typeindex>
 #include <stdexcept>
+#include<functional>
 
 #include "component_position.h"
 #include "component_rotation.h"
@@ -49,7 +50,7 @@ public:
     }
 
     template<typename T>
-    int Add(uint16_t entity_id, const T& component) {
+    int Add(uint32_t entity_id, const T& component) {
         auto& container = getContainer<T>();
         container.emplace_back(component);
         int id = static_cast<int>(container.size() - 1);
@@ -142,11 +143,14 @@ public:
         }
     }
 
+
     //コンポーネントの持ち主のエンティティが死んだとき、属するコンポーネントを消す
     void RemoveAllComponents(uint32_t entity_id) {
-        for (auto& [type, mapping] : entity_to_component_) {
-            mapping.erase(entity_id);
+        for (auto& [type, remove_fn] : removers_)
+        {
+            remove_fn(entity_id);
         }
+
     }
 
 private:
@@ -154,6 +158,12 @@ private:
     template<typename T>
     void registerContainer(std::vector<T>& vec) {
         containers_[std::type_index(typeid(T))] = &vec;
+
+        //removerも登録
+        removers_[std::type_index(typeid(T))] = [this](uint32_t eid)
+            {
+                this->Remove<T>(eid);
+            };
     }
 
     template<typename T>
@@ -178,6 +188,7 @@ private:
     std::unordered_map<std::type_index, void*> containers_;
     //型ごとのマッピング機能
     std::unordered_map<std::type_index, std::unordered_map<uint32_t, int>> entity_to_component_;
+    std::unordered_map<std::type_index, std::function<void(uint32_t)>> removers_;
 
     std::vector<ComponentPosition> positions_;
     std::vector<ComponentRotation> rotations_;

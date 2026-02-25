@@ -194,8 +194,8 @@ void RenderSystemManager::RenderAll()
     
 
     ////FXAAによるアンチエイジング
-    //Graphics::Instance().ViewClear(0, 0, 0, 0);
-    //Graphics::Instance().SetRenderTargets(); //FXAAでフルスクリーン描画するため、コンテキストをリセット
+    Graphics::Instance().ViewClear(0, 0, 0, 0);
+    Graphics::Instance().SetRenderTargets(); //FXAAでフルスクリーン描画するため、コンテキストをリセット
     RenderState render_state(Graphics::Instance().GetDevice());
     ctx->OMSetBlendState(render_state.GetBlendState(BlendState::transparency),nullptr,0xFFFFFFFF);
 

@@ -11,7 +11,8 @@ public:
     uint32_t Add();
 
     //エンティティの割り込み
-    uint32_t AddWithID(uint32_t id);
+    //uint32_t AddWithID(uint32_t id);
+    bool AddWithID(uint32_t id);
 
     //エンティティの削除関数
     //削除されたエンティティ番号はフリーリストに入り、再利用される
