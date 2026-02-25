@@ -89,6 +89,7 @@ bool SceneTest::InitializeCore()
         
     }
 
+    comp_edit->Load("progress.json");
 
     return true;
 }
