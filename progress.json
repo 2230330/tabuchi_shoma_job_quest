@@ -24,11 +24,65 @@
                     "mie_scale_height": 1200.0,
                     "ozone_center_height": 50000.0,
                     "ozone_scale_half_width": 15000.0,
-                    "rayleigh_scale_height": 20000.0,
+                    "rayleigh_scale_height": 8000.0,
                     "sun_distance": 149999992832.0
                 }
             },
             "entity_id": 0
+        },
+        {
+            "components": {
+                "VolumetricCloud": {
+                    "alt_max": 6373000.0,
+                    "alt_min": 6371500.0,
+                    "auto_ray_march": 0,
+                    "cloud_type_scale": 1.0,
+                    "coverage_scale": 0.25,
+                    "density_scale": 0.05000000074505806,
+                    "earth_radius": 6370000.0,
+                    "high_freq_scale": 0.00039999998989515007,
+                    "horizon_scale": 1.0,
+                    "long_distance_density": 18.0,
+                    "low_freq_scale": 3.9999998989515007e-05,
+                    "powdered_sugar": 0,
+                    "rain_absorption": 0.5,
+                    "ray_march_steps": 128,
+                    "shadow_flag": false,
+                    "wind_speed": 1.0,
+                    "wind_x": 1.0,
+                    "wind_y": 0.75
+                }
+            },
+            "entity_id": 1
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 10.0,
+                    "y": 10.0,
+                    "z": 10.0
+                }
+            },
+            "entity_id": 2
         }
     ]
 }
