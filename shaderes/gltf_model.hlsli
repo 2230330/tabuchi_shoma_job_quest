@@ -48,6 +48,10 @@ cbuffer PRIMITIVE_CONSTANT_BUFFER : register(b0)
     int pad;
 };
 
+#define HS_IN VS_OUT
+#define DS_IN VS_OUT
+#define DS_OUT VS_OUT
+#define PS_IN VS_OUT
 
 static const uint PRIMITIVE_MAX_JOINTS = 512;
 cbuffer PRIMITIVE_JOINT_CONSTANTS : register(b2)

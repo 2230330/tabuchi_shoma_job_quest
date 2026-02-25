@@ -88,17 +88,16 @@ void RenderSystemManager::RenderAll()
     bool sky_flag = sky_render_system_->GetSkyFlag();
     bool cloud_flag = cloud_render_system_->HasRenderableCloud();
 
+    sky_framebuffer_->Clear(ctx);
+    sky_framebuffer_->Activate(ctx);
+    // 空、雲と別に描画し、作成した画像を雲に渡す
+    sky_render_system_->Render();
+
     if (back_sample_count_ < back_sample_rimit_) {
         back_sample_count_++;
     }
     else {
         back_sample_count_ = 0;
-
-        // 空、雲と別に描画し、作成した画像を雲に渡す
-        sky_framebuffer_->Clear(ctx);
-        sky_framebuffer_->Activate(ctx);
-        sky_render_system_->Render();
-
 
         sky_framebuffer_->Deactivate(ctx);
 
@@ -116,18 +115,6 @@ void RenderSystemManager::RenderAll()
             bit_block_transfer_->blit(ctx, srv, 0, 1);
         }
         
-        // 天体光描画
-        {
-            ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
-            if (cloud_flag)
-            {
-                cloud_shadow_srv[0] = {
-                    cloud_render_system_->GetCloudShadowSRV(),
-                };
-            }
-            bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
-        }
-
         //雲オンリーのゴッドレイ(未完成)
         //if (cloud_flag)
         //{
@@ -136,11 +123,21 @@ void RenderSystemManager::RenderAll()
         //    };
         //}
         //bit_block_transfer_->blit(ctx, srvs, 0, 1, light_shafts_ps_.Get());
-
-        back_framebuffer_->Deactivate(ctx);
-
-
     }
+        // 天体光描画
+    if (sky_flag)
+    {
+        ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
+        if(cloud_flag)
+        {
+            cloud_shadow_srv[0] = {
+                cloud_render_system_->GetCloudShadowSRV(),
+            };
+        }
+        bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
+    }
+
+    back_framebuffer_->Deactivate(ctx);
 
     //スカイキューブ作成
             // IBL 入力更新（背景SRV→SkyCube化を内包）
@@ -197,6 +194,8 @@ void RenderSystemManager::RenderAll()
     
 
     ////FXAAによるアンチエイジング
+    //Graphics::Instance().ViewClear(0, 0, 0, 0);
+    //Graphics::Instance().SetRenderTargets(); //FXAAでフルスクリーン描画するため、コンテキストをリセット
     RenderState render_state(Graphics::Instance().GetDevice());
     ctx->OMSetBlendState(render_state.GetBlendState(BlendState::transparency),nullptr,0xFFFFFFFF);
 
@@ -204,19 +203,13 @@ void RenderSystemManager::RenderAll()
     {
         final_framebuffer_->GetShaderResourceView(0).Get(),
     };
-    Graphics::Instance().SetShaderResource(0, _countof(fxaa_srvs), fxaa_srvs);
+    Graphics::Instance().SetShaderResource(0, 1, fxaa_srvs);
     bit_block_transfer_->
-        blit(ctx, fxaa_srvs, 0, _countof(fxaa_srvs), fxaa_ps_.Get());
+        blit(ctx, fxaa_srvs, 0, 1, fxaa_ps_.Get());
 
     history_color_srv_ = final_framebuffer_->GetShaderResourceView(0).Get();
-    Graphics::Instance().ClearShaderResourceViews(0, _countof(fxaa_srvs));
+    Graphics::Instance().ClearShaderResourceViews(0,1);
 
-
-    //// 最終出力へ
-    //srvs[0] = final_framebuffer_->GetShaderResourceView(0).Get();
-    //Graphics::Instance().SetShaderResource(0, 1, srvs);
-    //bit_block_transfer_->blit(ctx, srvs, 0, 1);
-    //Graphics::Instance().ClearShaderResourceViews(0, 1);
 }
 
 //レンダーパスごとにシステムを回す

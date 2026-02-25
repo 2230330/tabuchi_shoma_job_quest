@@ -50,6 +50,7 @@ bool SceneTest::InitializeCore()
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\blue_exagonal_tiles_with_extracted\\scene.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\cube.glb");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\low_poly_tree_scene_free_extracted\\scene.gltf");
 
         }
         //shader
@@ -85,6 +86,8 @@ bool SceneTest::InitializeCore()
             ComponentSkyAtmosphere sky;
             comp_mng->Add(entity, sky);
         }
+
+        
     }
 
 
@@ -206,11 +209,11 @@ void SceneTest::DrawImguiCore()
     //ライトマネージャー
     light_manager_->DrawImgui();
 
-    //ポストエフェク
-    ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);
-    ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h * 5.0f }, ImGuiSetCond_Always);
-    ImGui::SetNextWindowBgAlpha(imgui_alpha);
-    post_pro_mng->PostImgui();
+    ////ポストエフェク
+    //ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);
+    //ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h * 5.0f }, ImGuiSetCond_Always);
+    //ImGui::SetNextWindowBgAlpha(imgui_alpha);
+    //post_pro_mng->PostImgui();
 
     //コンポーネントマネージャ
     ImGui::SetNextWindowPos({ imgui_window_size_x*7,0 }, ImGuiSetCond_Always);

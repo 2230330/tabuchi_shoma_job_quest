@@ -123,7 +123,7 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_p
 void SkyRenderSystem::Render()
 {
     sky_flag_ = false;
-    comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere& sky_atmosphere) {
+    comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere sky_atmosphere) {
         {
             sky_flag_ = true;
 

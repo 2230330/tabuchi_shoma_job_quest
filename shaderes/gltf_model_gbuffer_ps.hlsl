@@ -62,7 +62,7 @@ Texture2D<float4> material_textures[5] : register(t1);
 #define LINEAR_MIRROR 5
 SamplerState sampler_states[6] : register(s0);
 
-PSGBufferOut main(VS_OUT pin, bool is_front_face : SV_IsFrontFace)
+PSGBufferOut main(PS_IN pin, bool is_front_face : SV_IsFrontFace)
 {
     material_constants m = materials[material];
 
