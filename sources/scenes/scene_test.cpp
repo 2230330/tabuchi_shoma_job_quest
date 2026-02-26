@@ -70,21 +70,6 @@ bool SceneTest::InitializeCore()
                 );
             }
         }
-        //‘å‹CU—‚Æ‰_
-        {
-            int entity = world->GetEntityManager()->Add();
-            ComponentPosition position{};
-            comp_mng->Add<ComponentPosition>(entity, position);
-            ComponentRotation rotation{};
-            comp_mng->Add<ComponentRotation>(entity, rotation);
-            ComponentScale scale;
-            scale.value = { 1.f, 1.f, 1.f };
-            comp_mng->Add(entity, scale);
-            ComponentLocalToWorld l2w{};
-            comp_mng->Add(entity, l2w);
-            ComponentSkyAtmosphere sky;
-            comp_mng->Add(entity, sky);
-        }
 
         
     }
