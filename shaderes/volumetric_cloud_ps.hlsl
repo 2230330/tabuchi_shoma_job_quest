@@ -49,7 +49,7 @@ float3 SampleWeatherData(float2 sample_point)
     float2 offset = ((options.z + time_offset) * 0.001) * normalize(-wind_direction) * wind_speed;
 
     float horizon_distance = sqrt(cloud_altitudes_min_max.x * cloud_altitudes_min_max.x - earth_radius * earth_radius) * horizon_distance_scale;
-    return weather_texture.Sample(sampler_states[LINEAR_WRAP], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
+    return weather_texture.Sample(sampler_states[LINEAR_MIRROR], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
 
 }
 

@@ -58,7 +58,7 @@
         {
             "components": {
                 "AdjustPBR": {
-                    "metalness": 0.0,
+                    "metalness": 0.004000000189989805,
                     "roughness": 0.0
                 },
                 "Gltf": {
@@ -68,7 +68,7 @@
                 },
                 "Position": {
                     "x": 0.0,
-                    "y": 0.0,
+                    "y": 1.0,
                     "z": 0.0
                 },
                 "Rotation": {
@@ -77,12 +77,41 @@
                     "z": 0.0
                 },
                 "Scale": {
-                    "x": 10.0,
-                    "y": 10.0,
-                    "z": 10.0
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
                 }
             },
             "entity_id": 2
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 1.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": -1.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 100000.0,
+                    "y": 1.0,
+                    "z": 100000.0
+                }
+            },
+            "entity_id": 3
         }
     ]
 }

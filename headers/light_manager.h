@@ -70,11 +70,13 @@ private:
     float elevation_ = DirectX::XMConvertToRadians(-25);//ライトの仰角
     DirectX::XMFLOAT4 ambient_color_ = { 0.2,0.2,0.2,1 };
     //ライト空間用
+    DirectX::XMFLOAT4X4 light_view_{};
+    DirectX::XMFLOAT4X4 light_projection_{};
     DirectX::XMFLOAT4X4 light_view_projection_{};
     DirectX::XMFLOAT4X4 inverse_light_view_projection_{};
     const float shadow_distance_ = 50000;
     const float shadow_near_plane_ = 1.0f;
-    const float shadow_far_plane_ = 200000;
+    const float shadow_far_plane_ = 200;
     const float shadow_map_size_ = 1024.0f;
 
 

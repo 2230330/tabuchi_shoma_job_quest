@@ -233,12 +233,14 @@ void LightManager::Update(float elapsed_time)
 		up = DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
 
 	DirectX::XMMATRIX V = DirectX::XMMatrixLookAtLH(light_pos, target, up);
+    DirectX::XMStoreFloat4x4(&light_view_, V);
 
 	// 正射影（範囲は雲影を落としたい地面サイズ）
 	float w = shadow_map_size_;
 	float h = shadow_map_size_;
 
 	DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicLH(w, h, shadow_near_plane_, shadow_far_plane_);
+    DirectX::XMStoreFloat4x4(&light_projection_, P);
 
 	DirectX::XMMATRIX VP = V * P;
 	DirectX::XMStoreFloat4x4(&light_view_projection_, VP);

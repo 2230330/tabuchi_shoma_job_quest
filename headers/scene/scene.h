@@ -8,6 +8,26 @@
 #include"../graphics.h"
 #include"../light_manager.h"
 
+struct scene_constants
+{
+	DirectX::XMFLOAT4 options;	//	xy : マウスの座標値, z : タイマー, w : フラグ
+	DirectX::XMFLOAT4 z_buffer_parameteres;
+	DirectX::XMFLOAT4 camera_position;
+	DirectX::XMFLOAT4 camera_direction;
+	DirectX::XMFLOAT4 camera_clip_distance;
+	DirectX::XMFLOAT4 viewport_size;
+	DirectX::XMFLOAT4X4 view_transform;
+	DirectX::XMFLOAT4X4 projection_transform;
+	DirectX::XMFLOAT4X4 view_projection_transform;
+	DirectX::XMFLOAT4X4 inverse_view_transform;
+	DirectX::XMFLOAT4X4 inverse_projection_transform;
+	DirectX::XMFLOAT4X4 inverse_view_projection_transform;
+	DirectX::XMFLOAT4X4 previous_view_projection_transform;
+	DirectX::XMFLOAT2 sun_uv; //画面上の太陽位置
+	float sun_visible; //カメラ前方にあるか
+	float dummy;
+};
+
 class Scene
 {
 public:
@@ -28,6 +48,10 @@ public:
 
 
 	void SetWheel(float wheel) { this->wheel = wheel; }
+
+    DirectX::XMFLOAT3 GetCameraPosition() const { return camera_position; }
+    POINT GetCursorPosition() const { return cursor_position; }
+
 
 protected:
 	virtual bool InitializeCore() { return true; }
@@ -51,25 +75,7 @@ protected:
 	//};
 	//static constexpr float gltf_scale_factor = 1.0f;		//	単位をメートルにする場合は0.01に指定する事
 
-	struct scene_constants
-	{
-		DirectX::XMFLOAT4 options;	//	xy : マウスの座標値, z : タイマー, w : フラグ
-		DirectX::XMFLOAT4 z_buffer_parameteres;
-		DirectX::XMFLOAT4 camera_position;
-		DirectX::XMFLOAT4 camera_direction;
-		DirectX::XMFLOAT4 camera_clip_distance;
-		DirectX::XMFLOAT4 viewport_size;
-		DirectX::XMFLOAT4X4 view_transform;
-		DirectX::XMFLOAT4X4 projection_transform;
-		DirectX::XMFLOAT4X4 view_projection_transform;
-		DirectX::XMFLOAT4X4 inverse_view_transform;
-		DirectX::XMFLOAT4X4 inverse_projection_transform;
-		DirectX::XMFLOAT4X4 inverse_view_projection_transform;
-		DirectX::XMFLOAT4X4 previous_view_projection_transform;
-        DirectX::XMFLOAT2 sun_uv; //画面上の太陽位置
-        float sun_visible; //カメラ前方にあるか
-        float dummy;
-	};
+
 
 
 private:
@@ -84,7 +90,7 @@ private:
 	float timer{ 0.0f };
 	bool flag{ false };
 	float near_clip_distance{ 0.1f };
-	float far_clip_distance{ 10000.0f };
+	float far_clip_distance{ 1000.0f };
 	float fov_y{ DirectX::XMConvertToRadians(30) };
 
 	DirectX::XMFLOAT3 camera_position{ 0.0f, 0.0f, -10.0f };

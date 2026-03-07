@@ -8,7 +8,6 @@ enum  ConstantBufferSlot :uint8_t {
     kForwardLight,
     kDeferredLight,
     kPostEffect,
-    kTessellation,
 
     kCustomStart = 10,
     kSkyAtmosphere = kCustomStart + 1,

@@ -660,7 +660,7 @@ if_nz r0.w
       mul r13.z, r13.z, l(2.000000)
       div r13.zw, r14.xxxy, r13.zzzz
       add r13.xy, r13.xyxx, r13.zwzz
-      sample_indexable(texture2d)(float,float,float,float) r13.xyz, r13.xyxx, t2.xzyw, s2  // r13.x <- <SampleWeatherData return value>.x; r13.z <- <SampleWeatherData return value>.y; r13.y <- <SampleWeatherData return value>.z
+      sample_indexable(texture2d)(float,float,float,float) r13.xyz, r13.xyxx, t2.xzyw, s5  // r13.x <- <SampleWeatherData return value>.x; r13.z <- <SampleWeatherData return value>.y; r13.y <- <SampleWeatherData return value>.z
 
 #line 454
       mov r13.xyz, r13.xyzx  // r13.x <- weather_data.x; r13.y <- weather_data.z; r13.z <- weather_data.y
@@ -1121,7 +1121,7 @@ if_nz r0.w
           mul r17.x, r17.x, l(2.000000)
           div r17.xy, r18.xyxx, r17.xxxx
           add r16.zw, r16.zzzw, r17.xxxy
-          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s2
+          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s5
           mov r16.zw, r16.zzzw  // r16.z <- <SampleWeatherData return value>.x; r16.w <- <SampleWeatherData return value>.z
 
 #line 278
@@ -1600,7 +1600,7 @@ if_nz r0.w
           mul r17.x, r17.x, l(2.000000)
           div r17.xy, r18.xyxx, r17.xxxx
           add r16.zw, r16.zzzw, r17.xxxy
-          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s2
+          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s5
           mov r16.zw, r16.zzzw  // r16.z <- <SampleWeatherData return value>.x; r16.w <- <SampleWeatherData return value>.z
 
 #line 278
@@ -2079,7 +2079,7 @@ if_nz r0.w
           mul r17.x, r17.x, l(2.000000)
           div r17.xy, r18.xyxx, r17.xxxx
           add r16.zw, r16.zzzw, r17.xxxy
-          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s2
+          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s5
           mov r16.zw, r16.zzzw  // r16.z <- <SampleWeatherData return value>.x; r16.w <- <SampleWeatherData return value>.z
 
 #line 278
@@ -2558,7 +2558,7 @@ if_nz r0.w
           mul r17.x, r17.x, l(2.000000)
           div r17.xy, r18.xyxx, r17.xxxx
           add r16.zw, r16.zzzw, r17.xxxy
-          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s2
+          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s5
           mov r16.zw, r16.zzzw  // r16.z <- <SampleWeatherData return value>.x; r16.w <- <SampleWeatherData return value>.z
 
 #line 278
@@ -3037,7 +3037,7 @@ if_nz r0.w
           mul r17.x, r17.x, l(2.000000)
           div r17.xy, r18.xyxx, r17.xxxx
           add r16.zw, r16.zzzw, r17.xxxy
-          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s2
+          sample_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t2.ywxz, s5
           mov r16.zw, r16.zzzw  // r16.z <- <SampleWeatherData return value>.x; r16.w <- <SampleWeatherData return value>.z
 
 #line 278
@@ -3504,7 +3504,7 @@ if_nz r0.w
           mul r16.x, r16.x, l(2.000000)
           div r16.xy, r17.xyxx, r16.xxxx
           add r15.yw, r15.yyyw, r16.xxxy
-          sample_indexable(texture2d)(float,float,float,float) r15.yw, r15.ywyy, t2.yxwz, s2  // r15.y <- <SampleWeatherData return value>.x; r15.w <- <SampleWeatherData return value>.z
+          sample_indexable(texture2d)(float,float,float,float) r15.yw, r15.ywyy, t2.yxwz, s5  // r15.y <- <SampleWeatherData return value>.x; r15.w <- <SampleWeatherData return value>.z
 
 #line 278
           mov r15.yw, r15.yyyw  // r15.y <- weather_data.x; r15.w <- weather_data.z
@@ -3959,7 +3959,7 @@ if_nz r0.w
           mul r14.w, r14.w, l(2.000000)
           div r16.xy, r16.xyxx, r14.wwww
           add r15.xy, r15.xyxx, r16.xyxx
-          sample_indexable(texture2d)(float,float,float,float) r15.xy, r15.xyxx, t2.xzyw, s2  // r15.x <- <SampleWeatherData return value>.x; r15.y <- <SampleWeatherData return value>.z
+          sample_indexable(texture2d)(float,float,float,float) r15.xy, r15.xyxx, t2.xzyw, s5  // r15.x <- <SampleWeatherData return value>.x; r15.y <- <SampleWeatherData return value>.z
 
 #line 330
           mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
@@ -4528,7 +4528,7 @@ if_nz r0.w
       mul r14.z, r14.z, l(2.000000)
       div r14.zw, r15.xxxy, r14.zzzz
       add r14.xy, r14.xyxx, r14.zwzz
-      sample_indexable(texture2d)(float,float,float,float) r14.xy, r14.xyxx, t2.xzyw, s2  // r14.x <- <SampleWeatherData return value>.x; r14.y <- <SampleWeatherData return value>.z
+      sample_indexable(texture2d)(float,float,float,float) r14.xy, r14.xyxx, t2.xzyw, s5  // r14.x <- <SampleWeatherData return value>.x; r14.y <- <SampleWeatherData return value>.z
 
 #line 585
       mov r14.xy, r14.xyxx  // r14.x <- weather_data.x; r14.y <- weather_data.z

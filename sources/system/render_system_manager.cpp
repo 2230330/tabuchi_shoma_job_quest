@@ -149,8 +149,6 @@ void RenderSystemManager::RenderAll()
 
         if (ibl_manager_->IsDirty()) 
         {
-
-
             // Specularの分割更新（負荷に応じて複数ステップ回すと収束が早い）
             //for (int s = 0; s < ibl_steps_per_frame_; ++s) 
             {
@@ -191,7 +189,6 @@ void RenderSystemManager::RenderAll()
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
     final_framebuffer_->Deactivate(ctx);
     Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
-    
 
     ////FXAAによるアンチエイジング
     Graphics::Instance().ViewClear(0, 0, 0, 0);
