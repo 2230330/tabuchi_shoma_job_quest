@@ -112,6 +112,22 @@
                 }
             },
             "entity_id": 3
+        },
+        {
+            "components": {
+                "Camera": {
+                    "dir_x": 0.0,
+                    "dir_y": 0.0,
+                    "dir_z": -1.0,
+                    "far": 1000.0,
+                    "main": true,
+                    "near": 0.10000000149011612,
+                    "pos_x": 0.0,
+                    "pos_y": 0.0,
+                    "pos_z": 10.0
+                }
+            },
+            "entity_id": 5
         }
     ]
 }

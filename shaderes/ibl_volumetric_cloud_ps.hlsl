@@ -1,6 +1,7 @@
 #include"volumetric_cloud.hlsli"
 #include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
+#include"camera_buffer.hlsli"
 
 Texture2D sky_texture : register(t5);
 

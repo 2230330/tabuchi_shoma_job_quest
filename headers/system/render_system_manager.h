@@ -14,6 +14,7 @@
 #include"../framebuffer.h"
 #include"../deferred_g_buffer.h"
 #include"../light_manager.h"
+#include"camera_set_constants.h"
 //コンポーネントを回すためのクラス
 class RenderSystemManager {
 public:
@@ -52,6 +53,8 @@ private:
 
     //IBLマネージャ
     std::unique_ptr<IBLManager> ibl_manager_ ;
+
+    std::unique_ptr<CameraSetConstants> camera_set_constants_;
 
     //ライト情報 
     LightManager* light_manager_ = nullptr;

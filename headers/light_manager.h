@@ -53,6 +53,10 @@ public:
 
     size_t GetDeferredLightsSize() const{ return deferred_lights_.size(); }
 
+    //ライトの位置から見た射影行列を取得
+    //現在はディレクションライトのみ
+    const DirectX::XMFLOAT4X4& GetLightViewProjection() const { return light_view_projection_; }
+    const DirectX::XMFLOAT4X4& GetInverseLightViewProjection() const { return inverse_light_view_projection_; }
 
     //ライトのIMGUI管理
     void DrawImgui();
@@ -74,8 +78,8 @@ private:
     DirectX::XMFLOAT4X4 light_projection_{};
     DirectX::XMFLOAT4X4 light_view_projection_{};
     DirectX::XMFLOAT4X4 inverse_light_view_projection_{};
-    const float shadow_distance_ = 50000;
-    const float shadow_near_plane_ = 1.0f;
+    const float shadow_distance_ = 50;
+    const float shadow_near_plane_ = 0.1f;
     const float shadow_far_plane_ = 200;
     const float shadow_map_size_ = 1024.0f;
 

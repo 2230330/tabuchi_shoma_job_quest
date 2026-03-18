@@ -19,7 +19,7 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     AddSystem(std::make_unique<GltfRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<InstancingRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Lighting));
-    deferred_render_system_ = std::make_unique<DeferredRenderSystem>( RenderPass_Lighting);
+    deferred_render_system_ = std::make_unique<DeferredRenderSystem>(comp_mng_, RenderPass_Lighting);
 
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
@@ -53,6 +53,9 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     ibl_manager_ = std::make_unique<IBLManager>();
     ibl_manager_->Initialize(Graphics::Instance().GetDevice());
 
+    //カメラ情報の更新用クラス
+    camera_set_constants_ = std::make_unique<CameraSetConstants>(comp_mng_);
+
     celestial_light_ps_ =
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
             L".\\resources\\shader\\celestial_light_ps.cso");
@@ -74,6 +77,11 @@ void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)
 void RenderSystemManager::RenderAll()
 {
     auto* ctx = Graphics::Instance().GetDeviceContext();
+
+    //カメラ情報の更新
+    camera_set_constants_->SetBuffer(ctx);
+
+    //ライト情報の更新
     deferred_render_system_->SetLightManager(light_manager_);
 
     // === オブジェクト（毎フレーム） ===
@@ -172,6 +180,8 @@ void RenderSystemManager::RenderAll()
 
     object_framebuffer_->Clear(ctx);
     object_framebuffer_->Activate(ctx);
+    //オブジェクトのライティング
+    deferred_render_system_->SetCameraPosition(camera_set_constants_->GetCameraPosition());
     deferred_render_system_->Render();
 
     object_framebuffer_->Deactivate(ctx);

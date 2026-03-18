@@ -69,6 +69,10 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_vs.cso", vertex_shader_.ReleaseAndGetAddressOf(), 
 		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 
+	//shadowmap用
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_shadow_caster_vs.cso", shadow_caster_vs_.ReleaseAndGetAddressOf(),
+		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
+
 	//インスタンシング描画を埋め込みたい
 	D3D11_INPUT_ELEMENT_DESC instancing_input_element_desc[]
 	{
@@ -91,9 +95,12 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 		instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
 	//shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
 	//	instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_instancing_shadow_caster_vs.cso", shadow_instancing_caster_vs_.ReleaseAndGetAddressOf(),
+		input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
 
 	shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_gbuffer_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
 	//shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
+	
 
 	D3D11_BUFFER_DESC buffer_desc{};
 	buffer_desc.ByteWidth = (sizeof(PrimitiveConstants) + 15) / 16 * 16;
@@ -409,7 +416,7 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 	}
 }
 
-void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world)
+void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world,bool shadow_render_flag)
 {
 	using namespace DirectX;
 
@@ -419,9 +426,18 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
     immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
 	immediate_context->PSSetConstantBuffers(
 		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
-
-	immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	
+    //シャドウレンダーフラグがある場合はシャドウマップ用のシェーダーをセットする
+	if(!shadow_render_flag)
+	{
+		immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
+		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	}
+	else
+	{
+		immediate_context->VSSetShader(shadow_caster_vs_.Get(), nullptr, 0);
+		immediate_context->PSSetShader(nullptr, nullptr, 0);
+	}
 	immediate_context->IASetInputLayout(input_layout.Get());
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -546,7 +562,7 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 
 }
 
-void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location)
+void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location,bool shadow_render_flag)
 {
 	using namespace DirectX;
 
@@ -557,8 +573,17 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 	immediate_context->PSSetConstantBuffers(
 		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
 
-	immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+    //シャドウレンダーフラグがある場合はシャドウマップ用のシェーダーをセットする
+	if (!shadow_render_flag)
+	{
+		immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
+		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	}
+	else
+	{
+        immediate_context->VSSetShader(shadow_instancing_caster_vs_.Get(), nullptr, 0);
+        immediate_context->PSSetShader(nullptr, nullptr, 0);
+	}
 	immediate_context->IASetInputLayout(instancing_input_layout.Get());
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

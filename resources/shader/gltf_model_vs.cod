@@ -4,25 +4,19 @@
 //
 // Buffer Definitions: 
 //
-// cbuffer SCENE_CONSTANT_BUFFER
+// cbuffer CameraBuffer
 // {
 //
-//   float4 options;                    // Offset:    0 Size:    16 [unused]
-//   float4 z_buffer_parameteres;       // Offset:   16 Size:    16 [unused]
-//   float4 camera_position;            // Offset:   32 Size:    16 [unused]
-//   float4 camera_direction;           // Offset:   48 Size:    16 [unused]
-//   float4 camera_clip_distance;       // Offset:   64 Size:    16 [unused]
-//   float4 viewport_size;              // Offset:   80 Size:    16 [unused]
-//   row_major float4x4 view_transform; // Offset:   96 Size:    64 [unused]
-//   row_major float4x4 projection_transform;// Offset:  160 Size:    64 [unused]
-//   row_major float4x4 view_projection_transform;// Offset:  224 Size:    64
-//   row_major float4x4 inverse_view_transform;// Offset:  288 Size:    64 [unused]
-//   row_major float4x4 inverse_projection_transform;// Offset:  352 Size:    64 [unused]
-//   row_major float4x4 inverse_view_projection_transform;// Offset:  416 Size:    64 [unused]
-//   row_major float4x4 previous_view_projection_transform;// Offset:  480 Size:    64 [unused]
-//   float2 sun_uv;                     // Offset:  544 Size:     8 [unused]
-//   float sun_visible;                 // Offset:  552 Size:     4 [unused]
-//   float padding0;                    // Offset:  556 Size:     4 [unused]
+//   float4 camera_position;            // Offset:    0 Size:    16 [unused]
+//   float4 camera_direction;           // Offset:   16 Size:    16 [unused]
+//   float4 camera_clip_distance;       // Offset:   32 Size:    16 [unused]
+//   row_major float4x4 view_transform; // Offset:   48 Size:    64 [unused]
+//   row_major float4x4 projection_transform;// Offset:  112 Size:    64 [unused]
+//   row_major float4x4 view_projection_transform;// Offset:  176 Size:    64
+//   row_major float4x4 inverse_view_transform;// Offset:  240 Size:    64 [unused]
+//   row_major float4x4 inverse_projection_transform;// Offset:  304 Size:    64 [unused]
+//   row_major float4x4 inverse_view_projection_transform;// Offset:  368 Size:    64 [unused]
+//   row_major float4x4 previous_view_projection_transform;// Offset:  432 Size:    64 [unused]
 //
 // }
 //
@@ -51,8 +45,8 @@
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
-// SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
 // PRIMITIVE_JOINT_CONSTANTS         cbuffer      NA          NA            cb2      1 
+// CameraBuffer                      cbuffer      NA          NA            cb7      1 
 //
 //
 //
@@ -82,7 +76,7 @@
 //
 vs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB1[18], immediateIndexed
+dcl_constantbuffer CB7[15], immediateIndexed
 dcl_constantbuffer CB0[9], immediateIndexed
 dcl_constantbuffer CB2[2048], dynamicIndexed
 dcl_input v0.xyz
@@ -251,44 +245,25 @@ endif
 #line 25
 itof r1.w, l(1)  // r1.w <- vin.position.w
 
-#line 26
-mul r2.xyzw, cb1[14].xyzw, cb0[0].xxxx
-mul r3.xyzw, cb1[15].xyzw, cb0[0].yyyy
+#line 27
+mul r2.xyzw, r0.yyyy, cb0[0].xyzw
+mul r3.xyzw, r0.zzzz, cb0[1].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw
-mul r3.xyzw, cb1[16].xyzw, cb0[0].zzzz
+mul r3.xyzw, r0.wwww, cb0[2].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw
-mul r3.xyzw, cb1[17].xyzw, cb0[0].wwww
-add r2.xyzw, r2.xyzw, r3.xyzw
-mul r3.xyzw, cb1[14].xyzw, cb0[1].xxxx
-mul r4.xyzw, cb1[15].xyzw, cb0[1].yyyy
+mul r3.xyzw, r1.wwww, cb0[3].xyzw
+add r2.xyzw, r2.xyzw, r3.xyzw  // r2.x <- wpos.x; r2.y <- wpos.y; r2.z <- wpos.z; r2.w <- wpos.w
+
+#line 28
+mul r3.xyzw, r2.xxxx, cb7[11].xyzw
+mul r4.xyzw, r2.yyyy, cb7[12].xyzw
 add r3.xyzw, r3.xyzw, r4.xyzw
-mul r4.xyzw, cb1[16].xyzw, cb0[1].zzzz
+mul r4.xyzw, r2.zzzz, cb7[13].xyzw
 add r3.xyzw, r3.xyzw, r4.xyzw
-mul r4.xyzw, cb1[17].xyzw, cb0[1].wwww
-add r3.xyzw, r3.xyzw, r4.xyzw
-mul r4.xyzw, cb1[14].xyzw, cb0[2].xxxx
-mul r6.xyzw, cb1[15].xyzw, cb0[2].yyyy
-add r4.xyzw, r4.xyzw, r6.xyzw
-mul r6.xyzw, cb1[16].xyzw, cb0[2].zzzz
-add r4.xyzw, r4.xyzw, r6.xyzw
-mul r6.xyzw, cb1[17].xyzw, cb0[2].wwww
-add r4.xyzw, r4.xyzw, r6.xyzw
-mul r6.xyzw, cb1[14].xyzw, cb0[3].xxxx
-mul r7.xyzw, cb1[15].xyzw, cb0[3].yyyy
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, cb1[16].xyzw, cb0[3].zzzz
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, cb1[17].xyzw, cb0[3].wwww
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r2.xyzw, r0.yyyy, r2.xyzw
-mul r3.xyzw, r0.zzzz, r3.xyzw
-add r2.xyzw, r2.xyzw, r3.xyzw
-mul r3.xyzw, r0.wwww, r4.xyzw
-add r2.xyzw, r2.xyzw, r3.xyzw
-mul r3.xyzw, r1.wwww, r6.xyzw
+mul r2.xyzw, r2.wwww, cb7[14].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw  // r2.x <- vout.position.x; r2.y <- vout.position.y; r2.z <- vout.position.z; r2.w <- vout.position.w
 
-#line 27
+#line 29
 mul r3.xyzw, r0.yyyy, cb0[0].xyzw
 mul r4.xyzw, r0.zzzz, cb0[1].xyzw
 add r3.xyzw, r3.xyzw, r4.xyzw
@@ -297,10 +272,10 @@ add r3.xyzw, r3.xyzw, r4.xyzw
 mul r4.xyzw, r1.wwww, cb0[3].xyzw
 add r3.xyzw, r3.xyzw, r4.xyzw  // r3.x <- vout.w_position.x; r3.y <- vout.w_position.y; r3.z <- vout.w_position.z; r3.w <- vout.w_position.w
 
-#line 29
+#line 31
 itof r0.y, l(0)  // r0.y <- vin.normal.w
 
-#line 30
+#line 32
 mul r4.xyzw, r5.xxxx, cb0[0].xyzw
 mul r6.xyzw, r5.yyyy, cb0[1].xyzw
 add r4.xyzw, r4.xyzw, r6.xyzw
@@ -312,10 +287,10 @@ dp4 r0.y, r4.xyzw, r4.xyzw
 rsq r0.y, r0.y
 mul r4.xyzw, r0.yyyy, r4.xyzw  // r4.x <- vout.w_normal.x; r4.y <- vout.w_normal.y; r4.z <- vout.w_normal.z; r4.w <- vout.w_normal.w
 
-#line 33
+#line 35
 itof r0.y, l(0)  // r0.y <- vin.tangent.w
 
-#line 34
+#line 36
 mul r5.xyzw, r1.xxxx, cb0[0].xyzw
 mul r6.xyzw, r1.yyyy, cb0[1].xyzw
 add r5.xyzw, r5.xyzw, r6.xyzw
@@ -327,13 +302,13 @@ dp4 r0.y, r1.xyzw, r1.xyzw
 rsq r0.y, r0.y
 mul r0.yzw, r0.yyyy, r1.xxyz  // r0.y <- vout.w_tangent.x; r0.z <- vout.w_tangent.y; r0.w <- vout.w_tangent.z
 
-#line 35
+#line 37
 mov r0.x, r0.x  // r0.x <- vout.w_tangent.w
 
-#line 37
+#line 39
 mov r1.xy, v3.xyxx  // r1.x <- vout.texcoord.x; r1.y <- vout.texcoord.y
 
-#line 39
+#line 41
 mov o0.xyzw, r2.xyzw
 mov o1.xyzw, r3.xyzw
 mov o2.xyzw, r4.xyzw
@@ -341,4 +316,4 @@ mov o3.xyz, r0.yzwy
 mov o3.w, r0.x
 mov o4.xy, r1.xyxx
 ret 
-// Approximately 195 instruction slots used
+// Approximately 174 instruction slots used

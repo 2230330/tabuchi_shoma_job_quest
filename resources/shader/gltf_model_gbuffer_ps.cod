@@ -9,20 +9,9 @@
 //
 //   float4 options;                    // Offset:    0 Size:    16 [unused]
 //   float4 z_buffer_parameteres;       // Offset:   16 Size:    16
-//   float4 camera_position;            // Offset:   32 Size:    16 [unused]
-//   float4 camera_direction;           // Offset:   48 Size:    16 [unused]
-//   float4 camera_clip_distance;       // Offset:   64 Size:    16 [unused]
-//   float4 viewport_size;              // Offset:   80 Size:    16 [unused]
-//   row_major float4x4 view_transform; // Offset:   96 Size:    64 [unused]
-//   row_major float4x4 projection_transform;// Offset:  160 Size:    64 [unused]
-//   row_major float4x4 view_projection_transform;// Offset:  224 Size:    64
-//   row_major float4x4 inverse_view_transform;// Offset:  288 Size:    64 [unused]
-//   row_major float4x4 inverse_projection_transform;// Offset:  352 Size:    64 [unused]
-//   row_major float4x4 inverse_view_projection_transform;// Offset:  416 Size:    64 [unused]
-//   row_major float4x4 previous_view_projection_transform;// Offset:  480 Size:    64 [unused]
-//   float2 sun_uv;                     // Offset:  544 Size:     8 [unused]
-//   float sun_visible;                 // Offset:  552 Size:     4 [unused]
-//   float padding0;                    // Offset:  556 Size:     4 [unused]
+//   float4 viewport_size;              // Offset:   32 Size:    16 [unused]
+//   float2 sun_uv;                     // Offset:   48 Size:     8 [unused]
+//   float2 padding0;                   // Offset:   56 Size:     8 [unused]
 //
 // }
 //
@@ -32,6 +21,22 @@
 //   float adjust_metalness;            // Offset:    0 Size:     4
 //   float adjust_roughness;            // Offset:    4 Size:     4
 //   float2 pad0;                       // Offset:    8 Size:     8 [unused]
+//
+// }
+//
+// cbuffer CameraBuffer
+// {
+//
+//   float4 camera_position;            // Offset:    0 Size:    16 [unused]
+//   float4 camera_direction;           // Offset:   16 Size:    16 [unused]
+//   float4 camera_clip_distance;       // Offset:   32 Size:    16 [unused]
+//   row_major float4x4 view_transform; // Offset:   48 Size:    64 [unused]
+//   row_major float4x4 projection_transform;// Offset:  112 Size:    64 [unused]
+//   row_major float4x4 view_projection_transform;// Offset:  176 Size:    64
+//   row_major float4x4 inverse_view_transform;// Offset:  240 Size:    64 [unused]
+//   row_major float4x4 inverse_projection_transform;// Offset:  304 Size:    64 [unused]
+//   row_major float4x4 inverse_view_projection_transform;// Offset:  368 Size:    64 [unused]
+//   row_major float4x4 previous_view_projection_transform;// Offset:  432 Size:    64 [unused]
 //
 // }
 //
@@ -128,6 +133,7 @@
 // material_textures[4]              texture  float4          2d             t5      1 
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
+// CameraBuffer                      cbuffer      NA          NA            cb7      1 
 // ADJAST_METARIAL_CONSTANT_BUFFER    cbuffer      NA          NA           cb13      1 
 //
 //
@@ -159,8 +165,9 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB1[18], immediateIndexed
+dcl_constantbuffer CB1[2], immediateIndexed
 dcl_constantbuffer CB13[1], immediateIndexed
+dcl_constantbuffer CB7[15], immediateIndexed
 dcl_constantbuffer CB0[9], immediateIndexed
 dcl_sampler s2, mode_default
 dcl_sampler s4, mode_default
@@ -537,12 +544,12 @@ mov r6.xyz, r6.xyzx
 mov r3.xyz, r3.xyzx
 mov r0.y, r0.y
 mov r4.xy, r4.xyxx
-mov r7.x, cb1[14].z
-mov r8.x, cb1[14].w
-mov r7.y, cb1[15].z
-mov r8.y, cb1[15].w
-mov r9.xy, cb1[16].zwzz
-mov r9.zw, cb1[17].zzzw
+mov r7.x, cb7[11].z
+mov r8.x, cb7[11].w
+mov r7.y, cb7[12].z
+mov r8.y, cb7[12].w
+mov r9.xy, cb7[13].zwzz
+mov r9.zw, cb7[14].zzzw
 mov r0.xz, cb1[1].xxyx
 
 #line 73 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"

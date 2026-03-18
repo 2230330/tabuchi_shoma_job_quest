@@ -1,5 +1,6 @@
 #include"../../headers/system/update_system_manager.h"
 #include"../../headers/system/transform_system.h"
+#include"../../headers/system/camera_update_system.h"
 
 //新しいシステムはここで登録する
 UpdateSystemManager::UpdateSystemManager(ComponentManager& comp_mng)
@@ -7,6 +8,7 @@ UpdateSystemManager::UpdateSystemManager(ComponentManager& comp_mng)
 {
 
     AddSystem(std::make_unique<TransformSystem>(comp_mng_));
+    AddSystem(std::make_unique<CameraUpdateSystem>(comp_mng_));
 }
 
 //システム追加用関数

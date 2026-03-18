@@ -3,7 +3,9 @@
 
 #include"light.hlsli"
 
-#include "scene_constant_buffer.hlsli"
+#include"scene_constant_buffer.hlsli"
+
+#include "camera_buffer.hlsli"
 
 #include "gbuffer.hlsli"
 

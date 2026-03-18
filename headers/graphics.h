@@ -77,6 +77,10 @@ public:
     //サンプラーステートの解除
     void ClearSampler(int start_slot = 0, int num = D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT);
 
+    //カメラ用ホイール情報
+    void SetWheel(float wheel) { this->wheel_ = wheel; }
+    float GetWheel()const { return this->wheel_; }
+
 private:
     //メンバ変数
     HWND                                            hwnd_ = nullptr;
@@ -89,6 +93,7 @@ private:
 
     float screen_width_  = 0;
     float screen_height_ = 0;
+    float wheel_{ 0 };
 
     std::unique_ptr<RenderState>                    render_state_;
 };

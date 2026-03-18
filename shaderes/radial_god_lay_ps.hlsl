@@ -27,8 +27,8 @@ float4 main(VS_OUT pin) : SV_TARGET
     float2 uv0 = pin.texcoord;
 
     // ‘¾—z‚ª–³Œø‚È‚ç‰½‚ào‚³‚È‚¢
-    if (sun_visible <= 0.001f)
-        return float4(0, 0, 0, 0);
+    //if (sun_visible <= 0.001f)
+    //    return float4(0, 0, 0, 0);
 
     float2 lightPos = sun_uv;
 
@@ -114,7 +114,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     float distToLight = length(uv0 - lightPos);
     shafts *= saturate(1.0f - distToLight);
 
-    shafts *= sun_visible;
+    //shafts *= sun_visible;
 
     return float4(shafts, shafts, shafts, 1);
 }

@@ -19,6 +19,7 @@
 #include "component_sky_atmosphere.h"
 #include "component_volumetric_cloud.h"
 #include"component_ajast_pbr_paramter_.h"
+#include "component_camera.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -40,6 +41,7 @@ public:
         registerContainer<ComponentSkyAtmosphere>(skys_);
         registerContainer<ComponentVolumetricCloud>(clouds_);
         registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
+        registerContainer<ComponentCamera>(cameras_);
     }
 
     template<typename T>
@@ -204,4 +206,5 @@ private:
     std::vector<ComponentSkyAtmosphere>skys_;
     std::vector<ComponentVolumetricCloud>clouds_;
     std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
+    std::vector<ComponentCamera>cameras_;
 };

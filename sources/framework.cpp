@@ -28,7 +28,7 @@ void Framework::Update(float elapsed_time)
 #endif
     
     //シーン更新処理
-    scene_->SetWheel(wheel);
+    Graphics::Instance().SetWheel(wheel);
     wheel = 0;
     scene_->Update(elapsed_time);
 

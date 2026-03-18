@@ -12,17 +12,7 @@ struct scene_constants
 {
 	DirectX::XMFLOAT4 options;	//	xy : マウスの座標値, z : タイマー, w : フラグ
 	DirectX::XMFLOAT4 z_buffer_parameteres;
-	DirectX::XMFLOAT4 camera_position;
-	DirectX::XMFLOAT4 camera_direction;
-	DirectX::XMFLOAT4 camera_clip_distance;
 	DirectX::XMFLOAT4 viewport_size;
-	DirectX::XMFLOAT4X4 view_transform;
-	DirectX::XMFLOAT4X4 projection_transform;
-	DirectX::XMFLOAT4X4 view_projection_transform;
-	DirectX::XMFLOAT4X4 inverse_view_transform;
-	DirectX::XMFLOAT4X4 inverse_projection_transform;
-	DirectX::XMFLOAT4X4 inverse_view_projection_transform;
-	DirectX::XMFLOAT4X4 previous_view_projection_transform;
 	DirectX::XMFLOAT2 sun_uv; //画面上の太陽位置
 	float sun_visible; //カメラ前方にあるか
 	float dummy;
@@ -93,7 +83,7 @@ private:
 	float far_clip_distance{ 1000.0f };
 	float fov_y{ DirectX::XMConvertToRadians(30) };
 
-	DirectX::XMFLOAT3 camera_position{ 0.0f, 0.0f, -10.0f };
+	DirectX::XMFLOAT3 camera_position;
 	DirectX::XMFLOAT3 camera_focus{ 0.0f, 0.0f, 0.0f };
 	DirectX::XMFLOAT4X4 view;
 	DirectX::XMFLOAT4X4 projection;

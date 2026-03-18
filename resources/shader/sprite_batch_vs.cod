@@ -4,25 +4,19 @@
 //
 // Buffer Definitions: 
 //
-// cbuffer SCENE_CONSTANT_BUFFER
+// cbuffer CameraBuffer
 // {
 //
-//   float4 options;                    // Offset:    0 Size:    16 [unused]
-//   float4 z_buffer_parameteres;       // Offset:   16 Size:    16 [unused]
-//   float4 camera_position;            // Offset:   32 Size:    16 [unused]
-//   float4 camera_direction;           // Offset:   48 Size:    16 [unused]
-//   float4 camera_clip_distance;       // Offset:   64 Size:    16 [unused]
-//   float4 viewport_size;              // Offset:   80 Size:    16 [unused]
-//   row_major float4x4 view_transform; // Offset:   96 Size:    64 [unused]
-//   row_major float4x4 projection_transform;// Offset:  160 Size:    64 [unused]
-//   row_major float4x4 view_projection_transform;// Offset:  224 Size:    64
-//   row_major float4x4 inverse_view_transform;// Offset:  288 Size:    64 [unused]
-//   row_major float4x4 inverse_projection_transform;// Offset:  352 Size:    64 [unused]
-//   row_major float4x4 inverse_view_projection_transform;// Offset:  416 Size:    64 [unused]
-//   row_major float4x4 previous_view_projection_transform;// Offset:  480 Size:    64 [unused]
-//   float2 sun_uv;                     // Offset:  544 Size:     8 [unused]
-//   float sun_visible;                 // Offset:  552 Size:     4 [unused]
-//   float padding0;                    // Offset:  556 Size:     4 [unused]
+//   float4 camera_position;            // Offset:    0 Size:    16 [unused]
+//   float4 camera_direction;           // Offset:   16 Size:    16 [unused]
+//   float4 camera_clip_distance;       // Offset:   32 Size:    16 [unused]
+//   row_major float4x4 view_transform; // Offset:   48 Size:    64 [unused]
+//   row_major float4x4 projection_transform;// Offset:  112 Size:    64 [unused]
+//   row_major float4x4 view_projection_transform;// Offset:  176 Size:    64
+//   row_major float4x4 inverse_view_transform;// Offset:  240 Size:    64 [unused]
+//   row_major float4x4 inverse_projection_transform;// Offset:  304 Size:    64 [unused]
+//   row_major float4x4 inverse_view_projection_transform;// Offset:  368 Size:    64 [unused]
+//   row_major float4x4 previous_view_projection_transform;// Offset:  432 Size:    64 [unused]
 //
 // }
 //
@@ -31,7 +25,7 @@
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
-// SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
+// CameraBuffer                      cbuffer      NA          NA            cb7      1 
 //
 //
 //
@@ -58,7 +52,7 @@
 //
 vs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB1[18], immediateIndexed
+dcl_constantbuffer CB7[15], immediateIndexed
 dcl_input v0.xyz
 dcl_input v1.xyzw
 dcl_input v2.xy
@@ -97,12 +91,12 @@ mul r0.xyzw, r0.wwww, v6.xyzw
 add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- world_pos.x; r0.y <- world_pos.y; r0.z <- world_pos.z; r0.w <- world_pos.w
 
 #line 13
-mul r1.xyzw, r0.xxxx, cb1[14].xyzw
-mul r2.xyzw, r0.yyyy, cb1[15].xyzw
+mul r1.xyzw, r0.xxxx, cb7[11].xyzw
+mul r2.xyzw, r0.yyyy, cb7[12].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw
-mul r2.xyzw, r0.zzzz, cb1[16].xyzw
+mul r2.xyzw, r0.zzzz, cb7[13].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw
-mul r0.xyzw, r0.wwww, cb1[17].xyzw
+mul r0.xyzw, r0.wwww, cb7[14].xyzw
 add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z; r0.w <- vout.position.w
 
 #line 16

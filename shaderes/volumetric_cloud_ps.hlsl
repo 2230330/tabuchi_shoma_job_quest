@@ -3,6 +3,7 @@
 #include "scene_constant_buffer.hlsli"
 //#include "noise_functions.hlsli"
 #include "fullscreen_quad.hlsli"
+#include"camera_buffer.hlsli"
 
 static const float PI = 3.14159265359f;
 

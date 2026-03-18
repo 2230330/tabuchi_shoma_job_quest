@@ -9,20 +9,25 @@
 //
 //   float4 options;                    // Offset:    0 Size:    16 [unused]
 //   float4 z_buffer_parameteres;       // Offset:   16 Size:    16
-//   float4 camera_position;            // Offset:   32 Size:    16
-//   float4 camera_direction;           // Offset:   48 Size:    16 [unused]
-//   float4 camera_clip_distance;       // Offset:   64 Size:    16 [unused]
-//   float4 viewport_size;              // Offset:   80 Size:    16 [unused]
-//   row_major float4x4 view_transform; // Offset:   96 Size:    64 [unused]
-//   row_major float4x4 projection_transform;// Offset:  160 Size:    64 [unused]
-//   row_major float4x4 view_projection_transform;// Offset:  224 Size:    64 [unused]
-//   row_major float4x4 inverse_view_transform;// Offset:  288 Size:    64 [unused]
-//   row_major float4x4 inverse_projection_transform;// Offset:  352 Size:    64 [unused]
-//   row_major float4x4 inverse_view_projection_transform;// Offset:  416 Size:    64
-//   row_major float4x4 previous_view_projection_transform;// Offset:  480 Size:    64 [unused]
-//   float2 sun_uv;                     // Offset:  544 Size:     8 [unused]
-//   float sun_visible;                 // Offset:  552 Size:     4 [unused]
-//   float padding0;                    // Offset:  556 Size:     4 [unused]
+//   float4 viewport_size;              // Offset:   32 Size:    16 [unused]
+//   float2 sun_uv;                     // Offset:   48 Size:     8 [unused]
+//   float2 padding0;                   // Offset:   56 Size:     8 [unused]
+//
+// }
+//
+// cbuffer CameraBuffer
+// {
+//
+//   float4 camera_position;            // Offset:    0 Size:    16
+//   float4 camera_direction;           // Offset:   16 Size:    16 [unused]
+//   float4 camera_clip_distance;       // Offset:   32 Size:    16 [unused]
+//   row_major float4x4 view_transform; // Offset:   48 Size:    64 [unused]
+//   row_major float4x4 projection_transform;// Offset:  112 Size:    64 [unused]
+//   row_major float4x4 view_projection_transform;// Offset:  176 Size:    64 [unused]
+//   row_major float4x4 inverse_view_transform;// Offset:  240 Size:    64 [unused]
+//   row_major float4x4 inverse_projection_transform;// Offset:  304 Size:    64 [unused]
+//   row_major float4x4 inverse_view_projection_transform;// Offset:  368 Size:    64
+//   row_major float4x4 previous_view_projection_transform;// Offset:  432 Size:    64 [unused]
 //
 // }
 //
@@ -41,6 +46,7 @@
 // specular_pmrem                    texture  float4        cube            t34      1 
 // lut_ggx                           texture  float4          2d            t35      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
+// CameraBuffer                      cbuffer      NA          NA            cb7      1 
 //
 //
 //
@@ -60,7 +66,8 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB1[30], immediateIndexed
+dcl_constantbuffer CB1[2], immediateIndexed
+dcl_constantbuffer CB7[27], immediateIndexed
 dcl_sampler s0, mode_default
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
@@ -82,10 +89,7 @@ dcl_temps 11
 #line 5 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
 mov r0.x, l(2.200000)  // r0.x <- GammaFactor
 
-#line 30 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
-nop 
-
-#line 31
+#line 31 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
 nop 
 
 #line 32
@@ -103,22 +107,25 @@ nop
 #line 36
 nop 
 
-#line 38
+#line 37
+nop 
+
+#line 39
 nop 
 mov r0.yz, v1.xxyx
-mov r1.x, cb1[26].x
-mov r2.x, cb1[26].y
-mov r3.x, cb1[26].z
-mov r4.x, cb1[26].w
-mov r1.y, cb1[27].x
-mov r2.y, cb1[27].y
-mov r3.y, cb1[27].z
-mov r4.y, cb1[27].w
-mov r1.z, cb1[28].x
-mov r2.z, cb1[28].y
-mov r3.z, cb1[28].z
-mov r4.z, cb1[28].w
-mov r5.xyzw, cb1[29].xyzw
+mov r1.x, cb7[23].x
+mov r2.x, cb7[23].y
+mov r3.x, cb7[23].z
+mov r4.x, cb7[23].w
+mov r1.y, cb7[24].x
+mov r2.y, cb7[24].y
+mov r3.y, cb7[24].z
+mov r4.y, cb7[24].w
+mov r1.z, cb7[25].x
+mov r2.z, cb7[25].y
+mov r3.z, cb7[25].z
+mov r4.z, cb7[25].w
+mov r5.xyzw, cb7[26].xyzw
 mov r6.xy, cb1[1].xyxx
 
 #line 97 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"
@@ -198,48 +205,48 @@ mov r8.xyz, r8.xyzx  // r8.x <- <DecodeGBuffer return value>.w_normal.x; r8.y <-
 mov r6.z, r6.z  // r6.z <- <DecodeGBuffer return value>.shading_model
 mov r0.yzw, r0.yyzw  // r0.y <- <DecodeGBuffer return value>.w_position.x; r0.z <- <DecodeGBuffer return value>.w_position.y; r0.w <- <DecodeGBuffer return value>.w_position.z
 
-#line 38 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 39 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
 mov r7.xyz, r7.xyzx  // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z
 mov r8.xyz, r8.xyzx  // r8.x <- data.w_normal.x; r8.y <- data.w_normal.y; r8.z <- data.w_normal.z
 mov r0.yzw, r0.yyzw  // r0.y <- data.w_position.x; r0.z <- data.w_position.y; r0.w <- data.w_position.z
 mov r6.z, r6.z  // r6.z <- data.shading_model
 mov r9.xyzw, r9.xyzw  // r9.x <- data.roughness; r9.y <- data.metalness; r9.z <- data.occlusion_factor; r9.w <- data.occlusion_strength
 
-#line 40
+#line 41
 itof r1.xyz, l(0, 0, 0, 0)  // r1.x <- total_diffuse.x; r1.y <- total_diffuse.y; r1.z <- total_diffuse.z
 itof r2.xyz, l(0, 0, 0, 0)  // r2.x <- total_specular.x; r2.y <- total_specular.y; r2.z <- total_specular.z
 
-#line 41
+#line 42
 if_nz r6.z
 
-#line 43
+#line 44
   mov r7.xyz, r7.xyzx  // r7.x <- albedo.x; r7.y <- albedo.y; r7.z <- albedo.z
 
-#line 45
+#line 46
   dp3 r1.w, r8.xyzx, r8.xyzx
   rsq r1.w, r1.w
   mul r3.xyz, r1.wwww, r8.xyzx  // r3.x <- N.x; r3.y <- N.y; r3.z <- N.z
 
-#line 46
-  mov r4.xyz, -cb1[2].xyzx
+#line 47
+  mov r4.xyz, -cb7[0].xyzx
   add r0.yzw, r0.yyzw, r4.xxyz
   dp3 r1.w, r0.yzwy, r0.yzwy
   rsq r1.w, r1.w
   mul r0.yzw, r0.yyzw, r1.wwww  // r0.y <- V.x; r0.z <- V.y; r0.w <- V.z
 
-#line 49
+#line 50
   mov r4.xyz, -r7.xyzx
   add r4.xyz, r4.xyzx, l(0.000000, 0.000000, 0.000000, 0.000000)
   mul r4.xyz, r4.xyzx, r9.yyyy
   add r4.xyz, r4.xyzx, r7.xyzx  // r4.x <- diffuse_reflectance.x; r4.y <- diffuse_reflectance.y; r4.z <- diffuse_reflectance.z
 
-#line 52
+#line 53
   mov r5.xyz, l(-0.040000,-0.040000,-0.040000,-0.000000)
   add r5.xyz, r5.xyzx, r7.xyzx
   mul r5.xyz, r5.xyzx, r9.yyyy
   add r5.xyz, r5.xyzx, l(0.040000, 0.040000, 0.040000, 0.000000)  // r5.x <- F0.x; r5.y <- F0.y; r5.z <- F0.z
 
-#line 56
+#line 57
   nop 
   mov r3.xyz, r3.xyzx
   mov r0.yzw, r0.yyzw
@@ -301,10 +308,10 @@ if_nz r6.z
   mul r4.xyz, r4.xyzx, r6.xyzx
   mul r4.xyz, r7.xyzx, r4.xyzx  // r4.x <- <DiffuseIBL return value>.x; r4.y <- <DiffuseIBL return value>.y; r4.z <- <DiffuseIBL return value>.z
 
-#line 56 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 57 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
   add r4.xyz, r1.xyzx, r4.xyzx  // r4.x <- total_diffuse.x; r4.y <- total_diffuse.y; r4.z <- total_diffuse.z
 
-#line 58
+#line 59
   nop 
   mov r3.xyz, r3.xyzx
   mov r0.yzw, r0.yyzw
@@ -375,34 +382,34 @@ if_nz r6.z
   add r3.xyz, r3.yyyy, r3.xzwx
   mul r0.yzw, r0.yyzw, r3.xxyz  // r0.y <- <SpecularIBL return value>.x; r0.z <- <SpecularIBL return value>.y; r0.w <- <SpecularIBL return value>.z
 
-#line 58 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 59 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
   add r0.yzw, r0.yyzw, r2.xxyz  // r0.y <- total_specular.x; r0.z <- total_specular.y; r0.w <- total_specular.z
 
-#line 62
+#line 63
   mul r3.xyz, r9.zzzz, r4.xyzx
   mov r5.xyz, -r4.xyzx
   add r3.xyz, r3.xyzx, r5.xyzx
   mul r3.xyz, r3.xyzx, r9.wwww
   add r1.xyz, r3.xyzx, r4.xyzx  // r1.x <- total_diffuse.x; r1.y <- total_diffuse.y; r1.z <- total_diffuse.z
 
-#line 63
+#line 64
   mul r3.xyz, r9.zzzz, r0.yzwy
   mov r4.xyz, -r0.yzwy
   add r3.xyz, r3.xyzx, r4.xyzx
   mul r3.xyz, r3.xyzx, r9.wwww
   add r2.xyz, r0.yzwy, r3.xyzx  // r2.x <- total_specular.x; r2.y <- total_specular.y; r2.z <- total_specular.z
 
-#line 64
+#line 65
 endif 
 
-#line 66
+#line 67
 add r0.yzw, r1.xxyz, r2.xxyz
 div r0.xyz, r0.yzwy, r0.xxxx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 67
+#line 68
 itof r0.w, l(1)  // r0.w <- alpha
 
-#line 68
+#line 69
 itof r1.x, l(0)
 eq r1.x, r0.x, r1.x
 itof r1.y, l(0)
@@ -413,11 +420,11 @@ eq r1.y, r0.z, r1.y
 and r1.x, r1.y, r1.x
 if_nz r1.x
 
-#line 69
+#line 70
   itof r0.w, l(0)
 endif 
 
-#line 70
+#line 71
 mov o0.xyz, r0.xyzx
 mov o0.w, r0.w
 ret 

@@ -1,5 +1,5 @@
 #include "gltf_model_gbuffer.hlsli"
-
+#include"camera_buffer.hlsli"
 
 VS_OUT main(VS_IN vin)
 {

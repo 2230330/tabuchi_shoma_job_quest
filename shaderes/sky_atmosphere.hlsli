@@ -27,3 +27,4 @@ cbuffer RAYLEIGH_CONSTANT_BUFFER_ : register(b11)
     float3 dummy;
 
 };
+#include"camera_buffer.hlsli"

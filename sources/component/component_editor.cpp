@@ -334,6 +334,35 @@ void ComponentEditor::DrawImgui()
                     ImGui::Text("Instancing Render");
                     ImGui::Separator();
                 }
+                // Camera
+                if (comp_mng_.Has<ComponentCamera>(entity.entity))
+                {
+                    auto& cam = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
+
+                    if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        ImGui::Checkbox("Main Camera", &cam.main_camera_flag_);
+
+                        ImGui::DragFloat3("Position", &cam.camera_position.x, 0.1f);
+                        ImGui::DragFloat3("Direction", &cam.camera_direction.x, 0.01f);
+
+                        ImGui::Separator();
+
+                        ImGui::DragFloat("Near Clip", &cam.camera_clip_distance.x, 0.01f, 0.001f, 100.0f);
+                        ImGui::DragFloat("Far Clip", &cam.camera_clip_distance.y, 1.0f, 1.0f, 100000.0f);
+
+                        ImGui::Separator();
+
+                        ImGui::Text("View Matrix");
+                        ImGui::TextDisabled("Auto calculated");
+
+                        ImGui::Text("Projection Matrix");
+                        ImGui::TextDisabled("Auto calculated");
+                    }
+
+                    ImGui::Separator();
+                }
+
 
                 //コンポーネントの追加
                 if (has_sky_!=entity.entity|| !has_cloud_!=entity.entity)
@@ -564,6 +593,30 @@ void ComponentEditor::Save(const std::string& filename)
             comp_json["Instanced"] = true;
         }
 
+        // =========================
+        // Camera
+        // =========================
+        if (comp_mng_.Has<ComponentCamera>(entity.entity))
+        {
+            auto& c = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
+
+            comp_json["Camera"] =
+            {
+                {"pos_x", c.camera_position.x},
+                {"pos_y", c.camera_position.y},
+                {"pos_z", c.camera_position.z},
+
+                {"dir_x", c.camera_direction.x},
+                {"dir_y", c.camera_direction.y},
+                {"dir_z", c.camera_direction.z},
+
+                {"near", c.camera_clip_distance.x},
+                {"far", c.camera_clip_distance.y},
+
+                {"main", c.main_camera_flag_}
+            };
+        }
+
         entity_json["components"] = comp_json;
         root["entities"].push_back(entity_json);
     }
@@ -740,6 +793,21 @@ void ComponentEditor::Load(const std::string& filename)
         {
             ComponentInstanced i;
             comp_mng_.Add(entity, i);
+        }
+
+        // Camera
+        if (comp_json.contains("Camera"))
+        {
+            ComponentCamera c;
+            auto& j = comp_json["Camera"];
+
+            c.camera_position = { j["pos_x"], j["pos_y"], j["pos_z"], 1.0f };
+            c.camera_direction = { j["dir_x"], j["dir_y"], j["dir_z"], 0.0f };
+            c.camera_clip_distance = { j["near"], j["far"], 0, 0 };
+
+            c.main_camera_flag_ = j["main"];
+
+            comp_mng_.Add(entity, c);
         }
 
 

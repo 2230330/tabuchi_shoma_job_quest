@@ -36,7 +36,7 @@ struct VS_OUT
     float4 current_clip_position : CLIP_POSITION0;
     float4 previous_clip_position : CLIP_POSITION1;
 };
-#include"scene_constant_buffer.hlsli"
+#include"camera_buffer.hlsli"
 
 cbuffer PRIMITIVE_CONSTANT_BUFFER : register(b0)
 {

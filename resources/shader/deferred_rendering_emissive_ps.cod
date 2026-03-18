@@ -38,7 +38,19 @@ dcl_temps 2
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 28 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_emissive_ps.hlsl"
+#line 24 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_emissive_ps.hlsl"
+nop 
+
+#line 25
+nop 
+
+#line 26
+nop 
+
+#line 27
+nop 
+
+#line 28
 nop 
 
 #line 29
@@ -47,19 +59,7 @@ nop
 #line 30
 nop 
 
-#line 31
-nop 
-
 #line 32
-nop 
-
-#line 33
-nop 
-
-#line 34
-nop 
-
-#line 36
 nop 
 
 #line 98 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"
@@ -75,15 +75,15 @@ nop
 #line 118
 mov r0.xyz, r0.xyzx  // r0.x <- <DecodeGBuffer return value>.emissive_color.x; r0.y <- <DecodeGBuffer return value>.emissive_color.y; r0.z <- <DecodeGBuffer return value>.emissive_color.z
 
-#line 36 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_emissive_ps.hlsl"
+#line 32 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_emissive_ps.hlsl"
 mov r0.xyz, r0.xyzx  // r0.x <- data.emissive_color.x; r0.y <- data.emissive_color.y; r0.z <- data.emissive_color.z
 
-#line 38
+#line 34
 add r0.w, r0.y, r0.x
 add r0.w, r0.z, r0.w
 div r0.w, r0.w, l(3.000000)  // r0.w <- alpha
 
-#line 39
+#line 35
 itof r1.x, l(0)
 eq r1.x, r0.x, r1.x
 itof r1.y, l(0)
@@ -94,13 +94,13 @@ eq r1.y, r0.z, r1.y
 and r1.x, r1.y, r1.x
 if_nz r1.x
 
-#line 41
+#line 37
   itof r0.w, l(0)
 
-#line 42
+#line 38
 endif 
 
-#line 44
+#line 40
 mov o0.xyz, r0.xyzx
 mov o0.w, r0.w
 ret 

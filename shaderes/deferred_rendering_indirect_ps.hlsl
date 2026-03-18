@@ -2,6 +2,7 @@
 #include"gbuffer.hlsli"
 #include"fullscreen_quad.hlsli"
 #include"shading_functions.hlsli"
+#include"camera_buffer.hlsli"
 
 Texture2D<float4> gbuffer_base_color : register(t0);
 Texture2D<float4> gbuffer_emissive_color : register(t1);

@@ -178,7 +178,14 @@ void FrameBuffer::Activate(ID3D11DeviceContext* immediate_context, usage flags)
 
 	immediate_context->OMSetRenderTargets(num_rtvs, rtvs, dsv);
 	immediate_context->OMSetBlendState(render_state_->GetBlendState(BlendState::transparency), nullptr, 0xFFFFFFFF);
-	immediate_context->OMSetDepthStencilState(render_state_->GetDepthStencilState(DepthState::no_test_no_write), 0);
+    if (flags & usage::depth)
+	{
+		immediate_context->OMSetDepthStencilState(render_state_->GetDepthStencilState(DepthState::test_and_write), 0);
+	}
+	else
+	{
+		immediate_context->OMSetDepthStencilState(render_state_->GetDepthStencilState(DepthState::no_test_no_write), 0);
+	}
 }
 
 

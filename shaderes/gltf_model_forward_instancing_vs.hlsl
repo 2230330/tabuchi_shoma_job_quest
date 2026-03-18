@@ -14,7 +14,9 @@ VS_OUT main(INSTANCING_VS_IN vin)
     world_matrix = mul(world, world_matrix);
 
     vin.position.w = 1;
-    vout.position = mul(vin.position, mul(world_matrix, view_projection_transform));
+    //vout.position = mul(vin.position, mul(world_matrix, view_projection_transform));
+    float4 wpos = mul(vin.position, world_matrix);
+    vout.position = mul(wpos, view_projection_transform);
     vout.w_position = mul(vin.position, world_matrix);
 
     vin.normal.w = 0;

@@ -32,15 +32,15 @@ LightManager::LightManager()
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
 
-	//フォワードレンダリング用
-	for (int i = 0; i < forward_light_max; i++)
-	{
-		PointLight point_light;
-		point_lights_.emplace_back(point_light);
+	////フォワードレンダリング用
+	//for (int i = 0; i < forward_light_max; i++)
+	//{
+	//	PointLight point_light;
+	//	point_lights_.emplace_back(point_light);
 
-		SpotLight spot_light;
-		spot_lights_.emplace_back(spot_light);
-	}
+	//	SpotLight spot_light;
+	//	spot_lights_.emplace_back(spot_light);
+	//}
 
 }
 
@@ -219,12 +219,12 @@ void LightManager::Update(float elapsed_time)
 	//ライト方向から見た視線行列を生成
 
 	DirectX::XMVECTOR light_dir = DirectX::XMVector3Normalize(DirectX::XMLoadFloat4(&direction_light_.direction));
-	DirectX::XMVECTOR center = DirectX::XMVectorSet(0,0,0,0);
 
 	// 影中心からライト方向に引いた位置にライトを置く
-	DirectX::XMVECTOR light_pos = DirectX::XMVectorSubtract(center , DirectX::XMVectorScale(light_dir, shadow_distance_));
+	DirectX::XMVECTOR light_pos = DirectX::XMVectorScale(light_dir, shadow_distance_);
 
 	// 注視点は中心
+	DirectX::XMVECTOR center = DirectX::XMVectorSet(0,0,0,0);
 	DirectX::XMVECTOR target = center;
 
 	// up が light_dir と平行に近い場合の対策

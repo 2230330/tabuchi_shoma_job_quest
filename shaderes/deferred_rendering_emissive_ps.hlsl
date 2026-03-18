@@ -16,10 +16,6 @@ Texture2D<float4> gbuffer_velocity : register(t5);
 #define LINEAR_MIRROR 5
 SamplerState sampler_states[6] : register(s0);
 
-//  シャドウマップ用テクスチャ
-Texture2D shadow_map : register(t10);
-SamplerState shadow_sampler_state : register(s10);
-
 
 float4 main(VS_OUT pin) : SV_TARGET
 {

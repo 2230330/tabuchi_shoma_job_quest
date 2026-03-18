@@ -18,7 +18,6 @@ SamplerState sampler_states[6] : register(s0);
 
 //  シャドウマップ用テクスチャ
 Texture2D shadow_map : register(t10);
-SamplerState shadow_sampler_state : register(s10);
 
 
 float4 main(VS_OUT pin) : SV_TARGET
@@ -46,25 +45,37 @@ float4 main(VS_OUT pin) : SV_TARGET
             {
         
                 float attenuation = 1.0f;
-        //if (use_shadow)
-        //{
-        //    //シャドウマップ用のパラメータ計算
-        //    float3 shadow_texcoord;
-        //    {
-        //        //ライトから見たNDC座標を算出
-        //        float4 wvpPos = mul(float4(data.w_position.xyz, 1.0f), light_view_projection);
+                if (use_shadow)
+                {
+                    //シャドウマップ用のパラメータ計算
+                    float3 shadow_texcoord ;
+                    {
+                        //ライトから見たNDC座標を算出
+                        float4 wvpPos = mul(float4(data.w_position.xyz, 1.0f), light_view_projection);
                 
-        //        //NDC座標からUV座標を算出する
-        //        wvpPos /= wvpPos.w;
-        //        wvpPos.y = -wvpPos.y;
-        //        wvpPos.xy = 0.5f * wvpPos.xy + 0.5f;
-        //        shadow_texcoord = wvpPos.xyz;
-        //    }
-            
-        //    //深度値を比較して影かどうかを判定する
-        //    float depth = shadow_map.Sample(shadow_sampler_state, shadow_texcoord.xy).r;
-        //    attenuation = lerp(1, shadow_attenuation, (shadow_texcoord.z - depth > shadow_bias));
-        //}
+                        //NDC座標からUV座標を算出する
+                        wvpPos /= wvpPos.w;
+                        wvpPos.y = -wvpPos.y;
+                        wvpPos.xy = 0.5f * wvpPos.xy + 0.5f;
+                        shadow_texcoord = wvpPos.xyz;
+                        if (wvpPos.x < 0 || wvpPos.x > 1 ||
+                            wvpPos.y < 0 || wvpPos.y > 1)
+                        {
+                            attenuation = 1.0f; // シャドウ外
+                        }
+                        else
+                        {
+                            //深度値を比較して影かどうかを判定する
+                            float current_depth = shadow_texcoord.z * 0.5f + 0.5f;
+                            float depth = shadow_map.Sample(sampler_states[LINEAR_CLAMP], shadow_texcoord.xy).r;
+                            if (current_depth > depth + shadow_bias)
+                            {
+                                attenuation = shadow_attenuation;
+                            }
+                        }
+                    
+                    }
+                }
                 lighting_data.direction = normalize(directional_light.direction.xyz);
                 lighting_data.camera_position = camera_position.xyz;
                 lighting_data.color = directional_light.color.rgb * directional_light.color.a;

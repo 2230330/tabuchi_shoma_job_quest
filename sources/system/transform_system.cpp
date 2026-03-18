@@ -9,7 +9,7 @@ TransformSystem::TransformSystem(ComponentManager& comp_mng)
 //ä»íPÇ»épê®êßå‰óp
 void TransformSystem::Update(float elapsed_time)
 {
-    comp_mng_.ForEach<ComponentLocalToWorld>([this](uint32_t entity_id, ComponentLocalToWorld& l2w) {
+    comp_mng_.ForEach<ComponentLocalToWorld>([this,elapsed_time](uint32_t entity_id, ComponentLocalToWorld& l2w) {
         auto* pos = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id);
         auto* rot = comp_mng_.TryGetByEntity<ComponentRotation>(entity_id);
         auto* scale = comp_mng_.TryGetByEntity<ComponentScale>(entity_id);

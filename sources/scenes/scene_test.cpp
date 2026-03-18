@@ -72,10 +72,13 @@ bool SceneTest::InitializeCore()
         }
 
         
+        
     }
 
-    comp_edit->Load("progress.json");
+    {
+        comp_edit->Load("progress.json");
 
+    }
     return true;
 }
 
@@ -140,41 +143,9 @@ void SceneTest::RenderCore(float elapsed_time)
     }
     //レンダリングオブジェクト描画
     {
-        //framebuffers_[0]->Clear(dc);
-        //framebuffers_[0]->Activate(dc);
-        //2Dスプライト描画
-        {
-            dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_only), 0);
-
-
-            dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);
-
-        }
-        //3dオブジェクト描画
-        {
-
-            ////アニメーションキーフレームの更新
-            //int clip_index = 0;
-            //int frame_index = 0;
-            //static float animation_tick = 0;
-            //auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
-            //{
-            //    frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
-            //    if (frame_index > animation.sequence.size() - 1)
-            //    {
-            //        frame_index = 0;
-            //        animation_tick = 0;
-            //    }
-            //    else
-            //    {
-            //        animation_tick += elapsed_time;
-            //    }
-            //}
-            //Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
-
-            render_sys_mng->RenderAll();
-        }
-        //framebuffers_[0]->Deactivate(dc);
+        
+        render_sys_mng->RenderAll();
+        
     }
     //ポストエフェクト
     {

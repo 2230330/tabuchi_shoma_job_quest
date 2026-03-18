@@ -1,5 +1,4 @@
 #include"sky_atmosphere.hlsli"
-#include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
 
 //宇宙など、空の後ろに欲しい画像を入れる
