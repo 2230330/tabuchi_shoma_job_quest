@@ -80,7 +80,7 @@ private:
 	float timer{ 0.0f };
 	bool flag{ false };
 	float near_clip_distance{ 0.1f };
-	float far_clip_distance{ 1000.0f };
+	float far_clip_distance{ 100.0f };
 	float fov_y{ DirectX::XMConvertToRadians(30) };
 
 	DirectX::XMFLOAT3 camera_position;

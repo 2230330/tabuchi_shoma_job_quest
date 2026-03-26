@@ -177,10 +177,10 @@
 // Name                 Index   Mask Register SysValue  Format   Used
 // -------------------- ----- ------ -------- -------- ------- ------
 // SV_POSITION              0   xyzw        0      POS   float       
-// POSITION                 0   xyzw        1     NONE   float   xyz 
-// NORMAL                   0   xyzw        2     NONE   float   xyz 
-// TANGENT                  0   xyzw        3     NONE   float   xyzw
-// TEXCOORD                 0   xy          4     NONE   float   xy  
+// TEXCOORD                 1   xyzw        1     NONE   float   xyz 
+// TEXCOORD                 2   xyzw        2     NONE   float   xyz 
+// TEXCOORD                 3   xyzw        3     NONE   float   xyzw
+// TEXCOORD                 4   xy          4     NONE   float   xy  
 // CLIP_POSITION            0   xyzw        5     NONE   float       
 // CLIP_POSITION            1   xyzw        6     NONE   float       
 // SV_IsFrontFace           0   x           7    FFACE    uint   x   

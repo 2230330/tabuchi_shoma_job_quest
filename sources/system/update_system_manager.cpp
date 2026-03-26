@@ -1,6 +1,6 @@
 #include"../../headers/system/update_system_manager.h"
-#include"../../headers/system/transform_system.h"
-#include"../../headers/system/camera_update_system.h"
+#include"../../headers/system/update_transform_system.h"
+#include"../../headers/system/update_camera_system.h"
 
 //新しいシステムはここで登録する
 UpdateSystemManager::UpdateSystemManager(ComponentManager& comp_mng)

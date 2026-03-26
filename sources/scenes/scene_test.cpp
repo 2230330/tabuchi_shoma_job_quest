@@ -70,9 +70,6 @@ bool SceneTest::InitializeCore()
                 );
             }
         }
-
-        
-        
     }
 
     {

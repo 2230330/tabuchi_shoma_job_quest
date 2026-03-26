@@ -261,7 +261,7 @@
     <ClInclude Include="headers\static_mesh.h" />
     <ClInclude Include="headers\system\cloud_render_system.h" />
     <ClInclude Include="headers\system\deferred_render_system.h" />
-    <ClInclude Include="headers\system\camera_update_system.h" />
+    <ClInclude Include="headers\system\update_camera_system.h" />
     <ClInclude Include="headers\system\ibl_manager.h" />
     <ClInclude Include="headers\system\i_render_system.h" />
     <ClInclude Include="headers\system\i_update_system.h" />
@@ -271,7 +271,7 @@
     <ClInclude Include="headers\system\render_system_manager.h" />
     <ClInclude Include="headers\system\sky_render_system.h" />
     <ClInclude Include="headers\system\sprite_render_system.h" />
-    <ClInclude Include="headers\system\transform_system.h" />
+    <ClInclude Include="headers\system\update_transform_system.h" />
     <ClInclude Include="headers\system\update_system_manager.h" />
     <ClInclude Include="headers\system\instancing_render_system.h" />
     <ClInclude Include="headers\texture.h" />
@@ -312,7 +312,7 @@
     <ClCompile Include="sources\static_mesh.cpp" />
     <ClCompile Include="sources\system\cloud_render_system.cpp" />
     <ClCompile Include="sources\system\deferred_render_system.cpp" />
-    <ClCompile Include="sources\system\camera_update_system.cpp" />
+    <ClCompile Include="sources\system\update_camera_system.cpp" />
     <ClCompile Include="sources\system\ibl_manager.cpp" />
     <ClCompile Include="sources\system\instancing_render_system.cpp" />
     <ClCompile Include="sources\system\camera_set_constants.cpp" />
@@ -322,7 +322,7 @@
     <ClCompile Include="sources\system\sky_render_system.cpp" />
     <ClCompile Include="sources\system\sprite_render_system.cpp" />
     <ClCompile Include="sources\system\update_system_manager.cpp" />
-    <ClCompile Include="sources\system\transform_system.cpp" />
+    <ClCompile Include="sources\system\update_transform_system.cpp" />
     <ClCompile Include="sources\texture.cpp" />
   </ItemGroup>
   <ItemGroup>

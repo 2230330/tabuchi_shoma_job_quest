@@ -29,10 +29,10 @@ struct INSTANCING_VS_IN
 struct VS_OUT
 {
     float4 position : SV_POSITION;
-    float4 w_position : POSITION;
-    float4 w_normal : NORMAL;
-    float4 w_tangent : TANGENT;
-    float2 texcoord : TEXCOORD;
+    float4 w_position : TEXCOORD1;
+    float4 w_normal : TEXCOORD2;
+    float4 w_tangent : TEXCOORD3;
+    float2 texcoord : TEXCOORD4;
     float4 current_clip_position : CLIP_POSITION0;
     float4 previous_clip_position : CLIP_POSITION1;
 };
