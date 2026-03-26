@@ -278,6 +278,7 @@ void LightManager::BuildDeferredLights()
 		l.lights.work_data[0] = direction_light_.direction;
 		l.lights.work_data[1] = direction_light_.color;
 		l.lights.work_data[3].w = static_cast<float>(light_kind_derectional_light);
+		l.use_shadow = 1;
 		l.light_view_projection = light_view_projection_;
 
 		deferred_lights_.emplace_back(l);

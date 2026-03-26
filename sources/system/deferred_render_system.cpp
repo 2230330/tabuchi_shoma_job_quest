@@ -161,17 +161,17 @@ void DeferredRenderSystem::directional_shadow_rendering()
         DirectX::XMVector3Normalize(DirectX::XMLoadFloat4(&light_manager_->GetDirectionLight().direction));
     
     // 注視点は中心
-    DirectX::XMVECTOR center = DirectX::XMVectorSet(0, 0, 0, 0);
     DirectX::XMVECTOR target;
 
     //カメラ位置を注視点にすることで、カメラ周辺にシャドウマップの中心が来るようにする
     target = DirectX::XMLoadFloat4(&camera_position_);
 
-    // 影中心からライト方向に引いた位置にライトを置く
-    DirectX::XMVECTOR light_pos = DirectX::XMVectorSubtract(
-        target,
-        DirectX::XMVectorScale(light_dir, shadow_distance_) // target - light_dir * dist
-    );
+    //// 影中心からライト方向に引いた位置にライトを置く
+    DirectX::XMVECTOR light_pos =
+        DirectX::XMVectorSubtract(
+            target,
+            DirectX::XMVectorScale(light_dir, shadow_distance_) // target - light_dir * dist
+        );
 
 
     // up が light_dir と平行に近い場合の対策
@@ -179,8 +179,8 @@ void DeferredRenderSystem::directional_shadow_rendering()
     if (fabs(DirectX::XMVectorGetX(DirectX::XMVector3Dot(light_dir, up))) > 0.95f)
         up = DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
 
-    DirectX::XMMATRIX V = DirectX::XMMatrixLookAtLH(light_pos, target, up);
-    DirectX::XMStoreFloat4x4(&light_view_, V);
+    DirectX::XMMATRIX V0 = DirectX::XMMatrixLookAtLH(light_pos, target, up);
+    DirectX::XMStoreFloat4x4(&light_view_, V0);
 
 
     // === 直交投影（w,h は“ワールド距離”）===
@@ -188,23 +188,46 @@ void DeferredRenderSystem::directional_shadow_rendering()
     float h = shadow_coverage_;
 
     //テクセルスナップで泳ぎ防止
+    DirectX::XMMATRIX V;
     {
         // ライトビュー空間の 1 テクセルサイズ
-        float texelSizeX = w / static_cast<float>(shadowmap_width_);
-        float texelSizeY = h / static_cast<float>(shadowmap_height_);
+        float texel_size_x = w / static_cast<float>(shadowmap_width_);
+        float texel_size_y = h / static_cast<float>(shadowmap_height_);
 
         // target をライトビューに変換→XY をグリッドへ丸め→ライト位置を補正
-        DirectX::XMVECTOR targetL = DirectX::XMVector3TransformCoord(target, V);
+        DirectX::XMVECTOR targetL = DirectX::XMVector3TransformCoord(target, V0);
         float cx = DirectX::XMVectorGetX(targetL);
         float cy = DirectX::XMVectorGetY(targetL);
-        cx = std::floor(cx / texelSizeX) * texelSizeX;
-        cy = std::floor(cy / texelSizeY) * texelSizeY;
+        cx = std::floor(cx / texel_size_x) * texel_size_x;
+        cy = std::floor(cy / texel_size_y) * texel_size_y;
 
         // 丸めた中心がライトビューで (cx,cy) になるように、ビュー行列の原点を平行移動
-        DirectX::XMMATRIX off =
-            DirectX::XMMatrixTranslation(-(cx - DirectX::XMVectorGetX(targetL)),
-                -(cy - DirectX::XMVectorGetY(targetL)), 0.0f);
-        V = off * V; // 中心をグリッドに合わせる
+        //DirectX::XMMATRIX off =
+        //    DirectX::XMMatrixTranslation(-(cx - DirectX::XMVectorGetX(targetL)),
+        //        -(cy - DirectX::XMVectorGetY(targetL)), 0.0f);
+
+
+        //DirectX::XMMATRIX off = DirectX::XMMatrixTranslation(
+        //    cx - DirectX::XMVectorGetX(targetL),
+        //    cy - DirectX::XMVectorGetY(targetL),
+        //    0.0f
+        //);
+
+        //V0 = off*V0; // 中心をグリッドに合わせる
+
+        //スナップ差分をライト位置に反映
+        DirectX::XMVECTOR delta = DirectX::XMVectorSet(
+            DirectX::XMVectorGetX(targetL) - cx,
+            DirectX::XMVectorGetY(targetL) - cy,
+            0.0f, 0.0f);
+
+        // ライト位置をスナップ差分だけ移動
+        delta = DirectX::XMVector3TransformNormal(delta, DirectX::XMMatrixInverse(nullptr, V0));
+        //ライト位置を補正
+        light_pos = DirectX::XMVectorSubtract(light_pos, delta);
+
+        // ビュー行列を再計算
+        V = DirectX::XMMatrixLookAtLH(light_pos, target, up);
     }
 
     DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicLH(

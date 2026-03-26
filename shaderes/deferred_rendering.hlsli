@@ -59,7 +59,7 @@ cbuffer LIGHT_CONSTANT_BUFFER : register(b4)
     float shadow_bias; //深度バイアス
     uint shadow_dummy; //ダミー
     
-    row_major float4x4 light_view_projection; //ライトの位置から見た射影行列
+    //row_major float4x4 light_view_projection; //ライトの位置から見た射影行列
 };
 
 //ライトの種別の取得

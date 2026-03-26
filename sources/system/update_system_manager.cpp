@@ -7,8 +7,8 @@ UpdateSystemManager::UpdateSystemManager(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)
 {
 
-    AddSystem(std::make_unique<TransformSystem>(comp_mng_));
     AddSystem(std::make_unique<CameraUpdateSystem>(comp_mng_));
+    AddSystem(std::make_unique<TransformSystem>(comp_mng_));
 }
 
 //システム追加用関数

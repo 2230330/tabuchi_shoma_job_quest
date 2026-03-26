@@ -180,7 +180,7 @@ endif
 #line 25
 itof r0.w, l(1)  // r0.w <- vin.position.w
 
-#line 27
+#line 26
 mul r1.xyzw, r0.xxxx, cb0[0].xyzw
 mul r2.xyzw, r0.yyyy, cb0[1].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw
@@ -189,7 +189,7 @@ add r1.xyzw, r1.xyzw, r2.xyzw
 mul r0.xyzw, r0.wwww, cb0[3].xyzw
 add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- wpos.x; r0.y <- wpos.y; r0.z <- wpos.z; r0.w <- wpos.w
 
-#line 28
+#line 27
 mul r1.xyzw, r0.xxxx, cb6[0].xyzw
 mul r2.xyzw, r0.yyyy, cb6[1].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw
@@ -198,7 +198,7 @@ add r1.xyzw, r1.xyzw, r2.xyzw
 mul r0.xyzw, r0.wwww, cb6[3].xyzw
 add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z; r0.w <- vout.position.w
 
-#line 41
+#line 40
 mov o0.xyzw, r0.xyzw
 ret 
 // Approximately 94 instruction slots used

@@ -123,7 +123,7 @@ void CameraUpdateSystem::Update(float elapsed_time)
 					}
 
 					wheel_ = Graphics::Instance().GetWheel();
-					if (wheel_ >= 0.0)	// ズーム
+					if (wheel_ != 0.0)	// ズーム
 					{
 						distance -= static_cast<float>(wheel_) * distance * 0.001f;
 						distance = std::max(std::min(distance, max_distance), min_distance);

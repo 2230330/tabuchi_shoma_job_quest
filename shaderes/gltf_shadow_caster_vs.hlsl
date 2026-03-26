@@ -23,7 +23,6 @@ VS_OUT main(VS_IN vin)
     VS_OUT vout;
 
     vin.position.w = 1;
-    //vout.position = mul(vin.position, mul(world, light_view_projection));
     float4 wpos = mul(vin.position, world);
     vout.position = mul(wpos, light_view_projection);
  //   vout.w_position = mul(vin.position, world);

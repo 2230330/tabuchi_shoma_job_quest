@@ -1,5 +1,7 @@
 #include"deferred_rendering.hlsli"
 #include"fullscreen_quad.hlsli"
+#include"light_view_projection.hlsli"
+#include"camera_buffer.hlsli"
 
 Texture2D<float4> gbuffer_base_color : register(t0);
 Texture2D<float4> gbuffer_emissive_color : register(t1);
@@ -14,7 +16,8 @@ Texture2D<float4> gbuffer_velocity : register(t5);
 #define LINEAR_CLAMP 3
 #define ANISOTROPIC 4
 #define LINEAR_MIRROR 5
-SamplerState sampler_states[6] : register(s0);
+#define SHADOWMAP 6
+SamplerState sampler_states[7] : register(s0);
 
 //  シャドウマップ用テクスチャ
 Texture2D shadow_map : register(t10);
@@ -47,33 +50,23 @@ float4 main(VS_OUT pin) : SV_TARGET
                 float attenuation = 1.0f;
                 if (use_shadow)
                 {
-                    //シャドウマップ用のパラメータ計算
-                    float3 shadow_texcoord ;
-                    {
-                        //ライトから見たNDC座標を算出
+                	//  シャドウマップ用のパラメーター計算
+                    float3 shadow_texcoord;
+	                {
+		                // ライトから見たNDC座標を算出
                         float4 wvpPos = mul(float4(data.w_position.xyz, 1.0f), light_view_projection);
-                
-                        //NDC座標からUV座標を算出する
+		                // NDC座標からUV座標を算出する
                         wvpPos /= wvpPos.w;
                         wvpPos.y = -wvpPos.y;
                         wvpPos.xy = 0.5f * wvpPos.xy + 0.5f;
                         shadow_texcoord = wvpPos.xyz;
-                        if (wvpPos.x < 0 || wvpPos.x > 1 ||
-                            wvpPos.y < 0 || wvpPos.y > 1)
-                        {
-                            attenuation = 1.0f; // シャドウ外
-                        }
-                        else
-                        {
-                            //深度値を比較して影かどうかを判定する
-                            float current_depth = shadow_texcoord.z * 0.5f + 0.5f;
-                            float depth = shadow_map.Sample(sampler_states[LINEAR_CLAMP], shadow_texcoord.xy).r;
-                            if (current_depth > depth + shadow_bias)
-                            {
-                                attenuation = shadow_attenuation;
-                            }
-                        }
-                    
+                    }
+		            //	平行光源用シャドウマップ
+                    float depth = shadow_map.Sample(sampler_states[SHADOWMAP], shadow_texcoord.xy).r;
+		            //	深度値を比較して影かどうかを判定する
+                    if (shadow_texcoord.z - depth > shadow_bias)
+                    {
+                        attenuation = shadow_attenuation;
                     }
                 }
                 lighting_data.direction = normalize(directional_light.direction.xyz);
