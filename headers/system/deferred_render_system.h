@@ -35,10 +35,10 @@ private:
     std::unique_ptr<RenderState>render_state_=nullptr;
 
     //シャドウマップ
-    const float shadow_distance_ = 20.0f;
+    const float shadow_distance_ = 50.0f;
     float shadow_coverage_ = 20.f; // シャドウマップに収めたい範囲（影の最大距離など）
     const float shadow_near_clip_plane_ = 1.f;
-    const float shadow_far_clip_plane_ = 80.f;
+    const float shadow_far_clip_plane_ = 200.f;
     const float shadow_map_size_ = 1024.0f;
     const float shadowmap_width_ = 1024.f;
     const float shadowmap_height_ = 1024.f;

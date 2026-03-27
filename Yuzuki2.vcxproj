@@ -267,7 +267,6 @@
     <ClInclude Include="headers\system\i_update_system.h" />
     <ClInclude Include="headers\system\camera_set_constants.h" />
     <ClInclude Include="headers\system\render_gltf_system.h" />
-    <ClInclude Include="headers\system\render_shadow_system.h" />
     <ClInclude Include="headers\system\render_system_manager.h" />
     <ClInclude Include="headers\system\sky_render_system.h" />
     <ClInclude Include="headers\system\sprite_render_system.h" />
@@ -317,7 +316,6 @@
     <ClCompile Include="sources\system\instancing_render_system.cpp" />
     <ClCompile Include="sources\system\camera_set_constants.cpp" />
     <ClCompile Include="sources\system\render_gltf_system.cpp" />
-    <ClCompile Include="sources\system\render_shadow_system.cpp" />
     <ClCompile Include="sources\system\render_system_manager.cpp" />
     <ClCompile Include="sources\system\sky_render_system.cpp" />
     <ClCompile Include="sources\system\sprite_render_system.cpp" />

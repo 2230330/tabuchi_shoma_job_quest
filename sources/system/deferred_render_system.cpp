@@ -201,20 +201,6 @@ void DeferredRenderSystem::directional_shadow_rendering()
         cx = std::floor(cx / texel_size_x) * texel_size_x;
         cy = std::floor(cy / texel_size_y) * texel_size_y;
 
-        // 丸めた中心がライトビューで (cx,cy) になるように、ビュー行列の原点を平行移動
-        //DirectX::XMMATRIX off =
-        //    DirectX::XMMatrixTranslation(-(cx - DirectX::XMVectorGetX(targetL)),
-        //        -(cy - DirectX::XMVectorGetY(targetL)), 0.0f);
-
-
-        //DirectX::XMMATRIX off = DirectX::XMMatrixTranslation(
-        //    cx - DirectX::XMVectorGetX(targetL),
-        //    cy - DirectX::XMVectorGetY(targetL),
-        //    0.0f
-        //);
-
-        //V0 = off*V0; // 中心をグリッドに合わせる
-
         //スナップ差分をライト位置に反映
         DirectX::XMVECTOR delta = DirectX::XMVectorSet(
             DirectX::XMVectorGetX(targetL) - cx,
@@ -343,12 +329,6 @@ void DeferredRenderSystem::directional_shadow_rendering()
                 0, true/*shadow_render_flag*/);
         }
     }
-
-
-
-
     }
     shadowmap_framebuffer_->Deactivate(Graphics::Instance().GetDeviceContext());
-
-
 }

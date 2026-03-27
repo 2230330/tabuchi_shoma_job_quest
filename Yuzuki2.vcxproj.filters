@@ -287,9 +287,6 @@
     <ClInclude Include="headers\system\deferred_render_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\render_shadow_system.h">
-      <Filter>headers\system</Filter>
-    </ClInclude>
     <ClInclude Include="headers\component\component_camera.h">
       <Filter>headers\component</Filter>
     </ClInclude>
@@ -425,9 +422,6 @@
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\deferred_render_system.cpp">
-      <Filter>sources\system</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\system\render_shadow_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\camera_set_constants.cpp">
