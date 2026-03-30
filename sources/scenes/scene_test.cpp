@@ -74,6 +74,30 @@ bool SceneTest::InitializeCore()
 
     {
         comp_edit->Load("progress.json");
+        
+        //for (int i = 0; i < 100; i++)
+        //{
+        //    uint32_t entity = world->GetEntityManager()->Add();
+        //    ComponentPosition pos;
+        //    pos.value = { 3.f * static_cast<float>( i % 10), 1,3.f * static_cast<float>( i / 10) };
+        //    comp_mng->Add(entity, pos);
+        //    ComponentRotation rot;
+        //    rot.value = { 0, 0, 0 };
+        //    comp_mng->Add(entity, rot);
+        //    ComponentScale scale;
+        //    scale.value = { 1, 1, 1 };
+        //    comp_mng->Add(entity, scale);
+        //    ComponentLocalToWorld l2w;
+        //    comp_mng->Add(entity, l2w);
+        //    ComponentAdjastPbrParamter ajust_pbr_paramter;
+        //    comp_mng->Add(entity, ajust_pbr_paramter);
+        //    ComponentGltf gltf;
+        //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
+
+        //    comp_mng->Add(entity, gltf);
+        //    ComponentInstanced instanced;
+        //    comp_mng->Add(entity, instanced);
+        //}
 
     }
     return true;

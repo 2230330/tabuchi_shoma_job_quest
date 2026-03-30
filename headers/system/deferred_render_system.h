@@ -35,13 +35,12 @@ private:
 
     //シャドウマップ
     const float shadow_distance_ = 250.0f;
-    float shadow_coverage_ = 500.f; // シャドウマップに収めたい範囲（影の最大距離など）
+    float shadow_coverage_ = 30.f; // シャドウマップに収めたい範囲（影の最大距離など）
     const float shadow_near_clip_plane_ = 1.f;
     const float shadow_far_clip_plane_ = 1000.f;
-    const float shadow_map_size_ = 1024.0f;
-    const float shadowmap_width_ = 1024.f;
-    const float shadowmap_height_ = 1024.f;
-    const float shadowmap_fov_y_ = DirectX::XMConvertToRadians(30.f);
+    const float shadowmap_width_ = 4096.f;
+    const float shadowmap_height_ = 4096.f;
+    const float shadowmap_fov_y_ = DirectX::XMConvertToRadians(90.f);
     DirectX::XMFLOAT4 camera_position_, camera_front_, camera_right_;
 
 
@@ -78,7 +77,7 @@ private:
     };  
     static constexpr float split_aria_table_[] = 
     {
-        1.0f,
+        0.1f,
         25.f,
         100.f,
         250.f,
