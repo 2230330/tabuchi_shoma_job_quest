@@ -61,17 +61,25 @@ DeferredRenderSystem::DeferredRenderSystem(ComponentManager&comp_mng,RenderPass 
         buffer_desc.MiscFlags = 0;
         buffer_desc.StructureByteStride = 0;
         {
-            buffer_desc.ByteWidth = (sizeof(scene_constants) + 15) / 16 * 16;
+            buffer_desc.ByteWidth = (sizeof(LightSceneConstants) + 15) / 16 * 16;
             hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr, shadow_scene_constant_buffer_.GetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
         }
+        {
+            buffer_desc.ByteWidth = (sizeof(CascadeShadowSceneConstants) + 15) / 16 * 16;
+            hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr, cascade_shadow_scene_constant_buffer_.GetAddressOf());
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        }
+
 
     }
     //フレームバッファの生成
     {
-
-        shadowmap_framebuffer_ = std::make_unique<FrameBuffer>(
-            device,shadowmap_width_,shadowmap_height_,FrameBuffer::usage::depth,true);
+        for (int i = 0; i < CASCADE::Count; i++)
+        {
+            shadowmap_framebuffers_.at(i) = std::make_unique<FrameBuffer>(
+                device, shadowmap_width_, shadowmap_height_, FrameBuffer::usage::depth, true);
+        }
     }
 
     deferred_rendering_directional_ps_ =
@@ -141,8 +149,15 @@ void DeferredRenderSystem::Render()
 
         light_manager_->BindDeferredLightConstant(ConstantBufferSlot::kDeferredLight, i);
         //影情報の送信
-        ID3D11ShaderResourceView*shadowmap= shadowmap_framebuffer_->GetShaderResourceView(1).Get();
-        ctx->PSSetShaderResources(10, 1, &shadowmap);
+        for (int i = 0; i < CASCADE::Count; i++)
+        {
+            ID3D11ShaderResourceView* shadowmap = shadowmap_framebuffers_.at(i)->GetShaderResourceView(1).Get();
+            ctx->PSSetShaderResources(10+i, 1, &shadowmap);
+        }
+        Graphics::Instance().GetDeviceContext()->UpdateSubresource(
+            cascade_shadow_scene_constant_buffer_.Get(), 0, nullptr, &cascade_shadow_scene_constant_, 0, 0);
+        Graphics::Instance().SetConstantBuffer(
+            ConstantBufferSlot::kCascadeShadow, 1, cascade_shadow_scene_constant_buffer_.GetAddressOf());
 
         fullscreen_quad_->blit(ctx, srvs, 0,_countof(srvs), deferred_rendering_directional_ps_.Get());
     }
@@ -150,21 +165,31 @@ void DeferredRenderSystem::Render()
 
 void DeferredRenderSystem::directional_shadow_rendering()
 {
-    //定数バッファの更新
-    shadowmap_framebuffer_->Clear(Graphics::Instance().GetDeviceContext(), FrameBuffer::usage::depth_stencil);
-    shadowmap_framebuffer_->Activate(Graphics::Instance().GetDeviceContext(), FrameBuffer::usage::depth_stencil);
-    {
 
     //ライト方向から見た視線行列を生成
 
     DirectX::XMVECTOR light_dir =
         DirectX::XMVector3Normalize(DirectX::XMLoadFloat4(&light_manager_->GetDirectionLight().direction));
-    
+
     // 注視点は中心
-    DirectX::XMVECTOR target;
+    DirectX::XMVECTOR target,target_front,target_right;
 
     //カメラ位置を注視点にすることで、カメラ周辺にシャドウマップの中心が来るようにする
+    comp_mng_.ForEach<ComponentCamera>([this](uint32_t entity_id, ComponentCamera& camera)
+        {
+            if (camera.main_camera_flag_)
+            {
+                camera_position_ = camera.camera_position;
+                camera_front_ = camera.camera_direction;
+
+            }
+        });
     target = DirectX::XMLoadFloat4(&camera_position_);
+    target_front = DirectX::XMLoadFloat4(&camera_front_);
+    target_right = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(target_front, DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)));
+
+
+
 
     //// 影中心からライト方向に引いた位置にライトを置く
     DirectX::XMVECTOR light_pos =
@@ -180,7 +205,6 @@ void DeferredRenderSystem::directional_shadow_rendering()
         up = DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
 
     DirectX::XMMATRIX V0 = DirectX::XMMatrixLookAtLH(light_pos, target, up);
-    DirectX::XMStoreFloat4x4(&light_view_, V0);
 
 
     // === 直交投影（w,h は“ワールド距離”）===
@@ -221,114 +245,232 @@ void DeferredRenderSystem::directional_shadow_rendering()
         shadow_near_clip_plane_, shadow_far_clip_plane_
     );
 
-    DirectX::XMStoreFloat4x4(&light_projection_, P);
-
     DirectX::XMMATRIX VP = V * P;
-    DirectX::XMStoreFloat4x4(&light_view_projection_, VP);
-    DirectX::XMStoreFloat4x4(&inverse_light_view_projection_, DirectX::XMMatrixInverse(nullptr, VP));
 
-
-    //ここでシーンの定数バッファを更新する必要がある
-    ShadowSceneConstants constants{};
-    constants.light_view_projection = light_view_projection_;
-    constants.inverse_light_view_projection = inverse_light_view_projection_;
-    Graphics::Instance().GetDeviceContext()->UpdateSubresource(
-        shadow_scene_constant_buffer_.Get(), 0, nullptr, &constants, 0, 0);
-    Graphics::Instance().SetConstantBuffer(
-        ConstantBufferSlot::kShadowMap, 1, shadow_scene_constant_buffer_.GetAddressOf());
-
-    //通常GLTFモデルのシャドウマップレンダリング
-    comp_mng_.ForEach<ComponentGltf>([this](uint32_t entity_id, ComponentGltf& gltf)
-        {
-            if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id) &&
-                !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
-            {
-                auto* l2w = comp_mng_.TryGetByEntity < ComponentLocalToWorld>(entity_id);
-                auto* ins = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
-
-                //要求したものがあったら
-                if (l2w && !ins)
-                {
-                    auto* adjast = comp_mng_.TryGetByEntity<ComponentAdjastPbrParamter>(entity_id);
-                    if (adjast)
-                    {
-                        gltf.model->SetAdjastParam(
-                            adjast->adjust_metalness,
-                            adjast->adjust_roughness);
-                    }
-
-                    gltf.model->Render(Graphics::Instance().GetDeviceContext(), l2w->value,true/*shadow_render_flag*/);
-                }
-
-
-            }
-
-        });
-    // モデルごとにインスタンスをグループ化
+    float aspect_ratio = shadowmap_width_ / shadowmap_height_;
+    DirectX::XMFLOAT4X4 light_view_projection;
+    DirectX::XMFLOAT4X4 inverse_light_view_projection;
+    //カスケードシャドウ
+    for(int i = 0; i < CASCADE::Count; i++)
     {
-        std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds;
-
-        comp_mng_.ForEach<ComponentGltf>([&](uint32_t entity_id, ComponentGltf& gltf)
-            {
-                if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id) &&
-                    !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
-                {
-
-                    auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
-                    auto* instanced = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
-
-                    // インスタンシング対象のみ抽出
-                    if (l2w && instanced)
-                    {
-                        model_to_worlds[gltf.model.get()].push_back(l2w->value);
-                    }
-                }
-            });
-
-        ID3D11Device* device = Graphics::Instance().GetDevice();
-        ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
-        HRESULT hr{ S_OK };
-
-        for (auto& [model, world_matrices] : model_to_worlds)
+        shadowmap_framebuffers_.at(i)->Clear(Graphics::Instance().GetDeviceContext(), FrameBuffer::usage::depth_stencil);
+        shadowmap_framebuffers_.at(i)->Activate(Graphics::Instance().GetDeviceContext(), FrameBuffer::usage::depth_stencil);
         {
-            if (world_matrices.empty()) continue;
-
-
-            InstanceBufferInfo& buf_info = instance_buffer_pool_[model];
-
-            const UINT required_size = sizeof(DirectX::XMFLOAT4X4) * static_cast<UINT>(world_matrices.size());
-
-            // 必要に応じて再生成（足りないときだけ）
-            if (!buf_info.buffer || buf_info.cepasity < world_matrices.size())
+            float near_depth = split_aria_table_[i];
+            float far_depth = split_aria_table_[i + 1];
+            //カスケードシャドウのエリアを内包する視錐台の頂点を求める
+            DirectX::XMVECTOR vertex[8];
             {
-                D3D11_BUFFER_DESC desc{};
-                desc.Usage = D3D11_USAGE_DYNAMIC;
-                desc.ByteWidth = std::max(required_size, 16u);
-                desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-                desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+                //シャドウマップのFOVから、nearとfarの矩形のサイズを求める
+                float near_y = tanf(shadowmap_fov_y_ * 0.5f) * near_depth;
+                float near_x = near_y * aspect_ratio;
+                float far_y = tanf(shadowmap_fov_y_ * 0.5f) * far_depth;
+                float far_x = far_y * aspect_ratio;
 
-                hr = device->CreateBuffer(&desc, nullptr, buf_info.buffer.ReleaseAndGetAddressOf());
-                _ASSERT_EXPR(SUCCEEDED(hr), L"インスタンスバッファの作成に失敗しました");
-                buf_info.cepasity = world_matrices.size();
+                //エリアの近平面の中心座標を求める
+                DirectX::XMVECTOR near_pos=DirectX::XMVectorAdd(
+                    target,
+                    DirectX::XMVectorScale(target_front, near_depth)
+                );
+                //エリアの遠平面の中心座標を求める
+                DirectX::XMVECTOR far_pos = DirectX::XMVectorAdd(
+                    target,
+                    DirectX::XMVectorScale(target_front, far_depth)
+                );
+
+                //8頂点を求める
+                {
+                    //近平面
+                    vertex[0] = DirectX::XMVectorAdd(near_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, near_x),
+                            DirectX::XMVectorScale(up, near_y)
+                        )
+                    );
+                    vertex[1] = DirectX::XMVectorAdd(near_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, -near_x),
+                            DirectX::XMVectorScale(up, near_y)
+                        )
+                    );
+                    vertex[2] = DirectX::XMVectorAdd(near_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, near_x),
+                            DirectX::XMVectorScale(up, -near_y)
+                        )
+                    );
+                    vertex[3] = DirectX::XMVectorAdd(near_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, -near_x),
+                            DirectX::XMVectorScale(up, -near_y)
+                        )
+                    );
+                    //遠平面
+                    vertex[4] = DirectX::XMVectorAdd(far_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, far_x),
+                            DirectX::XMVectorScale(up, far_y)
+                        )
+                    );
+                    vertex[5] = DirectX::XMVectorAdd(far_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, -far_x),
+                            DirectX::XMVectorScale(up, far_y)
+                        )
+                    );
+                    vertex[6] = DirectX::XMVectorAdd(far_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, far_x),
+                            DirectX::XMVectorScale(up, -far_y)
+                        )
+                    );
+                    vertex[7] = DirectX::XMVectorAdd(far_pos,
+                        DirectX::XMVectorAdd(
+                            DirectX::XMVectorScale(target_right, -far_x),
+                            DirectX::XMVectorScale(up, -far_y)
+                        )
+                    );
+                }
+
+                //8頂点をライトビュー空間に変換して、AABBを求める
+                DirectX::XMFLOAT2 vertex_min{ FLT_MAX,FLT_MAX };
+                DirectX::XMFLOAT2 vertex_max{ -FLT_MAX,-FLT_MAX };
+                for (auto& it : vertex)
+                {
+                    DirectX::XMFLOAT3 p;
+                    DirectX::XMStoreFloat3(&p, DirectX::XMVector3TransformCoord(it, VP));
+
+                    vertex_min.x = std::min(vertex_min.x, p.x);
+                    vertex_min.y = std::min(vertex_min.y, p.y);
+                    vertex_max.x = std::max(vertex_max.x, p.x);
+                    vertex_max.y = std::max(vertex_max.y, p.y);
+                    
+                }
+
+                //クロップ行列を求める
+                DirectX::XMMATRIX clop_matrix = DirectX::XMMatrixIdentity();
+                {
+                    float x_scale = 2.0f / (vertex_max.x - vertex_min.x);
+                    float y_scale = 2.0f / (vertex_max.y - vertex_min.y);
+                    float x_offset = -0.5f * (vertex_max.x + vertex_min.x) * x_scale;
+                    float y_offset = -0.5f * (vertex_max.y + vertex_min.y) * y_scale;
+                    DirectX::XMFLOAT4X4 clop;
+                    DirectX::XMStoreFloat4x4(&clop, clop_matrix);
+                    clop._11 = x_scale;
+                    clop._22 = y_scale;
+                    clop._41 = x_offset;
+                    clop._42 = y_offset;
+                    clop_matrix = DirectX::XMLoadFloat4x4(&clop);
+                }
+
+                //クロップ行列をかけた行列を保存
+                DirectX::XMStoreFloat4x4(&light_view_projection, VP*clop_matrix);
+                DirectX::XMStoreFloat4x4(&inverse_light_view_projection, DirectX::XMMatrixInverse(nullptr, VP*clop_matrix));
+                light_scene_constant_.light_view_projection = light_view_projection;
+                light_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
+                cascade_shadow_scene_constant_.light_view_projection[i] = light_view_projection;
+                cascade_shadow_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
             }
 
-            // Map でデータ更新
-            D3D11_MAPPED_SUBRESOURCE mapped{};
-            hr = context->Map(buf_info.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-            if (SUCCEEDED(hr))
-            {
-                memcpy(mapped.pData, world_matrices.data(), required_size);
-                context->Unmap(buf_info.buffer.Get(), 0);
-            }
+            //定数バッファに送る
+            Graphics::Instance().GetDeviceContext()->UpdateSubresource(
+                shadow_scene_constant_buffer_.Get(), 0, nullptr, &light_scene_constant_, 0, 0);
+            Graphics::Instance().SetConstantBuffer(
+                ConstantBufferSlot::kLightViewProjection, 1, shadow_scene_constant_buffer_.GetAddressOf());
 
-            // インスタンシング描画呼び出し
-            model->InstancingRender(context,
-                static_cast<UINT>(world_matrices.size()),
-                buf_info.buffer.Get(),
-                0, true/*shadow_render_flag*/);
+            //通常GLTFモデルのシャドウマップレンダリング
+            comp_mng_.ForEach<ComponentGltf>([this](uint32_t entity_id, ComponentGltf& gltf)
+                {
+                    if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id) &&
+                        !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
+                    {
+                        auto* l2w = comp_mng_.TryGetByEntity < ComponentLocalToWorld>(entity_id);
+                        auto* ins = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
+
+                        //要求したものがあったら
+                        if (l2w && !ins)
+                        {
+                            auto* adjast = comp_mng_.TryGetByEntity<ComponentAdjastPbrParamter>(entity_id);
+                            if (adjast)
+                            {
+                                gltf.model->SetAdjastParam(
+                                    adjast->adjust_metalness,
+                                    adjast->adjust_roughness);
+                            }
+
+                            gltf.model->Render(Graphics::Instance().GetDeviceContext(), l2w->value, true/*shadow_render_flag*/);
+                        }
+
+
+                    }
+
+                });
+            // モデルごとにインスタンスをグループ化
+            {
+                std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds;
+
+                comp_mng_.ForEach<ComponentGltf>([&](uint32_t entity_id, ComponentGltf& gltf)
+                    {
+                        if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id) &&
+                            !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
+                        {
+
+                            auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
+                            auto* instanced = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
+
+                            // インスタンシング対象のみ抽出
+                            if (l2w && instanced)
+                            {
+                                model_to_worlds[gltf.model.get()].push_back(l2w->value);
+                            }
+                        }
+                    });
+
+                ID3D11Device* device = Graphics::Instance().GetDevice();
+                ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+                HRESULT hr{ S_OK };
+
+                for (auto& [model, world_matrices] : model_to_worlds)
+                {
+                    if (world_matrices.empty()) continue;
+
+
+                    InstanceBufferInfo& buf_info = instance_buffer_pool_[model];
+
+                    const UINT required_size = sizeof(DirectX::XMFLOAT4X4) * static_cast<UINT>(world_matrices.size());
+
+                    // 必要に応じて再生成（足りないときだけ）
+                    if (!buf_info.buffer || buf_info.cepasity < world_matrices.size())
+                    {
+                        D3D11_BUFFER_DESC desc{};
+                        desc.Usage = D3D11_USAGE_DYNAMIC;
+                        desc.ByteWidth = std::max(required_size, 16u);
+                        desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+                        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+                        hr = device->CreateBuffer(&desc, nullptr, buf_info.buffer.ReleaseAndGetAddressOf());
+                        _ASSERT_EXPR(SUCCEEDED(hr), L"インスタンスバッファの作成に失敗しました");
+                        buf_info.cepasity = world_matrices.size();
+                    }
+
+                    // Map でデータ更新
+                    D3D11_MAPPED_SUBRESOURCE mapped{};
+                    hr = context->Map(buf_info.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+                    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+                    if (SUCCEEDED(hr))
+                    {
+                        memcpy(mapped.pData, world_matrices.data(), required_size);
+                        context->Unmap(buf_info.buffer.Get(), 0);
+                    }
+
+                    // インスタンシング描画呼び出し
+                    model->InstancingRender(context,
+                        static_cast<UINT>(world_matrices.size()),
+                        buf_info.buffer.Get(),
+                        0, true/*shadow_render_flag*/);
+                }
+            }
         }
+        shadowmap_framebuffers_.at(i)->Deactivate(Graphics::Instance().GetDeviceContext());
     }
-    }
-    shadowmap_framebuffer_->Deactivate(Graphics::Instance().GetDeviceContext());
 }

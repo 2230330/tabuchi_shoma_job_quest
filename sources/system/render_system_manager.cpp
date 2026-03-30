@@ -181,7 +181,6 @@ void RenderSystemManager::RenderAll()
     object_framebuffer_->Clear(ctx);
     object_framebuffer_->Activate(ctx);
     //オブジェクトのライティング
-    deferred_render_system_->SetCameraPosition(camera_set_constants_->GetCameraPosition());
     deferred_render_system_->Render();
 
     object_framebuffer_->Deactivate(ctx);

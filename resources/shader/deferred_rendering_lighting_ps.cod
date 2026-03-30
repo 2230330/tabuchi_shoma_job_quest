@@ -47,11 +47,11 @@
 //
 // }
 //
-// cbuffer ShadowSceneConstants
+// cbuffer CascadeShadowMap
 // {
 //
-//   row_major float4x4 light_view_projection;// Offset:    0 Size:    64
-//   row_major float4x4 inverse_light_view_projection;// Offset:   64 Size:    64 [unused]
+//   row_major float4x4 cascade_light_view_projection[4];// Offset:    0 Size:   256
+//   row_major float4x4 cascade_inverse_light_view_projection;// Offset:  256 Size:    64 [unused]
 //
 // }
 //
@@ -66,11 +66,14 @@
 // gbuffer_normal                    texture  float4          2d             t2      1 
 // gbuffer_parameter                 texture  float4          2d             t3      1 
 // gbuffer_depth                     texture   float          2d             t4      1 
-// shadow_map                        texture  float4          2d            t10      1 
+// shadow_map[0]                     texture  float4          2d            t10      1 
+// shadow_map[1]                     texture  float4          2d            t11      1 
+// shadow_map[2]                     texture  float4          2d            t12      1 
+// shadow_map[3]                     texture  float4          2d            t13      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
 // LIGHT_CONSTANT_BUFFER             cbuffer      NA          NA            cb4      1 
-// ShadowSceneConstants              cbuffer      NA          NA            cb6      1 
 // CameraBuffer                      cbuffer      NA          NA            cb7      1 
+// CascadeShadowMap                  cbuffer      NA          NA            cb8      1 
 //
 //
 //
@@ -93,7 +96,7 @@ dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB1[2], immediateIndexed
 dcl_constantbuffer CB7[27], immediateIndexed
 dcl_constantbuffer CB4[5], immediateIndexed
-dcl_constantbuffer CB6[4], immediateIndexed
+dcl_constantbuffer CB8[16], immediateIndexed
 dcl_sampler s0, mode_default
 dcl_sampler s6, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
@@ -101,6 +104,9 @@ dcl_resource_texture2d (float,float,float,float) t2
 dcl_resource_texture2d (float,float,float,float) t3
 dcl_resource_texture2d (float,float,float,float) t4
 dcl_resource_texture2d (float,float,float,float) t10
+dcl_resource_texture2d (float,float,float,float) t11
+dcl_resource_texture2d (float,float,float,float) t12
+dcl_resource_texture2d (float,float,float,float) t13
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
 dcl_temps 15
@@ -275,62 +281,310 @@ switch r1.w
   ine r2.w, l(0, 0, 0, 0), cb4[4].x
   if_nz r2.w
 
-#line 57
-    mul r4.xyzw, r8.xxxx, cb6[0].xyzw
-    mul r5.xyzw, r10.zzzz, cb6[1].xyzw
+#line 59
+    mul r4.xyzw, r8.xxxx, cb8[0].xyzw
+    mul r5.xyzw, r10.zzzz, cb8[1].xyzw
     add r4.xyzw, r4.xyzw, r5.xyzw
-    mul r5.xyzw, r10.wwww, cb6[2].xyzw
+    mul r5.xyzw, r10.wwww, cb8[2].xyzw
     add r4.xyzw, r4.xyzw, r5.xyzw
-    mul r5.xyzw, cb6[3].xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
+    mul r5.xyzw, cb8[3].xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
     add r4.xyzw, r4.xyzw, r5.xyzw  // r4.x <- wvpPos.x; r4.y <- wvpPos.y; r4.z <- wvpPos.z; r4.w <- wvpPos.w
 
-#line 59
+#line 61
     div r4.xyz, r4.zxyz, r4.wwww  // r4.x <- wvpPos.z; r4.y <- wvpPos.x; r4.z <- wvpPos.y
 
-#line 60
+#line 62
     mov r4.w, -r4.z  // r4.w <- wvpPos.y
 
-#line 61
+#line 63
     mul r4.yz, r4.yywy, l(0.000000, 0.500000, 0.500000, 0.000000)
     add r4.yz, r4.yyzy, l(0.000000, 0.500000, 0.500000, 0.000000)  // r4.y <- wvpPos.x; r4.z <- wvpPos.y
 
-#line 62
+#line 64
     mov r4.yz, r4.yyzy  // r4.y <- shadow_texcoord.x; r4.z <- shadow_texcoord.y
     mov r4.x, r4.x  // r4.x <- shadow_texcoord.z
 
-#line 65
-    sample_indexable(texture2d)(float,float,float,float) r2.w, r4.yzyy, t10.yzwx, s6  // r2.w <- depth
-
 #line 67
-    mov r2.w, -r2.w
-    add r2.w, r2.w, r4.x
-    lt r2.w, cb4[4].z, r2.w
+    itof r2.w, l(0)
+    ge r2.w, r4.x, r2.w
+    itof r4.w, l(1)
+    ge r4.w, r4.w, r4.x
+    and r2.w, r2.w, r4.w
+    itof r4.w, l(0)
+    ge r4.w, r4.y, r4.w
+    and r2.w, r2.w, r4.w
+    itof r4.w, l(1)
+    ge r4.w, r4.w, r4.y
+    and r2.w, r2.w, r4.w
+    itof r4.w, l(0)
+    ge r4.w, r4.z, r4.w
+    and r2.w, r2.w, r4.w
+    itof r4.w, l(1)
+    ge r4.w, r4.w, r4.z
+    and r2.w, r2.w, r4.w
     if_nz r2.w
 
-#line 69
-      mov r1.w, cb4[4].y
+#line 72
+      sample_indexable(texture2d)(float,float,float,float) r4.y, r4.yzyy, t10.yxzw, s6  // r4.y <- depth
 
-#line 70
+#line 74
+      mov r4.y, -r4.y
+      add r4.x, r4.y, r4.x
+      lt r4.x, cb4[4].z, r4.x
+      if_nz r4.x
+
+#line 76
+        mov r1.w, cb4[4].y
+
+#line 77
+      endif 
+
+#line 79
     endif 
 
-#line 71
-  endif 
+#line 53
+    not r4.x, r2.w
+    not r4.x, r4.x
+    or r2.w, r2.w, r4.x
+    if_z r2.w
+
+#line 57
+      if_z r2.w
+
+#line 59
+        mul r4.xyzw, r8.xxxx, cb8[4].xyzw
+        mul r5.xyzw, r10.zzzz, cb8[5].xyzw
+        add r4.xyzw, r4.xyzw, r5.xyzw
+        mul r5.xyzw, r10.wwww, cb8[6].xyzw
+        add r4.xyzw, r4.xyzw, r5.xyzw
+        mul r5.xyzw, cb8[7].xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
+        add r4.xyzw, r4.xyzw, r5.xyzw  // r4.x <- wvpPos.x; r4.y <- wvpPos.y; r4.z <- wvpPos.z; r4.w <- wvpPos.w
+
+#line 61
+        div r4.xyz, r4.zxyz, r4.wwww  // r4.x <- wvpPos.z; r4.y <- wvpPos.x; r4.z <- wvpPos.y
+
+#line 62
+        mov r4.w, -r4.z  // r4.w <- wvpPos.y
+
+#line 63
+        mul r4.yz, r4.yywy, l(0.000000, 0.500000, 0.500000, 0.000000)
+        add r4.yz, r4.yyzy, l(0.000000, 0.500000, 0.500000, 0.000000)  // r4.y <- wvpPos.x; r4.z <- wvpPos.y
+
+#line 64
+        mov r4.yz, r4.yyzy  // r4.y <- shadow_texcoord.x; r4.z <- shadow_texcoord.y
+        mov r4.x, r4.x  // r4.x <- shadow_texcoord.z
+
+#line 67
+        itof r4.w, l(0)
+        ge r4.w, r4.x, r4.w
+        itof r5.x, l(1)
+        ge r5.x, r5.x, r4.x
+        and r4.w, r4.w, r5.x
+        itof r5.x, l(0)
+        ge r5.x, r4.y, r5.x
+        and r4.w, r4.w, r5.x
+        itof r5.x, l(1)
+        ge r5.x, r5.x, r4.y
+        and r4.w, r4.w, r5.x
+        itof r5.x, l(0)
+        ge r5.x, r4.z, r5.x
+        and r4.w, r4.w, r5.x
+        itof r5.x, l(1)
+        ge r5.x, r5.x, r4.z
+        and r4.w, r4.w, r5.x
+        if_nz r4.w
 
 #line 72
+          sample_indexable(texture2d)(float,float,float,float) r4.y, r4.yzyy, t11.yxzw, s6  // r4.y <- depth
+
+#line 74
+          mov r4.y, -r4.y
+          add r4.x, r4.y, r4.x
+          lt r4.x, cb4[4].z, r4.x
+          if_nz r4.x
+
+#line 76
+            mov r1.w, cb4[4].y
+
+#line 77
+          endif 
+
+#line 79
+        endif 
+      else 
+        mov r4.w, l(-1)
+      endif 
+      or r2.w, r2.w, r4.w
+
+#line 53
+      not r4.x, r2.w
+      not r4.x, r4.x
+      or r2.w, r2.w, r4.x
+
+#line 80
+    else 
+      mov r2.w, l(-1)
+    endif 
+
+#line 53
+    if_z r2.w
+
+#line 59
+      mul r4.xyzw, r8.xxxx, cb8[8].xyzw
+      mul r5.xyzw, r10.zzzz, cb8[9].xyzw
+      add r4.xyzw, r4.xyzw, r5.xyzw
+      mul r5.xyzw, r10.wwww, cb8[10].xyzw
+      add r4.xyzw, r4.xyzw, r5.xyzw
+      mul r5.xyzw, cb8[11].xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
+      add r4.xyzw, r4.xyzw, r5.xyzw  // r4.x <- wvpPos.x; r4.y <- wvpPos.y; r4.z <- wvpPos.z; r4.w <- wvpPos.w
+
+#line 61
+      div r4.xyz, r4.zxyz, r4.wwww  // r4.x <- wvpPos.z; r4.y <- wvpPos.x; r4.z <- wvpPos.y
+
+#line 62
+      mov r4.w, -r4.z  // r4.w <- wvpPos.y
+
+#line 63
+      mul r4.yz, r4.yywy, l(0.000000, 0.500000, 0.500000, 0.000000)
+      add r4.yz, r4.yyzy, l(0.000000, 0.500000, 0.500000, 0.000000)  // r4.y <- wvpPos.x; r4.z <- wvpPos.y
+
+#line 64
+      mov r4.yz, r4.yyzy  // r4.y <- shadow_texcoord.x; r4.z <- shadow_texcoord.y
+      mov r4.x, r4.x  // r4.x <- shadow_texcoord.z
+
+#line 67
+      itof r2.w, l(0)
+      ge r2.w, r4.x, r2.w
+      itof r4.w, l(1)
+      ge r4.w, r4.w, r4.x
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(0)
+      ge r4.w, r4.y, r4.w
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(1)
+      ge r4.w, r4.w, r4.y
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(0)
+      ge r4.w, r4.z, r4.w
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(1)
+      ge r4.w, r4.w, r4.z
+      and r2.w, r2.w, r4.w
+      if_nz r2.w
+
+#line 72
+        sample_indexable(texture2d)(float,float,float,float) r4.y, r4.yzyy, t12.yxzw, s6  // r4.y <- depth
+
+#line 74
+        mov r4.y, -r4.y
+        add r4.x, r4.y, r4.x
+        lt r4.x, cb4[4].z, r4.x
+        if_nz r4.x
+
+#line 76
+          mov r1.w, cb4[4].y
+
+#line 77
+        endif 
+
+#line 79
+      endif 
+
+#line 53
+      not r4.x, r2.w
+      not r4.x, r4.x
+      or r2.w, r2.w, r4.x
+
+#line 80
+    else 
+      mov r2.w, l(-1)
+    endif 
+
+#line 53
+    if_z r2.w
+
+#line 59
+      mul r4.xyzw, r8.xxxx, cb8[12].xyzw
+      mul r5.xyzw, r10.zzzz, cb8[13].xyzw
+      add r4.xyzw, r4.xyzw, r5.xyzw
+      mul r5.xyzw, r10.wwww, cb8[14].xyzw
+      add r4.xyzw, r4.xyzw, r5.xyzw
+      mul r5.xyzw, cb8[15].xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
+      add r4.xyzw, r4.xyzw, r5.xyzw  // r4.x <- wvpPos.x; r4.y <- wvpPos.y; r4.z <- wvpPos.z; r4.w <- wvpPos.w
+
+#line 61
+      div r4.xyz, r4.zxyz, r4.wwww  // r4.x <- wvpPos.z; r4.y <- wvpPos.x; r4.z <- wvpPos.y
+
+#line 62
+      mov r4.w, -r4.z  // r4.w <- wvpPos.y
+
+#line 63
+      mul r4.yz, r4.yywy, l(0.000000, 0.500000, 0.500000, 0.000000)
+      add r4.yz, r4.yyzy, l(0.000000, 0.500000, 0.500000, 0.000000)  // r4.y <- wvpPos.x; r4.z <- wvpPos.y
+
+#line 64
+      mov r4.yz, r4.yyzy  // r4.y <- shadow_texcoord.x; r4.z <- shadow_texcoord.y
+      mov r4.x, r4.x  // r4.x <- shadow_texcoord.z
+
+#line 67
+      itof r2.w, l(0)
+      ge r2.w, r4.x, r2.w
+      itof r4.w, l(1)
+      ge r4.w, r4.w, r4.x
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(0)
+      ge r4.w, r4.y, r4.w
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(1)
+      ge r4.w, r4.w, r4.y
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(0)
+      ge r4.w, r4.z, r4.w
+      and r2.w, r2.w, r4.w
+      itof r4.w, l(1)
+      ge r4.w, r4.w, r4.z
+      and r2.w, r2.w, r4.w
+      if_nz r2.w
+
+#line 72
+        sample_indexable(texture2d)(float,float,float,float) r2.w, r4.yzyy, t13.yzwx, s6  // r2.w <- depth
+
+#line 74
+        mov r2.w, -r2.w
+        add r2.w, r2.w, r4.x
+        lt r2.w, cb4[4].z, r2.w
+        if_nz r2.w
+
+#line 76
+          mov r1.w, cb4[4].y
+
+#line 77
+        endif 
+
+#line 79
+      endif 
+
+#line 80
+    endif 
+
+#line 81
+  endif 
+
+#line 82
   dp3 r2.w, r2.xyzx, r2.xyzx
   rsq r2.w, r2.w
   mul r2.xyz, r2.wwww, r2.xyzx  // r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z
 
-#line 73
+#line 83
   mov r4.xyz, cb7[0].xyzx  // r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z
 
-#line 74
+#line 84
   mul r3.xyz, r3.wwww, r3.xyzx  // r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z
 
-#line 75
+#line 85
   mov r1.w, r1.w  // r1.w <- lighting_data.attenuation
 
-#line 77
+#line 87
   nop 
   mov r7.xyz, r7.xyzx
   mov r5.xyz, r8.yzwy
@@ -600,23 +854,23 @@ switch r1.w
   mov r6.xyz, r6.xyzx  // r6.x <- <integrate_bxdf return value>.diffuse.x; r6.y <- <integrate_bxdf return value>.diffuse.y; r6.z <- <integrate_bxdf return value>.diffuse.z
   mov r11.xyz, r11.xyzx  // r11.x <- <integrate_bxdf return value>.specular.x; r11.y <- <integrate_bxdf return value>.specular.y; r11.z <- <integrate_bxdf return value>.specular.z
 
-#line 77 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 87 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
   mov r6.xyz, r6.xyzx  // r6.x <- result.diffuse.x; r6.y <- result.diffuse.y; r6.z <- result.diffuse.z
   mov r11.xyz, r11.xyzx  // r11.x <- result.specular.x; r11.y <- result.specular.y; r11.z <- result.specular.z
 
-#line 78
+#line 88
   add r0.yzw, r0.yyzw, r6.xxyz
 
-#line 79
+#line 89
   add r1.xyz, r1.xyzx, r11.xyzx
 
-#line 81
+#line 91
   break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r10.x <- data.roughness
 
-#line 82
+#line 92
   case l(1)
 
-#line 83
+#line 93
   nop 
 
 #line 82 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
@@ -634,54 +888,54 @@ switch r1.w
   mov r4.x, r3.w  // r4.x <- <convert_point_lights return value>.color.w
   mov r4.y, r4.y  // r4.y <- <convert_point_lights return value>.range
 
-#line 83 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 93 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
   mov r2.xyz, r2.xyzx  // r2.x <- point_light.position.x; r2.y <- point_light.position.y; r2.z <- point_light.position.z
   mov r3.xyz, r3.xyzx  // r3.x <- point_light.color.x; r3.y <- point_light.color.y; r3.z <- point_light.color.z
   mov r4.xy, r4.xyxx  // r4.x <- point_light.color.w; r4.y <- point_light.range
 
-#line 85
+#line 95
   if_nz r7.w
 
-#line 87
+#line 97
     mov r2.xyz, -r2.xyzx
     mov r5.x, r8.x
     mov r5.yz, r10.zzwz
     add r2.xyz, r2.xyzx, r5.xyzx  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
 
-#line 88
+#line 98
     dp3 r1.w, r2.xyzx, r2.xyzx
     sqrt r1.w, r1.w  // r1.w <- len
 
-#line 89
+#line 99
     lt r2.w, r1.w, r4.y
     if_nz r2.w
 
-#line 91
+#line 101
       div r2.xyz, r2.xyzx, r1.wwww
 
-#line 93
+#line 103
       div r1.w, r1.w, r4.y
       mov r1.w, -r1.w
       add r1.w, r1.w, l(1.000000)
       max r1.w, r1.w, l(0.000000)
       min r1.w, r1.w, l(1.000000)  // r1.w <- attenuateLength
 
-#line 94
+#line 104
       mul r1.w, r1.w, r1.w  // r1.w <- attenuation
 
-#line 97
+#line 107
       mov r1.w, r1.w  // r1.w <- lighting_data.attenuation
 
-#line 98
+#line 108
       mov r2.xyz, r2.xyzx  // r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z
 
-#line 99
+#line 109
       mul r3.xyz, r3.xyzx, r4.xxxx  // r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z
 
-#line 100
+#line 110
       mov r4.xyz, cb7[0].xyzx  // r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z
 
-#line 101
+#line 111
       nop 
       mov r7.xyz, r7.xyzx
       mov r8.yzw, r8.yyzw
@@ -950,29 +1204,29 @@ switch r1.w
       mov r6.xyz, r6.xyzx  // r6.x <- <integrate_bxdf return value>.diffuse.x; r6.y <- <integrate_bxdf return value>.diffuse.y; r6.z <- <integrate_bxdf return value>.diffuse.z
       mov r11.xyz, r11.xyzx  // r11.x <- <integrate_bxdf return value>.specular.x; r11.y <- <integrate_bxdf return value>.specular.y; r11.z <- <integrate_bxdf return value>.specular.z
 
-#line 101 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 111 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
       mov r6.xyz, r6.xyzx  // r6.x <- result.diffuse.x; r6.y <- result.diffuse.y; r6.z <- result.diffuse.z
       mov r11.xyz, r11.xyzx  // r11.x <- result.specular.x; r11.y <- result.specular.y; r11.z <- result.specular.z
 
-#line 102
+#line 112
       add r0.yzw, r0.yyzw, r6.xxyz
 
-#line 103
+#line 113
       add r1.xyz, r1.xyzx, r11.xyzx
 
-#line 104
+#line 114
     endif 
 
-#line 105
+#line 115
   endif 
 
-#line 106
+#line 116
   break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r7.w <- data.shading_model; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r8.w <- data.w_normal.z; r10.x <- data.roughness; r10.y <- data.metalness; r9.x <- data.occlusion_factor; r9.y <- data.occlusion_strength
 
-#line 107
+#line 117
   case l(2)
 
-#line 108
+#line 118
   nop 
 
 #line 91 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
@@ -1004,61 +1258,61 @@ switch r1.w
   mov r3.xyz, r3.xyzx  // r3.x <- <convert_spot_lights return value>.direction.x; r3.y <- <convert_spot_lights return value>.direction.y; r3.z <- <convert_spot_lights return value>.direction.z
   mov r4.xyz, r4.xyzx  // r4.x <- <convert_spot_lights return value>.color.x; r4.y <- <convert_spot_lights return value>.color.y; r4.z <- <convert_spot_lights return value>.color.z
 
-#line 108 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 118 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
   mov r2.xyz, r2.xyzx  // r2.x <- spot_light.position.x; r2.y <- spot_light.position.y; r2.z <- spot_light.position.z
   mov r3.xyz, r3.xyzx  // r3.x <- spot_light.direction.x; r3.y <- spot_light.direction.y; r3.z <- spot_light.direction.z
   mov r4.xyz, r4.xyzx  // r4.x <- spot_light.color.x; r4.y <- spot_light.color.y; r4.z <- spot_light.color.z
   mov r5.xyzw, r5.xyzw  // r5.x <- spot_light.color.w; r5.y <- spot_light.range; r5.z <- spot_light.inner_corn; r5.w <- spot_light.outer_corn
 
-#line 110
+#line 120
   if_nz r7.w
 
-#line 112
+#line 122
     mov r2.xyz, -r2.xyzx
     mov r6.x, r8.x
     mov r6.yz, r10.zzwz
     add r2.xyz, r2.xyzx, r6.xyzx  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
 
-#line 113
+#line 123
     dp3 r1.w, r2.xyzx, r2.xyzx
     sqrt r1.w, r1.w  // r1.w <- len
 
-#line 114
+#line 124
     lt r2.w, r1.w, r5.y
     if_nz r2.w
 
-#line 116
+#line 126
       div r2.w, r1.w, r5.y
       mov r2.w, -r2.w
       add r2.w, r2.w, l(1.000000)
       max r2.w, r2.w, l(0.000000)
       min r2.w, r2.w, l(1.000000)  // r2.w <- attenuateLength
 
-#line 117
+#line 127
       mul r2.w, r2.w, r2.w  // r2.w <- attenuation
 
-#line 118
+#line 128
       div r2.xyz, r2.xyzx, r1.wwww
 
-#line 119
+#line 129
       dp3 r1.w, r3.xyzx, r3.xyzx
       rsq r1.w, r1.w
       mul r3.xyz, r1.wwww, r3.xyzx  // r3.x <- spotDirection.x; r3.y <- spotDirection.y; r3.z <- spotDirection.z
 
-#line 120
+#line 130
       sincos null, r1.w, r5.z  // r1.w <- innerCorn
 
-#line 121
+#line 131
       sincos null, r3.w, r5.w  // r3.w <- outerCorn
 
-#line 122
+#line 132
       dp3 r3.x, r3.xyzx, r2.xyzx  // r3.x <- angle
 
-#line 123
+#line 133
       mov r3.y, -r3.w
       add r3.y, r1.w, r3.y  // r3.y <- area
 
-#line 124
+#line 134
       mov r3.x, -r3.x
       add r1.w, r1.w, r3.x
       div r1.w, r1.w, r3.y
@@ -1068,19 +1322,19 @@ switch r1.w
       min r1.w, r1.w, l(1.000000)
       mul r1.w, r1.w, r2.w  // r1.w <- attenuation
 
-#line 148
+#line 158
       mov r1.w, r1.w  // r1.w <- lighting_data.attenuation
 
-#line 149
+#line 159
       mov r2.xyz, r2.xyzx  // r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z
 
-#line 150
+#line 160
       mul r3.xyz, r4.xyzx, r5.xxxx  // r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z
 
-#line 151
+#line 161
       mov r4.xyz, cb7[0].xyzx  // r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z
 
-#line 152
+#line 162
       nop 
       mov r7.xyz, r7.xyzx
       mov r8.yzw, r8.yyzw
@@ -1349,39 +1603,39 @@ switch r1.w
       mov r5.xyz, r5.xyzx  // r5.x <- <integrate_bxdf return value>.diffuse.x; r5.y <- <integrate_bxdf return value>.diffuse.y; r5.z <- <integrate_bxdf return value>.diffuse.z
       mov r11.xyz, r11.xyzx  // r11.x <- <integrate_bxdf return value>.specular.x; r11.y <- <integrate_bxdf return value>.specular.y; r11.z <- <integrate_bxdf return value>.specular.z
 
-#line 152 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 162 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
       mov r5.xyz, r5.xyzx  // r5.x <- result.diffuse.x; r5.y <- result.diffuse.y; r5.z <- result.diffuse.z
       mov r11.xyz, r11.xyzx  // r11.x <- result.specular.x; r11.y <- result.specular.y; r11.z <- result.specular.z
 
-#line 153
+#line 163
       add r0.yzw, r0.yyzw, r5.xxyz
 
-#line 154
+#line 164
       add r1.xyz, r1.xyzx, r11.xyzx
 
-#line 155
+#line 165
     endif 
 
-#line 156
+#line 166
   endif 
 
-#line 157
+#line 167
   break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r7.w <- data.shading_model; r8.x <- data.w_position.x; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r8.w <- data.w_normal.z; r10.x <- data.roughness; r10.y <- data.metalness; r10.z <- data.w_position.y; r10.w <- data.w_position.z; r9.x <- data.occlusion_factor; r9.y <- data.occlusion_strength; r0.x <- PI
 
-#line 159
+#line 169
   default 
   break 
 endswitch 
 
-#line 162
+#line 172
 add r0.xyz, r0.yzwy, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 163
+#line 173
 add r0.w, r0.y, r0.x
 add r0.w, r0.z, r0.w
 div r0.w, r0.w, l(3.000000)  // r0.w <- alpha
 
-#line 164
+#line 174
 eq r1.x, r0.x, l(0.000000)
 eq r1.y, r0.y, l(0.000000)
 and r1.x, r1.y, r1.x
@@ -1389,14 +1643,14 @@ eq r1.y, r0.z, l(0.000000)
 and r1.x, r1.y, r1.x
 if_nz r1.x
 
-#line 166
+#line 176
   itof r0.w, l(0)
 
-#line 167
+#line 177
 endif 
 
-#line 169
+#line 179
 mov o0.xyz, r0.xyzx
 mov o0.w, r0.w
 ret 
-// Approximately 742 instruction slots used
+// Approximately 902 instruction slots used

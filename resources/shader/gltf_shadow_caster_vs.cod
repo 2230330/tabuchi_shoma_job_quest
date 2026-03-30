@@ -23,7 +23,7 @@
 //
 // }
 //
-// cbuffer ShadowSceneConstants
+// cbuffer LightViewProjection
 // {
 //
 //   row_major float4x4 light_view_projection;// Offset:    0 Size:    64
@@ -38,7 +38,7 @@
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
 // PRIMITIVE_JOINT_CONSTANTS         cbuffer      NA          NA            cb2      1 
-// ShadowSceneConstants              cbuffer      NA          NA            cb6      1 
+// LightViewProjection               cbuffer      NA          NA            cb6      1 
 //
 //
 //

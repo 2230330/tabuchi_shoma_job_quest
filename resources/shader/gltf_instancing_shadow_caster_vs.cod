@@ -16,7 +16,7 @@
 //
 // }
 //
-// cbuffer ShadowSceneConstants
+// cbuffer LightViewProjection
 // {
 //
 //   row_major float4x4 light_view_projection;// Offset:    0 Size:    64
@@ -30,7 +30,7 @@
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
-// ShadowSceneConstants              cbuffer      NA          NA            cb6      1 
+// LightViewProjection               cbuffer      NA          NA            cb6      1 
 //
 //
 //
