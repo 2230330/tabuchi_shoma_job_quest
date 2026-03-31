@@ -770,8 +770,8 @@ void GltfModel::FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf
 		material.data.pbr_metallic_roughness.basecolor_factor[3] = 1.0f;
         material.data.pbr_metallic_roughness.basecolor_texture.index = -1;
 
-		material.data.pbr_metallic_roughness.metallic_factor = 1.0f;
-		material.data.pbr_metallic_roughness.roughness_factor = 1.0f;
+		material.data.pbr_metallic_roughness.metallic_factor = 0.0f;
+		material.data.pbr_metallic_roughness.roughness_factor = 0.0f;
 
 		material.data.emissive_factor[0] = 0.0f;
 		material.data.emissive_factor[1] = 0.0f;
