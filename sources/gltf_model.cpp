@@ -289,6 +289,10 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 		{
 			Mesh::primitive& primitive{ mesh.primitives.emplace_back() };
 			primitive.material = gltf_primitive.material;
+            if (primitive.material < 0)
+			{
+				primitive.material = 0;//マテリアルが指定されていない場合は0番を使う
+			}
 
 			// Create index buffer view
 			if (gltf_primitive.indices > -1)
@@ -500,7 +504,6 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 
-				// UNIT.36
 				const Material& material{ materials_.at(primitive.material) };
 				const int texture_indices[]
 				{
@@ -754,6 +757,32 @@ void GltfModel::FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf
 		material.data.emissive_texture.texcoord = gltf_material.emissiveTexture.texCoord;
 	}
 
+    //ダミーマテリアルの追加。マテリアルが一つもない場合は、デフォルトマテリアルを追加する。
+	if (materials_.empty())
+	{
+		Material& material = materials_.emplace_back();
+
+		material.name = "DefaultMaterial";
+
+		material.data.pbr_metallic_roughness.basecolor_factor[0] = 1.0f;
+		material.data.pbr_metallic_roughness.basecolor_factor[1] = 1.0f;
+		material.data.pbr_metallic_roughness.basecolor_factor[2] = 1.0f;
+		material.data.pbr_metallic_roughness.basecolor_factor[3] = 1.0f;
+        material.data.pbr_metallic_roughness.basecolor_texture.index = -1;
+
+		material.data.pbr_metallic_roughness.metallic_factor = 1.0f;
+		material.data.pbr_metallic_roughness.roughness_factor = 1.0f;
+
+		material.data.emissive_factor[0] = 0.0f;
+		material.data.emissive_factor[1] = 0.0f;
+		material.data.emissive_factor[2] = 0.0f;
+
+		material.data.alpha_mode = 0; // OPAQUE
+		material.data.alpha_cutoff = 0.5f;
+		material.data.double_sided = 0;
+
+	}
+
 	// Create material data as shader resource view on GPU
 	std::vector<Material::Cbuffer> material_data;
 	for (std::vector<Material>::const_reference material : materials_)
@@ -830,6 +859,7 @@ void GltfModel::FetchTextures(ID3D11Device* device, const tinygltf::Model& gltf_
 			}
 		}
 	}
+
 }
 
 void GltfModel::FetchAnimations(const tinygltf::Model& gltf_model)

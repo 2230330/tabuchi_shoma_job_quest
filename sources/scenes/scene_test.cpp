@@ -50,6 +50,7 @@ bool SceneTest::InitializeCore()
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\blue_exagonal_tiles_with_extracted\\scene.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\cube.glb");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\plane.glb");
 
         }
         //shader
@@ -151,7 +152,7 @@ void SceneTest::RenderCore(float elapsed_time)
     {
         dc->OMSetBlendState(render_state->GetBlendState(BlendState::transparency), nullptr, 0xffffffff);
         dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);
-        dc->RSSetState(render_state->GetRasterizerState(RasterizerState::solid_cull_none));
+        dc->RSSetState(render_state->GetRasterizerState(RasterizerState::solid_cull_back));
     }
     //ビュープロジェクション変換行列の計算と定数バッファにセット
     {

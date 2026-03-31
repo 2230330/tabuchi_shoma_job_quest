@@ -74,6 +74,11 @@ PSGBufferOut main(PS_IN pin, bool is_front_face : SV_IsFrontFace)
         sampled.rgb = pow(sampled.rgb, GammaFactor);
         base_color *= sampled;
     }
+    else
+    {
+        base_color = float4(1, 1, 1,1);
+
+    }
     
     //  ìßñæìxí≤êÆ
     clip(base_color.a - 0.5f);
