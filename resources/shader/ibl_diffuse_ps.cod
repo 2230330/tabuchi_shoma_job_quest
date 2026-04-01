@@ -158,7 +158,7 @@ endif
 mov r2.xyz, r2.xyzx  // r2.x <- N.z; r2.y <- N.x; r2.z <- N.y
 
 #line 107
-mov r0.y, l(32)  // r0.y <- SAMPLE_COUNT
+mov r0.y, l(16)  // r0.y <- SAMPLE_COUNT
 
 #line 108
 mov r0.z, cb0[0].w  // r0.z <- mipLOD
@@ -264,12 +264,14 @@ loop
 
 #line 120
   utof r2.w, cb0[0].y
-  mul r2.w, r2.w, l(0.618034)
-  mul r6.zw, r2.wwww, l(0.000000, 0.000000, 0.754878, 0.569840)
-  frc r6.zw, r6.zzzw  // r6.z <- shift.x; r6.w <- shift.y
+  mul r2.w, r2.w, l(0.754800)
+  utof r3.w, cb0[0].y
+  mul r3.w, r3.w, l(0.569800)
+  frc r7.x, r2.w  // r7.x <- shift.x
+  frc r7.y, r3.w  // r7.y <- shift.y
 
 #line 121
-  add r6.xy, r6.zwzz, r6.xyxx
+  add r6.xy, r6.xyxx, r7.xyxx
   frc r6.xy, r6.xyxx  // r6.x <- Xi.x; r6.y <- Xi.y
 
 #line 123
@@ -320,15 +322,15 @@ loop
 
 #line 125
   nop 
-
-#line 126
-  nop 
   mov r6.xyz, r6.xyzx
   mov r2.w, r0.z
 
 #line 79
   sample_l_indexable(texturecube)(float,float,float,float) r6.xyz, r6.xyzx, t0.xyzw, s0, r2.w
   mov r6.xyz, r6.xyzx  // r6.x <- <SampleEnv return value>.x; r6.y <- <SampleEnv return value>.y; r6.z <- <SampleEnv return value>.z
+
+#line 125
+  mov r6.xyz, r6.xyzx  // r6.x <- color.x; r6.y <- color.y; r6.z <- color.z
 
 #line 126
   add r5.xyz, r5.xyzx, r6.xyzx
@@ -361,4 +363,4 @@ add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- blended.x; r0.y <- blended.y; r0.z <- b
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 
-// Approximately 197 instruction slots used
+// Approximately 199 instruction slots used

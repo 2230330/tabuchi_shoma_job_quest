@@ -458,7 +458,7 @@ endif
 
 #line 147
 add r0.x, r3.x, cb13[0].y
-max r0.x, r0.x, l(0.000100)
+max r0.x, r0.x, l(0.010000)
 min r5.y, r0.x, l(1.000000)  // r5.y <- roughness
 
 #line 148

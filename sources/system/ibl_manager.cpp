@@ -171,7 +171,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
             D3D11_TEXTURE2D_DESC td{};
             td.Width = kPrefilterSize; td.Height = kPrefilterSize;
             td.MipLevels = mipCount; td.ArraySize = kCubeFaces;
-            td.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+            td.Format = DXGI_FORMAT_R11G11B10_FLOAT;
             td.SampleDesc.Count = 1;
             td.Usage = D3D11_USAGE_DEFAULT;
             td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
@@ -343,9 +343,6 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
     ctx_->OMSetRenderTargets(1, &sky_rtv, nullptr);
 
-    const float clear[4] = { 0,0,0,0 };
-    ctx_->ClearRenderTargetView(sky_rtv, clear);
-
     //定数更新
     SkyCubeCB cb{};
     cb.faceIndex = sky_cube_next_face_;
@@ -391,8 +388,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
         ctx_->OMSetRenderTargets(1, &rtv, nullptr);
 
-        const float clear[4] = { 0,0,0,0 };
-        ctx_->ClearRenderTargetView(rtv, clear);
+
 
         //定数更新
         SkyCubeCB cb{};
@@ -406,7 +402,6 @@ void IBLManager::BuildSkyCubeFromEnvSource()
                 curl_noise_srv_.Get(),
                 sky_cube_srv_.Get()
         };
-        Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
         ctx_->PSSetShaderResources(0, _countof(srvs), srvs);
 
         ctx_->IASetInputLayout(nullptr);
@@ -418,10 +413,8 @@ void IBLManager::BuildSkyCubeFromEnvSource()
         ctx_->Draw(3, 0);
 
         Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
-        ctx_->PSSetShader(nullptr, nullptr, 0);
-        ctx_->VSSetShader(nullptr, nullptr, 0);
 
-        ctx_->OMSetRenderTargets(0, nullptr, nullptr);
+        //ctx_->OMSetRenderTargets(0, nullptr, nullptr);
 
     }
 
@@ -450,6 +443,7 @@ void IBLManager::UpdateDiffuseSH()
     if (diffuse_srv_ || diffuse_tex_ || ps_diffuse_)
     {
 
+
         // 入力（環境キューブ）
         ID3D11ShaderResourceView* envSrv = (cloud_flag_) ? cloud_cube_srv_.Get() : sky_cube_srv_.Get();
         if (!envSrv) return;
@@ -472,15 +466,14 @@ void IBLManager::UpdateDiffuseSH()
         // RTV セット & クリア（上書きなのでクリアは任意）
         const float clear[4] = { 0,0,0,0 };
         ctx_->OMSetRenderTargets(1, &rtv, nullptr);
-         ctx_->ClearRenderTargetView(rtv, clear); // 必要なら
 
         // 定数バッファ
         
         DiffuseCB cb{  };
         cb.faceIndex = face;
         cb.frameIndex = frame_index_;
-        cb.alpha = 0.12f;  // 推奨範囲 0.05～0.2
-        cb.mip_lod = 1.5f;   // 1.0～2.5
+        cb.alpha = 0.05f;  // 推奨範囲 0.05～0.2
+        cb.mip_lod = 1.f;   // 1.0～2.5
         ctx_->UpdateSubresource(cb_diffuse_.Get(), 0, nullptr,&cb, 0, 0);
 
         // バインド
@@ -504,9 +497,7 @@ void IBLManager::UpdateDiffuseSH()
         // アンバインド
         ID3D11ShaderResourceView* nullSRV[2] = { nullptr, nullptr };
         ctx_->PSSetShaderResources(0, 2, nullSRV);
-        ctx_->PSSetShader(nullptr, nullptr, 0);
-        ctx_->VSSetShader(nullptr, nullptr, 0);
-        ctx_->OMSetRenderTargets(0, nullptr, nullptr);
+
 
         // 次の面へ
         next_face = (next_face + 1) % 6;
@@ -547,8 +538,6 @@ void IBLManager::UpdateSpecularPrefilter()
         const UINT flatIndex = face * pmrem_mip_count_ + mip;
         ID3D11RenderTargetView* rtv = prefilter_rtvs_[pmrem_write_index_][flatIndex].Get();
         ctx_->OMSetRenderTargets(1, &rtv, nullptr);
-        //const float clear[4] = { 0,0,0,0 };
-        //ctx_->ClearRenderTargetView(rtv, clear);
 
         const float roughness = (pmrem_mip_count_ > 1) ? (float)mip / (float)(pmrem_mip_count_ - 1) : 0.0f;
         float env_resolution = static_cast<float>(kSkyCubeSize);
@@ -580,8 +569,7 @@ void IBLManager::UpdateSpecularPrefilter()
     // アンバインド
     ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
     ctx_->PSSetShaderResources(0, 1, nullSRV);
-    ctx_->VSSetShader(nullptr, nullptr, 0);
-    ctx_->PSSetShader(nullptr, nullptr, 0);
+
 
     // 進行
     prefilter_next_face_++;

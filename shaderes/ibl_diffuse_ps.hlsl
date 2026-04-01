@@ -104,7 +104,7 @@ float4 main(PSIn i) : SV_Target
     float3 N = DirectionFromCubeUV(FaceIndex, i.uv);
 
     //低周波化とノイズ定位減の為のLOD
-    const uint SAMPLE_COUNT = 32; // 16~64
+    const uint SAMPLE_COUNT = 16; // 16~64
     const float mipLOD = MipLOD; // 低周波化（1~2）
     float3 T, B;
     TangentBasis(N, T, B);
@@ -117,13 +117,13 @@ float4 main(PSIn i) : SV_Target
 
         float2 base = Hammersley(s, SAMPLE_COUNT);
         //0~1のフレーム依存シフト（frame 引数を適当な hash に通す）
-        float2 shift = frac(float2(0.75487766, 0.56984029) * (FrameIndex * 0.61803399));
+        float2 shift = frac(float2(FrameIndex * 0.7548, FrameIndex * 0.5698));
         float2 Xi = frac(base + shift);
 
         float3 Lh = CosineSampleHemisphere(Xi); // 局所半球
         float3 L = normalize(T * Lh.x + B * Lh.y + N * Lh.z); // 世界方向
         float3 color = SampleEnv(L, mipLOD);
-        sum += SampleEnv(L, mipLOD);
+        sum += color;
     }
 
     float3 diffuse_new=(sum / SAMPLE_COUNT) * PI;//期待値にπをかける
