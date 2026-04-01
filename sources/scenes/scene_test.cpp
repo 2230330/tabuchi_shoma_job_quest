@@ -94,7 +94,6 @@ bool SceneTest::InitializeCore()
         //    comp_mng->Add(entity, ajust_pbr_paramter);
         //    ComponentGltf gltf;
         //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
-
         //    comp_mng->Add(entity, gltf);
         //    ComponentInstanced instanced;
         //    comp_mng->Add(entity, instanced);
