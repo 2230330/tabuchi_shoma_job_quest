@@ -3,6 +3,7 @@
 #include "scene_constant_buffer.hlsli"
 //#include "noise_functions.hlsli"
 #include "fullscreen_quad.hlsli"
+#include"camera_buffer.hlsli"
 
 static const float PI = 3.14159265359f;
 
@@ -26,10 +27,10 @@ Texture3D<float4> low_frequency_perlin_worley_texture : register(t0);
 
 Texture3D<float3> high_frequency_worley_texture : register(t1);
 /*
-	weather_texture
-	- cloud coverage(r channel): the precentage of cloud coverage in the sky
-	- precipitation(g channel): the chance that the cloud overhead will produce rain
-	- cloud type(b channel): a value of 0.0 indicates stratus, 0.5 indicates stratocumulus, and 1.0 indicate cumulus cloud
+    weather_texture
+    - cloud coverage（R チャンネル）：空の雲量の割合
+    - precipitation（G チャンネル）：頭上の雲が雨を降らせる可能性
+    - cloud type（B チャンネル）：0.0 は層雲（stratus）、0.5 は層積雲（stratocumulus）、1.0 は積雲（cumulus）を示す
 */
 Texture2D<float3> weather_texture : register(t2);
 Texture2D<float3> curl_noise_texture : register(t3);
@@ -49,7 +50,7 @@ float3 SampleWeatherData(float2 sample_point)
     float2 offset = ((options.z + time_offset) * 0.001) * normalize(-wind_direction) * wind_speed;
 
     float horizon_distance = sqrt(cloud_altitudes_min_max.x * cloud_altitudes_min_max.x - earth_radius * earth_radius) * horizon_distance_scale;
-    return weather_texture.Sample(sampler_states[LINEAR_WRAP], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
+    return weather_texture.Sample(sampler_states[LINEAR_MIRROR], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
 
 }
 
@@ -149,6 +150,9 @@ float horizon_soft=0)
 	
 	// 雲の被覆率(カバレッジ)はweather_dataのRチャンネルに格納されている
     float cloud_coverage = weather_data.r * cloud_coverage_scale;
+    
+    if (cloud_coverage <= 0.01f)
+        return float(0);
     
 #ifdef ENABLE_CLOUD_ANIMATION
         // 風向きと風速に基づいて雲を移動させる（低周波形状用）
@@ -270,7 +274,7 @@ float SampleCloudOpticalDepthAlongCone(
     for (int i = 0; i < loop_samples; i++)
     {
         float distance_t = i / (float) (loop_samples - 1);
-        float base_cone_width = step_length * lerp(0.4, 1.2, distance_t);
+        float base_cone_width = step_length * lerp(0.8, 1.2, distance_t);
 
         float3 weather_data = SampleWeatherData(sample_point.xz);
 
@@ -382,22 +386,27 @@ float3 ComputeSunIrradiance(float air_mass)
 }
 
 
+
 // レイマーチングによる大気散乱と雲のレンダリング
 float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*背景の空の色*/)
 {
+    const float TRANSMITTANCE_EPS = 1e-3f;  //これ以下でほぼ遮蔽
+    const int ZERO_INSIDE_EXIT_COUNT = 6;   //雲内部で密度が連続する回数の閾値
+    const float MAX_DISTANCE = length(ray_step*steps);
+    
     // レイの1ステップの長さ
     float step_size = length(ray_step);
     
     //レイの方向
     const float3 ray_direction = normalize(ray_step);
 	
-	// レイ開始位置を少しランダムにして横筋を目立たなくする（ディザリング）
+	// レイ開始位置を少しランダムにして横筋を目立たなくする
     float3 sample_point =ray_origin + ray_step * Hash(ray_origin * 6.0);
 	
     //太陽方向と位相関数
     float3 sun = -directional_light.direction.xyz;
     float3 sun_direction = normalize(sun);
-    float cos_theta = clamp(dot(ray_direction, sun_direction), -0.f, 1.0f); //視線と太陽の角度
+    float cos_theta = clamp(dot(ray_direction, sun_direction), -1.f, 1.0f); //視線と太陽の角度
     float g = 0.6f;
     //float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
     float henyey_greenstein_phase = MiePhase(cos_theta, g);
@@ -429,14 +438,12 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
     float horizon_soft = lerp(0.2, 0.8, horizon);
     
     float3 color = 0.0;
-    float density = 0;
     float transmittence = 1.0;
     float cloud_test = 0;
     int zero_density_sample_count = 0;
     
-    float dist = 0.0f;
-    const float limit_dist = length(ray_step) * steps;
-	
+    float dist = 0.0f;	
+
     //メインのレイマーチングループ
 	[loop]
     for (int i = 0; i < steps; i++)
@@ -447,7 +454,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             //天候データ
             float3 weather_data = SampleWeatherData(sample_point.xz);
             //LOD調整
-            float detail_lod = smoothstep(0.0, 10.0, horizon_soft);
+            float detail_lod = smoothstep(0.0, 2.0, horizon_soft);
             //雲密度サンプリング
             float sampled_density = 
             SampleCloudDensity(
@@ -457,19 +464,20 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             (detail_lod<=1.0f)?false:true /*cheap_sample*/,
             horizon);
             // 密度ゼロが続いた回数をカウント
-            if (sampled_density == 0.0)
+            if (sampled_density <= 0.0)
             {
                 zero_density_sample_count++;
             }
+            
             //雲内部と判断できる間は積算を続行
-            if (zero_density_sample_count != 6)
+            if (zero_density_sample_count <= ZERO_INSIDE_EXIT_COUNT)
             {
-                float density_attenuation = lerp(1.0f, 0.3f, horizon_soft);
-                // 雲密度の積算、地平線方向で
-                density += sampled_density*density_attenuation;
+
                 // 雲密度がゼロでない場合、カウントをリセット
                 if (sampled_density != 0.0)
                 {
+                    zero_density_sample_count = 0;
+                    
                     //太陽方向の密度計算
                     float density_along_light_ray = 0.0;
                     
@@ -492,19 +500,20 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
 
 
                     //光学的厚み
-                    float shadow_strength = 10.0f; //ループを6回で切る為、影が薄くなるので強めにする
+                    float shadow_strength = 7.0f; //影が薄くなるので強めにする
                     float light_density_scale = density_scale * shadow_strength;
-                    float optical_thickness = (light_density_scale * (optical_depth_along_light_ray+density_along_light_ray));
+                    float optical_thickness = (light_density_scale * 
+                    (optical_depth_along_light_ray+density_along_light_ray));
                     
                     float rain_cloud_absorption = exp(-weather_data.g) * rain_cloud_absorption_scale;
 
                     //地平線方向では吸収を弱める
-                    float horizon_optical_scale = lerp(1.0f, 0.4f, horizon_soft);
+                    float horizon_optical_scale = lerp(1.0f, 0.7f, horizon_soft);
                     float beers_law = exp(-optical_thickness * horizon_optical_scale * rain_cloud_absorption);
 
 					// 雲内部を明るくする近似
                     float powdered_sugar = 
-                    enable_powdered_sugar_efffect ? 1.0 - exp(-optical_thickness)*2.0f : 0.5;
+                    enable_powdered_sugar_efffect ? 1.0 - (exp(-optical_thickness)) * 2.0f : 0.5;
                     powdered_sugar *= lerp(0.8f, 1.2f, horizon_soft);
 					
                     //高さ
@@ -519,10 +528,10 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     (1.0f
                     * beers_law
                     * powdered_sugar
-                    * lerp(1.f, 30.0f, henyey_greenstein_phase) // 太陽光位相関数
+                    * lerp(1.f, 15.0f, henyey_greenstein_phase) // 太陽光位相関数
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
-                    + Ei;
+                    +Ei;
 
                     // 合計ライト
                     float3 lighting=0.0f;
@@ -546,8 +555,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     float sigma = density_scale * sampled_density;
 
                     // そのステップでのトランスミッタンス変化（解析積分）
-                    //float T_step = exp(-sigma * step_size);
-                    float T_step = exp2((-sigma * step_size)*1.44269504);
+                    float T_step = exp(-sigma * step_size);
 
                     // ステップ内で散乱/吸収された割合（フラクション）
                     float delta = transmittence * (1.0f - T_step);
@@ -559,13 +567,6 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     transmittence = transmittence * T_step;
                     //視線方向の透過率を更新
                     
-                    
-                    //早期終了判定
-                    if (transmittence <= 1e-2f)
-                    {
-                        break;
-                    }
-                    
                 }
                 
             }
@@ -575,8 +576,9 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                 cloud_test = 0.0;
                 zero_density_sample_count = 0;
             }
-                //サンプル位置を進める
-                sample_point +=ray_step;
+            
+            //サンプル位置を進める
+            sample_point +=ray_step;
         }
         else
         {
@@ -589,21 +591,33 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             if (cloud_test <= 0.0)
             {
                 //地平線は荒く、上空は細かくステップを進める
-                //step_scale = lerp(1.0f, 3.0f, horizon);
+                step_scale = lerp(1.0f, 2.0f, horizon);
+                zero_density_sample_count++;
+            }
+            else
+            {
+                //雲が見つかったのでリセット
+                zero_density_sample_count = 0;
             }
             sample_point += ray_step * step_scale;
         }
         
         
+        //早期終了判定
         dist = length(sample_point - ray_origin);
-        if(dist>=limit_dist)
+        if (dist >= MAX_DISTANCE)
         {
             break;
         }
+        if (transmittence <= TRANSMITTANCE_EPS)
+        {
+            break;
+        }
+        
 
     }    
         	    
-    float alpha = saturate(1.0 - transmittence);
+    float alpha = saturate(1.0f - transmittence);
     
     return max(0.0, float4(color, alpha));
 }
@@ -643,19 +657,19 @@ float4 main(VS_OUT pin) : SV_TARGET
         //自動ステップ調整    
         if (auto_ray_marching_steps)
         {
-            steps = lerp(
-            ray_marching_steps * 0.5625, 
-            ray_marching_steps,
-            clamp(dot(ray_dir, float3(0.0, 1.0, 0.0)), 0.0, 1.0)
-            );
+            //steps = lerp(
+            //ray_marching_steps * 0.5625, 
+            //ray_marching_steps,
+            //clamp(dot(ray_dir, float3(0.0, 1.0, 0.0)), 0.0, 1.0)
+            //);
             {
                 float viewUp = saturate(ray_dir.y);
                 float horizon = 1.0 - viewUp;
 
                 steps = lerp(
-                ray_marching_steps * 0.3,
-                ray_marching_steps,
-                smoothstep(0.0, 0.6, viewUp)
+                ray_marching_steps * 0.5,
+                ray_marching_steps * 2.0,
+                smoothstep(0.8, 1, horizon)
                 );
             }
         }
@@ -670,10 +684,10 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         // 遠くの雲を空にブレンド
         {
-            // 地平線方向でフェードを強める（任意だが非常に効く）
+            ////地平線方向でフェードを強める
             float view_up = saturate(dot(ray_dir, float3(0, 1, 0)));
             float horizon = 1.0 - view_up;
-            float horizon_fade = ((horizon * horizon) * (horizon * horizon));
+            float horizon_fade = ((horizon * horizon) * (horizon * horizon)) * ((horizon * horizon) * (horizon * horizon));
             
             //雲の色を空に近づけるが、遮蔽は意地
             float3 cloud_color_only =

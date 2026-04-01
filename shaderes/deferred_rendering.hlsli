@@ -3,11 +3,13 @@
 
 #include"light.hlsli"
 
-#include "scene_constant_buffer.hlsli"
+#include"scene_constant_buffer.hlsli"
+
+#include "camera_buffer.hlsli"
 
 #include "gbuffer.hlsli"
 
-
+#include"shading_models.hlsli"
 
 static const int light_kind_directional = 0;
 static const int light_kind_point_light = 1;
@@ -57,7 +59,7 @@ cbuffer LIGHT_CONSTANT_BUFFER : register(b4)
     float shadow_bias; //深度バイアス
     uint shadow_dummy; //ダミー
     
-    row_major float4x4 light_view_projection; //ライトの位置から見た射影行列
+    //row_major float4x4 light_view_projection; //ライトの位置から見た射影行列
 };
 
 //ライトの種別の取得
@@ -87,7 +89,7 @@ spot_lights convert_spot_lights()
 {
     spot_lights data;
     data.position = light_data.work_data[0];
-    data.direction = normalize(light_data.work_data[1].xyz);
+    data.direction = normalize(light_data.work_data[1]);
     data.color = light_data.work_data[2];
     data.range = light_data.work_data[3].x;
     data.inner_corn = light_data.work_data[3].y;

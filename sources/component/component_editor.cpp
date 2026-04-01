@@ -2,7 +2,32 @@
 #include<DirectXMath.h>
 #include<Windows.h>
 #include<string>
+#include<filesystem>
+#include<fstream>
+#include<nlohmann/json.hpp>
 #include"../../external/imgui/imgui.h"
+#include"../../headers/graphics.h"
+
+
+std::wstring ToWString(const std::string& str)
+{
+    if (str.empty()) return std::wstring();
+
+    int size_needed = MultiByteToWideChar(
+        CP_UTF8, 0,
+        str.c_str(), (int)str.size(),
+        NULL, 0);
+
+    std::wstring wstr(size_needed, 0);
+
+    MultiByteToWideChar(
+        CP_UTF8, 0,
+        str.c_str(), (int)str.size(),
+        &wstr[0], size_needed);
+
+    return wstr;
+}
+
 
 ComponentEditor::ComponentEditor(
     ComponentManager& component_manager
@@ -18,6 +43,16 @@ void ComponentEditor::DrawImgui()
     {
 
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+
+        if (ImGui::Button("save"))
+        {
+            Save("progress.json");
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("load"))
+        {
+            Load("progress.json");
+        }
 
         // エンティティ追加ボタン
         if (ImGui::Button("Add Entity"))
@@ -56,7 +91,7 @@ void ComponentEditor::DrawImgui()
                 ComponentSkyAtmosphere sky;
                 comp_mng_.Add(entity, sky);
 
-                //has_sky_ = entity;
+                has_sky_ = entity;
             }
             else
             {
@@ -118,7 +153,7 @@ void ComponentEditor::DrawImgui()
                 if (comp_mng_.Has<ComponentScale>(entity.entity))
                 {
                     auto& scale = comp_mng_.GetByEntity<ComponentScale>(entity.entity);
-                    ImGui::SliderFloat3("Scale", &scale.value.x, 0.01f,10.0f);
+                    ImGui::DragFloat3("Scale", &scale.value.x, 0.01f);
                     ImGui::Separator();
                 }
                 // 色
@@ -129,11 +164,57 @@ void ComponentEditor::DrawImgui()
                     ImGui::Separator();
                 }
 
+                //大気散乱調整用
                 if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
                 {
                     ImGui::Text("Sky Atmosphere Component");
                     has_sky_ = entity.entity;
 
+                    auto& sky = comp_mng_.Get<ComponentSkyAtmosphere>(entity.entity);
+
+                    ImGui::Separator();
+                    ImGui::Text("Scattering Scale Heights");
+
+                    ImGui::DragFloat("Rayleigh Scale Height (m)",
+                        &sky.rayleigh_scale_height,
+                        100.0f, 1000.0f, 20000.0f, "%.0f");
+
+                    ImGui::DragFloat("Mie Scale Height (m)",
+                        &sky.mie_scale_height,
+                        50.0f, 100.0f, 10000.0f, "%.0f");
+
+                    ImGui::Separator();
+                    ImGui::Text("Ozone Layer");
+
+                    ImGui::DragFloat("Ozone Half Width (m)",
+                        &sky.ozone_scale_half_width,
+                        500.0f, 1000.0f, 50000.0f, "%.0f");
+
+                    ImGui::DragFloat("Ozone Center Height (m)",
+                        &sky.ozone_center_height,
+                        1000.0f, 10000.0f, 100000.0f, "%.0f");
+
+                    ImGui::Separator();
+                    ImGui::Text("Planet Settings");
+
+                    ImGui::DragFloat("Earth Radius (m)",
+                        &sky.earth_height,
+                        1000.0f, 6000000.0f, 7000000.0f, "%.0f");
+
+                    ImGui::DragFloat("Atmosphere Height (m)",
+                        &sky.atmosphere_height,
+                        100.0f, 10000.0f, 200000.0f, "%.0f");
+
+                    ImGui::DragFloat("Sun Distance (m)",
+                        &sky.sun_distance,
+                        1e7f, 1e9f, 3e11f, "%.0e");
+
+                    ImGui::Separator();
+                    ImGui::Text("Sampling");
+
+                    ImGui::SliderInt("Max Sample Count",
+                        &sky.max_sample,
+                        1, 128);
 
                     ImGui::Separator();
                 }
@@ -198,13 +279,6 @@ void ComponentEditor::DrawImgui()
 
                     ImGui::Separator();
                 }
-                //強度
-                if (comp_mng_.Has<ComponentIntensity>(entity.entity))
-                {
-                    auto& intensity = comp_mng_.GetByEntity<ComponentIntensity>(entity.entity);
-                    ImGui::SliderFloat("Intensity", &intensity.value, 0.1f, 100.f);
-                    ImGui::Separator();
-                }
                 // GLTFモデル
                 if (comp_mng_.Has<ComponentGltf>(entity.entity))
                 {
@@ -215,7 +289,7 @@ void ComponentEditor::DrawImgui()
                     auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
 
                     ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
-                    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, -1.0f, 1.0f);
+                    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, .0f, 1.0f);
 
                     //インスタンシング描画
                     if (ImGui::Button("instanced"))
@@ -260,6 +334,35 @@ void ComponentEditor::DrawImgui()
                     ImGui::Text("Instancing Render");
                     ImGui::Separator();
                 }
+                // Camera
+                if (comp_mng_.Has<ComponentCamera>(entity.entity))
+                {
+                    auto& cam = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
+
+                    if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        ImGui::Checkbox("Main Camera", &cam.main_camera_flag_);
+
+                        ImGui::DragFloat3("Position", &cam.camera_position.x, 0.1f);
+                        ImGui::DragFloat3("Direction", &cam.camera_direction.x, 0.01f);
+
+                        ImGui::Separator();
+
+                        ImGui::DragFloat("Near Clip", &cam.camera_clip_distance.x, 0.01f, 0.001f, 100.0f);
+                        ImGui::DragFloat("Far Clip", &cam.camera_clip_distance.y, 1.0f, 1.0f, 100000.0f);
+
+                        ImGui::Separator();
+
+                        ImGui::Text("View Matrix");
+                        ImGui::TextDisabled("Auto calculated");
+
+                        ImGui::Text("Projection Matrix");
+                        ImGui::TextDisabled("Auto calculated");
+                    }
+
+                    ImGui::Separator();
+                }
+
 
                 //コンポーネントの追加
                 if (has_sky_!=entity.entity|| !has_cloud_!=entity.entity)
@@ -336,5 +439,377 @@ void ComponentEditor::DrawImgui()
             }
         }
         ImGui::End();
+    }
+}
+
+void ComponentEditor::Save(const std::string& filename)
+{
+    using json = nlohmann::json;
+
+    json root;
+    root["entities"] = json::array();
+
+    for (const auto& entity : enti_mng_.GetArray())
+    {
+        if (!entity.alive) continue;
+
+        json entity_json;
+        json comp_json;
+
+        entity_json["entity_id"] = entity.entity;
+
+        // =========================
+        // Transform
+        // =========================
+        if (comp_mng_.Has<ComponentPosition>(entity.entity))
+        {
+            auto& c = comp_mng_.GetByEntity<ComponentPosition>(entity.entity);
+            comp_json["Position"] = { {"x",c.value.x},{"y",c.value.y},{"z",c.value.z} };
+        }
+
+        if (comp_mng_.Has<ComponentRotation>(entity.entity))
+        {
+            auto& c = comp_mng_.GetByEntity<ComponentRotation>(entity.entity);
+            comp_json["Rotation"] = { {"x",c.value.x},{"y",c.value.y},{"z",c.value.z} };
+        }
+
+        if (comp_mng_.Has<ComponentScale>(entity.entity))
+        {
+            auto& c = comp_mng_.GetByEntity<ComponentScale>(entity.entity);
+            comp_json["Scale"] = { {"x",c.value.x},{"y",c.value.y},{"z",c.value.z} };
+        }
+
+        // =========================
+        // Color
+        // =========================
+        if (comp_mng_.Has<ComponentColor>(entity.entity))
+        {
+            auto& c = comp_mng_.GetByEntity<ComponentColor>(entity.entity);
+            comp_json["Color"] = {
+                {"r",c.value.x},{"g",c.value.y},
+                {"b",c.value.z},{"a",c.value.w}
+            };
+        }
+
+        // =========================
+        // Sky Atmosphere（全項目）
+        // =========================
+        if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
+        {
+            auto& s = comp_mng_.GetByEntity<ComponentSkyAtmosphere>(entity.entity);
+
+            comp_json["SkyAtmosphere"] =
+            {
+                {"rayleigh_scale_height",s.rayleigh_scale_height},
+                {"mie_scale_height",s.mie_scale_height},
+                {"ozone_scale_half_width",s.ozone_scale_half_width},
+                {"ozone_center_height",s.ozone_center_height},
+                {"earth_height",s.earth_height},
+                {"atmosphere_height",s.atmosphere_height},
+                {"sun_distance",s.sun_distance},
+                {"max_sample",s.max_sample}
+            };
+        }
+
+        // =========================
+        // Volumetric Cloud（全項目）
+        // =========================
+        if (comp_mng_.Has<ComponentVolumetricCloud>(entity.entity))
+        {
+            auto& c = comp_mng_.GetByEntity<ComponentVolumetricCloud>(entity.entity);
+
+            comp_json["VolumetricCloud"] =
+            {
+                {"shadow_flag",c.shadow_flag},
+                {"wind_x",c.wind_direction.x},
+                {"wind_y",c.wind_direction.y},
+                {"wind_speed",c.wind_speed},
+
+                {"alt_min",c.cloud_altitudes_min_max.x},
+                {"alt_max",c.cloud_altitudes_min_max.y},
+
+                {"density_scale",c.density_scale},
+                {"coverage_scale",c.cloud_coverage_scale},
+                {"rain_absorption",c.rain_cloud_absorption_scale},
+                {"cloud_type_scale",c.cloud_type_scale},
+
+                {"earth_radius",c.earth_radius},
+                {"horizon_scale",c.horizon_distance_scale},
+
+                {"low_freq_scale",c.low_frequency_perlin_worley_sampling_scale},
+                {"high_freq_scale",c.high_frequency_worley_sampling_scale},
+                {"long_distance_density",c.cloud_density_long_distance_scale},
+
+                {"powdered_sugar",c.enable_powdered_sugar_efffect},
+
+                {"ray_march_steps",c.ray_marching_steps},
+                {"auto_ray_march",c.auto_ray_marching_steps}
+            };
+        }
+
+        // =========================
+        // GLTF
+        // =========================
+        if (comp_mng_.Has<ComponentGltf>(entity.entity))
+        {
+            auto& g = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
+
+            comp_json["Gltf"] =
+            {
+                {"filename", g.model ? g.model->GetFilename() : ""},
+                {"animation_time", g.animation_time},
+                {"animation_index", g.animation_index}
+            };
+        }
+
+        // =========================
+        // PBR
+        // =========================
+        if (comp_mng_.Has<ComponentAdjastPbrParamter>(entity.entity))
+        {
+            auto& p = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
+
+            comp_json["AdjustPBR"] =
+            {
+                {"metalness",p.adjust_metalness},
+                {"roughness",p.adjust_roughness}
+            };
+        }
+
+        // =========================
+        // Texture
+        // =========================
+        if (comp_mng_.Has<ComponentTexture>(entity.entity))
+        {
+            auto& t = comp_mng_.GetByEntity<ComponentTexture>(entity.entity);
+            comp_json["Texture"] = { {"name",t.name} };
+        }
+
+        // =========================
+        // Instanced
+        // =========================
+        if (comp_mng_.Has<ComponentInstanced>(entity.entity))
+        {
+            comp_json["Instanced"] = true;
+        }
+
+        // =========================
+        // Camera
+        // =========================
+        if (comp_mng_.Has<ComponentCamera>(entity.entity))
+        {
+            auto& c = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
+
+            comp_json["Camera"] =
+            {
+                {"pos_x", c.camera_position.x},
+                {"pos_y", c.camera_position.y},
+                {"pos_z", c.camera_position.z},
+
+                {"dir_x", c.camera_direction.x},
+                {"dir_y", c.camera_direction.y},
+                {"dir_z", c.camera_direction.z},
+
+                {"near", c.camera_clip_distance.x},
+                {"far", c.camera_clip_distance.y},
+
+                {"main", c.main_camera_flag_}
+            };
+        }
+
+        entity_json["components"] = comp_json;
+        root["entities"].push_back(entity_json);
+    }
+
+    std::ofstream file(filename);
+    if (file.is_open())
+        file << root.dump(4);
+}
+
+void ComponentEditor::Load(const std::string& filename)
+{
+    std::ifstream file(filename);
+    if (!file.is_open()) return;
+
+    using json = nlohmann::json;
+    json root;
+    file >> root;
+
+    has_sky_ = -1;
+    has_cloud_ = -1;
+
+    // 既存削除
+    for (auto& e : enti_mng_.GetArray())
+    {
+        if (e.alive)
+        {
+            comp_mng_.RemoveAllComponents(e.entity);
+            enti_mng_.Remove(e.entity);
+        }
+    }
+
+    for (auto& entity_json : root["entities"])
+    {
+        uint32_t entity = entity_json["entity_id"];
+        enti_mng_.AddWithID(entity);
+
+        auto& comp_json = entity_json["components"];
+
+        // Transform
+        if (comp_json.contains("Position"))
+        {
+            ComponentPosition c;
+            auto& j = comp_json["Position"];
+            c.value = { j["x"],j["y"],j["z"] };
+            comp_mng_.Add(entity, c);
+        }
+
+        if (comp_json.contains("Rotation"))
+        {
+            ComponentRotation c;
+            auto& j = comp_json["Rotation"];
+            c.value = { j["x"],j["y"],j["z"] };
+            comp_mng_.Add(entity, c);
+        }
+
+        if (comp_json.contains("Scale"))
+        {
+            ComponentScale c;
+            auto& j = comp_json["Scale"];
+            c.value = { j["x"],j["y"],j["z"] };
+            comp_mng_.Add(entity, c);
+        }
+
+        if (!comp_mng_.Has<ComponentLocalToWorld>(entity))
+        {
+            ComponentLocalToWorld l2w{};
+            comp_mng_.Add(entity, l2w);
+        }
+
+        // Color
+        if (comp_json.contains("Color"))
+        {
+            ComponentColor c;
+            auto& j = comp_json["Color"];
+            c.value = { j["r"],j["g"],j["b"],j["a"] };
+            comp_mng_.Add(entity, c);
+        }
+
+        // Sky
+        if (comp_json.contains("SkyAtmosphere"))
+        {
+            ComponentSkyAtmosphere s;
+            auto& j = comp_json["SkyAtmosphere"];
+
+            s.rayleigh_scale_height = j["rayleigh_scale_height"];
+            s.mie_scale_height = j["mie_scale_height"];
+            s.ozone_scale_half_width = j["ozone_scale_half_width"];
+            s.ozone_center_height = j["ozone_center_height"];
+            s.earth_height = j["earth_height"];
+            s.atmosphere_height = j["atmosphere_height"];
+            s.sun_distance = j["sun_distance"];
+            s.max_sample = j["max_sample"];
+
+            comp_mng_.Add(entity, s);
+            has_sky_ = entity;
+        }
+
+        // Cloud
+        if (comp_json.contains("VolumetricCloud"))
+        {
+            ComponentVolumetricCloud c;
+            auto& j = comp_json["VolumetricCloud"];
+
+            c.shadow_flag = j["shadow_flag"];
+            c.wind_direction = { j["wind_x"],j["wind_y"] };
+            c.wind_speed = j["wind_speed"];
+
+            c.cloud_altitudes_min_max = { j["alt_min"],j["alt_max"] };
+
+            c.density_scale = j["density_scale"];
+            c.cloud_coverage_scale = j["coverage_scale"];
+            c.rain_cloud_absorption_scale = j["rain_absorption"];
+            c.cloud_type_scale = j["cloud_type_scale"];
+
+            c.earth_radius = j["earth_radius"];
+            c.horizon_distance_scale = j["horizon_scale"];
+
+            c.low_frequency_perlin_worley_sampling_scale = j["low_freq_scale"];
+            c.high_frequency_worley_sampling_scale = j["high_freq_scale"];
+            c.cloud_density_long_distance_scale = j["long_distance_density"];
+
+            c.enable_powdered_sugar_efffect = j["powdered_sugar"];
+
+            c.ray_marching_steps = j["ray_march_steps"];
+            c.auto_ray_marching_steps = j["auto_ray_march"];
+
+            comp_mng_.Add(entity, c);
+            has_cloud_ = entity;
+        }
+
+        // GLTF
+        if (comp_json.contains("Gltf"))
+        {
+            auto& j = comp_json["Gltf"];
+            std::string filename = j["filename"];
+
+            auto model = ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), filename);
+
+            if (model)
+            {
+                ComponentGltf g;
+                g.model = model;
+                g.animation_time = j["animation_time"];
+                g.animation_index = j["animation_index"];
+                comp_mng_.Add(entity, g);
+
+                ComponentAdjastPbrParamter p{};
+                comp_mng_.Add(entity, p);
+            }
+        }
+
+        // PBR
+        if (comp_json.contains("AdjustPBR"))
+        {
+            ComponentAdjastPbrParamter p;
+            auto& j = comp_json["AdjustPBR"];
+            p.adjust_metalness = j["metalness"];
+            p.adjust_roughness = j["roughness"];
+            comp_mng_.Add(entity, p);
+        }
+
+        // Texture
+        if (comp_json.contains("Texture"))
+        {
+            ComponentTexture t;
+            t.name = comp_json["Texture"]["name"];
+            t.texture = 
+                ResourceManager::Instance().LoadTextureFromFile(Graphics::Instance().GetDevice(), ToWString(t.name).c_str());
+            comp_mng_.Add(entity, t);
+        }
+
+        // Instanced
+        if (comp_json.contains("Instanced"))
+        {
+            ComponentInstanced i;
+            comp_mng_.Add(entity, i);
+        }
+
+        // Camera
+        if (comp_json.contains("Camera"))
+        {
+            ComponentCamera c;
+            auto& j = comp_json["Camera"];
+
+            c.camera_position = { j["pos_x"], j["pos_y"], j["pos_z"], 1.0f };
+            c.camera_direction = { j["dir_x"], j["dir_y"], j["dir_z"], 0.0f };
+            c.camera_clip_distance = { j["near"], j["far"], 0, 0 };
+
+            c.main_camera_flag_ = j["main"];
+
+            comp_mng_.Add(entity, c);
+        }
+
+
     }
 }

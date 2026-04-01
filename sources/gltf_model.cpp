@@ -66,7 +66,11 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 		{ "JOINTS", 0, DXGI_FORMAT_R16G16B16A16_UINT, 4, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "WEIGHTS", 0,DXGI_FORMAT_R32G32B32A32_FLOAT, 5, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
-	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_vs.cso", vertex_shader_.ReleaseAndGetAddressOf(), 
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_vs.cso", vertex_shader_.ReleaseAndGetAddressOf(), 
+		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
+
+	//shadowmap用
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_shadow_caster_vs.cso", shadow_caster_vs_.ReleaseAndGetAddressOf(),
 		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 
 	//インスタンシング描画を埋め込みたい
@@ -87,26 +91,32 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 		{ "PREVIOUS_WORLD_MATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "PREVIOUS_WORLD_MATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 7, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 	};	
-	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
 		instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
+	//shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
+	//	instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
+	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_instancing_shadow_caster_vs.cso", shadow_instancing_caster_vs_.ReleaseAndGetAddressOf(),
+		input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
 
-	shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
+	shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_gbuffer_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
+	//shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
+	
 
 	D3D11_BUFFER_DESC buffer_desc{};
-	buffer_desc.ByteWidth = sizeof(PrimitiveConstants);
+	buffer_desc.ByteWidth = (sizeof(PrimitiveConstants) + 15) / 16 * 16;
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	HRESULT hr;
 	hr = device->CreateBuffer(&buffer_desc, nullptr, primitive_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-	buffer_desc.ByteWidth = sizeof(PrimitiveJointConstants);
+	buffer_desc.ByteWidth = (sizeof(PrimitiveJointConstants) + 15) / 16 * 16;
 	buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	hr = device->CreateBuffer(&buffer_desc, NULL, primitive_joint_cbuffer_.ReleaseAndGetAddressOf());
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-    buffer_desc.ByteWidth = sizeof(AdjastParamConstants);
+	buffer_desc.ByteWidth = (sizeof(AdjastParamConstants) + 15) / 16 * 16;
     buffer_desc.Usage = D3D11_USAGE_DEFAULT;
     buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
     hr = device->CreateBuffer(&buffer_desc, NULL, adjast_param_cbuffer_.ReleaseAndGetAddressOf());
@@ -178,7 +188,7 @@ void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 		XMMATRIX S{ XMMatrixScaling(node.scale.x, node.scale.y, node.scale.z) };
 		XMMATRIX R{ XMMatrixRotationQuaternion(XMVectorSet(node.rotation.x, node.rotation.y, node.rotation.z, node.rotation.w)) };
 		XMMATRIX T{ XMMatrixTranslation(node.translation.x, node.translation.y, node.translation.z) };
-		DirectX::XMStoreFloat4x4(&node.global_transform, S * R * T * XMLoadFloat4x4(&parent_global_transforms.top()));
+		XMStoreFloat4x4(&node.global_transform, S * R * T * XMLoadFloat4x4(&parent_global_transforms.top()));
 		for (int child_index : node.children)
 		{
 			parent_global_transforms.push(node.global_transform);
@@ -186,7 +196,7 @@ void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 			parent_global_transforms.pop();
 		}
 	} };
-	for (std::vector<int>::value_type node_index : scenes.at(default_scene_).nodes)
+	for (std::vector<int>::value_type node_index : scenes.at(0).nodes)
 	{
 		parent_global_transforms.push({ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 });
 		traverse(node_index);
@@ -279,6 +289,10 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 		{
 			Mesh::primitive& primitive{ mesh.primitives.emplace_back() };
 			primitive.material = gltf_primitive.material;
+            if (primitive.material < 0)
+			{
+				primitive.material = 0;//マテリアルが指定されていない場合は0番を使う
+			}
 
 			// Create index buffer view
 			if (gltf_primitive.indices > -1)
@@ -406,20 +420,28 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 	}
 }
 
-void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world)
+void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world,bool shadow_render_flag)
 {
 	using namespace DirectX;
 
 	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
 
 	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
-	//immediate_context->PSSetShaderResources(100, 1, cube_map_srv_.GetAddressOf());
     immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
 	immediate_context->PSSetConstantBuffers(
 		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
-
-	immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	
+    //シャドウレンダーフラグがある場合はシャドウマップ用のシェーダーをセットする
+	if(!shadow_render_flag)
+	{
+		immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
+		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	}
+	else
+	{
+		immediate_context->VSSetShader(shadow_caster_vs_.Get(), nullptr, 0);
+		immediate_context->PSSetShader(nullptr, nullptr, 0);
+	}
 	immediate_context->IASetInputLayout(input_layout.Get());
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -472,17 +494,16 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 				};
 				immediate_context->IASetVertexBuffers(0, _countof(vertex_buffers), vertex_buffers, strides, offsets);
 
-
 				PrimitiveConstants primitive_data{};
 				primitive_data.material = primitive.material;
 				primitive_data.has_tangent = primitive.has("TANGENT");
 				primitive_data.skin = node.skin;
 				DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
+				DirectX::XMStoreFloat4x4(&primitive_data.previous_world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
 				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
 				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 
-				// UNIT.36
 				const Material& material{ materials_.at(primitive.material) };
 				const int texture_indices[]
 				{
@@ -544,7 +565,7 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 
 }
 
-void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location)
+void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location,bool shadow_render_flag)
 {
 	using namespace DirectX;
 
@@ -555,8 +576,17 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 	immediate_context->PSSetConstantBuffers(
 		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
 
-	immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
-	immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+    //シャドウレンダーフラグがある場合はシャドウマップ用のシェーダーをセットする
+	if (!shadow_render_flag)
+	{
+		immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
+		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+	}
+	else
+	{
+        immediate_context->VSSetShader(shadow_instancing_caster_vs_.Get(), nullptr, 0);
+        immediate_context->PSSetShader(nullptr, nullptr, 0);
+	}
 	immediate_context->IASetInputLayout(instancing_input_layout.Get());
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -622,7 +652,7 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 				primitive_data.has_tangent = primitive.has("TANGENT");
 				primitive_data.skin = node.skin;
 				primitive_data.world = node.global_transform;
-				//DirectX::XMStoreFloat4x4(&primitive_data.world, XMLoadFloat4x4(&node.global_transform) * XMLoadFloat4x4(&world));
+				primitive_data.previous_world = node.global_transform;
 				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
 				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
 				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
@@ -682,6 +712,10 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 	{
 		traverse(node_index);
 	}
+
+	ID3D11ShaderResourceView* null_srv[] = { nullptr };
+	immediate_context->PSSetShaderResources(0, 1, null_srv);
+	immediate_context->PSSetShaderResources(1, 1, null_srv);
 }
 
 void GltfModel::FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf_model)
@@ -721,6 +755,32 @@ void GltfModel::FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf
 
 		material.data.emissive_texture.index = gltf_material.emissiveTexture.index;
 		material.data.emissive_texture.texcoord = gltf_material.emissiveTexture.texCoord;
+	}
+
+    //ダミーマテリアルの追加。マテリアルが一つもない場合は、デフォルトマテリアルを追加する。
+	if (materials_.empty())
+	{
+		Material& material = materials_.emplace_back();
+
+		material.name = "DefaultMaterial";
+
+		material.data.pbr_metallic_roughness.basecolor_factor[0] = 1.0f;
+		material.data.pbr_metallic_roughness.basecolor_factor[1] = 1.0f;
+		material.data.pbr_metallic_roughness.basecolor_factor[2] = 1.0f;
+		material.data.pbr_metallic_roughness.basecolor_factor[3] = 1.0f;
+        material.data.pbr_metallic_roughness.basecolor_texture.index = -1;
+
+		material.data.pbr_metallic_roughness.metallic_factor = 0.0f;
+		material.data.pbr_metallic_roughness.roughness_factor = 0.0f;
+
+		material.data.emissive_factor[0] = 0.0f;
+		material.data.emissive_factor[1] = 0.0f;
+		material.data.emissive_factor[2] = 0.0f;
+
+		material.data.alpha_mode = 0; // OPAQUE
+		material.data.alpha_cutoff = 0.5f;
+		material.data.double_sided = 0;
+
 	}
 
 	// Create material data as shader resource view on GPU
@@ -799,6 +859,7 @@ void GltfModel::FetchTextures(ID3D11Device* device, const tinygltf::Model& gltf_
 			}
 		}
 	}
+
 }
 
 void GltfModel::FetchAnimations(const tinygltf::Model& gltf_model)

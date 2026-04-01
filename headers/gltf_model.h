@@ -137,8 +137,10 @@ public:
 	GltfModel(ID3D11Device* device, const std::string& filename);
 	virtual ~GltfModel() = default;
 
-	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world);
-	void InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location = 0);
+	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world,bool shadow_render_flag=false);
+	void InstancingRender(ID3D11DeviceContext* immediate_context,
+		UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location = 0,
+		bool shadow_render_flag = false);
 	void Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes);
 	void UpdateAnimation(float elapsed_time);
 	const std::vector<GltfModel::Node>& GetNodes()const;
@@ -190,6 +192,7 @@ private:
 	struct PrimitiveConstants
 	{
 		DirectX::XMFLOAT4X4 world;
+		DirectX::XMFLOAT4X4 previous_world;
 		int material{ -1 };
 		int has_tangent{ 0 };
 		int skin{ -1 };
@@ -233,7 +236,9 @@ private:
 	std::vector<Microsoft::WRL::ComPtr<ID3D11Buffer>> buffers_;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> material_resource_view_;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertex_shader_;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> shadow_caster_vs_;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> instancing_vertex_shader_;//インスタンシング描画
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> shadow_instancing_caster_vs_;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> input_layout;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> instancing_input_layout;//インスタンシング描画

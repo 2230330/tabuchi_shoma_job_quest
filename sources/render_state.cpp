@@ -1,5 +1,7 @@
 #include"../headers/render_state.h"
 
+#include<float.h>
+
 #include"../headers/misc.h"
 
 //コンストラクタ
@@ -11,9 +13,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// ポイントサンプリング＆テクスチャ繰り返しあり
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -30,9 +32,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// ポイントサンプリング＆テクスチャ繰り返しなし
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -49,9 +51,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// リニアサンプリング＆テクスチャ繰り返しあり
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -68,9 +70,9 @@ RenderState::RenderState(ID3D11Device* device)
 		// リニアサンプリング＆テクスチャ繰り返しなし
 		{
 			desc.MipLODBias = 0.0f;
-			desc.MaxAnisotropy = 1;
-			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.BorderColor[0] = .0f;
 			desc.BorderColor[1] = .0f;
@@ -89,8 +91,8 @@ RenderState::RenderState(ID3D11Device* device)
 			desc.MipLODBias = 0;
 			desc.MaxAnisotropy = 16;
 			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-			desc.MinLOD = -D3D11_FLOAT32_MAX;
-			desc.MaxLOD = -D3D11_FLOAT32_MAX;
+			desc.MinLOD = 0;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
 			desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 			desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 			desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -116,6 +118,26 @@ RenderState::RenderState(ID3D11Device* device)
 			HRESULT hr = device->CreateSamplerState(&desc,
                 sampler_state_[static_cast<int>(SamplerState::linear_mirror)].GetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+		}
+
+		//シャドウマップ用サンプラー
+		{
+			desc.MipLODBias = 0;
+			desc.MaxAnisotropy = 16;
+			desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+			desc.BorderColor[0] = FLT_MAX;
+			desc.BorderColor[1] = FLT_MAX;
+			desc.BorderColor[2] = FLT_MAX;
+			desc.BorderColor[3] = FLT_MAX;
+			desc.MinLOD = 0;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+			HRESULT hr = device->CreateSamplerState(&desc,
+				sampler_state_[static_cast<int>(SamplerState::shadowmap)].GetAddressOf());
+			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
 	}
 

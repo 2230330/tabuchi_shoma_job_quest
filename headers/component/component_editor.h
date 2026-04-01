@@ -13,6 +13,9 @@ public:
         EntityManager&entity_manager);
     //•ÒW—p
     void DrawImgui();
+
+    void Save(const std::string& filename);
+    void Load(const std::string& filename);
 private:
     ComponentManager& comp_mng_;
     EntityManager& enti_mng_;

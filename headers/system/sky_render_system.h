@@ -21,7 +21,6 @@ public:
 
     bool GetSkyFlag() { return sky_flag_; }
 private:
-    void SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath, bool force_srgb = false);
 
     ComponentManager& comp_mng_;    
 
@@ -49,24 +48,26 @@ private:
     //定数バッファ
     // 参考資料
     //https://speakerdeck.com/fadis/konpiyutagurahuikusunokong?slide=26
-    struct RayleighConstants
+    struct SkyAtmosphereCB
     {
-
+        float rayleigh_scale_height{ 8000.f };
+        float mie_scale_height{ 1200.f };
+        float ozone_scale_half_width{ 15000.f };
+        float ozone_center_height{ 50000.f };
+        float earth_height{ 6360000.0f }; // 地球半径 [m]
+        float sun_distance{ 150000000000.0f }; // 太陽までの距離 [m]
+        float atmosphere_height{ 100000.0f }; // 大気の高さ [m]
+        int max_sample{ 64 };
         float height{ 0.f };//自身の高度
 
         DirectX::XMFLOAT3 dummy;
     };
-    RayleighConstants rayleigh_constant;
+    SkyAtmosphereCB sky_atmosphere_constant;
     Microsoft::WRL::ComPtr<ID3D11Buffer>rayleigh_constant_buffer_;
 
     //スカイテクスチャ
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> sky_srv_=nullptr;
 
-
-    //フレームバッファ
-    std::unique_ptr<FrameBuffer> sky_frame_buffer_;
-    //フルスクリーンクワッド
-    std::unique_ptr<FullscreenQuad> full_screen_quad_;
 
     bool sky_flag_ = false;
 

@@ -24,16 +24,24 @@ LightManager::LightManager()
 			forward_light_constant_buffer_.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-
-	//フォワードレンダリング用
-	for (int i = 0; i < forward_light_max; i++)
+	//ディファードレンダリング用定数バッファ
 	{
-		PointLight point_light;
-		point_lights_.emplace_back(point_light);
-
-		SpotLight spot_light;
-		spot_lights_.emplace_back(spot_light);
+		buffer_desc.ByteWidth = sizeof(DeferredLightContstants);
+		hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr,
+			deferred_light_constant_buffer_.GetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
+
+	////フォワードレンダリング用
+	//for (int i = 0; i < forward_light_max; i++)
+	//{
+	//	PointLight point_light;
+	//	point_lights_.emplace_back(point_light);
+
+	//	SpotLight spot_light;
+	//	spot_lights_.emplace_back(spot_light);
+	//}
+
 }
 
 
@@ -69,38 +77,15 @@ void LightManager::SetForwardLightConstant(int start_slot)
 	Graphics::Instance().SetConstantBuffer(start_slot, 1, forward_light_constant_buffer_.GetAddressOf());
 }
 
-void LightManager::SetDeferredLightConstant(int start_slot)
+void LightManager::BindDeferredLightConstant(int start_slot, UINT index)
 {
-	DeferredLightContstants constant;
+	auto* ctx = Graphics::Instance().GetDeviceContext();
 
-	//環境光
-	{
-		constant.lights.work_data[0] = ambient_color_;
-        constant.lights.work_data[3].w = light_kind_ambient_light;
-		Graphics::Instance().GetDeviceContext()
-			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
-        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
-	}
-
-    //ディレクションライト
-	{
-		constant.lights.work_data[0] = direction_light_.direction;
-		constant.lights.work_data[1] = direction_light_.color;
-		constant.lights.work_data[3].w = light_kind_derectional_light;
-
-        constant.use_shadow = 1;
-		constant.shadow_attenuation = 0.5f;
-        constant.shadow_bias = 0.001f;
-
-        constant.light_view_projection = light_view_projection_;
-
-        Graphics::Instance().GetDeviceContext()
-			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
-        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
-
-	}
+	ctx->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &deferred_lights_[index], 0, 0);
+	Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
 
 }
+
 
 void LightManager::DrawImgui()
 {
@@ -140,7 +125,7 @@ void LightManager::DrawImgui()
 				std::string name = "point_light" + std::to_string(i);
 				if (ImGui::TreeNode(name.c_str()))
 				{
-					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::DragFloat4("position", &light.position.x));
 					if (ImGui::ColorEdit4("color", &light.color.x));
 					if (ImGui::SliderFloat("range", &light.range, 0.0f, 20.f));
 					if (ImGui::SliderFloat("intensity", &light.intensity, 0.0f, 10.f));
@@ -161,7 +146,7 @@ void LightManager::DrawImgui()
 				std::string name = "spot light" + std::to_string(i);
 				if (ImGui::TreeNode(name.c_str()))
 				{
-					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::DragFloat4("position", &light.position.x));
 					if (ImGui::SliderFloat4("direction", &light.direction.x,-10.f,10.f));
 					if (ImGui::ColorEdit4("color", &light.color.x));
 					if (ImGui::SliderFloat("inner_corn", &light.inner_corn,
@@ -234,12 +219,12 @@ void LightManager::Update(float elapsed_time)
 	//ライト方向から見た視線行列を生成
 
 	DirectX::XMVECTOR light_dir = DirectX::XMVector3Normalize(DirectX::XMLoadFloat4(&direction_light_.direction));
-	DirectX::XMVECTOR center = DirectX::XMVectorSet(0,0,0,0);
 
 	// 影中心からライト方向に引いた位置にライトを置く
-	DirectX::XMVECTOR light_pos = DirectX::XMVectorSubtract(center , DirectX::XMVectorScale(light_dir, shadow_distance_));
+	DirectX::XMVECTOR light_pos = DirectX::XMVectorScale(light_dir, shadow_distance_);
 
 	// 注視点は中心
+	DirectX::XMVECTOR center = DirectX::XMVectorSet(0,0,0,0);
 	DirectX::XMVECTOR target = center;
 
 	// up が light_dir と平行に近い場合の対策
@@ -248,14 +233,89 @@ void LightManager::Update(float elapsed_time)
 		up = DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
 
 	DirectX::XMMATRIX V = DirectX::XMMatrixLookAtLH(light_pos, target, up);
+    DirectX::XMStoreFloat4x4(&light_view_, V);
 
 	// 正射影（範囲は雲影を落としたい地面サイズ）
 	float w = shadow_map_size_;
 	float h = shadow_map_size_;
 
 	DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicLH(w, h, shadow_near_plane_, shadow_far_plane_);
+    DirectX::XMStoreFloat4x4(&light_projection_, P);
 
 	DirectX::XMMATRIX VP = V * P;
 	DirectX::XMStoreFloat4x4(&light_view_projection_, VP);
 	DirectX::XMStoreFloat4x4(&inverse_light_view_projection_, DirectX::XMMatrixInverse(nullptr, VP));
+
+	BuildDeferredLights();
+}
+void LightManager::BuildDeferredLights()
+{
+	deferred_lights_.clear();
+
+	// Ambient
+	{
+		//環境光の場合
+		//work_data[0]=color
+		//work_data[1]=dummy
+		//work_data[2]=dummy
+		//work_data[3]=xyz=dummy,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = ambient_color_;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_ambient_light);
+
+		deferred_lights_.emplace_back(l);
+
+	}
+
+	// Directional
+	{
+		//平行光源の場合
+		//work_data[0]=direction
+		//work_data[1]=color
+		//work_data[2]=dummy
+		//work_data[3]=xyz=dummy,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = direction_light_.direction;
+		l.lights.work_data[1] = direction_light_.color;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_derectional_light);
+		l.use_shadow = 1;
+		l.light_view_projection = light_view_projection_;
+
+		deferred_lights_.emplace_back(l);
+	}
+
+	// Point
+	for (auto& p : point_lights_)
+	{
+		//点光源
+		//work_data[0]=position
+		//work_data[1]=color
+		//work_data[2]=x=range,yzw=dummy
+		//work_data[3]=xyz=dummy,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = p.position;
+		l.lights.work_data[1] = p.color;
+		l.lights.work_data[2].x = p.range;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_point_light);
+
+		deferred_lights_.emplace_back(l);
+	}
+
+	// Spot
+	for (auto& s : spot_lights_)
+	{
+
+		//スポットライトの場合
+		//work_data[0]=position
+		//work_data[1]=direction
+		//work_data[2]=color
+		//work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ライト識別番号
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = s.position;
+		l.lights.work_data[1] = s.direction;
+		l.lights.work_data[2] = s.color;
+		l.lights.work_data[3] = { s.range,s.inner_corn,s.outer_corn,static_cast<float>(light_kind_spot_light) };
+
+		deferred_lights_.emplace_back(l);
+	}
 }

@@ -368,7 +368,8 @@ void DirectBRDF(
 >>>>>>> master
 float4 SampleLutGGX(float2 brdf_sample_point, Texture2D lut_ggx_map, SamplerState state)
 {
-    return lut_ggx_map.Sample(state, brdf_sample_point);
+    return lut_ggx_map.SampleLevel(state, brdf_sample_point,0.0);
+    //return lut_ggx_map.Sample(state, brdf_sample_point);
 }
 <<<<<<< HEAD
 
@@ -391,6 +392,7 @@ float4 SampleDiffuseIEM(float3 v, TextureCube diffuse_iem_cube_map, SamplerState
     return diffuse_iem_cube_map.Sample(state, v);
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 //--------------------------------------------
 //	キューブマップから放射輝度を取得
@@ -403,6 +405,41 @@ float4 SampleSpecularPMREM(float3 v, float roughness, TextureCube specular_pmrem
 {
     //  ミップマップによって粗さを表現するため、段階を算出
 =======
+=======
+ 
+//IBLManager::cb_sh_
+cbuffer SHBuffer : register(b6)
+{
+    float4 shC[9];//wはダミー
+}
+float3 EvalSH9Irradiance(float3 n)
+{
+    //SH規定
+    float x = n.x, y = n.y, z = n.z;
+    
+    float shBasis[9];
+    shBasis[0] = 0.282095f;
+    shBasis[1] = 0.488603f * y;
+    shBasis[2] = 0.488603f * z;
+    shBasis[3] = 0.488603f * x;
+    shBasis[4] = 1.092548f * x * y;
+    shBasis[5] = 1.092548f * y * z;
+    shBasis[6] = 0.315392f * (3 * z * z - 1);
+    shBasis[7] = 1.092548f * x * z;
+    shBasis[8] = 0.546274f * (x * x - y * y);
+    
+    float3 irradiance = 0;
+    [unroll]
+    for (int i = 0; i < 9;i++)
+    {
+        irradiance += shC[i] * shBasis[i];
+    }
+
+    return max(irradiance, 0);
+}
+
+
+>>>>>>> master
 //----------------------------------------
 //キューブマップから放射輝度を取得
 //----------------------------------------
@@ -510,6 +547,19 @@ TextureCube diffuse_iem_cube_map, SamplerState state)
     float3 irradiance = SampleDiffuseIEM(normal, diffuse_iem_cube_map, state).rgb;
     return diffuse_reflectance * irradiance * kD;
 }
+//SH9係数での拡散反射IBL
+float3 DiffuseIBL_SH(float3 normal,float3 eye_vector,float roughness,float3 diffuse_reflectance,float3 f0)
+{
+    float3 N = normal;
+    float3 V = -eye_vector;
+    
+    float NdotV = max(0.0001f, dot(N, V));
+    float3 kD = 1.0f - CalcFresnelRoughness(f0, NdotV, roughness);
+    
+    float3 irradiance = EvalSH9Irradiance(N);
+    return diffuse_reflectance * irradiance * kD;
+}
+
 //-----------------------------------------
 //鏡面反射IBL
 //-----------------------------------------

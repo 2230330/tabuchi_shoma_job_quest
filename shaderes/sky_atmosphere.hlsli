@@ -14,10 +14,17 @@ struct VS_OUT
 
 cbuffer RAYLEIGH_CONSTANT_BUFFER_ : register(b11)
 {
-    //float4 sun_parameter; //xyz:color,a:intensity
-    
+    float rayleigh_scale_height;
+    float mie_scale_height;
+    float ozone_scale_half_width;
+    float ozone_center_height;
+    float earth_height; // 地球半径 [m]
+    float sun_distance; // 太陽までの距離 [m]
+    float atmosphere_height; // 大気の高さ [m]
+    int max_sample;
 
     float height;//自身の高度
     float3 dummy;
 
 };
+#include"camera_buffer.hlsli"

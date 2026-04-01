@@ -1,6 +1,7 @@
 #include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
 #include"fullscreen_quad.hlsli"
+#include"camera_buffer.hlsli"
 
 #define POINT_WRAP 0
 #define POINT_CLAMP 1

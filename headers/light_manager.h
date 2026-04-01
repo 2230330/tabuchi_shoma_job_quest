@@ -16,7 +16,7 @@ struct PointLight
 {
     DirectX::XMFLOAT4 position{ 0.f,0.f,0.f,0.f };
     DirectX::XMFLOAT4 color{ 1.f,1.f,1.f,1.f };
-    float range{ 0.f };
+    float range{ 1.f };
     float intensity{ 1.0f };
     DirectX::XMFLOAT2 dummy;
 };
@@ -25,7 +25,7 @@ struct SpotLight
     DirectX::XMFLOAT4 position{ 0.f,0.f,0.f,0.f };
     DirectX::XMFLOAT4 direction{ 0.f,0.f,-1.f,0.f };
     DirectX::XMFLOAT4 color{ 1.f,1.f,1.f,1.f };
-    float range{ 0.f };
+    float range{ 1.f };
     float inner_corn{ DirectX::XMConvertToRadians(30.f) };
     float outer_corn{ DirectX::XMConvertToRadians(45.f) };
     float dummy;
@@ -41,13 +41,22 @@ public:
     void SetDirectionLight(DirectionLight& light) { this->direction_light_ = light; }
 
     //ディレクションライト取得
-    DirectionLight GetDirectionLight()const { return this->direction_light_; }
+    const DirectionLight& GetDirectionLight()const { return this->direction_light_; }
 
     //ライトコンスタントを楽に送り出せるように
     void SetForwardLightConstant(int start_slot);
 
     //デファード用ライトコンスタントをセット
-    void SetDeferredLightConstant(int start_slot);
+    void BindDeferredLightConstant(int start_slot,UINT index);
+    //Update内で動く、ディファードレンダリング用ライトの組みなおし
+    void BuildDeferredLights();
+
+    size_t GetDeferredLightsSize() const{ return deferred_lights_.size(); }
+
+    //ライトの位置から見た射影行列を取得
+    //現在はディレクションライトのみ
+    const DirectX::XMFLOAT4X4& GetLightViewProjection() const { return light_view_projection_; }
+    const DirectX::XMFLOAT4X4& GetInverseLightViewProjection() const { return inverse_light_view_projection_; }
 
     //ライトのIMGUI管理
     void DrawImgui();
@@ -62,14 +71,16 @@ private:
 
     DirectionLight direction_light_;
     float azimuth_ = 0.f;//ライトの水平角度
-    float elevation_ = DirectX::XMConvertToRadians(-90);//ライトの仰角
+    float elevation_ = DirectX::XMConvertToRadians(-25);//ライトの仰角
     DirectX::XMFLOAT4 ambient_color_ = { 0.2,0.2,0.2,1 };
     //ライト空間用
+    DirectX::XMFLOAT4X4 light_view_{};
+    DirectX::XMFLOAT4X4 light_projection_{};
     DirectX::XMFLOAT4X4 light_view_projection_{};
     DirectX::XMFLOAT4X4 inverse_light_view_projection_{};
-    const float shadow_distance_ = 50000;
-    const float shadow_near_plane_ = 1.0f;
-    const float shadow_far_plane_ = 200000;
+    const float shadow_distance_ = 50;
+    const float shadow_near_plane_ = 0.1f;
+    const float shadow_far_plane_ = 200;
     const float shadow_map_size_ = 1024.0f;
 
 
@@ -132,7 +143,7 @@ private:
     };
     struct DeferredLightContstants
     {
-        IntegrateLight lights;
+        IntegrateLight lights{};
 
         //シャドウマップ関係
         int use_shadow{ 0 };//　影を擁しているかどうか
@@ -141,6 +152,7 @@ private:
         UINT shadow_dummy{0};
         DirectX::XMFLOAT4X4 light_view_projection{}; //ライトの位置から見た射影行列
     };
+    std::vector<DeferredLightContstants>deferred_lights_;
 };
 
 #endif //!PART2_LIGHT_MANAGER_H

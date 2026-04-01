@@ -2,15 +2,22 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <cstdint>
+#include<memory>
 
+#include"render_state.h"
+
+//ディファードレンダリング描画用フレームバッファ
 class DeferredGBuffer
 {
 public:
-    enum class Target : uint8_t
+    enum Target : uint8_t
     {
         BaseColor = 0,
         Emissive,
-        NormalDepth,
+        Normal,
+        Parameter,
+        Depth,
+        Velocity,
         Count
     };
 
@@ -23,11 +30,13 @@ public:
         int subsamples = 1
     );
 
+    ~DeferredGBuffer() = default;
+
     void Clear(ID3D11DeviceContext* ctx);
     void Activate(ID3D11DeviceContext* ctx);
     void Deactivate(ID3D11DeviceContext* ctx);
 
-    ID3D11ShaderResourceView* GetSRV(Target t) const
+    ID3D11ShaderResourceView* GetSRV(int t) const
     {
         return shader_resource_views_[static_cast<uint8_t>(t)].Get();
     }
@@ -37,12 +46,21 @@ public:
         return depth_srv_.Get();
     }
 
+    //ディファードレンダリングの基本データ
+    //ライティング前に呼び出す関数
+    void SetDeferredCommonResource();
+
 private:
     static constexpr uint8_t kRTCount = static_cast<uint8_t>(Target::Count);
 
     Microsoft::WRL::ComPtr<ID3D11Texture2D> render_targets_[kRTCount];
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtvs_[kRTCount];
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_views_[kRTCount];
+    //αブレンドを行うと変な具合になるので、こちら側で設定します
+    Microsoft::WRL::ComPtr<ID3D11BlendState>blend_state_;
+
+    //アクティブ前に入っていたRTVの数
+    UINT cached_num_rtvs_ = 0;
 
     Microsoft::WRL::ComPtr<ID3D11Texture2D> depth_texture_;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> dsv_;
@@ -55,4 +73,5 @@ private:
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> cached_dsv_;
 
     D3D11_VIEWPORT viewport_{};
+    std::unique_ptr<RenderState>render_state_ = nullptr;
 };

@@ -1,5 +1,5 @@
 #include"../shaderes/gltf_model.hlsli"
-#include"scene_constant_buffer.hlsli"
+#include"camera_buffer.hlsli"
 
 VS_OUT main(VS_IN vin)
 {
@@ -23,7 +23,9 @@ VS_OUT main(VS_IN vin)
     VS_OUT vout;
 
     vin.position.w = 1;
-    vout.position = mul(vin.position, mul(world, view_projection_transform));
+    //vout.position = mul(vin.position, mul(world, view_projection_transform));
+    float4 wpos = mul(vin.position, world);
+    vout.position = mul(wpos, view_projection_transform);
     vout.w_position = mul(vin.position, world);
 
     vin.normal.w = 0;

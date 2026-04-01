@@ -1,6 +1,7 @@
 #include"volumetric_cloud.hlsli"
 #include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
+#include"camera_buffer.hlsli"
 
 Texture2D sky_texture : register(t5);
 
@@ -53,7 +54,6 @@ float3 SampleWeatherData(float2 sample_point)
     return weather_texture.Sample(sampler_states[LINEAR_WRAP], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
 
 }
-
 
 
 
@@ -430,6 +430,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /
     int zero_density_sample_count = 0;
     
     float dist = 0.0f;
+    const float max_dist = ray_step * steps;
 	
     //メインのレイマーチングループ
 	[loop]
@@ -587,6 +588,8 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord /
         
         
         dist = length(sample_point - ray_origin);
+        
+
 
     }
         	    
@@ -659,7 +662,7 @@ float4 main(PSIn pin) : SV_TARGET
             // 地平線方向でフェードを強める（任意だが非常に効く）
             float view_up = saturate(dot(view_dir, float3(0, 1, 0)));
             float horizon = 1.0 - view_up;
-            float horizon_fade = ((horizon * horizon) * (horizon * horizon));
+            float horizon_fade = ((horizon * horizon) * (horizon * horizon)) * ((horizon * horizon) * (horizon * horizon));
             
             //雲の色を空に近づけるが、遮蔽は意地
             float3 cloud_color_only =

@@ -99,7 +99,7 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_p
         {
             D3D11_BUFFER_DESC cb_desc{};
             cb_desc.Usage = D3D11_USAGE_DEFAULT;
-            cb_desc.ByteWidth = sizeof(RayleighConstants);
+            cb_desc.ByteWidth = (sizeof(SkyAtmosphereCB)+15)/16*16;
             cb_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
             hr = device->CreateBuffer(&cb_desc, nullptr, rayleigh_constant_buffer_.ReleaseAndGetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
@@ -117,19 +117,13 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_p
         sky_input_.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
     sky_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\sky_atmosphere_ps.cso");
 
-    //フルスクリーン
-    sky_frame_buffer_= std::make_unique<FrameBuffer>(
-        device,
-        Graphics::Instance().GetScreenWidth(),
-        Graphics::Instance().GetScreenHeight());
-    full_screen_quad_ = std::make_unique<FullscreenQuad>(device);
 }
 
 
 void SkyRenderSystem::Render()
 {
     sky_flag_ = false;
-    comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere&) {
+    comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere sky_atmosphere) {
         {
             sky_flag_ = true;
 
@@ -154,18 +148,25 @@ void SkyRenderSystem::Render()
             context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
             //定数バッファの設定
-            rayleigh_constant.height = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id)->value.y * 1e3f;
-            RayleighConstants data = rayleigh_constant;
+            sky_atmosphere_constant.rayleigh_scale_height = sky_atmosphere.rayleigh_scale_height;
+            sky_atmosphere_constant.mie_scale_height = sky_atmosphere.mie_scale_height;
+            sky_atmosphere_constant.ozone_scale_half_width = sky_atmosphere.ozone_scale_half_width;
+            sky_atmosphere_constant.ozone_center_height = sky_atmosphere.ozone_center_height;
+            sky_atmosphere_constant.atmosphere_height = sky_atmosphere.atmosphere_height;
+            sky_atmosphere_constant.sun_distance = sky_atmosphere.sun_distance;
+            sky_atmosphere_constant.earth_height = sky_atmosphere.earth_height;
+            sky_atmosphere_constant.max_sample = sky_atmosphere.max_sample;
+            sky_atmosphere_constant.height = comp_mng_.TryGetByEntity<ComponentPosition>(entity_id)->value.y * 1e3f;
+            SkyAtmosphereCB data = sky_atmosphere_constant;
             context->UpdateSubresource(rayleigh_constant_buffer_.Get(), 0, 0, &data, 0, 0);
             Graphics::Instance().SetConstantBuffer(
-                static_cast<int>(ConstantBufferSlot::kSkyRayleigh),
+                static_cast<int>(ConstantBufferSlot::kSkyAtmosphere),
                 1,
                 rayleigh_constant_buffer_.GetAddressOf());
 
             // 描画呼び出し
             context->DrawIndexed(index_count_, 0, 0);
 
-            Graphics::Instance().ClearConstantBuffers(static_cast<int>(ConstantBufferSlot::kSkyRayleigh), 1);
         }
 
         });

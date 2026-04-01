@@ -10,6 +10,10 @@ public:
     //追加されたエンティティは、フリーリストに開いている番号がある場合、そこに入る
     uint32_t Add();
 
+    //エンティティの割り込み
+    //uint32_t AddWithID(uint32_t id);
+    bool AddWithID(uint32_t id);
+
     //エンティティの削除関数
     //削除されたエンティティ番号はフリーリストに入り、再利用される
     void Remove(uint32_t id);

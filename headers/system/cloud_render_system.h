@@ -38,7 +38,7 @@ private:
     struct CloudRayMarchingConstants
     {
         //•—×‚Ì§Œä
-        DirectX::XMFLOAT2 wind_direction = { 1.0f, 1.0f };
+        DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.75f };
         DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6371500.0f, 6373000.0f }; // highest and lowest altitudes at which clouds are distributed
         float wind_speed = 1.0f; // [0.0, 20.0]
 
@@ -75,18 +75,9 @@ private:
     //’áü”gƒmƒCƒY
     const int low_freq_perlin_worley_dimensions{ 256 };
     const int low_freq_perlin_worley_numthreads{ 8 };
-    //’†ü”g
-    const int mid_freq_perlin_worley_dimensions{ 128 };
-    const int mid_freq_perlin_worley_numthreads{ 8 };
     //‚ü”gƒmƒCƒY
     const int high_freq_worley_dimensions{ 64 };
     const int high_freq_worley_numthreads{ 8 };
-    //curlƒmƒCƒY
-    const int curl_dimensions{ 128 };
-    const int curl_numthreads{ 8 };
-    //‰_‚Ì‚“x•ª•zƒeƒNƒXƒ`ƒƒ
-    const int layout_cloud_height_profile_dimensions{ 64 };
-    const int layout_cloud_height_profile_numthreads{ 8 };
 
 
     struct CurlParams

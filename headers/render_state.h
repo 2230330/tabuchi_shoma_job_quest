@@ -5,7 +5,7 @@
 #include<wrl.h>
 
 //サンプラーステート
-enum class SamplerState
+enum  SamplerState:int
 {
     point_wrap,
     point_clamp,
@@ -13,8 +13,9 @@ enum class SamplerState
     linear_clamp,
     anisotropic,
     linear_mirror,
+    shadowmap,
 
-    enum_count
+    enum_count,
 };
 //デプスステート
 enum class DepthState

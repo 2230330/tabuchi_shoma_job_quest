@@ -29,6 +29,7 @@ bool SceneTest::InitializeCore()
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
         light_manager_ = std::make_unique<LightManager>();
+        render_sys_mng->SetLightManager(light_manager_.get());
 
         uint32_t w = static_cast<uint32_t>(Graphics::Instance().GetScreenWidth());
         uint32_t h = static_cast<uint32_t>(Graphics::Instance().GetScreenHeight());
@@ -48,6 +49,8 @@ bool SceneTest::InitializeCore()
         {
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\blue_exagonal_tiles_with_extracted\\scene.gltf");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\cube.glb");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\plane.glb");
 
         }
         //shader
@@ -68,24 +71,35 @@ bool SceneTest::InitializeCore()
                 );
             }
         }
-        //大気散乱と雲
-        {
-            int entity = world->GetEntityManager()->Add();
-            ComponentPosition position{};
-            comp_mng->Add<ComponentPosition>(entity, position);
-            ComponentRotation rotation{};
-            comp_mng->Add<ComponentRotation>(entity, rotation);
-            ComponentScale scale;
-            scale.value = { 1.f, 1.f, 1.f };
-            comp_mng->Add(entity, scale);
-            ComponentLocalToWorld l2w{};
-            comp_mng->Add(entity, l2w);
-            ComponentSkyAtmosphere sky;
-            comp_mng->Add(entity, sky);
-        }
     }
 
+    {
+        comp_edit->Load("progress.json");
+        
+        //for (int i = 0; i < 100; i++)
+        //{
+        //    uint32_t entity = world->GetEntityManager()->Add();
+        //    ComponentPosition pos;
+        //    pos.value = { 3.f * static_cast<float>( i % 10), 1,3.f * static_cast<float>( i / 10) };
+        //    comp_mng->Add(entity, pos);
+        //    ComponentRotation rot;
+        //    rot.value = { 0, 0, 0 };
+        //    comp_mng->Add(entity, rot);
+        //    ComponentScale scale;
+        //    scale.value = { 1, 1, 1 };
+        //    comp_mng->Add(entity, scale);
+        //    ComponentLocalToWorld l2w;
+        //    comp_mng->Add(entity, l2w);
+        //    ComponentAdjastPbrParamter ajust_pbr_paramter;
+        //    comp_mng->Add(entity, ajust_pbr_paramter);
+        //    ComponentGltf gltf;
+        //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
+        //    comp_mng->Add(entity, gltf);
+        //    ComponentInstanced instanced;
+        //    comp_mng->Add(entity, instanced);
+        //}
 
+    }
     return true;
 }
 
@@ -128,6 +142,8 @@ void SceneTest::RenderCore(float elapsed_time)
         dc->PSSetSamplers(4, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::linear_mirror);
         dc->PSSetSamplers(5, 1, sampler_state.GetAddressOf());
+        sampler_state = render_state->GetSamplerState(SamplerState::shadowmap);
+        dc->PSSetSamplers(6, 1, sampler_state.GetAddressOf());
 
 
     }
@@ -135,7 +151,7 @@ void SceneTest::RenderCore(float elapsed_time)
     {
         dc->OMSetBlendState(render_state->GetBlendState(BlendState::transparency), nullptr, 0xffffffff);
         dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);
-        dc->RSSetState(render_state->GetRasterizerState(RasterizerState::solid_cull_none));
+        dc->RSSetState(render_state->GetRasterizerState(RasterizerState::solid_cull_back));
     }
     //ビュープロジェクション変換行列の計算と定数バッファにセット
     {
@@ -148,41 +164,9 @@ void SceneTest::RenderCore(float elapsed_time)
     }
     //レンダリングオブジェクト描画
     {
-        //framebuffers_[0]->Clear(dc);
-        //framebuffers_[0]->Activate(dc);
-        //2Dスプライト描画
-        {
-            dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_only), 0);
-
-
-            dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);
-
-        }
-        //3dオブジェクト描画
-        {
-
-            ////アニメーションキーフレームの更新
-            //int clip_index = 0;
-            //int frame_index = 0;
-            //static float animation_tick = 0;
-            //auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
-            //{
-            //    frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
-            //    if (frame_index > animation.sequence.size() - 1)
-            //    {
-            //        frame_index = 0;
-            //        animation_tick = 0;
-            //    }
-            //    else
-            //    {
-            //        animation_tick += elapsed_time;
-            //    }
-            //}
-            //Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
-
-            render_sys_mng->RenderAll();
-        }
-        //framebuffers_[0]->Deactivate(dc);
+        
+        render_sys_mng->RenderAll();
+        
     }
     //ポストエフェクト
     {
@@ -204,11 +188,11 @@ void SceneTest::DrawImguiCore()
     //ライトマネージャー
     light_manager_->DrawImgui();
 
-    //ポストエフェク
-    ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);
-    ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h * 5.0f }, ImGuiSetCond_Always);
-    ImGui::SetNextWindowBgAlpha(imgui_alpha);
-    post_pro_mng->PostImgui();
+    ////ポストエフェク
+    //ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);
+    //ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h * 5.0f }, ImGuiSetCond_Always);
+    //ImGui::SetNextWindowBgAlpha(imgui_alpha);
+    //post_pro_mng->PostImgui();
 
     //コンポーネントマネージャ
     ImGui::SetNextWindowPos({ imgui_window_size_x*7,0 }, ImGuiSetCond_Always);

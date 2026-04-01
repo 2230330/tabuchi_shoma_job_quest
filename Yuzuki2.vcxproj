@@ -30,14 +30,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <EnableASAN>false</EnableASAN>
@@ -45,14 +45,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <EnableASAN>false</EnableASAN>
@@ -95,7 +95,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -105,7 +105,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\debug;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;.\external\fbx\2020.3.7\lib\x64\debug;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -124,7 +124,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -135,7 +135,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -152,7 +152,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -162,7 +162,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\lib\x64\debug;%(AdditionalLibraryDirectories);.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;.\external\fbx\2020.3.7\lib\x64\debug;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -181,7 +181,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -192,7 +192,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories);.\external</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
@@ -214,12 +214,12 @@
     <ClInclude Include="headers\archetype\archetype_manager.h" />
     <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
+    <ClInclude Include="headers\component\component_camera.h" />
     <ClInclude Include="headers\component\component_volumetric_cloud.h" />
     <ClInclude Include="headers\component\component_color.h" />
     <ClInclude Include="headers\component\component_editor.h" />
     <ClInclude Include="headers\component\component_gltf.h" />
     <ClInclude Include="headers\component\component_instanced.h" />
-    <ClInclude Include="headers\component\component_intensity.h" />
     <ClInclude Include="headers\component\component_local_to_world.h" />
     <ClInclude Include="headers\component\component_manager.h" />
     <ClInclude Include="headers\component\component_material.h" />
@@ -260,15 +260,17 @@
     <ClInclude Include="headers\sprite_batch.h" />
     <ClInclude Include="headers\static_mesh.h" />
     <ClInclude Include="headers\system\cloud_render_system.h" />
-    <ClInclude Include="headers\system\follow_camera_update_system.h" />
+    <ClInclude Include="headers\system\deferred_render_system.h" />
+    <ClInclude Include="headers\system\update_camera_system.h" />
     <ClInclude Include="headers\system\ibl_manager.h" />
     <ClInclude Include="headers\system\i_render_system.h" />
     <ClInclude Include="headers\system\i_update_system.h" />
+    <ClInclude Include="headers\system\camera_set_constants.h" />
     <ClInclude Include="headers\system\render_gltf_system.h" />
     <ClInclude Include="headers\system\render_system_manager.h" />
     <ClInclude Include="headers\system\sky_render_system.h" />
     <ClInclude Include="headers\system\sprite_render_system.h" />
-    <ClInclude Include="headers\system\transform_system.h" />
+    <ClInclude Include="headers\system\update_transform_system.h" />
     <ClInclude Include="headers\system\update_system_manager.h" />
     <ClInclude Include="headers\system\instancing_render_system.h" />
     <ClInclude Include="headers\texture.h" />
@@ -308,21 +310,27 @@
     <ClCompile Include="sources\sprite_batch.cpp" />
     <ClCompile Include="sources\static_mesh.cpp" />
     <ClCompile Include="sources\system\cloud_render_system.cpp" />
-    <ClCompile Include="sources\system\follow_camera_update_system.cpp" />
+    <ClCompile Include="sources\system\deferred_render_system.cpp" />
+    <ClCompile Include="sources\system\update_camera_system.cpp" />
     <ClCompile Include="sources\system\ibl_manager.cpp" />
     <ClCompile Include="sources\system\instancing_render_system.cpp" />
+    <ClCompile Include="sources\system\camera_set_constants.cpp" />
     <ClCompile Include="sources\system\render_gltf_system.cpp" />
     <ClCompile Include="sources\system\render_system_manager.cpp" />
     <ClCompile Include="sources\system\sky_render_system.cpp" />
     <ClCompile Include="sources\system\sprite_render_system.cpp" />
     <ClCompile Include="sources\system\update_system_manager.cpp" />
-    <ClCompile Include="sources\system\transform_system.cpp" />
+    <ClCompile Include="sources\system\update_transform_system.cpp" />
     <ClCompile Include="sources\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaderes\bidirectional_reflectance_distribution_function.hlsli" />
     <None Include="shaderes\bloom.hlsli" />
+    <None Include="shaderes\camera_buffer.hlsli" />
+    <None Include="shaderes\filter_functions.hlsli" />
+    <None Include="shaderes\light_view_projection.hlsli" />
     <None Include="shaderes\physical_based_rendering.hlsli" />
+    <None Include="shaderes\shading_models.hlsli" />
     <None Include="shaderes\volumetric_cloud.hlsli" />
     <None Include="shaderes\deferred_rendering.hlsli" />
     <None Include="shaderes\forward_light.hlsli" />
@@ -355,6 +363,60 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\celestial_light_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\deferred_rendering_lighting_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\deferred_rendering_emissive_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\deferred_rendering_indirect_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\fast_approximate_anti_aliasing_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_instancing_shadow_caster_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_gbuffer_instancing_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_gbuffer_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_shadow_caster_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_diffuse_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>

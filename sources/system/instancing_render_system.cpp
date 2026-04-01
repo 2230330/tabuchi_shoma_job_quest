@@ -15,10 +15,9 @@ InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng, Rende
 
 void InstancingRenderSystem::Render()
 {
-    using namespace DirectX;
 
     // モデルごとにインスタンスをグループ化
-    std::unordered_map<GltfModel*, std::vector<XMFLOAT4X4>> model_to_worlds;
+    std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds;
 
     comp_mng_.ForEach<ComponentGltf>([&](uint32_t entity_id, ComponentGltf& gltf)
         {
@@ -48,7 +47,7 @@ void InstancingRenderSystem::Render()
 
         InstancingRenderSystem::InstanceBufferInfo& buf_info = instance_buffer_pool_[model];
 
-        const UINT required_size = sizeof(XMFLOAT4X4) * static_cast<UINT>(world_matrices.size());
+        const UINT required_size = sizeof(DirectX::XMFLOAT4X4) * static_cast<UINT>(world_matrices.size());
 
         // 必要に応じて再生成（足りないときだけ）
         if (!buf_info.buffer || buf_info.cepasity < world_matrices.size())
