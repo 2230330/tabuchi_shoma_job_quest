@@ -340,13 +340,10 @@
     <None Include="shaderes\gltf_model.hlsli" />
     <None Include="shaderes\gltf_model_gbuffer.hlsli" />
     <None Include="shaderes\image_based_lighting.hlsli" />
-<<<<<<< HEAD
-=======
     <None Include="shaderes\light.hlsli" />
     <None Include="shaderes\noise_functions.hlsli" />
     <None Include="shaderes\perlin_worley_noise.hlsli" />
     <None Include="shaderes\scene_constant_buffer.hlsli" />
->>>>>>> master
     <None Include="shaderes\shading_functions.hlsli" />
     <None Include="shaderes\skinned_mesh.hlsli" />
     <None Include="shaderes\sky_atmosphere.hlsli" />
