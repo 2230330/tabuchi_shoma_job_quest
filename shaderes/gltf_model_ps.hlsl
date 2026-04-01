@@ -63,136 +63,34 @@ SamplerState sampler_states[5] : register(s0);
 
 float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
 {
-<<<<<<< HEAD
-
-    const float GAMMA = 2.2;
-
-    const material_constants m = materials[material];
-    
-    //ベースカラーの取得
-    float4 basecolor_factor = m.pbr_metallic_roughness.basecolor_factor;
-    const int basecolor_texture = m.pbr_metallic_roughness.basecolor_texture.index;
-    if (basecolor_texture > -1)
-=======
+    // Load material
     material_constants m = materials[material];
-    
-    //ベースカラーを取得
+
+    // Base color / albedo
     float4 base_color = m.pbr_metallic_roughness.basecolor_factor;
     if (m.pbr_metallic_roughness.basecolor_texture.index > -1)
->>>>>>> master
     {
         float4 sampled = material_textures[BASECOLOR_TEXTURE].Sample(sampler_states[ANISOTROPIC], pin.texcoord);
-        //リニア空間へ
         sampled.rgb = pow(sampled.rgb, GammaFactor);
         base_color *= sampled;
     }
-<<<<<<< HEAD
-    
-    //透明度調整
-    clip(basecolor_factor.a - 0.01f);
 
-    //自己発光色を取得
-    float3 emmisive_factor = m.emissive_factor;
-    const int emissive_texture = m.emissive_texture.index;
-    if (emissive_texture > -1)
-=======
-    //自己発光色を取得
+    // alpha cutoff
+    clip(base_color.a - 0.01f);
+
+    // Emissive
     float3 emisive_color = m.emissive_factor;
     if (m.emissive_texture.index > -1)
->>>>>>> master
     {
         float3 emisive = material_textures[EMISSIVE_TEXTURE].Sample(sampler_states[ANISOTROPIC], pin.texcoord).rgb;
-        emisive.rgb = pow(emisive.rgb, GammaFactor);
-        emisive_color.rgb *= emisive.rgb;
-    }
-<<<<<<< HEAD
-
-    //金属質/粗さを取得
-    float roughness_factor = m.pbr_metallic_roughness.roughness_factor;
-    float metallic_factor = m.pbr_metallic_roughness.metallic_factor;
-    const int metallic_roughness_texture = m.pbr_metallic_roughness.metallic_roughness_texture.index;
-    if (metallic_roughness_texture > -1)
-    {
-        float4 sampled = material_textures[METALLIC_ROUGHNESS_TEXTURE].Sample(sampler_states[LINEAR], pin.texcoord);
-        roughness_factor *= sampled.g;
-        metallic_factor *= sampled.b;
+        emisive = pow(emisive, GammaFactor);
+        emisive_color *= emisive;
     }
 
-    //光の遮断値を取得
-    float occlusion_factor = 1.0;
-    const int occlusion_texture = m.occlusion_texture.index;
-    if (occlusion_texture > -1)
-    {
-        float4 sampled = material_textures[OCCLUSION_TEXTURE].Sample(sampler_states[LINEAR], pin.texcoord);
-        occlusion_factor *= sampled.r;
-    }
-    const float occlusion_strength = m.occlusion_texture.strength;
-
-    //垂直反射じのフレネル反射率
-    const float3 f0 = lerp(0.04f, basecolor_factor.rgb, metallic_factor);
-    const float3 f90 = 1.0;
-    const float alpha_roughness = roughness_factor * roughness_factor;
-    //入射光のうち拡散反射になる割合
-    const float3 c_diff = lerp(basecolor_factor.rgb, 0.0, metallic_factor);
-
-    const float3 P = pin.w_position.xyz;
-    const float3 V = normalize(camera_position.xyz - pin.w_position.xyz);
-
-=======
-    //法線/従法線/接戦
->>>>>>> master
-    float3 N = normalize(pin.w_normal.xyz);
-    float3 T = has_tangent ? normalize(pin.w_tangent.xyz) : float3(1, 0, 0);
-    float sigma = has_tangent ? pin.w_tangent.w : 1.0f;
-    T = normalize(T - N * dot(N, T));
-    float3 B = normalize(cross(N, T) * sigma);
-<<<<<<< HEAD
-
-    //背面描画の時はひっくり返す
-	// For a back-facing surface, the tangential basis vectors are negated.
-=======
-    //裏面描画の場合は反転しておく
->>>>>>> master
-    if (is_front_face == false)
-    {
-        T = -T;
-        B = -B;
-        N = -N;
-    }
-<<<<<<< HEAD
-
-
-    //法線マッピング
-    const int normal_texture = m.normal_texture.index;
-    if (normal_texture > -1)
-=======
-    //法線マッピング
-    if (m.normal_texture.index > -1)
->>>>>>> master
-    {
-        float4 sampled = material_textures[NORMAL_TEXTURE].Sample(sampler_states[LINEAR_WRAP], pin.texcoord);
-        float3 normal_factor = sampled.xyz;
-        normal_factor = (normal_factor * 2.0f) - 1.0f;
-        normal_factor = normalize(normal_factor * float3(m.normal_texture.scale, m.normal_texture.scale, 1.0f));
-        N = normalize((normal_factor.x * T) + (normal_factor.y * B) + (normal_factor.z * N));
-    }
-<<<<<<< HEAD
-
-    float3 diffuse = 0;
-    float3 specular = 0;
-
-	// Loop for shading process for each light
-    float3 L = normalize(-light_direction.xyz);
-    float3 Li = float3(1.0, 1.0, 1.0); // Radiance of the light
-    const float NoL = max(0.0, dot(N, L));
-    const float NoV = max(0.0, dot(N, V));
-    if (NoL > 0.0 || NoV > 0.0)
-=======
-    //金属質・粗さを取得
+    // Roughness / Metallic
     float roughness = m.pbr_metallic_roughness.roughness_factor;
     float metalness = m.pbr_metallic_roughness.metallic_factor;
     if (m.pbr_metallic_roughness.metallic_roughness_texture.index > -1)
->>>>>>> master
     {
         float4 sampled = material_textures[METALLIC_ROUGHNESS_TEXTURE].Sample(sampler_states[LINEAR_WRAP], pin.texcoord);
         roughness *= sampled.g;
@@ -200,8 +98,8 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
     }
     roughness = clamp(roughness + adjust_roughness, 0.0001f, 1.0f);
     metalness = clamp(metalness + adjust_metalness, 0.0f, 2.0f);
-    
-    //光の遮蔽値を取得
+
+    // Occlusion
     float occlusion_factor = 1.0f;
     if (m.occlusion_texture.index > -1)
     {
@@ -209,119 +107,113 @@ float4 main(VS_OUT pin, bool is_front_face : SV_IsFrontFace) : SV_TARGET
         occlusion_factor *= sampled.r;
     }
     const float occlusion_strength = m.occlusion_texture.strength;
-    //非金属部
+
+    // Albedo and reflectance
     float4 albedo = base_color;
-    //入射光のうち拡散反射になる割合
     float3 diffuse_reflectance = lerp(albedo.rgb, 0.0f, metalness);
-    //垂直反射時のフレネル反射率(非金属でも最低4％は鏡面反射する)
     float3 F0 = lerp(0.04f, albedo.rgb, metalness);
-    //視線ベクトル
-    //float3 V = normalize(pin.w_position.xyz - camera_position.xyz);
+
+    // View vector
     float3 V = normalize(camera_position.xyz - pin.w_position.xyz);
 
-    //直接光のシューディング
-    float3 total_diffuse = 0, total_specular = 0;
+    // Tangent space
+    float3 N = normalize(pin.w_normal.xyz);
+    float3 T = has_tangent ? normalize(pin.w_tangent.xyz) : float3(1, 0, 0);
+    float sigma = has_tangent ? pin.w_tangent.w : 1.0f;
+    T = normalize(T - N * dot(N, T));
+    float3 B = normalize(cross(N, T) * sigma);
+
+    if (is_front_face == false)
     {
-        //平行光源の処理
-        {
-            float3 diffuse = (float3) 0, specular = (float3) 0;
-            float3 L = normalize(directional_light.direction.xyz);
-            float3 LC = directional_light.color.rgb*directional_light.color.w;
-            DirectBRDF(diffuse_reflectance, F0, N, V, L, LC, roughness, diffuse, specular);
+        T = -T;
+        B = -B;
+        N = -N;
+    }
 
-            total_diffuse += diffuse;
-            total_specular += specular;
-        }
-        //点光源
-        for (int i = 0; i < 8; ++i)
-        {
-            if (i >= light_count.y)
-            {
-                break;
-            }
-            float3 L = pin.w_position.xyz - point_light[i].position.xyz;
-            float len = length(L);
-            if (len >= point_light[i].range)
-            {
-                continue;
-            }
-            float attenuateLength = saturate(1.0f - len / point_light[i].range);
-            float attenuation = attenuateLength * attenuateLength;
-            L /= len;
-            float3 LC = point_light[i].color.rgb *point_light[i].intensity;
-            
-            float3 diffuse = (float3) 0, specular = (float3) 0;
-            DirectBRDF(diffuse_reflectance, F0, N, V, L, LC * attenuation, roughness, diffuse, specular);
-            total_diffuse += diffuse;
-            total_specular += specular;
-        }
-        //スポットライト
-        for (int j = 0; j < 8; ++j)
-        {
-            if (j >= light_count.z)
-            {
-                break;
-            }
-            
-            float3 L = pin.w_position.xyz - spot_light[j].position.xyz;
-            float len = length(L);
-            if (len >= spot_light[j].range)
-            {
-                continue;
-            }
-            float attenuateLength = saturate(1.0f - len / spot_light[j].range);
-            float attenuation = attenuateLength * attenuateLength;
-            L /= len;
-            float3 spotDirection = normalize(spot_light[j].direction.xyz);
-            float angle = dot(spotDirection, L);
-            float area = spot_light[j].inner_corn - spot_light[j].outer_corn;
-            attenuation *= saturate(1.0f - (spot_light[j].inner_corn - angle) / area);
-            float3 LC = spot_light[j].color.rgb * spot_light[j].color.a;
-            
-            float3 diffuse = (float3) 0, specular = (float3) 0;
-            DirectBRDF(diffuse_reflectance, F0, N, V, L, LC * attenuation, roughness, diffuse, specular);
-            
-            total_diffuse += diffuse;
-            total_specular += specular;
-        }
-        
+    // Normal map
+    if (m.normal_texture.index > -1)
+    {
+        float4 sampled = material_textures[NORMAL_TEXTURE].Sample(sampler_states[LINEAR_WRAP], pin.texcoord);
+        float3 normal_factor = sampled.xyz;
+        normal_factor = (normal_factor * 2.0f) - 1.0f;
+        normal_factor = normalize(normal_factor * float3(m.normal_texture.scale, m.normal_texture.scale, 1.0f));
+        N = normalize((normal_factor.x * T) + (normal_factor.y * B) + (normal_factor.z * N));
+    }
 
-        // 視線（ピクセル→カメラ）※修正済みのVを使う
-        float3 R = reflect(-V, N); // 反射方向
+    // Lighting accumulation
+    float3 total_diffuse = 0;
+    float3 total_specular = 0;
 
-        // roughnessでmipを選ぶ（ざっくり）
-        // ※ cubemapにmipがある前提（prefilter済みが理想）
-        float mip = roughness * 8.0f; // 8.0f は mip段数に合わせて調整
+    // Directional light
+    {
+        float3 diffuse = (float3)0, specular = (float3)0;
+        float3 L = normalize(directional_light.direction.xyz);
+        float3 LC = directional_light.color.rgb * directional_light.color.w;
+        DirectBRDF(diffuse_reflectance, F0, N, V, L, LC, roughness, diffuse, specular);
+        total_diffuse += diffuse;
+        total_specular += specular;
+    }
 
+    // Point lights
+    for (int i = 0; i < 8; ++i)
+    {
+        if (i >= light_count.y) break;
+        float3 L = pin.w_position.xyz - point_light[i].position.xyz;
+        float len = length(L);
+        if (len >= point_light[i].range) continue;
+        float attenuateLength = saturate(1.0f - len / point_light[i].range);
+        float attenuation = attenuateLength * attenuateLength;
+        L /= len;
+        float3 LC = point_light[i].color.rgb * point_light[i].intensity;
+        float3 diffuse = (float3)0, specular = (float3)0;
+        DirectBRDF(diffuse_reflectance, F0, N, V, L, LC * attenuation, roughness, diffuse, specular);
+        total_diffuse += diffuse;
+        total_specular += specular;
+    }
+
+    // Spot lights
+    for (int j = 0; j < 8; ++j)
+    {
+        if (j >= light_count.z) break;
+        float3 L = pin.w_position.xyz - spot_light[j].position.xyz;
+        float len = length(L);
+        if (len >= spot_light[j].range) continue;
+        float attenuateLength = saturate(1.0f - len / spot_light[j].range);
+        float attenuation = attenuateLength * attenuateLength;
+        L /= len;
+        float3 spotDirection = normalize(spot_light[j].direction.xyz);
+        float angle = dot(spotDirection, L);
+        float area = spot_light[j].inner_corn - spot_light[j].outer_corn;
+        attenuation *= saturate(1.0f - (spot_light[j].inner_corn - angle) / area);
+        float3 LC = spot_light[j].color.rgb * spot_light[j].color.a;
+        float3 diffuse = (float3)0, specular = (float3)0;
+        DirectBRDF(diffuse_reflectance, F0, N, V, L, LC * attenuation, roughness, diffuse, specular);
+        total_diffuse += diffuse;
+        total_specular += specular;
+    }
+
+    // Image-based lighting (environment)
+    {
+        float3 R = reflect(-V, N);
+        float mip = roughness * 8.0f;
         float3 env = cubemap_texture.SampleLevel(sampler_states[LINEAR_WRAP], R, mip).rgb;
-
-        // Fresnel（角度依存で反射が強くなる）
         float NdotV = saturate(dot(N, V));
         float3 F = CalcFresnel(F0, NdotV);
-
-        // 金属は強く反射、非金属は弱く（それっぽく）
         float reflect_strength = lerp(0.04f, 1.0f, metalness);
-
-        // 反射をspecularへ加算
         total_specular += env * F * reflect_strength;
-
     }
-    
 
-    
-    //遮蔽処理
+    // Apply occlusion
     total_diffuse = lerp(total_diffuse, total_diffuse * occlusion_factor, occlusion_strength);
     total_specular = lerp(total_specular, total_specular * occlusion_factor, occlusion_strength);
-    
-    float3 ambient = ambient_color.rgb*ambient_color.a;
+
+    float3 ambient = ambient_color.rgb * ambient_color.a;
     ambient *= diffuse_reflectance;
     ambient *= lerp(1.0f, occlusion_factor, occlusion_strength);
-    
-    //色生成
-    float3 color = total_diffuse + total_specular + (emisive_color)+ambient;
-    
-    
-    //sRGB空間へ
+
+    float3 color = total_diffuse + total_specular + emisive_color + ambient;
+
+    // Convert to sRGB
     color.rgb = pow(color.rgb, 1.0f / GammaFactor);
     return float4(color, base_color.a);
 }
