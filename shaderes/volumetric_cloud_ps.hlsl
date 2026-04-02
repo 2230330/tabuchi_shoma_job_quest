@@ -35,6 +35,9 @@ Texture3D<float3> high_frequency_worley_texture : register(t1);
 Texture2D<float3> weather_texture : register(t2);
 Texture2D<float3> curl_noise_texture : register(t3);
 Texture2D<float3> sky_color_texture : register(t4);
+Texture2D<float> gradient_cumulonimbus_texture : register(t5);
+Texture2D<float> gradient_cumulus_texture : register(t6);
+Texture2D<float> gradient_stratus_texture : register(t7);
 
 static const float time_offset = 10000.0;
 float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
@@ -101,6 +104,7 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 {
     float density_gradient = 0.0;
 
+    #if 0
     // height_fraction に基づいて、stratus、stratocumulus、cumulus の各雲タイプの密度勾配をブレンドする
     const float4 stratus_gradient = float4(0.02f, 0.05f, 0.09f, 0.11f);
     const float4 stratocumulus_gradient = float4(0.02f, 0.2f, 0.48f, 0.625f);
@@ -112,6 +116,37 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 
     float4 cloud_gradient = stratus_gradient * stratus + stratocumulus_gradient * stratocumulus + cumulus_gradient * cumulus;
     density_gradient = smoothstep(cloud_gradient.x, cloud_gradient.y, height_fraction) - smoothstep(cloud_gradient.z, cloud_gradient.w, height_fraction);
+    #else
+    const float stratus_threshold = 0.1;
+    const float stratocumulus_threshold = 0.9;
+	//const float cumulus_threshold = 1.0;
+
+    int type = 2;
+    // cloud type: {0: stratus, 1: cumulus, 2: cumulonimbus}
+    if (cloud_type < stratus_threshold)
+    {
+        type = 0;
+    }
+    else if (cloud_type < stratocumulus_threshold)
+    {
+        type = 1;
+    }
+	
+	
+	// sample from gradient texture
+    if (type == 0) // stratus clouds
+    {
+        density_gradient = gradient_stratus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    else if (type == 1) // cumulus clouds
+    {
+        density_gradient = gradient_cumulus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    else if (type == 2)// cumulunimbusclouds
+    {
+        density_gradient = gradient_cumulonimbus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    #endif
     return density_gradient;
 
 }
@@ -454,7 +489,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             //天候データ
             float3 weather_data = SampleWeatherData(sample_point.xz);
             //LOD調整
-            float detail_lod = smoothstep(0.0, 2.0, horizon_soft);
+            float detail_lod = smoothstep(0.0, 1.0, horizon_soft);
             //雲密度サンプリング
             float sampled_density = 
             SampleCloudDensity(

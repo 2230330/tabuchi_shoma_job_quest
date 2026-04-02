@@ -71,6 +71,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_worley_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>curl_noise_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>gradient_cumulonimbus_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>gradient_cumulus_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>gradient_stratus_srv_ = nullptr;
 
     //’áŽü”gƒmƒCƒY
     const int low_freq_perlin_worley_dimensions{ 256 };
