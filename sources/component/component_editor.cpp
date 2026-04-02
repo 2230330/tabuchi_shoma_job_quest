@@ -248,7 +248,10 @@ void ComponentEditor::DrawImgui()
                         ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.5f);
                         ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.0f, 0.8f);
                         ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 10.0f);
-                        ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
+                        //ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
+                        static int cloud_type = 0;
+                        ImGui::SliderInt("Cloud Type", &cloud_type, 0, 3);
+                        c.cloud_type_scale = static_cast<float>(cloud_type);
 
                         ImGui::Separator();
 

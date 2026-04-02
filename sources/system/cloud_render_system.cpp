@@ -69,6 +69,12 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
         weather_map_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, weather_noise_tex_path);
         const wchar_t* curl_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\curl_noise.png";
         curl_noise_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, curl_noise_tex_path);
+        const wchar_t* gradient_cumulonimbus_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\gradient_cumulonimbus.png";
+        gradient_cumulonimbus_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, gradient_cumulonimbus_tex_path);
+        const wchar_t* gradient_cumulus_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\gradient_cumulus.png";
+        gradient_cumulus_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, gradient_cumulus_tex_path);
+        const wchar_t* gradient_stratus_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\gradient_stratus.png";
+        gradient_stratus_srv_ = ResourceManager::Instance().LoadTextureFromFile(device, gradient_stratus_tex_path);
     }
 
     // InputLayoutとシェーダーの読み込み（仮）
@@ -128,6 +134,9 @@ void CloudRenderSystem::Render()
                 weather_map_srv_.Get(),
                 curl_noise_srv_.Get(),
                 sky_color_srv_.Get(),
+                gradient_cumulonimbus_srv_.Get(),
+                gradient_cumulus_srv_.Get(),
+                gradient_stratus_srv_.Get(),
             };
             //Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
             // 描画呼び出し
