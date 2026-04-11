@@ -6,6 +6,11 @@
 #include"../fullscreen_quad.h"
 #include"../framebuffer.h"
 
+//ボリュームクラウドの描画システム
+//このシステムは、ComponentVolumetricCloudを持つエンティティが存在する場合に、
+// フルスクリーンクワッドを使用してボリュームクラウドを描画します。
+//シェーダーはshaderers/volumetric_cloud_ps.csoを使用
+//レイマーチングを使用して、空に雲を描画します。
 class CloudRenderSystem :public IRenderSystem
 {
 public:
@@ -76,11 +81,11 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>gradient_stratus_srv_ = nullptr;
 
     //低周波ノイズ
-    const int low_freq_perlin_worley_dimensions{ 256 };
-    const int low_freq_perlin_worley_numthreads{ 8 };
+    const int low_freq_perlin_worley_dimensions_{ 256 };
+    const int low_freq_perlin_worley_numthreads_{ 8 };
     //高周波ノイズ
-    const int high_freq_worley_dimensions{ 64 };
-    const int high_freq_worley_numthreads{ 8 };
+    const int high_freq_worley_dimensions_{ 64 };
+    const int high_freq_worley_numthreads_{ 8 };
 
 
     struct CurlParams
@@ -104,6 +109,6 @@ private:
     //シャドウマップ用
     const int SHADOW_RES = 512;
     std::unique_ptr<FrameBuffer>shadow_map_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps_ = nullptr;
 
 };

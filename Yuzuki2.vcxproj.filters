@@ -36,20 +36,8 @@
     <Filter Include="sources\system">
       <UniqueIdentifier>{13f7a2e9-de57-44f9-bb95-3d216872c9b0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="headers\archetype">
-      <UniqueIdentifier>{b28aada2-aba1-4ff8-b565-fdf65b0be3ff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\archetype">
-      <UniqueIdentifier>{49c7d7cc-5d78-45ae-8990-ce7f69f7e44b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="headers\world">
       <UniqueIdentifier>{d26189f7-d26c-409f-af8d-699f178fdd97}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="headers\importer">
-      <UniqueIdentifier>{7bd56912-3e5f-400f-a7ff-0d7b1468f26f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\importer">
-      <UniqueIdentifier>{95523fd2-6d91-4743-a442-8d2f33d258c3}</UniqueIdentifier>
     </Filter>
     <Filter Include="headers\post_process">
       <UniqueIdentifier>{d00e35c1-ff1d-41a3-91cc-32f47bf06ffc}</UniqueIdentifier>
@@ -212,12 +200,6 @@
     <ClInclude Include="headers\system\i_render_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\archetype\archetype.h">
-      <Filter>headers\archetype</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\archetype\archetype_manager.h">
-      <Filter>headers\archetype</Filter>
-    </ClInclude>
     <ClInclude Include="headers\entity\entity_record.h">
       <Filter>headers\entity</Filter>
     </ClInclude>
@@ -232,12 +214,6 @@
     </ClInclude>
     <ClInclude Include="headers\component\component_texture.h">
       <Filter>headers\component</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\importer\gltf_importer.h">
-      <Filter>headers\importer</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\importer\i_importer.h">
-      <Filter>headers\importer</Filter>
     </ClInclude>
     <ClInclude Include="headers\component\component_primitive.h">
       <Filter>headers\component</Filter>
@@ -382,15 +358,6 @@
     <ClCompile Include="sources\system\render_system_manager.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
-    <ClCompile Include="sources\archetype\archetype.cpp">
-      <Filter>sources\archetype</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\archetype\archetype_manager.cpp">
-      <Filter>sources\archetype</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\importer\gltf_importer.cpp">
-      <Filter>sources\importer</Filter>
-    </ClCompile>
     <ClCompile Include="sources\post_process\bloom.cpp">
       <Filter>sources\post_process</Filter>
     </ClCompile>
@@ -501,10 +468,6 @@
     <None Include="shaderes\sky_atmosphere.hlsli">
       <Filter>Shaders\Header</Filter>
     </None>
-<<<<<<< HEAD
-    <None Include="shaderes\shading_functions.hlsli">
-      <Filter>Shaders</Filter>
-=======
     <None Include="shaderes\shading_models.hlsli">
       <Filter>Shaders\Header</Filter>
     </None>
@@ -516,7 +479,6 @@
     </None>
     <None Include="shaderes\camera_buffer.hlsli">
       <Filter>Shaders\Header</Filter>
->>>>>>> master
     </None>
   </ItemGroup>
   <ItemGroup>

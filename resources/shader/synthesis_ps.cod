@@ -33,7 +33,7 @@ dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
-dcl_temps 2
+dcl_temps 3
 //
 // Initial variable locations:
 //   v0.x <- position.x; v0.y <- position.y; v0.z <- position.z; v0.w <- position.w; 
@@ -41,42 +41,49 @@ dcl_temps 2
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
 #line 15 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\synthesis_ps.hlsl"
-itof r0.xyz, l(0, 0, 0, 0)  // r0.x <- sampled_color.x; r0.y <- sampled_color.y; r0.z <- sampled_color.z
+itof r0.xyzw, l(0, 0, 0, 0)  // r0.x <- sampled_color.x; r0.y <- sampled_color.y; r0.z <- sampled_color.z; r0.w <- sampled_color.w
 
 #line 16
-itof r0.w, l(0)  // r0.w <- total_weight
-
-#line 22
-mov r1.x, l(1.000000)
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
+itof r1.x, l(0)  // r1.x <- total_alpha
 
 #line 23
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t0.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
+mov r1.y, l(1.000000)
+div r1.y, l(1.000000), r1.y  // r1.y <- weight
 
 #line 24
-add r0.w, r0.w, r1.x
+sample_indexable(texture2d)(float,float,float,float) r2.xyzw, v1.xyxx, t0.xyzw, s3
+mul r2.xyzw, r1.yyyy, r2.xyzw
+add r0.xyzw, r0.xyzw, r2.xyzw
 
-#line 22
-mov r1.x, l(1.000000)
-mov r1.y, l(2.000000)
-mul r1.x, r1.y, r1.x
-div r1.x, l(1.000000), r1.x  // r1.x <- weight
+#line 25
+add r1.x, r0.w, r1.x
 
 #line 23
-sample_indexable(texture2d)(float,float,float,float) r1.yzw, v1.xyxx, t1.wxyz, s3
-mul r1.yzw, r1.xxxx, r1.yyzw
-add r0.xyz, r0.xyzx, r1.yzwy
+mov r1.y, l(1.000000)
+mov r1.z, l(2.000000)
+mul r1.y, r1.z, r1.y
+div r1.y, l(1.000000), r1.y  // r1.y <- weight
 
 #line 24
-add r0.w, r0.w, r1.x
+sample_indexable(texture2d)(float,float,float,float) r2.xyzw, v1.xyxx, t1.xyzw, s3
+mul r2.xyzw, r1.yyyy, r2.xyzw
+add r0.xyzw, r0.xyzw, r2.xyzw
 
-#line 27
-div r0.xyz, r0.xyzx, r0.wwww
+#line 25
+add r0.w, r0.w, r1.x  // r0.w <- total_alpha
 
-#line 29
+#line 31
+lt r1.x, l(1.000000), r0.w
+if_nz r1.x
+
+#line 33
+  mov r0.w, l(1.000000)
+
+#line 34
+endif 
+
+#line 36
 mov o0.xyz, r0.xyzx
-mov o0.w, l(1.000000)
+mov o0.w, r0.w
 ret 
-// Approximately 20 instruction slots used
+// Approximately 23 instruction slots used

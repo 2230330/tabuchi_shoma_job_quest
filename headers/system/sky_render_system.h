@@ -7,6 +7,11 @@
 #include"../fullscreen_quad.h"
 #include"../framebuffer.h"
 
+//スカイの描画システム
+//このシステムは、ComponentSkyAtmosphereを持つエンティティが存在する場合に、
+//スカイを描画します。
+//シェーダーはshaderers/sky_atmosphere_ps.csoを使用
+//レイマーチングを使用して、空に大気散乱を描画します。
 class SkyRenderSystem:public IRenderSystem
 {
 public:

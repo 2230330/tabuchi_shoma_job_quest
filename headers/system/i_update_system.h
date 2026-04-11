@@ -1,5 +1,6 @@
 #pragma once
 
+//更新システムのインターフェース
 class IUpdateSystem
 {
 public :

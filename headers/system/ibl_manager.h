@@ -8,6 +8,7 @@
 
 //IBLマネージャ
 //生成　diffuse,specular,lut,sky_cube
+//オブジェクト描画前に、IBLリソースをバインドする関数
 class IBLManager {
 public:
     void Initialize(ID3D11Device* dev);

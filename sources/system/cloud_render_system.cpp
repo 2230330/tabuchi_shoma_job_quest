@@ -50,7 +50,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
     //ノイズテクスチャの読み込み
     {
         //コンピュートシェーダーで使うノイズテクスチャの作成
-        //CreateNoiseTextures(device);
+        CreateNoiseTextures(device);
 
         HRESULT hr{ S_OK };
         
@@ -86,7 +86,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
     //シェーダーの設定
     cloud_ps_ = 
         ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\volumetric_cloud_ps.cso");
-    cloud_screen_shadow_ps = 
+    cloud_screen_shadow_ps_ = 
         ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\cloud_screen_shadow_ps.cso");
 
     //フルスクリーンクワッドの作成
@@ -146,7 +146,7 @@ void CloudRenderSystem::Render()
             shadow_map_->Activate(context,FrameBuffer::usage::color);
             //影描画様に雲の位置を書き出す
             {
-                fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_screen_shadow_ps.Get());
+                fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_screen_shadow_ps_.Get());
             }
             shadow_map_->Deactivate(context);
 
@@ -167,163 +167,163 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
 
     context->Flush();
     //低周波ノイズテクスチャ
-    //const wchar_t* low_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley.dds";
-    //{
-    //    // 3Dテクスチャ作成（MipMap対応）
-    //    Microsoft::WRL::ComPtr<ID3D11Texture3D> low_freq_tex;
-    //    D3D11_TEXTURE3D_DESC desc{};
-    //    desc.Width = low_freq_perlin_worley_dimensions;
-    //    desc.Height = low_freq_perlin_worley_dimensions;
-    //    desc.Depth = low_freq_perlin_worley_dimensions;
-    //    desc.MipLevels = 0; // 自動生成
-    //    desc.Format = format;
-    //    desc.Usage = D3D11_USAGE_DEFAULT;
-    //    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
-    //    desc.CPUAccessFlags = 0;
-    //    desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // MipMap生成可能に
-    //    hr = device->CreateTexture3D(&desc, nullptr, low_freq_tex.GetAddressOf());
-    //    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+    const wchar_t* low_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley.dds";
+    {
+        // 3Dテクスチャ作成（MipMap対応）
+        Microsoft::WRL::ComPtr<ID3D11Texture3D> low_freq_tex;
+        D3D11_TEXTURE3D_DESC desc{};
+        desc.Width = low_freq_perlin_worley_dimensions_;
+        desc.Height = low_freq_perlin_worley_dimensions_;
+        desc.Depth = low_freq_perlin_worley_dimensions_;
+        desc.MipLevels = 0; // 自動生成
+        desc.Format = format;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
+        desc.CPUAccessFlags = 0;
+        desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // MipMap生成可能に
+        hr = device->CreateTexture3D(&desc, nullptr, low_freq_tex.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-    //    // SRV作成（MipMap対応）
-    //    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> low_freq_srv;
-    //    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    //    srvDesc.Format = desc.Format;
-    //    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-    //    srvDesc.Texture3D.MipLevels = -1; // 全MipMap使用
-    //    srvDesc.Texture3D.MostDetailedMip = 0;
-    //    hr = device->CreateShaderResourceView(low_freq_tex.Get(), &srvDesc, low_freq_srv.GetAddressOf());
-    //    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        // SRV作成（MipMap対応）
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> low_freq_srv;
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+        srvDesc.Format = desc.Format;
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+        srvDesc.Texture3D.MipLevels = -1; // 全MipMap使用
+        srvDesc.Texture3D.MostDetailedMip = 0;
+        hr = device->CreateShaderResourceView(low_freq_tex.Get(), &srvDesc, low_freq_srv.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-    //    // UAV作成
-    //    Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> low_freq_uav;
-    //    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
-    //    uavDesc.Format = desc.Format;
-    //    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-    //    uavDesc.Texture3D.MipSlice = 0;
-    //    uavDesc.Texture3D.FirstWSlice = 0;
-    //    uavDesc.Texture3D.WSize = -1;
-    //    hr = device->CreateUnorderedAccessView(low_freq_tex.Get(), &uavDesc, low_freq_uav.GetAddressOf());
-    //    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        // UAV作成
+        Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> low_freq_uav;
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+        uavDesc.Format = desc.Format;
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+        uavDesc.Texture3D.MipSlice = 0;
+        uavDesc.Texture3D.FirstWSlice = 0;
+        uavDesc.Texture3D.WSize = -1;
+        hr = device->CreateUnorderedAccessView(low_freq_tex.Get(), &uavDesc, low_freq_uav.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-    //    // コンピュートシェーダーでノイズ生成
-    //    auto cs = ResourceManager::Instance().LoadComputeShader(device, L".\\resources\\shader\\low_freq_perlin_worley_cs.cso");
-    //    context->CSSetUnorderedAccessViews(0, 1, low_freq_uav.GetAddressOf(), nullptr);
-    //    context->CSSetShader(cs.Get(), nullptr, 0);
-    //    UINT threadGroupCount = (low_freq_perlin_worley_dimensions + low_freq_perlin_worley_numthreads - 1) / low_freq_perlin_worley_numthreads;
-    //    context->Dispatch(threadGroupCount, threadGroupCount, threadGroupCount);
-    //    // UAV解除
-    //    ID3D11UnorderedAccessView* nullUAV = nullptr;
-    //    context->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
-    //    context->CSSetShader(nullptr, nullptr, 0);
+        // コンピュートシェーダーでノイズ生成
+        auto cs = ResourceManager::Instance().LoadComputeShader(device, L".\\resources\\shader\\low_freq_perlin_worley_cs.cso");
+        context->CSSetUnorderedAccessViews(0, 1, low_freq_uav.GetAddressOf(), nullptr);
+        context->CSSetShader(cs.Get(), nullptr, 0);
+        UINT threadGroupCount = (low_freq_perlin_worley_dimensions_ + low_freq_perlin_worley_numthreads_ - 1) / low_freq_perlin_worley_numthreads_;
+        context->Dispatch(threadGroupCount, threadGroupCount, threadGroupCount);
+        // UAV解除
+        ID3D11UnorderedAccessView* nullUAV = nullptr;
+        context->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
+        context->CSSetShader(nullptr, nullptr, 0);
 
-    //    // MipMap生成
-    //    context->GenerateMips(low_freq_srv.Get());
+        // MipMap生成
+        context->GenerateMips(low_freq_srv.Get());
 
 
-    //    // GPU完了待ち（同期）
-    //    D3D11_QUERY_DESC queryDesc{};
-    //    queryDesc.Query = D3D11_QUERY_EVENT;
-    //    Microsoft::WRL::ComPtr<ID3D11Query> query;
-    //    device->CreateQuery(&queryDesc, &query);
-    //    context->End(query.Get());
-    //    while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
+        // GPU完了待ち（同期）
+        D3D11_QUERY_DESC queryDesc{};
+        queryDesc.Query = D3D11_QUERY_EVENT;
+        Microsoft::WRL::ComPtr<ID3D11Query> query;
+        device->CreateQuery(&queryDesc, &query);
+        context->End(query.Get());
+        while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
 
-    //    // DDS保存
-    //    DirectX::ScratchImage image;
-    //    hr = DirectX::CaptureTexture(device, context, low_freq_tex.Get(), image);
-          //if (FAILED(hr))
-          //{
-          //    HRTrace(hr); // ログだけ出す
-          //    return;
-          //}
-    //    hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(),
-    //        DirectX::DDS_FLAGS_NONE, low_freq_noise_tex_path);
-          //if (FAILED(hr))
-          //{
-          //    HRTrace(hr); // ログだけ出す
-          //    return;
-          //}
-    //}
+        // DDS保存
+        DirectX::ScratchImage image;
+        hr = DirectX::CaptureTexture(device, context, low_freq_tex.Get(), image);
+          if (FAILED(hr))
+          {
+              HRTrace(hr); // ログだけ出す
+              return;
+          }
+        hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(),
+            DirectX::DDS_FLAGS_NONE, low_freq_noise_tex_path);
+          if (FAILED(hr))
+          {
+              HRTrace(hr); // ログだけ出す
+              return;
+          }
+    }
     context->Flush();
 
-    //高周波ノイズテクスチャの生成
+    ////高周波ノイズテクスチャの生成
     const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
     {
-        ////空のテクスチャを作成
-        //Microsoft::WRL::ComPtr<ID3D11Texture3D> high_freq_worley_texture3d;
-        //D3D11_TEXTURE3D_DESC texture3d_desc{};
-        //texture3d_desc.Width = high_freq_worley_dimensions;
-        //texture3d_desc.Height = high_freq_worley_dimensions;
-        //texture3d_desc.Depth = high_freq_worley_dimensions;
-        //texture3d_desc.MipLevels = 1;
-        //texture3d_desc.MiscFlags = 0;
-        //texture3d_desc.Format = format;
-        //texture3d_desc.Usage = D3D11_USAGE_DEFAULT;
-        //texture3d_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
-        //texture3d_desc.CPUAccessFlags = 0;
-        //hr = device->CreateTexture3D(&texture3d_desc, NULL, high_freq_worley_texture3d.GetAddressOf());
-        //_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        ////シェーダーリソースビューを作成
-        //Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> high_freq_worley_srv;
-        //D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
-        //srv_desc.Format = texture3d_desc.Format;
-        //srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-        //srv_desc.Texture3D.MipLevels = 1;
-        //srv_desc.Texture3D.MostDetailedMip = 0;
-        //hr = device->CreateShaderResourceView(
-        //    high_freq_worley_texture3d.Get(), &srv_desc, high_freq_worley_srv.GetAddressOf());
-        //_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        ////アンオーダードアクセスビューを作成
-        //Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>high_freq_worley_unordered_access_view;
-        //D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_view_desc = {};
-        //unordered_access_view_desc.Format = texture3d_desc.Format;
-        //unordered_access_view_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-        //unordered_access_view_desc.Texture3D.MipSlice = 0;
-        //unordered_access_view_desc.Texture3D.FirstWSlice = 0;
-        //unordered_access_view_desc.Texture3D.WSize = -1;
-        //hr = device->CreateUnorderedAccessView(high_freq_worley_texture3d.Get(), &unordered_access_view_desc, high_freq_worley_unordered_access_view.GetAddressOf());   
-        //_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        ////コンピュートシェーダで3Dテクスチャ内部にノイズを書き込む
-        //Microsoft::WRL::ComPtr<ID3D11ComputeShader> high_freq_worley_cs;
-        //high_freq_worley_cs = ResourceManager::Instance().LoadComputeShader(
-        //    device, L"./resources/shader/high_freq_worley_cs.cso"
-        //);
-        //context->CSSetUnorderedAccessViews(0, 1, high_freq_worley_unordered_access_view.GetAddressOf(), nullptr);
-        //context->CSSetShader(high_freq_worley_cs.Get(), nullptr, 0);
-        //UINT thread_group_count =
-        //    (high_freq_worley_dimensions + high_freq_worley_numthreads - 1)/ high_freq_worley_numthreads;
-        //context->Dispatch(thread_group_count, thread_group_count, thread_group_count);
+        //空のテクスチャを作成
+        Microsoft::WRL::ComPtr<ID3D11Texture3D> high_freq_worley_texture3d;
+        D3D11_TEXTURE3D_DESC texture3d_desc{};
+        texture3d_desc.Width = high_freq_worley_dimensions_;
+        texture3d_desc.Height = high_freq_worley_dimensions_;
+        texture3d_desc.Depth = high_freq_worley_dimensions_;
+        texture3d_desc.MipLevels = 1;
+        texture3d_desc.MiscFlags = 0;
+        texture3d_desc.Format = format;
+        texture3d_desc.Usage = D3D11_USAGE_DEFAULT;
+        texture3d_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
+        texture3d_desc.CPUAccessFlags = 0;
+        hr = device->CreateTexture3D(&texture3d_desc, NULL, high_freq_worley_texture3d.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        //シェーダーリソースビューを作成
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> high_freq_worley_srv;
+        D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+        srv_desc.Format = texture3d_desc.Format;
+        srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+        srv_desc.Texture3D.MipLevels = 1;
+        srv_desc.Texture3D.MostDetailedMip = 0;
+        hr = device->CreateShaderResourceView(
+            high_freq_worley_texture3d.Get(), &srv_desc, high_freq_worley_srv.GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        //アンオーダードアクセスビューを作成
+        Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>high_freq_worley_unordered_access_view;
+        D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_view_desc = {};
+        unordered_access_view_desc.Format = texture3d_desc.Format;
+        unordered_access_view_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+        unordered_access_view_desc.Texture3D.MipSlice = 0;
+        unordered_access_view_desc.Texture3D.FirstWSlice = 0;
+        unordered_access_view_desc.Texture3D.WSize = -1;
+        hr = device->CreateUnorderedAccessView(high_freq_worley_texture3d.Get(), &unordered_access_view_desc, high_freq_worley_unordered_access_view.GetAddressOf());   
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        //コンピュートシェーダで3Dテクスチャ内部にノイズを書き込む
+        Microsoft::WRL::ComPtr<ID3D11ComputeShader> high_freq_worley_cs;
+        high_freq_worley_cs = ResourceManager::Instance().LoadComputeShader(
+            device, L"./resources/shader/high_freq_worley_cs.cso"
+        );
+        context->CSSetUnorderedAccessViews(0, 1, high_freq_worley_unordered_access_view.GetAddressOf(), nullptr);
+        context->CSSetShader(high_freq_worley_cs.Get(), nullptr, 0);
+        UINT thread_group_count =
+            (high_freq_worley_dimensions_ + high_freq_worley_numthreads_ - 1)/ high_freq_worley_numthreads_;
+        context->Dispatch(thread_group_count, thread_group_count, thread_group_count);
 
-        //ID3D11UnorderedAccessView* null_unordered_access_view = nullptr;
-        //context->CSSetUnorderedAccessViews(0, 1, &null_unordered_access_view,nullptr);
-        //context->CSSetShader(nullptr, nullptr,0);
-        ////みっぷマップを自動生成
-        ////context->GenerateMips(high_freq_worley_srv.Get());
-        //
-        ////GPU命令をキック
-        //// GPU完了待ち（同期）
-        //D3D11_QUERY_DESC queryDesc{};
-        //queryDesc.Query = D3D11_QUERY_EVENT;
-        //Microsoft::WRL::ComPtr<ID3D11Query> query;
-        //device->CreateQuery(&queryDesc, &query);
-        //context->End(query.Get());
-        //while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
+        ID3D11UnorderedAccessView* null_unordered_access_view = nullptr;
+        context->CSSetUnorderedAccessViews(0, 1, &null_unordered_access_view,nullptr);
+        context->CSSetShader(nullptr, nullptr,0);
+        //みっぷマップを自動生成
+        //context->GenerateMips(high_freq_worley_srv.Get());
+        
+        //GPU命令をキック
+        // GPU完了待ち（同期）
+        D3D11_QUERY_DESC queryDesc{};
+        queryDesc.Query = D3D11_QUERY_EVENT;
+        Microsoft::WRL::ComPtr<ID3D11Query> query;
+        device->CreateQuery(&queryDesc, &query);
+        context->End(query.Get());
+        while (S_OK != context->GetData(query.Get(), nullptr, 0, 0)) { Sleep(1); }
 
-        ////DDSファイルとして書き出し
-        //DirectX::ScratchImage image;
-        //hr = DirectX::CaptureTexture(device, context, high_freq_worley_texture3d.Get(), image);
-        //if (FAILED(hr))
-        //{
-        //    HRTrace(hr); // ログだけ出す
-        //    return;
-        //}        hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(),
-        //    DirectX::DDS_FLAGS_NONE, high_freq_noise_tex_path);
-        //if (FAILED(hr))
-        //{
-        //    HRTrace(hr); // ログだけ出す
-        //    return;
-        //}
-        //
+        //DDSファイルとして書き出し
+        DirectX::ScratchImage image;
+        hr = DirectX::CaptureTexture(device, context, high_freq_worley_texture3d.Get(), image);
+        if (FAILED(hr))
+        {
+            HRTrace(hr); // ログだけ出す
+            return;
+        }        hr = DirectX::SaveToDDSFile(image.GetImages(), image.GetImageCount(), image.GetMetadata(),
+            DirectX::DDS_FLAGS_NONE, high_freq_noise_tex_path);
+        if (FAILED(hr))
+        {
+            HRTrace(hr); // ログだけ出す
+            return;
+        }
+        
     }
 
     // 命令キック

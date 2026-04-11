@@ -15,7 +15,15 @@
 #include"../deferred_g_buffer.h"
 #include"../light_manager.h"
 #include"camera_set_constants.h"
-//コンポーネントを回すためのクラス
+#include"../post_process/post_process_manager.h"
+
+//描画システムを管理するクラス
+//描画システムは、背景、オブジェクト、UIなどの描画を担当する複数のシステムで構成されます。
+//このクラスは、これらのシステムを管理し、必要に応じて更新や描画を行います。
+//将来的には、描画システムの追加や削除、描画順序の管理などもこのクラスで行う予定です。
+//現在は、背景用の描画システムとオブジェクト用の描画システムを管理しています。
+//背景用の描画システムは、スカイレンダリングとクラウドレンダリングの2つで構成されており、
+//オブジェクト用の描画システムは、デファードレンダリングの1つで構成されています。
 class RenderSystemManager {
 public:
     RenderSystemManager(ComponentManager& comp_mng);
@@ -71,4 +79,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D11PixelShader> celestial_light_ps_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> light_shafts_ps_;
+
+    //ポストエフェクトを管理しているマネージャ  
+    std::unique_ptr<PostProcessManager> post_process_manager_;
 };

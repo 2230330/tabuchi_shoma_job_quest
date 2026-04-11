@@ -210,8 +210,6 @@
     <ClInclude Include="external\imgui\imstb_rectpack.h" />
     <ClInclude Include="external\imgui\imstb_textedit.h" />
     <ClInclude Include="external\imgui\imstb_truetype.h" />
-    <ClInclude Include="headers\archetype\archetype.h" />
-    <ClInclude Include="headers\archetype\archetype_manager.h" />
     <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
     <ClInclude Include="headers\component\component_camera.h" />
@@ -243,8 +241,6 @@
     <ClInclude Include="headers\gltf_model.h" />
     <ClInclude Include="headers\graphics.h" />
     <ClInclude Include="headers\high_resolution_timer.h" />
-    <ClInclude Include="headers\importer\gltf_importer.h" />
-    <ClInclude Include="headers\importer\i_importer.h" />
     <ClInclude Include="headers\light_manager.h" />
     <ClInclude Include="headers\misc.h" />
     <ClInclude Include="headers\model.h" />
@@ -283,8 +279,6 @@
     <ClCompile Include="external\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="external\imgui\imgui_ja_gryph_ranges.cpp" />
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="sources\archetype\archetype.cpp" />
-    <ClCompile Include="sources\archetype\archetype_manager.cpp" />
     <ClCompile Include="sources\camera.cpp" />
     <ClCompile Include="sources\component\component_editor.cpp" />
     <ClCompile Include="sources\deferred_g_buffer.cpp" />
@@ -295,7 +289,6 @@
     <ClCompile Include="sources\geometric_primitive.cpp" />
     <ClCompile Include="sources\gltf_model.cpp" />
     <ClCompile Include="sources\graphics.cpp" />
-    <ClCompile Include="sources\importer\gltf_importer.cpp" />
     <ClCompile Include="sources\light_manager.cpp" />
     <ClCompile Include="sources\main.cpp" />
     <ClCompile Include="sources\post_process\bloom.cpp" />

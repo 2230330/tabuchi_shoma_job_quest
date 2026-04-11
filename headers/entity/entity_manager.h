@@ -1,5 +1,6 @@
 #pragma once
 #include<vector>
+#include<unordered_map>
 
 #include"entity.h"
 #include"entity_record.h"
@@ -22,7 +23,7 @@ public:
     const std::vector<Entity>& GetArray() const;
 
     //EntityRecordへの登録
-    void RegisterEntity(uint32_t entity_id, Archetype* archetype, uint32_t index_in_chunk);
+    void RegisterEntity(uint32_t entity_id, uint32_t index_in_chunk);
     //エンティティレコードのゲッター
     EntityRecord GetRecord(uint32_t entity_id)const;
 

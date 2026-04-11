@@ -19,7 +19,6 @@ SceneTest::SceneTest(const HWND hwnd)
 bool SceneTest::InitializeCore()
 {
 
-    //std::ifstream file("C:/Users/2230330/Desktop/JobQuest/part2/resources/model/fbx/nico/nico.fbx");
 
     //各種マネージャの設定
     {
@@ -30,12 +29,6 @@ bool SceneTest::InitializeCore()
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
         light_manager_ = std::make_unique<LightManager>();
         render_sys_mng->SetLightManager(light_manager_.get());
-
-        uint32_t w = static_cast<uint32_t>(Graphics::Instance().GetScreenWidth());
-        uint32_t h = static_cast<uint32_t>(Graphics::Instance().GetScreenHeight());
-        post_pro_mng = std::make_unique<PostProcessManager>(
-            Graphics::Instance().GetDevice(),
-            w,h);
     }
 
     //レンダリングオブジェクト宣言
@@ -168,10 +161,7 @@ void SceneTest::RenderCore(float elapsed_time)
         render_sys_mng->RenderAll();
         
     }
-    //ポストエフェクト
-    {
-        //post_pro_mng->PostProcess(dc, framebuffers_[0]->GetShaderResourceView(0).Get());
-    }
+
 }
 
 void SceneTest::DrawImguiCore()
@@ -188,11 +178,7 @@ void SceneTest::DrawImguiCore()
     //ライトマネージャー
     light_manager_->DrawImgui();
 
-    ////ポストエフェク
-    //ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);
-    //ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h * 5.0f }, ImGuiSetCond_Always);
-    //ImGui::SetNextWindowBgAlpha(imgui_alpha);
-    //post_pro_mng->PostImgui();
+
 
     //コンポーネントマネージャ
     ImGui::SetNextWindowPos({ imgui_window_size_x*7,0 }, ImGuiSetCond_Always);

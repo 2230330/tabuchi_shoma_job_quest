@@ -9,6 +9,7 @@ enum RenderPass {
     RenderPass_None ,
 };
 
+//描画システムのインターフェース
 class IRenderSystem
 {
 public:

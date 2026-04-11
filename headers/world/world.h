@@ -1,19 +1,18 @@
 #pragma once
-#include"../archetype/archetype_manager.h"
 #include"../entity/entity_manager.h"
 
+/// ゲーム全体の状態を管理するクラス
+//現在はエンティティマネージャーのみを持つが、将来的にはシステムマネージャーやアーキタイプマネージャーも持つ予定
 class World
 {
 private:
     EntityManager entity_manager_;
-    ArchetypeManager archetype_manager_;
 
 public:
-    World() :archetype_manager_(&entity_manager_)
+    World() 
     {
     }
 
     EntityManager* GetEntityManager() { return &entity_manager_; }
-    ArchetypeManager* GetArcheTypeManager() { return &archetype_manager_; }
 
 };

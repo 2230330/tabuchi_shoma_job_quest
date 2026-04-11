@@ -26,12 +26,16 @@ public:
         return glow_extraction_->GetShaderResourceView(0);
     }
 
+    //エミッシブマップをセットする関数
+    void SetEmissiveMap(ID3D11ShaderResourceView* emissive_map) { emissive_map_ = emissive_map; }
+
     void DrawImgui();
 private:
     //リソースマネージャ
 
     std::unique_ptr<FullscreenQuad>bit_block_transfer_;
     std::unique_ptr<FrameBuffer>glow_extraction_;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> emissive_map_;
 
     static const size_t downsampled_count = 6;
     std::unique_ptr<FrameBuffer>gaussian_blur[downsampled_count][2];
@@ -48,10 +52,10 @@ private:
 
     struct BloomConstants
     {
-        float bloom_extraction_threshold{0.8f};//明るさの閾値
+        float bloom_extraction_threshold{1.0f};//明るさの閾値
         float bloom_intensity{1.5f};          //強度
         float bloom_soft_knee{0.3f};          //閾値付近の滑らかさ
-        float bloom_radius{1.0f}; //広がり
+        float bloom_radius{1.f}; //広がり
     };
 
     Microsoft::WRL::ComPtr<ID3D11Buffer>constant_buffer_;

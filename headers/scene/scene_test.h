@@ -55,7 +55,6 @@ private:
     std::unique_ptr<UpdateSystemManager>update_sys_mng;
     std::unique_ptr<RenderSystemManager>render_sys_mng;
     std::unique_ptr<World>world;
-    std::unique_ptr<PostProcessManager>post_pro_mng;
     std::unique_ptr<LightManager>light_manager_;
 };
 

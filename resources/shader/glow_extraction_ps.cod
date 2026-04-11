@@ -21,7 +21,8 @@
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // sampler_states[3]                 sampler      NA          NA             s3      1 
 // hdr_color_buffer_texture          texture  float4          2d             t0      1 
-// BLOOM_CONSTANT_BUFFER             cbuffer      NA          NA            cb4      1 
+// emissive_color_buffer_texture     texture  float4          2d             t1      1 
+// BLOOM_CONSTANT_BUFFER             cbuffer      NA          NA            cb5      1 
 //
 //
 //
@@ -41,9 +42,10 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB4[1], immediateIndexed
+dcl_constantbuffer CB5[1], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
+dcl_resource_texture2d (float,float,float,float) t1
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
 dcl_temps 2
@@ -53,21 +55,25 @@ dcl_temps 2
 //   v1.x <- texcoord.x; v1.y <- texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 15 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\glow_extraction_ps.hlsl"
+#line 17 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\glow_extraction_ps.hlsl"
 sample_indexable(texture2d)(float,float,float,float) r0.xyz, v1.xyxx, t0.xyzw, s3
 mov r0.xyz, r0.xyzx  // r0.x <- hdrColor.x; r0.y <- hdrColor.y; r0.z <- hdrColor.z
 
-#line 19
+#line 18
+sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t1.xyzw, s3
+add r0.xyz, r0.xyzx, r1.xyzx
+
+#line 22
 dp3 r0.w, r0.xyzx, l(0.212600, 0.715200, 0.072200, 0.000000)  // r0.w <- brightness
 
-#line 23
-mul r1.x, cb4[0].z, cb4[0].x
+#line 26
+mul r1.x, cb5[0].z, cb5[0].x
 add r1.x, r1.x, l(0.000100)  // r1.x <- knee
 
-#line 24
+#line 27
 mov r1.y, -r1.x
-add r1.y, r1.y, cb4[0].x
-add r1.z, r1.x, cb4[0].x
+add r1.y, r1.y, cb5[0].x
+add r1.z, r1.x, cb5[0].x
 mov r1.y, -r1.y
 add r1.z, r1.y, r1.z
 add r1.y, r0.w, r1.y
@@ -80,22 +86,22 @@ add r1.z, r1.z, l(3.000000)
 mul r1.y, r1.y, r1.y
 mul r1.y, r1.y, r1.z  // r1.y <- soft
 
-#line 29
-mov r1.z, -cb4[0].x
+#line 32
+mov r1.z, -cb5[0].x
 add r0.w, r0.w, r1.z
 div r0.w, r0.w, r1.x
 max r0.w, r0.w, l(0.000000)
 min r0.w, r0.w, l(1.000000)  // r0.w <- bloomMask
 
-#line 30
+#line 33
 max r0.w, r0.w, r1.y
 
-#line 33
+#line 36
 mul r0.xyz, r0.wwww, r0.xyzx
-mul r0.xyz, r0.xyzx, cb4[0].yyyy  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
+mul r0.xyz, r0.xyzx, cb5[0].yyyy  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
 
-#line 35
-mov o0.xyz, r0.xyzx
-mov o0.w, l(1.000000)
+#line 39
+mov r0.w, l(0)
+mov o0.xyzw, r0.xyzw
 ret 
-// Approximately 30 instruction slots used
+// Approximately 32 instruction slots used

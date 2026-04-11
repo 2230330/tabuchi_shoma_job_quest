@@ -3,15 +3,16 @@
 #include"../../headers/render_state.h"
 #include"../../external/imgui/imgui.h"
 
-PostProcessManager::PostProcessManager(ID3D11Device* device, uint32_t& width, uint32_t& height)
+PostProcessManager::PostProcessManager(ID3D11Device* device, uint32_t width, uint32_t height)
 {
     //リザルトを表示する奴
+    result_framebuffer_ = std::make_unique<FrameBuffer>(device, width, height);
     result_transfer_ = std::make_unique<FullscreenQuad>(device);
-    result_synthesiser_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//synthesis_ps.cso");
+    result_synthesiser_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//synthesis_ps.cso");
 
     bloom_ = std::make_unique<Bloom>(device, width, height);
     RenderState render_state(device);
-    blend_state_ = render_state.GetBlendState(BlendState::additive);
+    blend_state_ = render_state.GetBlendState(BlendState::transparency);
 }
 
 void PostProcessManager::PostProcess(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* color_map)
@@ -31,13 +32,19 @@ void PostProcessManager::PostProcess(ID3D11DeviceContext* immediate_context, ID3
 
         //ブルーム処理
         bloom_->Make(immediate_context, color_map);
+
+        //ポストエフェクトの合成
+        result_framebuffer_->Clear(immediate_context);
+        result_framebuffer_->Activate(immediate_context);
         ID3D11ShaderResourceView* srv[]
         {
             color_map,
             bloom_->GetShaderResourceView().Get()
         };
         immediate_context->OMSetBlendState(blend_state_.Get(), nullptr, 0XFFFFFFFF);
-        result_transfer_->blit(immediate_context, srv, 0, _countof(srv), result_synthesiser_.Get());
+        result_transfer_->blit(immediate_context, srv, 0, _countof(srv), result_synthesiser_ps_.Get());
+
+        result_framebuffer_->Deactivate(immediate_context);
 
     }
 

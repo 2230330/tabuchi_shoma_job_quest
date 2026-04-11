@@ -76,7 +76,11 @@ void Bloom::Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceVie
 	// Extracting bright color
 	glow_extraction_->Clear(immediate_context);
 	glow_extraction_->Activate(immediate_context);
-	bit_block_transfer_->blit(immediate_context, &color_map, 0, 1, glow_extraction_ps_.Get());
+	ID3D11ShaderResourceView* glow_maps[] = {
+		color_map,
+		emissive_map_.Get(),
+    };
+	bit_block_transfer_->blit(immediate_context, glow_maps, 0, _countof(glow_maps), glow_extraction_ps_.Get());
 	glow_extraction_->Deactivate(immediate_context);
 	immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
 
@@ -162,6 +166,9 @@ void Bloom::DrawImgui()
 		ImGui::SliderFloat("intensity", &bloom_constant_.bloom_intensity, 0.f, 10.f);
 		ImGui::SliderFloat("soft_knee", &bloom_constant_.bloom_soft_knee, 0.f, 1.f);
 		ImGui::SliderFloat("radius", &bloom_constant_.bloom_radius, 0.f, 2.f);
+
+        ImGui::Image(emissive_map_.Get(), ImVec2(256, 256));
+        ImGui::Image(glow_extraction_->GetShaderResourceView(0).Get(), ImVec2(256, 256));
 
 		ImGui::TreePop();
 	}

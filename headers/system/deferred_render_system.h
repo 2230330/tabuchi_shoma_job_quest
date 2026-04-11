@@ -8,6 +8,10 @@
 #include"../render_state.h"
 #include"../framebuffer.h"
 
+//ディファードレンダリングのシステム
+//オブジェクト描画時にGバッファに必要な情報を描画しておいて、
+//この描画システムでライティングパスで光の情報と合成して最終的な色を出力します。
+//シャドウマップの生成もこのシステムで行います。
 class DeferredRenderSystem :public IRenderSystem
 {
 public: 

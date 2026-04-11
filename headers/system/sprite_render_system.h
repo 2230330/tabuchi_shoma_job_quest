@@ -7,6 +7,7 @@
 
 #include"../component/component_manager.h"
 
+//2?テクスチャの描画
 class SpriteRenderSystem :public IRenderSystem
 {
 public:

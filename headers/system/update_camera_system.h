@@ -2,6 +2,9 @@
 #include"i_update_system.h"
 #include"../component/component_manager.h"
 
+//カメラの更新を行うシステム
+//このシステムは、ComponentCameraを持つエンティティが存在する場合に、
+//カメラの位置や向きを更新します。
 class CameraUpdateSystem :public IUpdateSystem
 {
 public:

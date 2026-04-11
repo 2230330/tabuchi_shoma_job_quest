@@ -5,7 +5,7 @@
 #include"../world/world.h"
 
 //描画用システム
-//現在は、元々用意していたGlTFモデルの描画を使っていますが、そのうちちゃんと作りたい
+//現在はGlTFモデルの描画を使っていますが、そのうちちゃんと作りたい
 class GltfRenderSystem :public IRenderSystem
 {
 public:

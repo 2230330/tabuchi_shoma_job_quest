@@ -66,6 +66,10 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
             L".\\resources\\shader\\fast_approximate_anti_aliasing_ps.cso");
 
+    post_process_manager_ = std::make_unique<PostProcessManager>(Graphics::Instance().GetDevice(),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()));
+
 }
 
 void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)
@@ -185,21 +189,28 @@ void RenderSystemManager::RenderAll()
 
     object_framebuffer_->Deactivate(ctx);
 
-    // === 合成
+    // === ポストプロセス ===
+    post_process_manager_->SetEmissiveMap(deferred_framebuffer_->GetSRV(DeferredGBuffer::Target::Emissive));
+    post_process_manager_->PostProcess(ctx, object_framebuffer_->GetShaderResourceView(0).Get());
     
+
+    // === 合成
     final_framebuffer_->Clear(ctx);
     final_framebuffer_->Activate(ctx);
 
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),
-        object_framebuffer_->GetShaderResourceView(0).Get(),
+        //object_framebuffer_->GetShaderResourceView(0).Get(),
+        post_process_manager_->GetResultShaderResourceView().Get(),
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
     final_framebuffer_->Deactivate(ctx);
-    Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
+
+
 
     ////FXAAによるアンチエイジング
+    Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
     Graphics::Instance().ViewClear(0, 0, 0, 0);
     Graphics::Instance().SetRenderTargets(); //FXAAでフルスクリーン描画するため、コンテキストをリセット
     RenderState render_state(Graphics::Instance().GetDevice());
@@ -216,6 +227,7 @@ void RenderSystemManager::RenderAll()
     history_color_srv_ = final_framebuffer_->GetShaderResourceView(0).Get();
     Graphics::Instance().ClearShaderResourceViews(0,1);
 
+    post_process_manager_->PostImgui();
 }
 
 //レンダーパスごとにシステムを回す
@@ -228,8 +240,6 @@ void RenderSystemManager::RunPass(RenderPass pass)
         {
             if (system->GetPass() == pass)
             {
-                
-
                 system->Render();
             }
         }
