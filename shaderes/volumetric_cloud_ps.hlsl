@@ -81,7 +81,12 @@ float SampleObjectDepth(float2 sample_point)
             float2 offset = float2(x, y) * texel;
             float sample = object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + offset);
             
-            d = max(d, sample); // 手前を優先
+            //周囲のサンプルの最大値を取ることで、物体の輪郭を少し削る
+            d = max(d, sample); 
+            if(d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
+            {
+                break;
+            }
         }
     }
 
