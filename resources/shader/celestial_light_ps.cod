@@ -453,10 +453,12 @@ max r0.x, r0.x, l(0.000000)
 min r0.x, r0.x, l(1.000000)  // r0.x <- outAlpha
 
 #line 132
-mul r0.yzw, r1.wwww, r0.yyzw  // r0.y <- outColor.x; r0.z <- outColor.y; r0.w <- outColor.z
+mul r0.yzw, r1.wwww, r0.yyzw
+max r0.yzw, r0.yyzw, l(0.000000, 0.000000, 0.000000, 0.000000)
+min r0.yzw, r0.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)  // r0.y <- outColor.x; r0.z <- outColor.y; r0.w <- outColor.z
 
 #line 134
 mov o0.xyz, r0.yzwy
 mov o0.w, r0.x
 ret 
-// Approximately 212 instruction slots used
+// Approximately 214 instruction slots used

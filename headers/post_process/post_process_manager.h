@@ -22,19 +22,26 @@ public:
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetResultShaderResourceView()
     {
-        return result_framebuffer_->GetShaderResourceView(0);
+        return result_srv_;
     }
 
     void SetEmissiveMap(ID3D11ShaderResourceView* emissive_map) { bloom_->SetEmissiveMap(emissive_map); }
 
 private:
+    //画像合成用
+    std::unique_ptr<FrameBuffer> synthesiser_framebuffer_;
+    std::unique_ptr<FullscreenQuad> fullscreen_transfer_;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>synthesiser_ps_;
+    
     //最終画像を転送するやつ
-    std::unique_ptr<FrameBuffer> result_framebuffer_;
-    std::unique_ptr<FullscreenQuad> result_transfer_;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>result_synthesiser_ps_;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> result_srv_;
 
     //以下、ポストプロセス
+    //ブルーム
     std::unique_ptr<Bloom> bloom_;
     Microsoft::WRL::ComPtr<ID3D11BlendState>blend_state_;
+    //FXAA
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>fxaa_ps_;
+    std::unique_ptr<FrameBuffer> fxaa_framebuffer_;
 
 };

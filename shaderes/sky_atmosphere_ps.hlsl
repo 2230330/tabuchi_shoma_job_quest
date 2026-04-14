@@ -1,6 +1,9 @@
 #include"sky_atmosphere.hlsli"
 #include"forward_light.hlsli"
 
+//大気散乱のシェーダー
+//レイリー散乱とミー散乱を簡易的に実装し、太陽の位置や高度に応じて空の色を変える
+
 //宇宙など、空の後ろに欲しい画像を入れる
 Texture2D sky_texture : register(t0);
 

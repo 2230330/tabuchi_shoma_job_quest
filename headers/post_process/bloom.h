@@ -52,7 +52,7 @@ private:
 
     struct BloomConstants
     {
-        float bloom_extraction_threshold{1.0f};//明るさの閾値
+        float bloom_extraction_threshold{2.0f};//明るさの閾値
         float bloom_intensity{1.5f};          //強度
         float bloom_soft_knee{0.3f};          //閾値付近の滑らかさ
         float bloom_radius{1.f}; //広がり

@@ -5,6 +5,14 @@
 #include "fullscreen_quad.hlsli"
 #include"camera_buffer.hlsli"
 
+
+//レイマーチングを用いて雲のレンダリングを行うピクセルシェーダーです
+//雲の密度は、低周波のPerlin-Worleyノイズと高周波のWorleyノイズを組み合わせて生成されます
+//雲の被覆率やタイプなどの天候データは、専用のテクスチャからサンプリングされます
+//レイマーチングループ内では、雲の密度に応じて太陽光の減衰や位相関数を計算し、リアルなライティングを実現しています
+//また、雲内部でのサンプリングは高品質に行い、雲の外部では計算コストを抑えるための工夫も施されています
+
+
 static const float PI = 3.14159265359f;
 
 #define POINT_WRAP 0
@@ -38,6 +46,7 @@ Texture2D<float3> sky_color_texture : register(t4);
 Texture2D<float> gradient_cumulonimbus_texture : register(t5);
 Texture2D<float> gradient_cumulus_texture : register(t6);
 Texture2D<float> gradient_stratus_texture : register(t7);
+Texture2D<float> object_depth_texture : register(t8);
 
 static const float time_offset = 10000.0;
 float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
@@ -54,9 +63,30 @@ float3 SampleWeatherData(float2 sample_point)
 
     float horizon_distance = sqrt(cloud_altitudes_min_max.x * cloud_altitudes_min_max.x - earth_radius * earth_radius) * horizon_distance_scale;
     return weather_texture.Sample(sampler_states[LINEAR_MIRROR], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
-
 }
+float SampleObjectDepth(float2 sample_point)
+{
+    //物体深度テクスチャから深度をサンプリングする関数
+    //物体を描画する際に、雲が物体の前にあるか後ろにあるかを判断するために使用される
+    //そのままサンプリングした場合、テクスチャの解像度の違いによりジャギーが発生する可能性がある為、
+    //周囲のサンプルを取って最大値を返すことで、実際の物体よりも一回り小さい輪郭を作るようにしている
+    float d = 0.0f;
+    float2 texel = 1.0f/object_resolution;
+    [unroll]
+    for (int x = -1; x <= 1; x++)
+    {
+        [unroll]
+        for (int y = -1; y <= 1; y++)
+        {
+            float2 offset = float2(x, y) * texel;
+            float sample = object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + offset);
+            
+            d = max(d, sample); // 手前を優先
+        }
+    }
 
+    return d;
+}
 
 
 // from: https://www.shadertoy.com/view/4sfgzs credit to iq
@@ -104,7 +134,7 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 {
     float density_gradient = 0.0;
 
-    #if 0
+    #if 1
     // height_fraction に基づいて、stratus、stratocumulus、cumulus の各雲タイプの密度勾配をブレンドする
     const float4 stratus_gradient = float4(0.02f, 0.05f, 0.09f, 0.11f);
     const float4 stratocumulus_gradient = float4(0.02f, 0.2f, 0.48f, 0.625f);
@@ -663,6 +693,13 @@ float4 main(VS_OUT pin) : SV_TARGET
     float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
+    
+    float object_depth = SampleObjectDepth(pin.texcoord.xy);
+    if(object_depth <1.0f)
+    {
+        //物体が雲の前にある場合、雲を描画しない
+        return float4(sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb,1.0f);
+    }
 
     // 地球中心基準のカメラ位置
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);

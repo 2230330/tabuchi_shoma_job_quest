@@ -15,7 +15,7 @@ float4 main(float4 position : SV_POSITION, float2 texcoord : TEXCOORD) : SV_TARG
 {
     // 入力HDRカラー
     float3 hdrColor = hdr_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord).rgb;
-    hdrColor += emissive_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord).rgb;
+    hdrColor += emissive_color_buffer_texture.Sample(sampler_states[LINEAR_CLAMP], texcoord).rgb*2;
 
     // 最大輝度成分を使用
     //float brightness = max(hdrColor.rgb, float3(0.2126f, 0.7152f, 0.0722f));

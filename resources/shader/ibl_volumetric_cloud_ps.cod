@@ -22,6 +22,7 @@
 //   bool enable_powdered_sugar_efffect;// Offset:   56 Size:     4
 //   uint ray_marching_steps;           // Offset:   60 Size:     4
 //   bool auto_ray_marching_steps;      // Offset:   64 Size:     4 [unused]
+//   float2 object_resolution;          // Offset:   68 Size:     8 [unused]
 //
 // }
 //

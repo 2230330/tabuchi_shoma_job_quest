@@ -21,7 +21,6 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Lighting));
     deferred_render_system_ = std::make_unique<DeferredRenderSystem>(comp_mng_, RenderPass_Lighting);
 
-
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
@@ -62,9 +61,6 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     light_shafts_ps_ =
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
             L".\\resources\\shader\\radial_god_lay_ps.cso");
-    fxaa_ps_ =
-        ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
-            L".\\resources\\shader\\fast_approximate_anti_aliasing_ps.cso");
 
     post_process_manager_ = std::make_unique<PostProcessManager>(Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
@@ -117,6 +113,8 @@ void RenderSystemManager::RenderAll()
         back_framebuffer_->Activate(ctx);
 
         cloud_render_system_->SetSkyColorSRV(sky_framebuffer_->GetShaderResourceView(0).Get());
+        cloud_render_system_->SetObjectDepthSRV(deferred_framebuffer_->GetSRV(DeferredGBuffer::Target::Depth));
+        cloud_render_system_->SetObjectResolution(Graphics::Instance().GetScreenWidth()*obj_scale, Graphics::Instance().GetScreenHeight()*obj_scale);
         cloud_render_system_->Render();
 
         
@@ -127,14 +125,6 @@ void RenderSystemManager::RenderAll()
             bit_block_transfer_->blit(ctx, srv, 0, 1);
         }
         
-        //雲オンリーのゴッドレイ(未完成)
-        //if (cloud_flag)
-        //{
-        //    srvs[0] = {
-        //        cloud_render_system_->GetCloudShadowSRV(),
-        //    };
-        //}
-        //bit_block_transfer_->blit(ctx, srvs, 0, 1, light_shafts_ps_.Get());
     }
         // 天体光描画
     if (sky_flag)
@@ -189,45 +179,31 @@ void RenderSystemManager::RenderAll()
 
     object_framebuffer_->Deactivate(ctx);
 
-    // === ポストプロセス ===
-    post_process_manager_->SetEmissiveMap(deferred_framebuffer_->GetSRV(DeferredGBuffer::Target::Emissive));
-    post_process_manager_->PostProcess(ctx, object_framebuffer_->GetShaderResourceView(0).Get());
-    
-
     // === 合成
     final_framebuffer_->Clear(ctx);
     final_framebuffer_->Activate(ctx);
 
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),
-        //object_framebuffer_->GetShaderResourceView(0).Get(),
-        post_process_manager_->GetResultShaderResourceView().Get(),
+        object_framebuffer_->GetShaderResourceView(0).Get(),
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
     final_framebuffer_->Deactivate(ctx);
-
-
-
-    ////FXAAによるアンチエイジング
     Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
+
+    // === ポストプロセス ===
+    post_process_manager_->SetEmissiveMap(deferred_framebuffer_->GetSRV(DeferredGBuffer::Target::Emissive));
+    post_process_manager_->PostProcess(ctx, final_framebuffer_->GetShaderResourceView(0).Get());
+
+    ////最終結果を描画
     Graphics::Instance().ViewClear(0, 0, 0, 0);
     Graphics::Instance().SetRenderTargets(); //FXAAでフルスクリーン描画するため、コンテキストをリセット
     RenderState render_state(Graphics::Instance().GetDevice());
     ctx->OMSetBlendState(render_state.GetBlendState(BlendState::transparency),nullptr,0xFFFFFFFF);
+    bit_block_transfer_->blit(ctx, post_process_manager_->GetResultShaderResourceView().GetAddressOf(), 0, 1);
 
-    ID3D11ShaderResourceView* fxaa_srvs[]
-    {
-        final_framebuffer_->GetShaderResourceView(0).Get(),
-    };
-    Graphics::Instance().SetShaderResource(0, 1, fxaa_srvs);
-    bit_block_transfer_->
-        blit(ctx, fxaa_srvs, 0, 1, fxaa_ps_.Get());
 
-    history_color_srv_ = final_framebuffer_->GetShaderResourceView(0).Get();
-    Graphics::Instance().ClearShaderResourceViews(0,1);
-
-    post_process_manager_->PostImgui();
 }
 
 //レンダーパスごとにシステムを回す

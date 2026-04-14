@@ -137,6 +137,7 @@ void CloudRenderSystem::Render()
                 gradient_cumulonimbus_srv_.Get(),
                 gradient_cumulus_srv_.Get(),
                 gradient_stratus_srv_.Get(),
+                object_depth_srv_.Get(),
             };
             //Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
             // 描画呼び出し

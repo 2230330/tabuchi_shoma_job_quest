@@ -15,9 +15,18 @@ class CloudRenderSystem :public IRenderSystem
 {
 public:
     CloudRenderSystem(ComponentManager&comp_mng,RenderPass render_pass);
-
+    
+    //スカイカラーをセットする関数
     void SetSkyColorSRV(ID3D11ShaderResourceView* sky_color_srv) {
         sky_color_srv_ = sky_color_srv;
+    }
+    //オブジェクトの深度情報をセットする関数
+    void SetObjectDepthSRV(ID3D11ShaderResourceView* object_depth_srv) {
+        object_depth_srv_ = object_depth_srv;
+    }
+
+    void SetObjectResolution(float width, float height) {
+        cloud_ray_marching_constant_.object_resolution = DirectX::XMFLOAT2(width, height);
     }
 
     ID3D11ShaderResourceView* GetCloudShadowSRV() { return shadow_map_->GetShaderResourceView(0).Get(); }
@@ -66,7 +75,9 @@ private:
         int ray_marching_steps = 128;
         int auto_ray_marching_steps = false;
 
-        DirectX::XMFLOAT2 dummy;
+        DirectX::XMFLOAT2 object_resolution;//16バイトアラインメントのためのダミー
+        //DirectX::XMFLOAT2 dummy;//16バイトアラインメントのためのダミー
+
     }cloud_ray_marching_constant_;
     Microsoft::WRL::ComPtr<ID3D11Buffer>cloud_ray_marching_constant_buffer_;
 
@@ -104,6 +115,10 @@ private:
     //スカイカラー
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>sky_color_srv_ = nullptr;
 
+    //オブジェクトの深度情報
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>object_depth_srv_ = nullptr;
+
+    //フルスクリーンクワッド
     std::unique_ptr<FullscreenQuad>fullscreen_quad_;
 
     //シャドウマップ用

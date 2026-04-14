@@ -6,13 +6,20 @@
 PostProcessManager::PostProcessManager(ID3D11Device* device, uint32_t width, uint32_t height)
 {
     //リザルトを表示する奴
-    result_framebuffer_ = std::make_unique<FrameBuffer>(device, width, height);
-    result_transfer_ = std::make_unique<FullscreenQuad>(device);
-    result_synthesiser_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//synthesis_ps.cso");
+    synthesiser_framebuffer_ = std::make_unique<FrameBuffer>(device, width, height);
+    fullscreen_transfer_ = std::make_unique<FullscreenQuad>(device);
+    synthesiser_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//synthesis_ps.cso");
 
+    //ブルーム
     bloom_ = std::make_unique<Bloom>(device, width, height);
     RenderState render_state(device);
     blend_state_ = render_state.GetBlendState(BlendState::transparency);
+
+    //FXAA
+    fxaa_ps_ =
+        ResourceManager::Instance().LoadPixelShader(device,
+            L".\\resources\\shader\\fast_approximate_anti_aliasing_ps.cso");
+    fxaa_framebuffer_ = std::make_unique<FrameBuffer>(device, width, height);
 }
 
 void PostProcessManager::PostProcess(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* color_map)
@@ -34,19 +41,35 @@ void PostProcessManager::PostProcess(ID3D11DeviceContext* immediate_context, ID3
         bloom_->Make(immediate_context, color_map);
 
         //ポストエフェクトの合成
-        result_framebuffer_->Clear(immediate_context);
-        result_framebuffer_->Activate(immediate_context);
-        ID3D11ShaderResourceView* srv[]
+        synthesiser_framebuffer_->Clear(immediate_context);
+        synthesiser_framebuffer_->Activate(immediate_context);
         {
-            color_map,
-            bloom_->GetShaderResourceView().Get()
-        };
-        immediate_context->OMSetBlendState(blend_state_.Get(), nullptr, 0XFFFFFFFF);
-        result_transfer_->blit(immediate_context, srv, 0, _countof(srv), result_synthesiser_ps_.Get());
+            ID3D11ShaderResourceView* srv[]
+            {
+                color_map,
+                bloom_->GetShaderResourceView().Get()
+            };
+            immediate_context->OMSetBlendState(blend_state_.Get(), nullptr, 0XFFFFFFFF);
+            fullscreen_transfer_->blit(immediate_context, srv, 0, _countof(srv), synthesiser_ps_.Get());
+        }
+        synthesiser_framebuffer_->Deactivate(immediate_context);
 
-        result_framebuffer_->Deactivate(immediate_context);
+        //FXAA処理
+        fxaa_framebuffer_->Clear(immediate_context);
+        fxaa_framebuffer_->Activate(immediate_context);
+        {
+            ID3D11ShaderResourceView* fxaa_srvs[]
+            {
+                synthesiser_framebuffer_->GetShaderResourceView(0).Get(),
+            };
+            fullscreen_transfer_->blit(immediate_context, fxaa_srvs, 0, 1, fxaa_ps_.Get());
+        
 
+        }
+        fxaa_framebuffer_->Deactivate(immediate_context);
     }
+    result_srv_ = fxaa_framebuffer_->GetShaderResourceView(0);
+
 
     //元の設定に戻す
     immediate_context->OMSetDepthStencilState(cached_depth_stencil_state.Get(), 0);

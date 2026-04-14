@@ -55,9 +55,6 @@ private:
     std::unique_ptr<FrameBuffer> final_framebuffer_;
     std::unique_ptr<DeferredGBuffer> deferred_framebuffer_;
 
-    //FXAA
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>fxaa_ps_;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>history_color_srv_=nullptr;
 
     //IBLマネージャ
     std::unique_ptr<IBLManager> ibl_manager_ ;
@@ -70,12 +67,12 @@ private:
     //スカイキューブの分割
     int ibl_steps_per_frame_ = 1;
 
-    const float back_scale_ = 2.0f;
+    const float back_scale_ = 4.0f;
     const float obj_scale = 1.0f;
     //背景のサンプリング間隔
     //マイフレーム呼び出す必要はないと感じました
     int back_sample_count_ = 0;
-    const int back_sample_rimit_ = 2;
+    const int back_sample_rimit_ = 0;
 
     Microsoft::WRL::ComPtr<ID3D11PixelShader> celestial_light_ps_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> light_shafts_ps_;
