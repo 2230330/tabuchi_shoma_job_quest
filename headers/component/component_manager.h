@@ -20,6 +20,7 @@
 #include "component_volumetric_cloud.h"
 #include"component_ajast_pbr_paramter_.h"
 #include "component_camera.h"
+#include "component_screen_space_reflection.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -42,6 +43,7 @@ public:
         registerContainer<ComponentVolumetricCloud>(clouds_);
         registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
         registerContainer<ComponentCamera>(cameras_);
+        registerContainer<ComponentSsr>(ssrs_);
     }
 
     template<typename T>
@@ -207,4 +209,5 @@ private:
     std::vector<ComponentVolumetricCloud>clouds_;
     std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
     std::vector<ComponentCamera>cameras_;
+    std::vector<ComponentSsr>ssrs_;
 };

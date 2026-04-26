@@ -1,16 +1,3 @@
-struct VS_IN
-{
-    float3 position : POSITION;
-    float2 texcoord : TEXCOORD;
-};
-
-struct VS_OUT
-{
-    float4 position : SV_POSITION;
-    float2 texcoord : TEXCOORD;
-    float3 world_pos : TEXCOORD1;
-};
-
 
 cbuffer RAYLEIGH_CONSTANT_BUFFER_ : register(b11)
 {
@@ -18,13 +5,14 @@ cbuffer RAYLEIGH_CONSTANT_BUFFER_ : register(b11)
     float mie_scale_height;
     float ozone_scale_half_width;
     float ozone_center_height;
-    float earth_height; // ’n‹…”¼Œa [m]
-    float sun_distance; // ‘¾—z‚Ü‚Å‚Ì‹——£ [m]
-    float atmosphere_height; // ‘å‹C‚Ì‚‚³ [m]
+    float earth_height; // åœ°çƒåŠå¾„ [m]
+    float sun_distance; // å¤ªé™½ã¾ã§ã®è·é›¢ [m]
+    float atmosphere_height; // å¤§æ°—ã®é«˜ã• [m]
     int max_sample;
 
-    float height;//©g‚Ì‚“x
+    float height;//è‡ªèº«ã®é«˜åº¦
     float3 dummy;
 
 };
 #include"camera_buffer.hlsli"
+

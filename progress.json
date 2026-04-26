@@ -116,18 +116,140 @@
         {
             "components": {
                 "Camera": {
-                    "dir_x": -0.029701998457312584,
-                    "dir_y": -0.13954299688339233,
-                    "dir_z": -0.9897704124450684,
+                    "dir_x": 0.898827075958252,
+                    "dir_y": -0.266731321811676,
+                    "dir_z": 0.34779930114746094,
                     "far": 1000.0,
                     "main": true,
                     "near": 1.0,
-                    "pos_x": 0.2970200181007385,
-                    "pos_y": 1.395430088043213,
-                    "pos_z": 9.897705078125
+                    "pos_x": -8.988269805908203,
+                    "pos_y": 2.6673128604888916,
+                    "pos_z": -3.4779927730560303
                 }
             },
             "entity_id": 5
+        },
+        {
+            "components": {
+                "ScreenSpaceReflection": true
+            },
+            "entity_id": 6
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": 2.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "entity_id": 7
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": -2.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 0.10000000149011612,
+                    "y": 0.10000000149011612,
+                    "z": 0.10000000149011612
+                }
+            },
+            "entity_id": 8
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": -2.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 0.10000000149011612,
+                    "y": 0.10000000149011612,
+                    "z": 0.10000000149011612
+                }
+            },
+            "entity_id": 9
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 2.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "entity_id": 10
         }
     ]
 }

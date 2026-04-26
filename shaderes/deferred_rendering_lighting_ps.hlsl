@@ -35,7 +35,8 @@ float4 main(VS_OUT pin) : SV_TARGET
     gbuffer_textures.velocity = gbuffer_velocity;
     gbuffer_textures.state = sampler_states[POINT_WRAP];
     GBufferData data;
-    data = DecodeGBuffer(gbuffer_textures, pin.texcoord, inverse_view_projection_transform, z_buffer_parameteres);
+    data = DecodeGBuffer(
+    gbuffer_textures, pin.texcoord, inverse_view_projection_transform, z_buffer_parameteres);
 
 
     //ƒ‰ƒCƒgî•ñ‚ğæ“¾

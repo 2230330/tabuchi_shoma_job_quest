@@ -54,12 +54,12 @@ void ComponentEditor::DrawImgui()
             Load("progress.json");
         }
 
-        // ƒGƒ“ƒeƒBƒeƒB’Ç‰Áƒ{ƒ^ƒ“
+        // ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£è¿½åŠ ãƒœã‚¿ãƒ³
         if (ImGui::Button("Add Entity"))
         {
             uint32_t entity=enti_mng_.Add();
 
-            //Šî‘bî•ñ‚Ì’Ç‰Á
+            //åŸºç¤æƒ…å ±ã®è¿½åŠ 
             ComponentPosition position{};
             comp_mng_.Add<ComponentPosition>(entity,position);
             ComponentRotation rotation{};
@@ -71,14 +71,14 @@ void ComponentEditor::DrawImgui()
             comp_mng_.Add(entity, l2w);
         }
 
-        //‘å‹C‚Ì’Ç‰Á
+        //å¤§æ°—ã®è¿½åŠ 
         if (ImGui::Button("atmosphere"))
         {
 
             if (has_sky_<0)
             {
                 uint32_t entity = enti_mng_.Add();
-                //Šî‘bî•ñ‚Ì’Ç‰Á
+                //åŸºç¤æƒ…å ±ã®è¿½åŠ 
                 ComponentPosition position{};
                 comp_mng_.Add<ComponentPosition>(entity, position);
                 ComponentRotation rotation{};
@@ -95,13 +95,13 @@ void ComponentEditor::DrawImgui()
             }
             else
             {
-                enti_mng_.Remove(has_sky_); // alive = false ‚É‚·‚é
-                comp_mng_.RemoveAllComponents(has_sky_); // ‚·‚×‚Ä‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğíœ
+                enti_mng_.Remove(has_sky_); // alive = false ã«ã™ã‚‹
+                comp_mng_.RemoveAllComponents(has_sky_); // ã™ã¹ã¦ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å‰Šé™¤
 
                 has_sky_ = -1;
             }
         }
-        //‰_‚Ì’Ç‰Á
+        //é›²ã®è¿½åŠ 
         if (ImGui::Button("cloud"))
         {
 
@@ -116,47 +116,66 @@ void ComponentEditor::DrawImgui()
             }
             else
             {
-                enti_mng_.Remove(has_cloud_); // alive = false ‚É‚·‚é
-                comp_mng_.RemoveAllComponents(has_cloud_); // ‚·‚×‚Ä‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğíœ
+                enti_mng_.Remove(has_cloud_); // alive = false ã«ã™ã‚‹
+                comp_mng_.RemoveAllComponents(has_cloud_); // ã™ã¹ã¦ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å‰Šé™¤
 
                 has_cloud_ = -1;
             }
         }
+        if (ImGui::Button("ssr"))
+        {
+            if(has_ssr_<0)
+            {
+                uint32_t entity = enti_mng_.Add();
+
+                ComponentSsr ssr;
+                comp_mng_.Add(entity, ssr);
+
+                has_ssr_ = entity;
+            }
+            else
+            {
+                enti_mng_.Remove(has_ssr_); // alive = false ã«ã™ã‚‹
+                comp_mng_.RemoveAllComponents(has_ssr_); // ã™ã¹ã¦ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å‰Šé™¤
+
+                has_ssr_ = -1;
+            }
+        }
 
 
-        //¶‚«‚Ä‚¢‚éƒGƒ“ƒeƒBƒeƒB‚ğ•\¦‚·‚é
+        //ç”Ÿãã¦ã„ã‚‹ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ã‚’è¡¨ç¤ºã™ã‚‹
         const std::vector<Entity>& entities = enti_mng_.GetArray();
         for (const Entity& entity : entities)
         {
             if (!entity.alive) continue;
 
-            //ƒGƒfƒBƒ^–ˆ‚É•\¦
+            //ã‚¨ãƒ‡ã‚£ã‚¿æ¯ã«è¡¨ç¤º
             std::string label = "Entity " + std::to_string(entity.entity);
             if (ImGui::TreeNode(label.c_str()))
             {
                 ImGui::Separator();
-                // ˆÊ’u
+                // ä½ç½®
                 if (comp_mng_.Has<ComponentPosition>(entity.entity))
                 {
                     auto& pos = comp_mng_.GetByEntity<ComponentPosition>(entity.entity);
                     ImGui::DragFloat3("Position", &pos.value.x);
                     ImGui::Separator();
                 }
-                // ‰ñ“]
+                // å›è»¢
                 if (comp_mng_.Has<ComponentRotation>(entity.entity))
                 {
                     auto& rot = comp_mng_.GetByEntity<ComponentRotation>(entity.entity);
                     ImGui::SliderFloat3("Rotation", &rot.value.x, -3.14f,3.14f);
                     ImGui::Separator();
                 }
-                // ƒXƒP[ƒ‹
+                // ã‚¹ã‚±ãƒ¼ãƒ«
                 if (comp_mng_.Has<ComponentScale>(entity.entity))
                 {
                     auto& scale = comp_mng_.GetByEntity<ComponentScale>(entity.entity);
                     ImGui::DragFloat3("Scale", &scale.value.x, 0.01f);
                     ImGui::Separator();
                 }
-                // F
+                // è‰²
                 if (comp_mng_.Has<ComponentColor>(entity.entity))
                 {
                     auto& color = comp_mng_.GetByEntity<ComponentColor>(entity.entity);
@@ -164,7 +183,7 @@ void ComponentEditor::DrawImgui()
                     ImGui::Separator();
                 }
 
-                //‘å‹CU—’²®—p
+                //å¤§æ°—æ•£ä¹±èª¿æ•´ç”¨
                 if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
                 {
                     ImGui::Text("Sky Atmosphere Component");
@@ -219,7 +238,7 @@ void ComponentEditor::DrawImgui()
                     ImGui::Separator();
                 }
 
-                //‰_‚Ì‚İ‚Ìˆ—‚È‚Ì‚ÅAã‚Ì•û‚É’u‚¢‚Ä‚¨‚«‚Ü‚·
+                //é›²ã®ã¿ã®å‡¦ç†ãªã®ã§ã€ä¸Šã®æ–¹ã«ç½®ã„ã¦ãŠãã¾ã™
                 if (comp_mng_.Has<ComponentVolumetricCloud>(entity.entity))
                 {
                     auto& c = comp_mng_.GetByEntity<ComponentVolumetricCloud>(entity.entity);
@@ -282,7 +301,7 @@ void ComponentEditor::DrawImgui()
 
                     ImGui::Separator();
                 }
-                // GLTFƒ‚ƒfƒ‹
+                // GLTFãƒ¢ãƒ‡ãƒ«
                 if (comp_mng_.Has<ComponentGltf>(entity.entity))
                 {
                     auto& gltf = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
@@ -294,7 +313,7 @@ void ComponentEditor::DrawImgui()
                     ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
                     ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, .0f, 1.0f);
 
-                    //ƒCƒ“ƒXƒ^ƒ“ƒVƒ“ƒO•`‰æ
+                    //ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚·ãƒ³ã‚°æç”»
                     if (ImGui::Button("instanced"))
                     {
                         if (!comp_mng_.Has<ComponentInstanced>(entity.entity))
@@ -366,21 +385,35 @@ void ComponentEditor::DrawImgui()
                     ImGui::Separator();
                 }
 
+                //SSR
+                if (comp_mng_.Has<ComponentSsr>(entity.entity))
+                {
+                    auto& ssr = comp_mng_.GetByEntity<ComponentSsr>(entity.entity);
 
-                //ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì’Ç‰Á
+                    ImGui::Text("Screen Space Reflection");
+
+                    ImGui::Image(ssr.ssr_texture.Get(), { 256,256, }, { 0,0 });
+                    ImGui::Image(ssr.normal.Get(), { 256,256, }, { 0,0 });
+                    ImGui::Image(ssr.color.Get(), { 256,256, }, { 0,0 });
+                    ImGui::Image(ssr.depth.Get(), { 256,256, }, { 0,0 });
+
+                    ImGui::Separator();
+                }
+
+                //ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®è¿½åŠ 
                 if (has_sky_!=entity.entity|| !has_cloud_!=entity.entity)
                 {
                     if (ImGui::TreeNode("Add Component"))
                     {
 
-                        //ƒ‚ƒfƒ‹ŠÖŒW‚Ìæ
+                        //ãƒ¢ãƒ‡ãƒ«é–¢ä¿‚ã®å–
                         {
                             if (!comp_mng_.Has<ComponentGltf>(entity.entity))
                             {
                                 if (ImGui::TreeNode("GLTF Model"))
                                 {
                                     const auto& models = ResourceManager::Instance().GetGltfs();
-                                    //‚à‚µGLTF‚Ìƒ‚ƒfƒ‹‚ª‹ó‚È‚ç
+                                    //ã‚‚ã—GLTFã®ãƒ¢ãƒ‡ãƒ«ãŒç©ºãªã‚‰
                                     if (models.empty())
                                     {
                                         ImGui::Text("No models loaded.");
@@ -428,11 +461,11 @@ void ComponentEditor::DrawImgui()
                     }
                 }
 
-                // ƒGƒ“ƒeƒBƒeƒBíœƒ{ƒ^ƒ“
+                // ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£å‰Šé™¤ãƒœã‚¿ãƒ³
                 if (ImGui::Button("Delete Entity"))
                 {
-                    enti_mng_.Remove(entity.entity); // alive = false ‚É‚·‚é
-                    comp_mng_.RemoveAllComponents(entity.entity); // ‚·‚×‚Ä‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğíœ
+                    enti_mng_.Remove(entity.entity); // alive = false ã«ã™ã‚‹
+                    comp_mng_.RemoveAllComponents(entity.entity); // ã™ã¹ã¦ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å‰Šé™¤
 
                     if (has_sky_ == entity.entity)has_sky_ = -1;
                     else if (has_cloud_ == entity.entity)has_cloud_ = -1;
@@ -495,7 +528,7 @@ void ComponentEditor::Save(const std::string& filename)
         }
 
         // =========================
-        // Sky Atmospherei‘S€–Új
+        // Sky Atmosphereï¼ˆå…¨é …ç›®ï¼‰
         // =========================
         if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
         {
@@ -515,7 +548,7 @@ void ComponentEditor::Save(const std::string& filename)
         }
 
         // =========================
-        // Volumetric Cloudi‘S€–Új
+        // Volumetric Cloudï¼ˆå…¨é …ç›®ï¼‰
         // =========================
         if (comp_mng_.Has<ComponentVolumetricCloud>(entity.entity))
         {
@@ -620,6 +653,15 @@ void ComponentEditor::Save(const std::string& filename)
             };
         }
 
+        // =========================
+        // SSR
+        // =========================
+        if (comp_mng_.Has<ComponentSsr>(entity.entity))
+        {
+            comp_json["ScreenSpaceReflection"] = true;
+        }
+
+
         entity_json["components"] = comp_json;
         root["entities"].push_back(entity_json);
     }
@@ -641,7 +683,7 @@ void ComponentEditor::Load(const std::string& filename)
     has_sky_ = -1;
     has_cloud_ = -1;
 
-    // Šù‘¶íœ
+    // æ—¢å­˜å‰Šé™¤
     for (auto& e : enti_mng_.GetArray())
     {
         if (e.alive)
@@ -813,6 +855,13 @@ void ComponentEditor::Load(const std::string& filename)
             comp_mng_.Add(entity, c);
         }
 
+        // SSR
+        if (comp_json.contains("ScreenSpaceReflection"))
+        {
+            ComponentSsr ssr;
+            comp_mng_.Add(entity, ssr);
+            has_ssr_ = entity;
+        }
 
     }
 }

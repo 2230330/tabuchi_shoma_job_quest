@@ -5,7 +5,7 @@ cbuffer CameraBuffer : register(b7)
 {
     float4 camera_position;
     float4 camera_direction;
-    float4 camera_clip_distance;
+    float4 camera_clip_distance; //x:near,y:far,z:near * far,w:far-near
     row_major float4x4 view_transform;
     row_major float4x4 projection_transform;
     row_major float4x4 view_projection_transform;

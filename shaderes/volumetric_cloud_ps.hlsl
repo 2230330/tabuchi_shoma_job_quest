@@ -706,7 +706,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         return float4(sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb,1.0f);
     }
 
-    // 地球中心基準のカメラ位置
+    // カメラ位置からスクリーン上の点へのレイの方向を計算
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
 
     float3 color = 0.0;

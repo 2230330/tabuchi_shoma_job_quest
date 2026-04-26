@@ -6,20 +6,21 @@
 
 #include"render_state.h"
 
+enum Target : uint8_t
+{
+    BaseColor = 0,
+    Emissive,
+    Normal,
+    Parameter,
+    Depth,
+    Velocity,
+    Count
+};
+
 //ディファードレンダリング描画用フレームバッファ
 class DeferredGBuffer
 {
 public:
-    enum Target : uint8_t
-    {
-        BaseColor = 0,
-        Emissive,
-        Normal,
-        Parameter,
-        Depth,
-        Velocity,
-        Count
-    };
 
 public:
     DeferredGBuffer(

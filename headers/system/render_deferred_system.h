@@ -23,13 +23,16 @@ public:
 
     void SetSRV(ID3D11ShaderResourceView* srv, int num) { this->srvs_[num] = srv; }
 
+    void SetSSRSRV(ID3D11ShaderResourceView* ssr_srv) { this->ssr_srv_ = ssr_srv; }
+
 private:
     void directional_shadow_rendering();
 
     ComponentManager& comp_mng_;
     LightManager* light_manager_ = nullptr;
     std::unique_ptr<FullscreenQuad>fullscreen_quad_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>srvs_[DeferredGBuffer::Target::Count];
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>srvs_[Target::Count];
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>ssr_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>deferred_rendering_directional_ps_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>deferred_rendering_indirect_ps_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>deferred_rendering_emissive_ps_=nullptr;

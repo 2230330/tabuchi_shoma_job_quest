@@ -1,3 +1,4 @@
+#include"fullscreen_quad.hlsli"
 #include"sky_atmosphere.hlsli"
 #include"forward_light.hlsli"
 
@@ -204,13 +205,18 @@ float4 main(VS_OUT pin):SV_TARGET
   
     //大気散乱    
     float3 sky_color = float3(0, 0, 0);
+    
+    
+    float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
+    float4 pos = mul(ndc, inverse_view_projection_transform);
+    pos /= pos.w;
 
     float3 position =  float3(0.f, height+earth_height, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
     float3 sun_pos = light_dir * sun_distance; //太陽の位置()
-    float3 sun_dir = normalize(sun_pos.xyz-pin.world_pos.xyz);//頂点ー＞太陽
+    float3 sun_dir = normalize(sun_pos.xyz-pos.xyz);//頂点ー＞太陽
     //カメラから天球の各頂点への方向
-    float3 view_dir = normalize(pin.world_pos.xyz - camera_position.xyz); //camera->頂点まで方向
+    float3 view_dir = normalize(pos.xyz - camera_position.xyz); //camera->頂点まで方向
     
     //疑似多重散乱の事前計算
     float3 multi_scattering = PrecomputeMultiScattering(position, view_dir, sun_dir);
