@@ -213,6 +213,7 @@
     <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
     <ClInclude Include="headers\component\component_camera.h" />
+    <ClInclude Include="headers\component\component_name.h" />
     <ClInclude Include="headers\component\component_volumetric_cloud.h" />
     <ClInclude Include="headers\component\component_color.h" />
     <ClInclude Include="headers\component\component_editor.h" />

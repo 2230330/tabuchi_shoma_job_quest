@@ -269,6 +269,9 @@
     <ClInclude Include="headers\system\camera_set_constants.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_name.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
