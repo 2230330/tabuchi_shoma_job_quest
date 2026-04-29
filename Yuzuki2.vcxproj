@@ -95,7 +95,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -124,7 +124,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -152,7 +152,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -181,7 +181,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
