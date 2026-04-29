@@ -13,6 +13,17 @@ SamplerState sampler_states[6] : register(s0);
 Texture2D<float4> normal_texture : register(t0);
 Texture2D<float> depth_texture : register(t1);
 Texture2D<float4> color_texture : register(t2);
+Texture2D<float4> parameter_texture : register(t3);
+
+cbuffer SsrConstants : register(b9)
+{
+    float distance;
+    int num_steps;
+    int max_mip;
+    float thickness;
+    float resolution;
+    float start_bias;
+}
 
 float3 GetNormalVS(float2 uv)
 {
@@ -42,6 +53,13 @@ float3 GetColor(float2 uv)
     sampler_states[LINEAR_CLAMP], uv
     ).xyz;
 
+}
+//1:メタリック、2:ラフネス
+float2 GetParameter(float2 uv)
+{
+    return parameter_texture.Sample(
+        sampler_states[LINEAR_CLAMP], uv
+    ).xy;
 }
 
 //screen -> view
@@ -86,14 +104,13 @@ bool OutOfBounds(float2 uv)
     return uv.x <= 0 || uv.x >= 1 || uv.y <= 0 || uv.y >= 1;
 }
 
-static const float MAX_DISTANCE = 10.0f;
-static const int NUM_STEPS = 100;
-static const int MAX_MIP = 6;
-static const float THICKNESS = .01;
-static const float START_BIAS = 0.01f;
-
 float4 main(VS_OUT pin) : SV_TARGET
 {
+    //オブジェクトのパラメータ
+    //1:メタリック、2:ラフネス
+    float2 parameter = GetParameter(pin.texcoord);
+    if(parameter.y>0.8f)
+        return float4(0, 0, 0, 0);
     
     //View空間のリニア深度
     float scene_depth = GetSceneDepth(pin.texcoord.xy, 0);
@@ -109,13 +126,17 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 v = normalize(view_pos);
     float3 r = normalize(reflect(v, n));
     
-    float3 view_end = view_pos + r * MAX_DISTANCE;
+    //SSRは見えている箇所しか反射できないので、反射レイがオブジェの裏側に当たらないようにする
+    //if (dot(r, v) < -0.9)
+    //    return float4(0, 0, 0, 0);
+    
+    float3 view_end = view_pos + r * distance;
     
     //スクリーンスペースに
     uint2 dimensions;
     uint mip = 0, levels;
     normal_texture.GetDimensions(mip, dimensions.x, dimensions.y, levels);
-    float2 start_frag = ViewToScreen(view_pos, dimensions);
+    float2 start_frag = ViewToScreen(view_pos + (r*start_bias), dimensions);
     float2 end_frag = ViewToScreen(view_end, dimensions);
     
     float2 delta = end_frag - start_frag;
@@ -123,13 +144,19 @@ float4 main(VS_OUT pin) : SV_TARGET
     bool use_x = abs(delta.x) > abs(delta.y);
     
     float max_delta = use_x ? abs(delta.x) : abs(delta.y);
-    float steps = max_delta * saturate(0.3f/*resolution*/);
+    float steps = max_delta * saturate(resolution);
     
     if (steps < 1.0f)
         return 0;
     
-    if (steps > 3000)
-        steps = 3000;
+    //最大ステップ数を制限
+    if (steps > 10000)
+        steps = 10000;
+    
+    // grazing angle 
+    float grazing = saturate(dot(n, -v));
+    steps *= grazing;
+    
     
     float2 increment = delta / steps;
     float2 frag = start_frag;
@@ -140,16 +167,16 @@ float4 main(VS_OUT pin) : SV_TARGET
     bool hit = false;
     float depth_delta = 0.0f;
     
-    
     //coarse march
     [loop]
-    for (int i = 0; i < (int)steps;++i)
+    for (int i = 0; i < (int) steps; ++i)
     {
+    
         frag += increment;
         
         float2 uv = frag / dimensions;
         
-        if(OutOfBounds(uv))
+        if (OutOfBounds(uv))
         {
             return 0;
         }
@@ -160,7 +187,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         //compute interpolation parameter along ray
         float t;
-        if(use_x)
+        if (use_x)
             t = (frag.x - start_frag.x) / delta.x;
         else
             t = (frag.y - start_frag.y) / delta.y;
@@ -171,7 +198,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         depth_delta = view_z - scene_pos.z;
         
-        if(depth_delta>=0.f&&depth_delta<THICKNESS)
+        if (depth_delta >= 0.f && depth_delta < thickness)
         {
             hit = true;
             t_max = t;
@@ -182,14 +209,14 @@ float4 main(VS_OUT pin) : SV_TARGET
     }
     
     //もし当たっていなかったらここで終了
-    if (!hit)
-        return 0;
+        if (!hit)
+            return 0;
     
     //Binary refinement
     float t = 0.5f * (t_min + t_max);
     
-    [unrool]
-    for (int i = 0; i < NUM_STEPS;i++)
+    [loop]
+    for (int i = 0; i < num_steps;i++)
     {
         float2 frag_refined = lerp(start_frag, end_frag, t);
         float2 uv = frag_refined / dimensions;
@@ -204,7 +231,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         float view_z = perspectiveCorrectZ(view_pos.z, view_end.z, t);
         depth_delta = view_z - scene_pos.z;
 
-        if (depth_delta > 0 && depth_delta < THICKNESS)
+        if (depth_delta > 0 && depth_delta < thickness)
             t_max = t;
         else
             t_min = t;
@@ -223,9 +250,9 @@ float4 main(VS_OUT pin) : SV_TARGET
     //fade reflections facing toward the camera 
     visibility *= (1.0f - max(dot(-v, r),0));
     //fade based on depth mismatch within thickness tolerance
-    visibility *= (1.0f - saturate(depth_delta / THICKNESS));
+    visibility *= (1.0f - saturate(depth_delta / thickness));
     //fade near maximum ray distance to avoid hard cutoff
-    visibility *= (1.0f - saturate(length(hit_pos - view_pos) / MAX_DISTANCE));
+    visibility *= (1.0f - saturate(length(hit_pos - view_pos) / distance));
     
     float n_o_v = saturate(dot(n, -v));
     float f0 = 0.04f;

@@ -19,6 +19,7 @@ public:
     void SetNormalSRV(ID3D11ShaderResourceView* normal_srv) { this->normal_srv_ = normal_srv; }
     void SetDepthSRV(ID3D11ShaderResourceView* depth_srv) { this->depth_srv_ = depth_srv; }
     void SetColorSRV(ID3D11ShaderResourceView* color_srv) { this->color_srv_ = color_srv; }
+    void SetParameterSRV(ID3D11ShaderResourceView* parameter_srv) { this->parameter_srv_ = parameter_srv; }
     
     void SetSRV(ID3D11ShaderResourceView* srv, int num) { this->srvs_[num] = srv; }
 
@@ -32,6 +33,20 @@ public:
 private:
     ComponentManager& comp_mng_;
 
+    //スクリーンスペースリフレクションの定数バッファ
+    struct SsrConstants
+    {
+        float distance{ 10.0f };
+        int num_steps{ 10 };
+        int max_mip{ 6 };
+        float thickness{ 0.5f };
+
+        float resolution{ 0.3f };
+        float start_bias{ 0.05f };
+        DirectX::XMFLOAT2 dummy;
+    };
+    Microsoft::WRL::ComPtr<ID3D11Buffer>ssr_constant_buffer_ = nullptr;
+
     //スクリーンスペースリフレクションのシェーダー
     Microsoft::WRL::ComPtr<ID3D11PixelShader>ssr_ps_ = nullptr;
     static constexpr uint8_t kRTCount = static_cast<uint8_t>(Target::Count);
@@ -41,6 +56,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>normal_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>depth_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>color_srv_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>parameter_srv_ = nullptr;
     std::unique_ptr<FrameBuffer>ssr_framebuffer_ = nullptr;
     std::unique_ptr<FullscreenQuad>ssr_fullscreen_quad_ = nullptr;
 

@@ -122,6 +122,7 @@ void ComponentEditor::DrawImgui()
                 has_cloud_ = -1;
             }
         }
+        //スクリーンスペースリフレクションの追加
         if (ImGui::Button("ssr"))
         {
             if(has_ssr_<0)
@@ -392,6 +393,13 @@ void ComponentEditor::DrawImgui()
 
                     ImGui::Text("Screen Space Reflection");
 
+                    ImGui::DragFloat("Distance", &ssr.distance, 0.1f, 0.1f, 100.0f);
+                    ImGui::DragInt("Num Steps", &ssr.num_steps, 1, 1, 128);
+                    ImGui::DragInt("Max Mip", &ssr.max_mip, 1, 1, 10);
+                    ImGui::DragFloat("Thickness", &ssr.thickness, 0.01f, 0.01f, 1.0f);
+                    ImGui::DragFloat("Resolution", &ssr.resolution, 0.01f, 0.01f, 1.0f);
+                    ImGui::DragFloat("Start Bias", &ssr.start_bias, 0.01f, 0.0f, 1.0f);
+
                     ImGui::Image(ssr.ssr_texture.Get(), { 256,256, }, { 0,0 });
                     ImGui::Image(ssr.normal.Get(), { 256,256, }, { 0,0 });
                     ImGui::Image(ssr.color.Get(), { 256,256, }, { 0,0 });
@@ -658,7 +666,19 @@ void ComponentEditor::Save(const std::string& filename)
         // =========================
         if (comp_mng_.Has<ComponentSsr>(entity.entity))
         {
-            comp_json["ScreenSpaceReflection"] = true;
+            auto& ssr = comp_mng_.GetByEntity<ComponentSsr>(entity.entity);
+
+            comp_json["ScreenSpaceReflection"] =
+            {
+                {"distance", ssr.distance},
+                {"num_steps", ssr.num_steps},
+                {"max_mip", ssr.max_mip},
+                {"thickness", ssr.thickness},
+                {"resolution", ssr.resolution},
+                {"start_bias", ssr.start_bias}
+            };
+
+
         }
 
 

@@ -174,6 +174,7 @@ void RenderSystemManager::RenderAll()
     ssr_render_system_->SetNormalSRV(deferred_framebuffer_->GetSRV(Target::Normal));
     ssr_render_system_->SetDepthSRV(deferred_framebuffer_->GetSRV(Target::Depth));
     ssr_render_system_->SetColorSRV(deferred_framebuffer_->GetSRV(Target::BaseColor));
+    ssr_render_system_->SetParameterSRV(deferred_framebuffer_->GetSRV(Target::Parameter));
     ssr_render_system_->Render();
 
     //オブジェクトのライティング
