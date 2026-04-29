@@ -1,8 +1,10 @@
 #pragma once
-#include"component_manager.h"
-#include"../entity/entity_manager.h"
-#include"../resource_manager.h"
+#include<cstdint>
+#include<string>
 #include"../../external/imgui/imgui.h"
+
+class ComponentManager;
+class EntityManager;
 
 //このクラスは、コンポーネントマネージャーの情報を元に
 //コンポーネントの確認と追加、削除等を行うために作成されたクラスである。

@@ -7,6 +7,9 @@
 #include<nlohmann/json.hpp>
 #include"../../external/imgui/imgui.h"
 #include"../../headers/graphics.h"
+#include"../../headers/component/component_manager.h"
+#include"../../headers/resource_manager.h"
+#include"../../headers/entity/entity_manager.h"
 
 
 std::wstring ToWString(const std::string& str)
