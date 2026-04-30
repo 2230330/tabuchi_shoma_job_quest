@@ -6,15 +6,15 @@
 class ComponentManager;
 class EntityManager;
 
-//このクラスは、コンポーネントマネージャーの情報を元に
-//コンポーネントの確認と追加、削除等を行うために作成されたクラスである。
+//���̃N���X�́A�R���|�[�l���g�}�l�[�W���[�̏������
+//�R���|�[�l���g�̊m�F�ƒǉ��A�폜����s�����߂ɍ쐬���ꂽ�N���X�ł���B
 class ComponentEditor
 {
 public:
     ComponentEditor(
         ComponentManager& component_manager,
         EntityManager&entity_manager);
-    //編集用
+    //�ҏW�p
     void DrawImgui();
 
     void Save(const std::string& filename);
@@ -25,6 +25,8 @@ private:
 
     int32_t has_sky_ = -1;
     int32_t has_cloud_ = -1;
+    int32_t has_ssr_ = -1;
+
 
     //リネーム中のEntity
     uint32_t rename_entity_ = UINT32_MAX;

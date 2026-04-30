@@ -1,4 +1,4 @@
-﻿#include"../headers/framework.h"
+#include"../headers/framework.h"
 
 #include"../headers/graphics.h"
 #include"../headers/scene/scene_test.h"
@@ -39,12 +39,9 @@ void Framework::Update(float elapsed_time)
 
 void Framework::Render(float elapsed_time)
 {
-    ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
-    ID3D11RenderTargetView* null_render_target_views[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
-    dc->OMSetRenderTargets(_countof(null_render_target_views), null_render_target_views, 0);
-    ID3D11ShaderResourceView* null_shader_resource_views[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
-    dc->VSSetShaderResources(0, _countof(null_shader_resource_views), null_shader_resource_views);
-    dc->PSSetShaderResources(0, _countof(null_shader_resource_views), null_shader_resource_views);
+    Graphics::Instance().SetRenderTargets();
+    Graphics::Instance().ViewClear(0, 0, 0, 0);
+    Graphics::Instance().ClearShaderResourceViews();
 
     //シーン描画処理
     {

@@ -21,14 +21,15 @@
 #include "component_volumetric_cloud.h"
 #include"component_ajast_pbr_paramter_.h"
 #include "component_camera.h"
+#include "component_screen_space_reflection.h"
 #include"component_name.h"
 
-//コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
+//�R���|�[�l���g�̊Ǘ��ҁB���ꂩ��Ԃ��Ԃ��傫���Ȃ�ƍl����Ƃ�����ƔY�ݕ�
 class ComponentManager 
 {
 public:
     ComponentManager() {
-        // コンストラクタで型ごとのストレージを登録しておく
+        // �R���X�g���N�^�Ō^���Ƃ̃X�g���[�W��o�^���Ă���
         registerContainer<ComponentPosition>(positions_);
         registerContainer<ComponentRotation>(rotations_);
         registerContainer<ComponentScale>(scales_);
@@ -44,6 +45,7 @@ public:
         registerContainer<ComponentVolumetricCloud>(clouds_);
         registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
         registerContainer<ComponentCamera>(cameras_);
+        registerContainer<ComponentSsr>(ssrs_);
         registerContainer<ComponentName>(names_);
     }
 
@@ -63,7 +65,7 @@ public:
         return id;
     }
 
-    //コンポーネントを格納している配列の要素で取り出すゲッター
+    //�R���|�[�l���g��i�[���Ă���z��̗v�f�Ŏ��o���Q�b�^�[
     template<typename T>
     T& Get(int id) {
         auto& container = getContainer<T>();
@@ -76,7 +78,7 @@ public:
         return container.at(id);
     }
 
-    //要素の削除関数
+    //�v�f�̍폜�֐�
     template<typename T>
     void Remove(uint32_t entity_id) {
         auto type = std::type_index(typeid(T));
@@ -95,7 +97,7 @@ public:
             // swap with last
             std::swap(container[index_to_remove], container[last_index]);
 
-            // 更新対象の entity を探す
+            // �X�V�Ώۂ� entity ��T��
             for (auto& [eid, idx] : mapping) {
                 if (idx == last_index) {
                     idx = index_to_remove;
@@ -108,7 +110,7 @@ public:
         mapping.erase(entity_id);
     }
 
-    //一緒に登録したエンティティで要素を取り出すゲッター
+    //�ꏏ�ɓo�^�����G���e�B�e�B�ŗv�f����o���Q�b�^�[
     template<typename T>
     T& GetByEntity(uint32_t entity_id) {
         auto& container = getContainer<T>();
@@ -116,7 +118,7 @@ public:
         return container.at(mapping.at(entity_id));
     }
 
-    //登録したコンポーネントがない場合などの安全版ゲッター
+    //�o�^�����R���|�[�l���g���Ȃ��ꍇ�Ȃǂ̈��S�ŃQ�b�^�[
     template<typename T>
     T* TryGetByEntity(uint32_t entity_id) {
         auto it = entity_to_component_.find(std::type_index(typeid(T)));
@@ -129,7 +131,7 @@ public:
         auto& container = getContainer<T>();
         return &container.at(mit->second);
     }
-    //エンティティがそのコンポーネントを所有しているかの確認
+    //�G���e�B�e�B�����̃R���|�[�l���g����L���Ă��邩�̊m�F
     template<typename T>
     inline bool Has(uint32_t entity_id) 
     {
@@ -138,7 +140,7 @@ public:
         return it->second.find(entity_id) != it->second.end();
     }
 
-    //特定のコンポーネントを持つエンティティに対して一括処理をする為の走査関数
+    //����̃R���|�[�l���g����G���e�B�e�B�ɑ΂��Ĉꊇ���������ׂ̑����֐�
     template<typename T>
     void ForEach(std::function<void(uint32_t, T&)> func) {
         auto& container = getContainer<T>();
@@ -149,7 +151,7 @@ public:
     }
 
 
-    //コンポーネントの持ち主のエンティティが死んだとき、属するコンポーネントを消す
+    //�R���|�[�l���g�̎�����̃G���e�B�e�B�����񂾂Ƃ��A������R���|�[�l���g�����
     void RemoveAllComponents(uint32_t entity_id) {
         for (auto& [type, remove_fn] : removers_)
         {
@@ -159,12 +161,12 @@ public:
     }
 
 private:
-    // 型ごとのコンテナを汎用的に扱うための仕組み
+    // �^���Ƃ̃R���e�i��ėp�I�Ɉ������߂̎d�g��
     template<typename T>
     void registerContainer(std::vector<T>& vec) {
         containers_[std::type_index(typeid(T))] = &vec;
 
-        //removerも登録
+        //remover��o�^
         removers_[std::type_index(typeid(T))] = [this](uint32_t eid)
             {
                 this->Remove<T>(eid);
@@ -175,7 +177,7 @@ private:
     std::vector<T>& getContainer() {
         auto it = containers_.find(std::type_index(typeid(T)));
         if (it == containers_.end()) {
-            throw std::runtime_error("コンポーネントが登録されていません");
+            throw std::runtime_error("�R���|�[�l���g���o�^����Ă��܂���");
         }
         return *static_cast<std::vector<T>*>(it->second);
     }
@@ -184,14 +186,14 @@ private:
     const std::vector<T>& getContainer() const {
         auto it = containers_.find(std::type_index(typeid(T)));
         if (it == containers_.end()) {
-            throw std::runtime_error("コンポーネントが登録されていません");
+            throw std::runtime_error("�R���|�[�l���g���o�^����Ă��܂���");
         }
         return *static_cast<const std::vector<T>*>(it->second);
     }
 
 private:
     std::unordered_map<std::type_index, void*> containers_;
-    //型ごとのマッピング機能
+    //�^���Ƃ̃}�b�s���O�@�\
     std::unordered_map<std::type_index, std::unordered_map<uint32_t, int>> entity_to_component_;
     std::unordered_map<std::type_index, std::function<void(uint32_t)>> removers_;
 
@@ -210,5 +212,6 @@ private:
     std::vector<ComponentVolumetricCloud>clouds_;
     std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
     std::vector<ComponentCamera>cameras_;
+    std::vector<ComponentSsr>ssrs_;
     std::vector<ComponentName>names_;
 };

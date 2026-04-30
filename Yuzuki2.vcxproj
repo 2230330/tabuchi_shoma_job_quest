@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -95,7 +95,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -124,7 +124,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -152,7 +152,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories);.\external\DirectXTex-oct2025\DirectXTex</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -181,7 +181,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -213,6 +213,7 @@
     <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
     <ClInclude Include="headers\component\component_camera.h" />
+    <ClInclude Include="headers\component\component_screen_space_reflection.h" />
     <ClInclude Include="headers\component\component_name.h" />
     <ClInclude Include="headers\component\component_volumetric_cloud.h" />
     <ClInclude Include="headers\component\component_color.h" />
@@ -256,8 +257,9 @@
     <ClInclude Include="headers\sprite.h" />
     <ClInclude Include="headers\sprite_batch.h" />
     <ClInclude Include="headers\static_mesh.h" />
-    <ClInclude Include="headers\system\cloud_render_system.h" />
-    <ClInclude Include="headers\system\deferred_render_system.h" />
+    <ClInclude Include="headers\system\render_cloud_system.h" />
+    <ClInclude Include="headers\system\render_deferred_system.h" />
+    <ClInclude Include="headers\system\render_screen_space_reflection_system.h" />
     <ClInclude Include="headers\system\update_camera_system.h" />
     <ClInclude Include="headers\system\ibl_manager.h" />
     <ClInclude Include="headers\system\i_render_system.h" />
@@ -265,11 +267,11 @@
     <ClInclude Include="headers\system\camera_set_constants.h" />
     <ClInclude Include="headers\system\render_gltf_system.h" />
     <ClInclude Include="headers\system\render_system_manager.h" />
-    <ClInclude Include="headers\system\sky_render_system.h" />
-    <ClInclude Include="headers\system\sprite_render_system.h" />
+    <ClInclude Include="headers\system\render_sky_system.h" />
+    <ClInclude Include="headers\system\render_sprite_system.h" />
     <ClInclude Include="headers\system\update_transform_system.h" />
     <ClInclude Include="headers\system\update_system_manager.h" />
-    <ClInclude Include="headers\system\instancing_render_system.h" />
+    <ClInclude Include="headers\system\render_instancing_system.h" />
     <ClInclude Include="headers\texture.h" />
     <ClInclude Include="headers\world\world.h" />
   </ItemGroup>
@@ -303,16 +305,17 @@
     <ClCompile Include="sources\sprite.cpp" />
     <ClCompile Include="sources\sprite_batch.cpp" />
     <ClCompile Include="sources\static_mesh.cpp" />
-    <ClCompile Include="sources\system\cloud_render_system.cpp" />
-    <ClCompile Include="sources\system\deferred_render_system.cpp" />
+    <ClCompile Include="sources\system\render_cloud_system.cpp" />
+    <ClCompile Include="sources\system\render_deferred_system.cpp" />
+    <ClCompile Include="sources\system\render_screen_space_reflection_system.cpp" />
     <ClCompile Include="sources\system\update_camera_system.cpp" />
     <ClCompile Include="sources\system\ibl_manager.cpp" />
-    <ClCompile Include="sources\system\instancing_render_system.cpp" />
+    <ClCompile Include="sources\system\render_instancing_system.cpp" />
     <ClCompile Include="sources\system\camera_set_constants.cpp" />
     <ClCompile Include="sources\system\render_gltf_system.cpp" />
     <ClCompile Include="sources\system\render_system_manager.cpp" />
-    <ClCompile Include="sources\system\sky_render_system.cpp" />
-    <ClCompile Include="sources\system\sprite_render_system.cpp" />
+    <ClCompile Include="sources\system\render_sky_system.cpp" />
+    <ClCompile Include="sources\system\render_sprite_system.cpp" />
     <ClCompile Include="sources\system\update_system_manager.cpp" />
     <ClCompile Include="sources\system\update_transform_system.cpp" />
     <ClCompile Include="sources\texture.cpp" />
@@ -417,6 +420,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\screen_space_reflection_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
@@ -666,12 +675,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="shaderes\sky_atmosphere_vs.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\sprite_batch_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

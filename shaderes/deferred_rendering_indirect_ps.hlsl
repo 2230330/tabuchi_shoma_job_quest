@@ -10,6 +10,7 @@ Texture2D<float4> gbuffer_normal : register(t2);
 Texture2D<float4> gbuffer_parameter : register(t3);
 Texture2D<float> gbuffer_depth : register(t4);
 Texture2D<float4> gbuffer_velocity : register(t5);
+Texture2D<float4> ssr_texture : register(t6);
 
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
@@ -56,8 +57,30 @@ float4 main(VS_OUT pin) : SV_TARGET
         //total_diffuse += DiffuseIBL_SH(N, V, data.roughness, diffuse_reflectance, F0);
         total_diffuse += DiffuseIBL(N, V, data.roughness, diffuse_reflectance, F0,
         diffuse_pmrem, sampler_states[LINEAR_CLAMP]);
-        total_specular += SpecularIBL(N, V, data.roughness, F0,
-        lut_ggx, specular_pmrem, sampler_states[LINEAR_CLAMP]);
+        total_specular += SpecularIBL(
+        N, V, data.roughness, F0,
+        lut_ggx, specular_pmrem,
+        sampler_states[LINEAR_CLAMP]);
+
+        // SSR
+        float4 ssr = ssr_texture.Sample(
+        sampler_states[LINEAR_CLAMP], pin.texcoord);
+
+        float3 ssr_color = ssr.rgb;
+        float ssr_mask = ssr.a;
+
+        float NoV = saturate(dot(N, V));
+        float3 F = CalcFresnel(F0, NoV);
+
+        // roughness & hit mask
+        float ssr_weight = ssr_mask * (1.0 - data.roughness);
+
+        // SSR優先、IBLフォールバック
+        total_specular = lerp(
+        total_specular,
+        ssr_color * F,
+        ssr_weight);
+
 
     	//	自己遮蔽
         total_diffuse = lerp(total_diffuse, total_diffuse * data.occlusion_factor,data.occlusion_strength);
