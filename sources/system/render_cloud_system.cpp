@@ -10,7 +10,7 @@
 #include"../../headers/constant_buffer_slot.h"
 #include"../../headers/misc.h"
 
-CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
+RenderCloudSystem::RenderCloudSystem(ComponentManager& comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
     ,IRenderSystem(render_pass)
 {
@@ -100,7 +100,7 @@ CloudRenderSystem::CloudRenderSystem(ComponentManager& comp_mng,RenderPass rende
             SHADOW_RES,
             FrameBuffer::usage::color);
 }
-void CloudRenderSystem::Render()
+void RenderCloudSystem::Render()
 {
     enable_cloud_ = false;
 
@@ -159,7 +159,7 @@ void CloudRenderSystem::Render()
         });
 }
 //初期に1度だけ呼び出し、ノイズマップを作成
-void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
+void RenderCloudSystem::CreateNoiseTextures(ID3D11Device* device)
 {
 
     HRESULT hr{ S_OK };
@@ -331,7 +331,7 @@ void CloudRenderSystem::CreateNoiseTextures(ID3D11Device* device)
     context->Flush();
 }
 
-void CloudRenderSystem::UpdateConstants(const ComponentVolumetricCloud& cloud)
+void RenderCloudSystem::UpdateConstants(const ComponentVolumetricCloud& cloud)
 {
     // --- 基本情報 ---
     cloud_ray_marching_constant_.wind_direction = cloud.wind_direction;

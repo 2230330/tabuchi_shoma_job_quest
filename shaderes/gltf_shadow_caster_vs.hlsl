@@ -24,7 +24,7 @@ VS_OUT main(VS_IN vin)
 
     vin.position.w = 1;
     float4 wpos = mul(vin.position, world);
-    vout.position = mul(wpos, light_view_projection);
+    vout.position = mul(wpos, cascade_light_view_projection[current_index]);
  //   vout.w_position = mul(vin.position, world);
 
  //   vin.normal.w = 0;

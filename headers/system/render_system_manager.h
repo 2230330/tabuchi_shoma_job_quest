@@ -43,10 +43,10 @@ private:
 
     std::vector<std::unique_ptr<IRenderSystem>> systems_;
     //背景用描画システムは別枠で管理する
-    std::unique_ptr<SkyRenderSystem>sky_render_system_;
-    std::unique_ptr<CloudRenderSystem>cloud_render_system_;
-    std::unique_ptr<DeferredRenderSystem>deferred_render_system_;
-    std::unique_ptr<ScreenSpaceReflectionRenderSystem>ssr_render_system_;
+    std::unique_ptr<RenderSkySystem>sky_render_system_;
+    std::unique_ptr<RenderCloudSystem>cloud_render_system_;
+    std::unique_ptr<RenderDeferredSystem>deferred_render_system_;
+    std::unique_ptr<RenderScreenSpaceReflectionSystem>ssr_render_system_;
     ComponentManager& comp_mng_;
 
     //フルスクリーンクワッド(背景用)

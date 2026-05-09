@@ -21,8 +21,10 @@ cbuffer SsrConstants : register(b9)
     int num_steps;
     int max_mip;
     float thickness;
+    
     float resolution;
     float start_bias;
+    float intensity;
 }
 
 float3 GetNormalVS(float2 uv)
@@ -30,7 +32,7 @@ float3 GetNormalVS(float2 uv)
     //テクスチャはワールド空間で算出されている 
     //gltf_model_gbuffer_vs.hlsl
     float3 n= normal_texture.SampleLevel(
-        sampler_states[LINEAR_CLAMP], uv, 0).xyz;
+        sampler_states[POINT_CLAMP], uv, 0).xyz;
     
     //ワールド空間からからビュー空間へ変換
     n = normalize(mul(float4(n, 0), view_transform));
@@ -44,13 +46,13 @@ float3 GetNormalVS(float2 uv)
 float GetSceneDepth(float2 uv, int mip)
 {
     return depth_texture.SampleLevel(
-        sampler_states[LINEAR_CLAMP], uv, mip);
+        sampler_states[POINT_CLAMP], uv, mip);
 }
 //色情報
 float3 GetColor(float2 uv)
 {
     return color_texture.Sample(
-    sampler_states[LINEAR_CLAMP], uv
+    sampler_states[POINT_CLAMP], uv
     ).xyz;
 
 }
@@ -58,7 +60,7 @@ float3 GetColor(float2 uv)
 float2 GetParameter(float2 uv)
 {
     return parameter_texture.Sample(
-        sampler_states[LINEAR_CLAMP], uv
+        sampler_states[POINT_CLAMP], uv
     ).xy;
 }
 
@@ -108,9 +110,9 @@ float4 main(VS_OUT pin) : SV_TARGET
 {
     //オブジェクトのパラメータ
     //1:メタリック、2:ラフネス
-    float2 parameter = GetParameter(pin.texcoord);
-    if(parameter.y>0.8f)
-        return float4(0, 0, 0, 0);
+    //float2 parameter = GetParameter(pin.texcoord);
+    //if(parameter.y>0.8f)
+    //    return float4(0, 0, 0, 0);
     
     //View空間のリニア深度
     float scene_depth = GetSceneDepth(pin.texcoord.xy, 0);
@@ -126,9 +128,12 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 v = normalize(view_pos);
     float3 r = normalize(reflect(v, n));
     
+    
     //SSRは見えている箇所しか反射できないので、反射レイがオブジェの裏側に当たらないようにする
-    //if (dot(r, v) < -0.9)
+    //if (dot(v,n) < -0.9)
     //    return float4(0, 0, 0, 0);
+    
+    //return float4(r, 1.0f);
     
     float3 view_end = view_pos + r * distance;
     
@@ -152,10 +157,6 @@ float4 main(VS_OUT pin) : SV_TARGET
     //最大ステップ数を制限
     if (steps > 10000)
         steps = 10000;
-    
-    // grazing angle 
-    float grazing = saturate(dot(n, -v));
-    steps *= grazing;
     
     
     float2 increment = delta / steps;
@@ -181,7 +182,7 @@ float4 main(VS_OUT pin) : SV_TARGET
             return 0;
         }
         
-        float scene_linear_depth = GetSceneDepth(uv, mip);
+        float scene_linear_depth = GetSceneDepth(uv, 0);
         scene_linear_depth *= camera_clip_distance.y;
         float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
         
@@ -198,7 +199,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         depth_delta = view_z - scene_pos.z;
         
-        if (depth_delta >= 0.f && depth_delta < thickness)
+        if (depth_delta > 0 && depth_delta < thickness)
         {
             hit = true;
             t_max = t;
@@ -261,6 +262,6 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     visibility = saturate(visibility);
     
-    return float4(GetColor(hit_uv),1.0);
+    return float4(GetColor(hit_uv), visibility*intensity);
     
 }

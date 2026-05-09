@@ -23,6 +23,7 @@
 #include "component_camera.h"
 #include "component_screen_space_reflection.h"
 #include"component_name.h"
+#include"component_cascade_shadow.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -47,6 +48,7 @@ public:
         registerContainer<ComponentCamera>(cameras_);
         registerContainer<ComponentSsr>(ssrs_);
         registerContainer<ComponentName>(names_);
+        registerContainer<ComponentCascadeShadow>(cas_shadows_);
     }
 
     template<typename T>
@@ -215,4 +217,5 @@ private:
     std::vector<ComponentCamera>cameras_;
     std::vector<ComponentSsr>ssrs_;
     std::vector<ComponentName>names_;
+    std::vector<ComponentCascadeShadow>cas_shadows_;
 };

@@ -278,6 +278,9 @@
     <ClInclude Include="headers\component\component_name.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_cascade_shadow.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -661,6 +664,9 @@
     </FxCompile>
     <FxCompile Include="shaderes\screen_space_reflection_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\ssr_hiz_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

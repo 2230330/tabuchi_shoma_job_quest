@@ -8,7 +8,7 @@
 #include"../../headers/misc.h"
 #include"../../headers/constant_buffer_slot.h"
 
-SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_pass)
+RenderSkySystem::RenderSkySystem(ComponentManager& comp_mng, RenderPass render_pass)
     :comp_mng_(comp_mng)
     , IRenderSystem(render_pass)
 {
@@ -42,7 +42,7 @@ SkyRenderSystem::SkyRenderSystem(ComponentManager& comp_mng, RenderPass render_p
 }
 
 
-void SkyRenderSystem::Render()
+void RenderSkySystem::Render()
 {
     sky_flag_ = false;
     comp_mng_.ForEach<ComponentSkyAtmosphere>([&](uint32_t entity_id, ComponentSkyAtmosphere sky_atmosphere) {

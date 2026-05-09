@@ -12,10 +12,10 @@
 //スカイを描画します。
 //シェーダーはshaderers/sky_atmosphere_ps.csoを使用
 //レイマーチングを使用して、空に大気散乱を描画します。
-class SkyRenderSystem:public IRenderSystem
+class RenderSkySystem:public IRenderSystem
 {
 public:
-    SkyRenderSystem(ComponentManager& comp_mng,RenderPass render_pass);
+    RenderSkySystem(ComponentManager& comp_mng,RenderPass render_pass);
 
     //スカイキューブを受け取る
     void SetSkyCubeSRV(ID3D11ShaderResourceView* sky_cube_srv){

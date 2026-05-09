@@ -10,6 +10,7 @@
 #include"../../headers/component/component_manager.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/entity/entity_manager.h"
+#include"../../headers/system/render_deferred_system.h"
 
 
 std::wstring ToWString(const std::string& str)
@@ -125,6 +126,27 @@ void ComponentEditor::DrawImgui()
                 has_cloud_ = -1;
             }
         }
+        //カスケードシャドウの追加
+        if (ImGui::Button("cascade shadow"))
+        {
+            if (has_cascade_shadow_ < 0)
+            {
+                uint32_t entity = enti_mng_.Add();
+
+                ComponentCascadeShadow shadow;
+                comp_mng_.Add(entity, shadow);
+
+                has_cascade_shadow_ = entity;
+            }
+            else
+            {
+                enti_mng_.Remove(has_cascade_shadow_); // alive = false にする
+                comp_mng_.RemoveAllComponents(has_cascade_shadow_); // すべてのコンポーネントを削除
+
+                has_cascade_shadow_ = -1;
+            }
+        }
+
         //スクリーンスペースリフレクションの追加
         if (ImGui::Button("ssr"))
         {
@@ -494,6 +516,16 @@ void ComponentEditor::DrawImgui()
                     ImGui::Separator();
                 }
 
+                //Cascade Shadow
+                if (comp_mng_.Has<ComponentCascadeShadow>(entity.entity))
+                {
+                    auto& shadow = comp_mng_.GetByEntity<ComponentCascadeShadow>(entity.entity);
+                    for (int i = 0; i < RenderDeferredSystem::CASCADE::CascadeCount; i++)
+                    {
+                        ImGui::Image(shadow.srvs_.at(i).Get(), { 256,256 }, { 0,0 });
+                    }
+                }
+
                 //SSR
                 if (comp_mng_.Has<ComponentSsr>(entity.entity))
                 {
@@ -507,6 +539,7 @@ void ComponentEditor::DrawImgui()
                     ImGui::DragFloat("Thickness", &ssr.thickness, 0.01f, 0.01f, 1.0f);
                     ImGui::DragFloat("Resolution", &ssr.resolution, 0.01f, 0.01f, 1.0f);
                     ImGui::DragFloat("Start Bias", &ssr.start_bias, 0.01f, 0.0f, 1.0f);
+                    ImGui::SliderFloat("Intensity", &ssr.intensity, 0.0f, 10.0f);
 
                     ImGui::Image(ssr.ssr_texture.Get(), { 256,256, }, { 0,0 });
                     ImGui::Image(ssr.normal.Get(), { 256,256, }, { 0,0 });
@@ -770,6 +803,14 @@ void ComponentEditor::Save(const std::string& filename)
         }
 
         // =========================
+        // Cascade Shadow
+        // =========================
+        if (comp_mng_.Has<ComponentCascadeShadow>(entity.entity))
+        {
+            comp_json["Cascade Shadow"] = true;
+        }
+
+        // =========================
         // SSR
         // =========================
         if (comp_mng_.Has<ComponentSsr>(entity.entity))
@@ -783,7 +824,8 @@ void ComponentEditor::Save(const std::string& filename)
                 {"max_mip", ssr.max_mip},
                 {"thickness", ssr.thickness},
                 {"resolution", ssr.resolution},
-                {"start_bias", ssr.start_bias}
+                {"start_bias", ssr.start_bias},
+                {"intensity",ssr.intensity}
             };
 
 
@@ -993,10 +1035,25 @@ void ComponentEditor::Load(const std::string& filename)
             comp_mng_.Add(entity, c);
         }
 
+        //Cascade Shadow
+        if (comp_json.contains("Cascade Shadow"))
+        {
+            ComponentCascadeShadow shadow;
+            comp_mng_.Add(entity, shadow);
+        }
+
         // SSR
         if (comp_json.contains("ScreenSpaceReflection"))
         {
             ComponentSsr ssr;
+            auto& j = comp_json["ScreenSpaceReflection"];
+            ssr.distance = j["distance"];
+            ssr.num_steps = j["num_steps"];
+            ssr.max_mip = j["max_mip"];
+            ssr.thickness = j["thickness"];
+            ssr.resolution = j["resolution"];
+            ssr.start_bias = j["start_bias"];
+            ssr.intensity = j["intensity"];
             comp_mng_.Add(entity, ssr);
             has_ssr_ = entity;
         }

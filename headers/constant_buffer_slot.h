@@ -1,14 +1,13 @@
 #pragma once
-#include<stdint.h>
 
-enum  ConstantBufferSlot :uint8_t {
+enum  ConstantBufferSlot :int {
     kPerObject = 0,
     kPerFrame,
     kPerMaterial,
     kForwardLight,
     kDeferredLight,
     kPostEffect,
-    kLightViewProjection,
+    kHiz,
     kCamera,
     kCascadeShadow,
     kSsr,

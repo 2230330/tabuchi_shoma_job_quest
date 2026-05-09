@@ -44,6 +44,8 @@
 //   float shadow_attenuation;          // Offset:   68 Size:     4
 //   float shadow_bias;                 // Offset:   72 Size:     4
 //   uint shadow_dummy;                 // Offset:   76 Size:     4 [unused]
+//   row_major float4x4 light_view_projection;// Offset:   80 Size:    64 [unused]
+//   row_major float4x4 inverse_light_view_projection;// Offset:  144 Size:    64 [unused]
 //
 // }
 //
@@ -52,6 +54,8 @@
 //
 //   row_major float4x4 cascade_light_view_projection[4];// Offset:    0 Size:   256
 //   row_major float4x4 cascade_inverse_light_view_projection;// Offset:  256 Size:    64 [unused]
+//   int current_index;                 // Offset:  320 Size:     4 [unused]
+//   int dummy[3];                      // Offset:  336 Size:    36 [unused]
 //
 // }
 //
@@ -247,7 +251,7 @@ itof r1.xyz, l(0, 0, 0, 0)  // r1.x <- specular.x; r1.y <- specular.y; r1.z <- s
 #line 45
 nop 
 
-#line 68 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 69 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
 add r1.w, cb4[3].w, l(0.500000)
 ftoi r1.w, r1.w  // r1.w <- <get_light_kinds return value>
 
@@ -260,13 +264,13 @@ switch r1.w
 #line 48
   nop 
 
-#line 74 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 75 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
   mov r2.xyz, cb4[0].xyzx  // r2.x <- data.direction.x; r2.y <- data.direction.y; r2.z <- data.direction.z
 
-#line 75
+#line 76
   mov r3.xyzw, cb4[1].xyzw  // r3.x <- data.color.x; r3.y <- data.color.y; r3.z <- data.color.z; r3.w <- data.color.w
 
-#line 76
+#line 77
   mov r3.xyzw, r3.xyzw  // r3.x <- <convert_directional_lights return value>.color.x; r3.y <- <convert_directional_lights return value>.color.y; r3.z <- <convert_directional_lights return value>.color.z; r3.w <- <convert_directional_lights return value>.color.w
   mov r2.xyz, r2.xyzx  // r2.x <- <convert_directional_lights return value>.direction.x; r2.y <- <convert_directional_lights return value>.direction.y; r2.z <- <convert_directional_lights return value>.direction.z
 
@@ -873,16 +877,16 @@ switch r1.w
 #line 94
   nop 
 
-#line 82 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 83 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
   mov r2.xyz, cb4[0].xyzx  // r2.x <- data.position.x; r2.y <- data.position.y; r2.z <- data.position.z
 
-#line 83
+#line 84
   mov r3.xyzw, cb4[1].xyzw  // r3.x <- data.color.x; r3.y <- data.color.y; r3.z <- data.color.z; r3.w <- data.color.w
 
-#line 84
+#line 85
   mov r4.y, cb4[2].x  // r4.y <- data.range
 
-#line 85
+#line 86
   mov r2.xyz, r2.xyzx  // r2.x <- <convert_point_lights return value>.position.x; r2.y <- <convert_point_lights return value>.position.y; r2.z <- <convert_point_lights return value>.position.z
   mov r3.xyz, r3.xyzx  // r3.x <- <convert_point_lights return value>.color.x; r3.y <- <convert_point_lights return value>.color.y; r3.z <- <convert_point_lights return value>.color.z
   mov r4.x, r3.w  // r4.x <- <convert_point_lights return value>.color.w
@@ -1229,27 +1233,27 @@ switch r1.w
 #line 119
   nop 
 
-#line 91 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 92 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
   mov r2.xyz, cb4[0].xyzx  // r2.x <- data.position.x; r2.y <- data.position.y; r2.z <- data.position.z
 
-#line 92
+#line 93
   dp4 r1.w, cb4[1].xyzw, cb4[1].xyzw
   rsq r1.w, r1.w
   mul r3.xyz, r1.wwww, cb4[1].xyzx  // r3.x <- data.direction.x; r3.y <- data.direction.y; r3.z <- data.direction.z
 
-#line 93
+#line 94
   mov r4.xyzw, cb4[2].xyzw  // r4.x <- data.color.x; r4.y <- data.color.y; r4.z <- data.color.z; r4.w <- data.color.w
 
-#line 94
+#line 95
   mov r5.y, cb4[3].x  // r5.y <- data.range
 
-#line 95
+#line 96
   mov r5.z, cb4[3].y  // r5.z <- data.inner_corn
 
-#line 96
+#line 97
   mov r5.w, cb4[3].z  // r5.w <- data.outer_corn
 
-#line 97
+#line 98
   mov r5.x, r4.w  // r5.x <- <convert_spot_lights return value>.color.w
   mov r5.y, r5.y  // r5.y <- <convert_spot_lights return value>.range
   mov r5.z, r5.z  // r5.z <- <convert_spot_lights return value>.inner_corn

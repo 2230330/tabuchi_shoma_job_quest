@@ -14,13 +14,13 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
 {
     //AddSystem(std::make_unique<SkyRenderSystem>(comp_mng_,RenderPass_Background));
     //AddSystem(std::make_unique<CloudRenderSystem>(comp_mng_,RenderPass_Background));
-    sky_render_system_ = std::make_unique<SkyRenderSystem>(comp_mng_, RenderPass_Background);
-    cloud_render_system_ = std::make_unique<CloudRenderSystem>(comp_mng_, RenderPass_Background);
+    sky_render_system_ = std::make_unique<RenderSkySystem>(comp_mng_, RenderPass_Background);
+    cloud_render_system_ = std::make_unique<RenderCloudSystem>(comp_mng_, RenderPass_Background);
     AddSystem(std::make_unique<GltfRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<InstancingRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Lighting));
-    deferred_render_system_ = std::make_unique<DeferredRenderSystem>(comp_mng_, RenderPass_Lighting);
-    ssr_render_system_ = std::make_unique<ScreenSpaceReflectionRenderSystem>(comp_mng_, RenderPass_Lighting);
+    deferred_render_system_ = std::make_unique<RenderDeferredSystem>(comp_mng_, RenderPass_Lighting);
+    ssr_render_system_ = std::make_unique<RenderScreenSpaceReflectionSystem>(comp_mng_, RenderPass_Lighting);
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
@@ -175,6 +175,7 @@ void RenderSystemManager::RenderAll()
     ssr_render_system_->SetDepthSRV(deferred_framebuffer_->GetSRV(Target::Depth));
     ssr_render_system_->SetColorSRV(deferred_framebuffer_->GetSRV(Target::BaseColor));
     ssr_render_system_->SetParameterSRV(deferred_framebuffer_->GetSRV(Target::Parameter));
+    ssr_render_system_->SetDepthTex(deferred_framebuffer_->GetDepthTex());
     ssr_render_system_->Render();
 
     //オブジェクトのライティング

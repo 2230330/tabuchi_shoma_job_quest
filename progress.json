@@ -122,15 +122,15 @@
         {
             "components": {
                 "Camera": {
-                    "dir_x": 0.05452919378876686,
-                    "dir_y": -0.4160088002681732,
-                    "dir_z": -0.9077242612838745,
-                    "far": 100.0,
+                    "dir_x": 0.12336616963148117,
+                    "dir_y": -0.3700394630432129,
+                    "dir_z": -0.9207886457443237,
+                    "far": 1000.0,
                     "main": true,
-                    "near": 1.0,
-                    "pos_x": 0.516374945640564,
-                    "pos_y": 0.22040283679962158,
-                    "pos_z": 12.64525032043457
+                    "near": 0.10000000149011612,
+                    "pos_x": -1.6119575500488281,
+                    "pos_y": 4.835101127624512,
+                    "pos_z": 12.0314359664917
                 },
                 "Name": {
                     "value": "Camera"
@@ -140,7 +140,18 @@
         },
         {
             "components": {
-                "ScreenSpaceReflection": true
+                "Name": {
+                    "value": "ScreenSpaceReflection"
+                },
+                "ScreenSpaceReflection": {
+                    "distance": 10.0,
+                    "intensity": 1.1059999465942383,
+                    "max_mip": 6,
+                    "num_steps": 10,
+                    "resolution": 0.30000001192092896,
+                    "start_bias": 0.05000000074505806,
+                    "thickness": 0.5
+                }
             },
             "entity_id": 6
         },
@@ -259,6 +270,15 @@
                 }
             },
             "entity_id": 10
+        },
+        {
+            "components": {
+                "Cascade Shadow": true,
+                "Name": {
+                    "value": "Cascade Shadow"
+                }
+            },
+            "entity_id": 11
         }
     ]
 }

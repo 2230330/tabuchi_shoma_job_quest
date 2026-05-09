@@ -13,6 +13,7 @@ struct ComponentSsr :public IComponent
     float thickness{ 0.5f };
     float resolution{ 0.3f };
     float start_bias{ 0.05f };
+    float intensity{ 1.0f };
 
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ssr_texture;

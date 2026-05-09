@@ -2,6 +2,7 @@
 //スクリーンスペースリフレクションのシステム
 //深度情報と法線情報を元に、画面上で販社の情報を生成します
 //反射の情報は、ディファードレンダリングのライティングパスで合成されます。
+#include<vector>
 
 #include"i_render_system.h"
 #include"../component/component_manager.h"
@@ -9,10 +10,10 @@
 #include"../fullscreen_quad.h"
 #include"../deferred_g_buffer.h"
 
-class ScreenSpaceReflectionRenderSystem :public IRenderSystem
+class RenderScreenSpaceReflectionSystem :public IRenderSystem
 {
 public:
-    ScreenSpaceReflectionRenderSystem(ComponentManager& comp_mng, RenderPass render_pass);
+    RenderScreenSpaceReflectionSystem(ComponentManager& comp_mng, RenderPass render_pass);
 
     void Render()override;
 
@@ -20,8 +21,7 @@ public:
     void SetDepthSRV(ID3D11ShaderResourceView* depth_srv) { this->depth_srv_ = depth_srv; }
     void SetColorSRV(ID3D11ShaderResourceView* color_srv) { this->color_srv_ = color_srv; }
     void SetParameterSRV(ID3D11ShaderResourceView* parameter_srv) { this->parameter_srv_ = parameter_srv; }
-    
-    void SetSRV(ID3D11ShaderResourceView* srv, int num) { this->srvs_[num] = srv; }
+    void SetDepthTex(ID3D11Texture2D* depth_tex) { this->hiz_copy_tex_ = depth_tex; }
 
 
     //生成したスクリーンスペースリフレクションのテクスチャを取得する関数
@@ -43,14 +43,31 @@ private:
 
         float resolution{ 0.3f };
         float start_bias{ 0.05f };
-        DirectX::XMFLOAT2 dummy;
+        float intensity{ 1.0f };
+        float dummy;
     };
     Microsoft::WRL::ComPtr<ID3D11Buffer>ssr_constant_buffer_ = nullptr;
 
     //スクリーンスペースリフレクションのシェーダー
     Microsoft::WRL::ComPtr<ID3D11PixelShader>ssr_ps_ = nullptr;
-    static constexpr uint8_t kRTCount = static_cast<uint8_t>(Target::Count);
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>srvs_[kRTCount];
+    //SSRにHi-Zを使いたいので、ミップを用意
+    const static int MIP_COUNT=6;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D>hiz_copy_tex_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> hiz_depth_texture_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>hiz_depth_srv_ = nullptr;
+    std::vector<Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>>hiz_uavs_;
+    std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>hiz_srvs_;
+    Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>hiz_process_uavs_[2];
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>hiz_process_srvs_[2];
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader>hiz_cs_ = nullptr;
+    struct HizConstants
+    {
+        int srv_mip;
+        int dst_mip;
+        int dummy[2];
+    };
+    Microsoft::WRL::ComPtr<ID3D11Buffer>hiz_constant_buffer_ = nullptr;
+
 
     //スクリーンスペースリフレクションの描画に必要なリソース
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>normal_srv_ = nullptr;
@@ -60,4 +77,7 @@ private:
     std::unique_ptr<FrameBuffer>ssr_framebuffer_ = nullptr;
     std::unique_ptr<FullscreenQuad>ssr_fullscreen_quad_ = nullptr;
 
+private:
+    //コンピュートシェーダーでHi-Zを行う関数
+    void ComputeHiz(ID3D11DeviceContext*context);
 };
