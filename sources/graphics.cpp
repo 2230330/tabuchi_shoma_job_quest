@@ -1,5 +1,15 @@
 #include"../headers/graphics.h"
+
+#include"../headers/render_state.h"
 #include"../headers/misc.h"
+
+Graphics::~Graphics() = default;
+
+Graphics& Graphics::Instance()
+{
+    static Graphics instance_;
+    return instance_;
+}
 
 void Graphics::Initialize(HWND hwnd)
 {
@@ -157,6 +167,11 @@ void Graphics::Present(UINT sync_interval)
     hr = swap_chain_->Present(sync_interval, 0);
     
     _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+}
+
+RenderState* Graphics::GetRenderState()
+{
+    return this->render_state_.get();
 }
 
 void Graphics::SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers)

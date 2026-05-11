@@ -4,7 +4,8 @@
 #include <cstdint>
 #include<memory>
 
-#include"render_state.h"
+//前方宣言
+class RenderState;
 
 enum Target : uint8_t
 {
@@ -18,6 +19,7 @@ enum Target : uint8_t
 };
 
 //ディファードレンダリング描画用フレームバッファ
+//深度に関しては通常以外にSRVでリニア深度を算出しています
 class DeferredGBuffer
 {
 public:

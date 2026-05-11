@@ -1,6 +1,8 @@
 #include"../headers/framebuffer.h"
 
 #include"../headers/misc.h"
+#include"../headers/render_state.h"
+
 
 inline bool operator& (FrameBuffer::usage lhs, FrameBuffer::usage rhs)
 {
@@ -125,7 +127,7 @@ void FrameBuffer::Clear(
 		if (HasFlag(flags, usage::depth))   clear_flags |= D3D11_CLEAR_DEPTH;
 		if (HasFlag(flags, usage::stencil)) clear_flags |= D3D11_CLEAR_STENCIL;
 
-		// depth_stencil ‚Å—ˆ‚½‚ç depth+stencil ‚ÌˆÓ–¡‚È‚Ì‚Å—¼•û
+		// depth_stencil ã§æ¥ãŸã‚‰ depth+stencil ã®æ„å‘³ãªã®ã§ä¸¡æ–¹
 		if (flags == usage::depth_stencil) clear_flags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL;
 
 		ctx->ClearDepthStencilView(depth_stencil_view_.Get(), clear_flags, depth, stencil);
@@ -155,7 +157,7 @@ void FrameBuffer::Activate(ID3D11DeviceContext* immediate_context, usage flags)
 		if (cached_rtvs[i])
 		{
 			cached_render_target_views_[i].Attach(cached_rtvs[i]);
-			cached_num_rtvs_ = i + 1; // ˜A‘±‚µ‚ÄŽh‚³‚Á‚Ä‚¢‚é‘O’ñ
+			cached_num_rtvs_ = i + 1; // é€£ç¶šã—ã¦åˆºã•ã£ã¦ã„ã‚‹å‰æ
 		}
 	}
 
@@ -203,7 +205,7 @@ void FrameBuffer::Deactivate(ID3D11DeviceContext* immediate_context)
 		cached_depth_stencil_view_.Get()
 	);
 
-	// ƒLƒƒƒbƒVƒ…‚ðƒNƒŠƒA‚µ‚Ä“ñd•ÛŽ‚ð”ð‚¯‚é
+	// ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã‚’ã‚¯ãƒªã‚¢ã—ã¦äºŒé‡ä¿æŒã‚’é¿ã‘ã‚‹
 	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
 		cached_render_target_views_[i].Reset();
 

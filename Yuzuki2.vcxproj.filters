@@ -80,9 +80,6 @@
     <ClInclude Include="headers\sprite_batch.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="headers\texture.h">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="headers\framework.h">
       <Filter>headers</Filter>
     </ClInclude>
@@ -93,9 +90,6 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="headers\light_manager.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\camera.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="headers\scene\scene.h">
@@ -308,9 +302,6 @@
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="sources\render_state.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\camera.cpp">
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="sources\scenes\scene_test.cpp">

@@ -210,7 +210,6 @@
     <ClInclude Include="external\imgui\imstb_rectpack.h" />
     <ClInclude Include="external\imgui\imstb_textedit.h" />
     <ClInclude Include="external\imgui\imstb_truetype.h" />
-    <ClInclude Include="headers\camera.h" />
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
     <ClInclude Include="headers\component\component_camera.h" />
     <ClInclude Include="headers\component\component_cascade_shadow.h" />
@@ -273,7 +272,6 @@
     <ClInclude Include="headers\system\update_transform_system.h" />
     <ClInclude Include="headers\system\update_system_manager.h" />
     <ClInclude Include="headers\system\render_instancing_system.h" />
-    <ClInclude Include="headers\texture.h" />
     <ClInclude Include="headers\world\world.h" />
   </ItemGroup>
   <ItemGroup>
@@ -283,7 +281,6 @@
     <ClCompile Include="external\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="external\imgui\imgui_ja_gryph_ranges.cpp" />
     <ClCompile Include="external\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="sources\camera.cpp" />
     <ClCompile Include="sources\component\component_editor.cpp" />
     <ClCompile Include="sources\deferred_g_buffer.cpp" />
     <ClCompile Include="sources\entity\entity_manager.cpp" />

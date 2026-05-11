@@ -1,6 +1,7 @@
 #include"../headers/deferred_g_buffer.h"
 #include"../headers/graphics.h"
 #include"../headers/misc.h"
+#include"../headers/render_state.h"
 
 DeferredGBuffer::DeferredGBuffer(
     ID3D11Device* device,

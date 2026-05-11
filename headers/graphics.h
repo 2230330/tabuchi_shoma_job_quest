@@ -6,19 +6,18 @@
 
 #include<memory>
 
-#include"../headers/render_state.h"
+//前方宣言
+class RenderState;
 
+//画像描画関係を管理しているクラスです。
 class Graphics
 {
 private:
     Graphics() = default;
-    ~Graphics() = default;
+    ~Graphics();
 
 public:
-    static Graphics& Instance() {
-        static Graphics instance_;
-        return instance_;
-    }
+    static Graphics& Instance();
 
     void Shutdown()
     {
@@ -60,7 +59,7 @@ public:
     //スクリーン高さ取得
     float GetScreenHeight()const { return this->screen_height_; }
     //レンダーステート取得
-    RenderState* GetRenderState() { return this->render_state_.get(); }
+    RenderState* GetRenderState();
 
     //コンスタントバッファビュー設定
     void SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers);
@@ -95,6 +94,6 @@ private:
     float screen_height_ = 0;
     float wheel_{ 0 };
 
-    std::unique_ptr<RenderState>                    render_state_;
+    std::unique_ptr<RenderState>                    render_state_=nullptr;
 };
 #endif // !PART2_GRAPHICS_H_

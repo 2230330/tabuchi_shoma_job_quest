@@ -5,7 +5,6 @@
 #include<d3d11.h>
 
 #include"scene.h"
-#include"../camera.h"
 #include"../light_manager.h"
 #include"../sprite_batch.h"
 #include"../geometric_primitive.h"
@@ -33,14 +32,13 @@ public:
 private:
     bool InitializeCore()override;
     bool UninitializeCore()override;
-    //XVˆ—
+    //æ›´æ–°å‡¦ç†
     void UpdateCore(float elapsed_time)override;
-    //•`‰æˆ—
+    //æç”»å‡¦ç†
     void RenderCore(float elapsed_time)override;
-    //GUI•`‰æˆ—
+    //GUIæç”»å‡¦ç†
     void DrawImguiCore()override;
 
-    Camera                               camera_;
     Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer_;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shaders_[8];
 

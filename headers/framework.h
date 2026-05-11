@@ -5,26 +5,13 @@
 #include<tchar.h>
 #include<d3d11.h>
 #include<wrl.h>
-
 #include<sstream>
+#include<stdint.h>
 #include<memory>
 
-#include"../headers/misc.h"
-#include"../headers/high_resolution_timer.h"
-#include"../headers/graphics.h"
-#include"../headers/scene_constants.h"
-#include"../headers/scene/scene.h"
-#include"../headers/sprite.h"
-#include"../headers/sprite_batch.h"
-
-#ifdef USE_IMGUI
-#include "../external/imgui/imgui.h"
-#include "../external/imgui/imgui_internal.h"
-#include "../external/imgui/imgui_impl_dx11.h"
-#include "../external/imgui/imgui_impl_win32.h"
-extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-extern ImWchar glyphRangesJapanese[];
-#endif
+//å‰æ–¹å®£è¨€
+class HighResolutionTimer;
+class Scene;
 
 const long kScreenWidth{ 1280 };
 const long kScreenHeight{ 720 };
@@ -50,7 +37,7 @@ public:
     LRESULT CALLBACK HandleMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 
-    //ƒtƒŒ[ƒ€ƒŒ[ƒgŒvZ
+    //ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ¬ãƒ¼ãƒˆè¨ˆç®—
     void CalculateFrameState();
 
 private:
@@ -60,14 +47,14 @@ private:
     bool Uninitialize();
 
 private:
-    HighResolutionTimer tictoc_;
+    std::unique_ptr<HighResolutionTimer> tictoc_=nullptr;
     uint32_t frames_{ 0 };
     float    accumulated_time_{ 0.0f };
 
 
 private:
-    std::unique_ptr<Scene>          scene_;
-    float wheel{ 0 }; //ƒ}ƒEƒXƒzƒC[ƒ‹
+    std::unique_ptr<Scene>          scene_ = nullptr;
+    float wheel{ 0 }; //ãƒã‚¦ã‚¹ãƒ›ã‚¤ãƒ¼ãƒ«
 
 };
 

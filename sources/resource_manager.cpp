@@ -1,4 +1,4 @@
-﻿#include"../headers/resource_manager.h"
+#include"../headers/resource_manager.h"
 #include<d3dcompiler.h>
 #include<DDSTextureLoader.h>
 #include<WICTextureLoader.h>
@@ -7,7 +7,7 @@
 #include<iostream>
 #include<DirectXTex.h>
 
-#include"../headers/texture.h"
+#include"../headers/gltf_model.h"
 #include"../headers/misc.h"
 
 std::shared_ptr<GltfModel> ResourceManager::LoadGltfModel(ID3D11Device* device, const std::string& filename)
