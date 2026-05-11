@@ -22,65 +22,29 @@
 gs_4_0
 dcl_input_siv v[3][0].xyzw, position
 dcl_input v[3][1].xy
-dcl_temps 3
+dcl_temps 1
 dcl_inputprimitive triangle 
 dcl_outputtopology trianglestrip 
 dcl_output_siv o0.xyzw, position
 dcl_output o1.xy
 dcl_output_siv o2.x, rendertarget_array_index
 dcl_maxout 18
-//
-// Initial variable locations:
-//   m0 <- stream; 
-//   v[0][0].x <- input[0].pos.x; v[0][0].y <- input[0].pos.y; v[0][0].z <- input[0].pos.z; v[0][0].w <- input[0].pos.w; 
-//   v[0][1].x <- input[0].uv.x; v[0][1].y <- input[0].uv.y; 
-//   v[1][0].x <- input[1].pos.x; v[1][0].y <- input[1].pos.y; v[1][0].z <- input[1].pos.z; v[1][0].w <- input[1].pos.w; 
-//   v[1][1].x <- input[1].uv.x; v[1][1].y <- input[1].uv.y; 
-//   v[2][0].x <- input[2].pos.x; v[2][0].y <- input[2].pos.y; v[2][0].z <- input[2].pos.z; v[2][0].w <- input[2].pos.w; 
-//   v[2][1].x <- input[2].uv.x; v[2][1].y <- input[2].uv.y
-//
-#line 21 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\ibl_screen_gs.hlsl"
-mov r0.x, l(0)  // r0.x <- f
-mov r0.y, r0.x  // r0.y <- f
+mov r0.x, l(0)
 loop 
-  mov r0.z, l(6)
-  ult r0.z, r0.y, r0.z
-  breakc_z r0.z
-
-#line 24
-  mov r0.z, l(0)  // r0.z <- i
-  mov r0.w, r0.z  // r0.w <- i
+  uge r0.y, r0.x, l(6)
+  breakc_nz r0.y
+  mov r0.y, l(0)
   loop 
-    mov r1.x, l(3)
-    ult r1.x, r0.w, r1.x
-    breakc_z r1.x
-
-#line 27
-    mov r1.xyzw, v[r0.w + 0][0].xyzw  // r1.x <- o.pos.x; r1.y <- o.pos.y; r1.z <- o.pos.z; r1.w <- o.pos.w
-
-#line 28
-    mov r2.xy, v[r0.w + 0][1].xyxx  // r2.x <- o.uv.x; r2.y <- o.uv.y
-
-#line 29
-    mov r2.z, r0.y  // r2.z <- o.face
-
-#line 30
-    mov o0.xyzw, r1.xyzw
-    mov o1.xy, r2.xyxx
-    mov o2.x, r2.z
+    uge r0.z, r0.y, l(3)
+    breakc_nz r0.z
+    mov o0.xyzw, v[r0.y + 0][0].xyzw
+    mov o1.xy, v[r0.y + 0][1].xyxx
+    mov o2.x, r0.x
     emit 
-
-#line 31
-    iadd r0.w, r0.w, l(1)
+    iadd r0.y, r0.y, l(1)
   endloop 
-
-#line 32
   cut 
-
-#line 33
-  iadd r0.y, r0.y, l(1)
+  iadd r0.x, r0.x, l(1)
 endloop 
-
-#line 34
 ret 
-// Approximately 25 instruction slots used
+// Approximately 18 instruction slots used

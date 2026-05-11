@@ -140,7 +140,7 @@
 // SV_TARGET                0   xyzw        0   TARGET   float   xyzw
 //
 ps_5_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_constantbuffer CB12[4], immediateIndexed
 dcl_constantbuffer CB1[1], immediateIndexed
 dcl_constantbuffer CB3[12], immediateIndexed
@@ -156,4497 +156,899 @@ dcl_resource_texture2d (float,float,float,float) t3
 dcl_resource_texturecube (float,float,float,float) t4
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
-dcl_temps 21
-dcl_indexableTemp x0[5], 4
-//
-// Initial variable locations:
-//   v0.x <- pin.pos.x; v0.y <- pin.pos.y; v0.z <- pin.pos.z; v0.w <- pin.pos.w; 
-//   v1.x <- pin.uv.x; v1.y <- pin.uv.y; 
-//   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
-//
-#line 9 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\ibl_volumetric_cloud_ps.hlsl"
-mov r0.x, l(3.141593)  // r0.x <- PI
-
-#line 40
-mov r0.y, l(10000.000000)  // r0.y <- time_offset
-
-#line 242
-mov x0[0].xyz, l(0.380513,0.924534,-0.021113,0)
-mov x0[1].xyz, l(-0.506258,-0.035908,-0.861634,0)
-mov x0[2].xyz, l(-0.325092,-0.945574,0.014288,0)
-mov x0[3].xyz, l(0.090262,-0.273765,0.957552,0)
-mov x0[4].xyz, l(0.281286,0.424436,-0.860658,0)
-
-#line 362
-mov r1.xyz, l(0.000000,0.000000,0.000000,0)  // r1.x <- INV_WAVELENGTH4.x; r1.y <- INV_WAVELENGTH4.y; r1.z <- INV_WAVELENGTH4.z
-
-#line 633
-nop 
-mov r0.z, cb0[0].x
-mov r2.xy, v1.xyxx
-
-#line 604
-mul r2.xy, r2.xyxx, l(2.000000, 2.000000, 0.000000, 0.000000)
-mov r2.zw, l(-0.000000,-0.000000,-1.000000,-1.000000)
-add r2.xz, r2.zzwz, r2.xxyx  // r2.x <- p.x; r2.z <- p.y
-
-#line 605
-mov r0.w, l(0)
-ieq r0.w, r0.w, r0.z
-if_z r0.z
-
-#line 606
-  mov r3.y, -r2.z
-  mov r3.z, -r2.x
-  itof r3.x, l(1)
-  dp3 r1.w, r3.xyzx, r3.xyzx
-  rsq r1.w, r1.w
-  mul r3.xyz, r1.wwww, r3.xyzx
-endif   // r3.x <- <DirectionFromCubeUV return value>.x; r3.y <- <DirectionFromCubeUV return value>.y; r3.z <- <DirectionFromCubeUV return value>.z
-
-#line 607
-if_z r0.w
-  mov r0.w, l(1)
-  ieq r0.w, r0.w, r0.z
-  if_nz r0.w
-
-#line 608
-    mov r4.y, -r2.z
-    mov r4.z, r2.x
-    itof r4.x, l(-1)
-    dp3 r1.w, r4.xyzx, r4.xyzx
-    rsq r1.w, r1.w
-    mul r3.xyz, r1.wwww, r4.xyzx
+dcl_temps 19
+if_nz cb0[0].x
+  ine r0.x, cb0[0].x, l(1)
+  if_nz r0.x
+    mad r0.xz, v1.xxyx, l(2.000000, 0.000000, 2.000000, 0.000000), l(-1.000000, 0.000000, -1.000000, 0.000000)
+    mov r0.y, l(1.000000)
+    dp3 r0.w, r0.xyzx, r0.xyzx
+    rsq r0.w, r0.w
+    mul r0.xyz, r0.wwww, r0.xyzx
+    mad r1.xz, v1.xxyx, l(2.000000, 0.000000, -2.000000, 0.000000), l(-1.000000, 0.000000, 1.000000, 0.000000)
+    mov r1.y, l(-1.000000)
+    dp3 r0.w, r1.xyzx, r1.xyzx
+    rsq r0.w, r0.w
+    mul r1.xyz, r0.wwww, r1.xyzx
+    ieq r2.xyz, cb0[0].xxxx, l(2, 3, 4, 0)
+    mad r3.xy, v1.xyxx, l(2.000000, -2.000000, 0.000000, 0.000000), l(-1.000000, 1.000000, 0.000000, 0.000000)
+    mov r3.z, l(1.000000)
+    dp3 r0.w, r3.xyzx, r3.xyzx
+    rsq r0.w, r0.w
+    mul r3.xyz, r0.wwww, r3.xyzx
+    mad r4.xy, v1.xyxx, l(-2.000000, -2.000000, 0.000000, 0.000000), l(1.000000, 1.000000, 0.000000, 0.000000)
+    mov r4.z, l(-1.000000)
+    dp3 r0.w, r4.xyzx, r4.xyzx
+    rsq r0.w, r0.w
+    mul r4.xyz, r0.wwww, r4.xyzx
+    movc r3.xyz, r2.zzzz, r3.xyzx, r4.xyzx
+    movc r1.xyz, r2.yyyy, r1.xyzx, r3.xyzx
+    movc r0.xyz, r2.xxxx, r0.yxzy, r1.yxzy
+  else 
+    mov r1.x, l(-1.000000)
+    mad r1.yz, v1.yyxy, l(0.000000, -2.000000, 2.000000, 0.000000), l(0.000000, 1.000000, -1.000000, 0.000000)
+    dp3 r0.w, r1.xyzx, r1.xyzx
+    rsq r0.w, r0.w
+    mul r0.xyz, r0.wwww, r1.yxzy
   endif 
-
-#line 609
-  if_z r0.w
-    mov r0.w, l(2)
-    ieq r0.w, r0.w, r0.z
-    if_nz r0.w
-
-#line 610
-      itof r2.y, l(1)
-      dp3 r1.w, r2.xyzx, r2.xyzx
-      rsq r1.w, r1.w
-      mul r3.xyz, r1.wwww, r2.xyzx
-    endif 
-
-#line 611
-    if_z r0.w
-      mov r0.w, l(3)
-      ieq r0.w, r0.w, r0.z
-      if_nz r0.w
-
-#line 612
-        mov r4.z, -r2.z
-        itof r4.y, l(-1)
-        mov r4.x, r2.x
-        dp3 r1.w, r4.xyzx, r4.xyzx
-        rsq r1.w, r1.w
-        mul r3.xyz, r1.wwww, r4.xyzx
-      endif 
-
-#line 613
-      if_z r0.w
-        mov r0.w, l(4)
-        ieq r0.z, r0.w, r0.z
-        if_nz r0.z
-
-#line 614
-          mov r4.y, -r2.z
-          itof r4.z, l(1)
-          mov r4.x, r2.x
-          dp3 r0.w, r4.xyzx, r4.xyzx
-          rsq r0.w, r0.w
-          mul r3.xyz, r0.wwww, r4.xyzx
-        endif 
-
-#line 615
-        if_z r0.z
-          mov r4.x, -r2.x
-          mov r4.y, -r2.z
-          itof r4.z, l(-1)
-          dp3 r0.z, r4.xyzx, r4.xyzx
-          rsq r0.z, r0.z
-          mul r3.xyz, r0.zzzz, r4.xyzx
-        endif 
-      endif 
-    endif 
-  endif 
+else 
+  mov r1.x, l(1.000000)
+  mad r1.yz, v1.yyxy, l(0.000000, -2.000000, -2.000000, 0.000000), l(0.000000, 1.000000, 1.000000, 0.000000)
+  dp3 r0.w, r1.xyzx, r1.xyzx
+  rsq r0.w, r0.w
+  mul r0.xyz, r0.wwww, r1.yxzy
 endif 
-
-#line 633
-mov r3.xyz, r3.xyzx  // r3.x <- view_dir.x; r3.y <- view_dir.y; r3.z <- view_dir.z
-
-#line 637
-mov r2.xz, l(0,0,0,0)
-mov r2.y, cb12[2].y
-add r2.xyz, r2.xyzx, cb7[0].xyzx  // r2.x <- eye_pos.x; r2.y <- eye_pos.y; r2.z <- eye_pos.z
-
-#line 638
-nop 
-mov r2.xyz, r2.xyzx
-mov r3.xyz, r3.xyzx
-mov r0.z, cb12[0].z
-
-#line 122
-dp3 r0.w, r3.xyzx, r3.xyzx  // r0.w <- a
-
-#line 123
-dp3 r1.w, r3.xyzx, r2.xyzx
-mul r1.w, r1.w, l(2.000000)  // r1.w <- b
-
-#line 124
-dp3 r2.w, r2.xyzx, r2.xyzx
-mul r0.z, r0.z, r0.z
-mov r0.z, -r0.z
-add r0.z, r0.z, r2.w  // r0.z <- c
-
-#line 125
-mul r2.w, r1.w, r1.w
-mul r3.w, r0.w, l(4.000000)
-mul r0.z, r0.z, r3.w
-mov r0.z, -r0.z
-add r0.z, r0.z, r2.w  // r0.z <- disc
-
-#line 126
-lt r2.w, r0.z, l(0.000000)
-if_nz r2.w
-
-#line 128
-  mov r3.w, l(-1.000000)
-
-#line 129
-endif   // r3.w <- <IntersectSphere return value>
-
-#line 130
-if_z r2.w
-  sqrt r0.z, r0.z  // r0.z <- d
-
-#line 131
-  mov r2.w, -r1.w
-  mov r4.x, -r0.z
-  add r2.w, r2.w, r4.x
-  mul r4.x, r0.w, l(2.000000)
-  div r2.w, r2.w, r4.x  // r2.w <- t0
-
-#line 132
-  mov r1.w, -r1.w
-  add r0.z, r0.z, r1.w
-  mul r0.w, r0.w, l(2.000000)
-  div r0.z, r0.z, r0.w  // r0.z <- t1
-
-#line 134
-  lt r0.w, l(0.000000), r2.w
-  if_nz r0.w
-
-#line 135
-    mov r3.w, r2.w
-  endif 
-
-#line 136
-  if_z r0.w
-    mov r3.w, r0.z
-  endif 
-endif 
-
-#line 638
-mul r4.xyz, r3.wwww, r3.xyzx
-add r4.xyz, r2.xyzx, r4.xyzx  // r4.x <- ray_origin.x; r4.y <- ray_origin.y; r4.z <- ray_origin.z
-
-#line 640
-nop 
-mov r0.z, cb12[0].w
-
-#line 122
-dp3 r0.w, r3.xyzx, r3.xyzx  // r0.w <- a
-
-#line 123
-dp3 r1.w, r3.xyzx, r2.xyzx
-mul r1.w, r1.w, l(2.000000)  // r1.w <- b
-
-#line 124
-dp3 r2.w, r2.xyzx, r2.xyzx
-mul r0.z, r0.z, r0.z
-mov r0.z, -r0.z
-add r0.z, r0.z, r2.w  // r0.z <- c
-
-#line 125
-mul r2.w, r1.w, r1.w
-mul r3.w, r0.w, l(4.000000)
-mul r0.z, r0.z, r3.w
-mov r0.z, -r0.z
-add r0.z, r0.z, r2.w  // r0.z <- disc
-
-#line 126
-lt r2.w, r0.z, l(0.000000)
-if_nz r2.w
-
-#line 128
-  mov r3.w, l(-1.000000)
-
-#line 129
-endif   // r3.w <- <IntersectSphere return value>
-
-#line 130
-if_z r2.w
-  sqrt r0.z, r0.z  // r0.z <- d
-
-#line 131
-  mov r2.w, -r1.w
-  mov r4.w, -r0.z
-  add r2.w, r2.w, r4.w
-  mul r4.w, r0.w, l(2.000000)
-  div r2.w, r2.w, r4.w  // r2.w <- t0
-
-#line 132
-  mov r1.w, -r1.w
-  add r0.z, r0.z, r1.w
-  mul r0.w, r0.w, l(2.000000)
-  div r0.z, r0.z, r0.w  // r0.z <- t1
-
-#line 134
-  lt r0.w, l(0.000000), r2.w
-  if_nz r0.w
-
-#line 135
-    mov r3.w, r2.w
-  endif 
-
-#line 136
-  if_z r0.w
-    mov r3.w, r0.z
-  endif 
-endif 
-
-#line 640
-mul r5.xyz, r3.wwww, r3.xyzx
-add r2.xyz, r2.xyzx, r5.xyzx  // r2.x <- ray_endpoint.x; r2.y <- ray_endpoint.y; r2.z <- ray_endpoint.z
-
-#line 642
-mov r5.xyz, -r4.xyzx
-add r2.xyz, r2.xyzx, r5.xyzx
-dp3 r0.z, r2.xyzx, r2.xyzx
-sqrt r0.z, r0.z  // r0.z <- shell_dist
-
-#line 644
-ge r0.w, r3.y, l(0.000000)
+ge r0.w, r0.x, l(0.000000)
 if_nz r0.w
-
-#line 647
-  utof r0.w, cb12[3].w  // r0.w <- steps
-
-#line 649
-  mul r0.w, r0.w, l(0.500000)
-
-#line 651
-  mul r2.xyz, r0.zzzz, r3.xyzx
-  div r2.xyz, r2.xyzx, r0.wwww  // r2.x <- ray_step.x; r2.y <- ray_step.y; r2.z <- ray_step.z
-
-#line 653
-  nop 
-  mov r4.xyz, r4.xyzx
-  mov r2.xyz, r2.xyzx
-  ftoi r0.z, r0.w
-
-#line 383
-  dp3 r0.w, r2.xyzx, r2.xyzx
-  sqrt r0.w, r0.w  // r0.w <- step_size
-
-#line 386
-  dp3 r1.w, r2.xyzx, r2.xyzx
-  rsq r1.w, r1.w
-  mul r5.xyz, r1.wwww, r2.xyzx  // r5.x <- ray_direction.x; r5.y <- ray_direction.y; r5.z <- ray_direction.z
-
-#line 389
-  nop 
-  mul r6.xyz, r4.xyzx, l(6.000000, 6.000000, 6.000000, 0.000000)
-
-#line 63
-  mul r6.xyz, r6.xyzx, l(0.318310, 0.318310, 0.318310, 0.000000)
-  add r6.xyz, r6.xyzx, l(0.100000, 0.100000, 0.100000, 0.000000)
-  frc r6.xyz, r6.xyzx  // r6.x <- p.x; r6.y <- p.y; r6.z <- p.z
-
-#line 64
-  mul r6.xyz, r6.xyzx, l(17.000000, 17.000000, 17.000000, 0.000000)
-
-#line 65
-  mul r1.w, r6.y, r6.x
-  mul r1.w, r6.z, r1.w
-  add r2.w, r6.y, r6.x
-  add r2.w, r6.z, r2.w
-  mul r1.w, r1.w, r2.w
-  frc r1.w, r1.w  // r1.w <- <Hash return value>
-
-#line 389
-  mul r6.xyz, r1.wwww, r2.xyzx
-  add r4.xyz, r4.xyzx, r6.xyzx  // r4.x <- sample_point.x; r4.y <- sample_point.y; r4.z <- sample_point.z
-
-#line 392
-  mov r6.xyz, -cb3[11].xyzx  // r6.x <- sun.x; r6.y <- sun.y; r6.z <- sun.z
-
-#line 393
-  dp3 r1.w, r6.xyzx, r6.xyzx
-  rsq r1.w, r1.w
-  mul r6.xyz, r1.wwww, r6.xyzx  // r6.x <- sun_direction.x; r6.y <- sun_direction.y; r6.z <- sun_direction.z
-
-#line 394
-  dp3 r1.w, r5.xyzx, r6.xyzx
-  max r1.w, r1.w, l(-1.000000)
-  min r1.w, r1.w, l(1.000000)  // r1.w <- cos_theta
-
-#line 395
-  mov r2.w, l(0.600000)  // r2.w <- g
-
-#line 397
-  nop 
-  mov r1.w, r1.w
-  mov r2.w, r2.w
-
-#line 85
-  mul r3.w, r2.w, r2.w  // r3.w <- g2
-
-#line 87
-  mov r4.w, -r3.w
-  add r4.w, r4.w, l(1.000000)
-  add r3.w, r3.w, l(1.000000)
-  mul r2.w, r2.w, l(2.000000)
-  mul r1.w, r1.w, r2.w
-  mov r1.w, -r1.w
-  add r1.w, r1.w, r3.w
-  log r1.w, r1.w
-  mul r1.w, r1.w, l(1.500000)
-  exp r1.w, r1.w
-  mul r1.w, r1.w, l(4.000000)
-  mul r0.x, r0.x, r1.w
-  div r0.x, r4.w, r0.x  // r0.x <- <MiePhase return value>
-
-#line 397
-  mov r0.x, r0.x  // r0.x <- henyey_greenstein_phase
-
-#line 398
-  max r0.x, r0.x, l(0.000000)
-  min r0.x, r0.x, l(1.000000)  // r0.x <- henyey_greenstein_phase
-
-#line 401
-  itof r7.xyz, l(0, 1, 0, 0)
-  dp3 r1.w, r6.xyzx, r7.xyzx
-  max r1.w, r1.w, l(0.000000)
-  min r1.w, r1.w, l(1.000000)  // r1.w <- sun_elevation
-
-#line 402
-  mov r2.w, -r1.w
-  max r3.w, r1.w, r2.w
-  mov r4.w, -r3.w
-  add r4.w, r4.w, l(1.000000)
-  sqrt r4.w, r4.w
-  mul r5.w, r3.w, l(-0.018729)
-  add r5.w, r5.w, l(0.074261)
-  mul r5.w, r3.w, r5.w
-  add r5.w, r5.w, l(-0.212114)
-  mul r3.w, r3.w, r5.w
-  add r3.w, r3.w, l(1.570729)
-  mul r3.w, r4.w, r3.w
-  mul r4.w, r3.w, l(-2.000000)
-  add r4.w, r4.w, l(3.141593)
-  lt r2.w, r1.w, r2.w
-  and r2.w, r2.w, r4.w
-  add r2.w, r2.w, r3.w
-  mul r2.w, r2.w, l(57.295780)  // r2.w <- sun_theta
-
-#line 404
-  mov r2.w, -r2.w
-  add r2.w, r2.w, l(96.079948)
+  mov r1.xz, l(0,0,0,0)
+  mov r1.y, cb12[2].y
+  add r1.xyz, r1.xyzx, cb7[0].xyzx
+  dp3 r0.w, r0.xyzx, r0.xyzx
+  dp3 r1.w, r0.yxzy, r1.xyzx
+  add r2.x, r1.w, r1.w
+  dp3 r2.y, r1.xyzx, r1.xyzx
+  mul r2.z, cb12[0].z, cb12[0].z
+  mad r2.yw, -cb12[0].zzzw, cb12[0].zzzw, r2.yyyy
+  mul r3.x, r0.w, l(4.000000)
+  mul r2.yw, r2.yyyw, r3.xxxx
+  mad r2.xy, r2.xxxx, r2.xxxx, -r2.ywyy
+  ge r3.xy, r2.xyxx, l(0.000000, 0.000000, 0.000000, 0.000000)
+  sqrt r2.xy, r2.xyxx
+  mad r3.zw, -r1.wwww, l(0.000000, 0.000000, 2.000000, 2.000000), -r2.xxxy
+  add r0.w, r0.w, r0.w
+  div r3.zw, r3.zzzw, r0.wwww
+  mad r2.xy, -r1.wwww, l(2.000000, 2.000000, 0.000000, 0.000000), r2.xyxx
+  div r2.xy, r2.xyxx, r0.wwww
+  lt r4.xy, l(0.000000, 0.000000, 0.000000, 0.000000), r3.zwzz
+  movc r2.xy, r4.xyxx, r3.zwzz, r2.xyxx
+  movc r2.xy, r3.xyxx, r2.xyxx, l(-1.000000,-1.000000,0,0)
+  mad r3.xyz, r0.yxzy, r2.xxxx, r1.xyzx
+  mad r1.xyz, r0.yxzy, r2.yyyy, r1.xyzx
+  add r1.xyz, -r3.xyzx, r1.xyzx
+  dp3 r0.w, r1.xyzx, r1.xyzx
+  sqrt r0.w, r0.w
+  utof r1.x, cb12[3].w
+  mul r1.x, r1.x, l(0.500000)
+  mul r1.yzw, r0.wwww, r0.yyxz
+  div r1.yzw, r1.yyzw, r1.xxxx
+  ftoi r0.w, r1.x
+  dp3 r1.x, r1.yzwy, r1.yzwy
+  sqrt r2.x, r1.x
+  rsq r1.x, r1.x
+  mul r4.xyz, r1.xxxx, r1.zywz
+  mad r5.xyz, r3.xyzx, l(1.909859, 1.909859, 1.909859, 0.000000), l(0.100000, 0.100000, 0.100000, 0.000000)
+  frc r5.xyz, r5.xyzx
+  mul r5.xyw, r5.xyxz, l(17.000000, 17.000000, 0.000000, 17.000000)
+  mul r1.x, r5.y, r5.x
+  mul r1.x, r5.w, r1.x
+  add r2.y, r5.y, r5.x
+  mad r2.y, r5.z, l(17.000000), r2.y
+  mul r1.x, r1.x, r2.y
+  frc r1.x, r1.x
+  mad r3.xyz, r1.yzwy, r1.xxxx, r3.xyzx
+  dp3 r1.x, -cb3[11].xyzx, -cb3[11].xyzx
+  rsq r1.x, r1.x
+  mul r5.xyz, r1.xxxx, -cb3[11].xyzx
+  dp3 r1.x, r4.yxzy, r5.xyzx
+  max r1.x, r1.x, l(-1.000000)
+  min r1.x, r1.x, l(1.000000)
+  mad r1.x, -r1.x, l(1.200000), l(1.360000)
+  log r1.x, r1.x
+  mul r1.x, r1.x, l(1.500000)
+  exp r1.x, r1.x
+  mul r1.x, r1.x, l(12.566371)
+  div r1.x, l(0.640000), r1.x
+  mov_sat r2.y, r5.y
+  add r2.w, -r2.y, l(1.000000)
+  sqrt r2.w, r2.w
+  mad r3.w, r2.y, l(-0.018729), l(0.074261)
+  mad r3.w, r3.w, r2.y, l(-0.212114)
+  mad r3.w, r3.w, r2.y, l(1.570729)
+  mul r2.w, r2.w, r3.w
+  mad r2.w, -r2.w, l(57.295780), l(96.079948)
   log r2.w, r2.w
   mul r2.w, r2.w, l(-1.636400)
   exp r2.w, r2.w
-  mul r2.w, r2.w, l(0.505720)
-  add r2.w, r1.w, r2.w
-  div r2.w, l(1.000000), r2.w  // r2.w <- air_mass
-
-#line 405
+  mad r2.w, r2.w, l(0.505720), r2.y
+  div r2.w, l(1.000000, 1.000000, 1.000000, 1.000000), r2.w
   min r2.w, r2.w, l(4.000000)
-
-#line 407
-  nop 
-  mov r2.w, r2.w
-
-#line 370
-  mul r1.xyz, r1.xyzx, r2.wwww
-  mul r1.xyz, r1.xyzx, l(3000000000.000000, 3000000000.000000, 3000000000.000000, 0.000000)  // r1.x <- tau.x; r1.y <- tau.y; r1.z <- tau.z
-
-#line 373
-  mov r1.xyz, -r1.xyzx
-  mul r1.xyz, r1.xyzx, l(1.442695, 1.442695, 1.442695, 0.000000)
-  exp r1.xyz, r1.xyzx  // r1.x <- Ei.x; r1.y <- Ei.y; r1.z <- Ei.z
-
-#line 375
-  mov r1.xyz, r1.xyzx  // r1.x <- <ComputeSunIrradiance return value>.x; r1.y <- <ComputeSunIrradiance return value>.y; r1.z <- <ComputeSunIrradiance return value>.z
-
-#line 407
-  mov r1.xyz, r1.xyzx  // r1.x <- Ei.x; r1.y <- Ei.y; r1.z <- Ei.z
-
-#line 409
-  mov r2.w, l(-0.500000)
-  add r2.w, r2.w, l(1.500000)
-  mul r1.w, r1.w, r2.w
-  add r1.w, r1.w, l(0.500000)
-  mul r1.xyz, r1.wwww, r1.xyzx
-
-#line 415
-  sample_indexable(texturecube)(float,float,float,float) r7.xyz, r5.xyzx, t4.xyzw, s3  // r7.x <- atmosphere_color.x; r7.y <- atmosphere_color.y; r7.z <- atmosphere_color.z
-
-#line 419
-  mov r1.w, -cb12[0].z
-  add r1.w, r1.w, cb12[0].w
-  div r1.w, r1.w, l(36.000000)  // r1.w <- cone_spread_multplier
-
-#line 422
-  dp3 r2.w, r2.xyzx, r2.xyzx
-  rsq r2.w, r2.w
-  mul r8.xyz, r2.wwww, r2.xyzx
-  itof r9.xyz, l(0, 1, 0, 0)
-  dp3 r2.w, r8.xyzx, r9.xyzx
-  max r2.w, r2.w, l(0.000000)
-  min r2.w, r2.w, l(1.000000)  // r2.w <- view_up
-
-#line 423
-  mov r2.w, -r2.w
-  add r2.w, r2.w, l(1.000000)  // r2.w <- horizon
-
-#line 424
-  mov r3.w, l(-0.200000)
-  add r3.w, r3.w, l(0.800000)
-  mul r3.w, r2.w, r3.w
-  add r3.w, r3.w, l(0.200000)  // r3.w <- horizon_soft
-
-#line 426
-  mov r8.xyz, l(0,0,0,0)  // r8.x <- color.x; r8.y <- color.y; r8.z <- color.z
-
-#line 428
-  mov r4.w, l(1.000000)  // r4.w <- transmittence
-
-#line 429
-  itof r5.w, l(0)  // r5.w <- cloud_test
-
-#line 430
-  mov r6.w, l(0)  // r6.w <- zero_density_sample_count
-
-#line 437
-  mov r7.w, l(0)  // r7.w <- i
-  mov r9.xyz, r8.xyzx  // r9.x <- color.x; r9.y <- color.y; r9.z <- color.z
-  mov r10.xy, r4.xzxx  // r10.x <- sample_point.x; r10.y <- sample_point.z
-  mov r10.z, r4.y  // r10.z <- sample_point.y
-  mov r8.w, r4.w  // r8.w <- transmittence
-  mov r10.w, r5.w  // r10.w <- cloud_test
-  mov r11.x, r6.w  // r11.x <- zero_density_sample_count
-  mov r11.y, r7.w  // r11.y <- i
+  mul r6.xyz, r2.wwww, l(-0.020242, -0.047298, -0.115474, 0.000000)
+  exp r6.xyz, r6.xyzx
+  add r2.w, r2.y, l(0.500000)
+  mul r6.xyz, r2.wwww, r6.xyzx
+  sample_indexable(texturecube)(float,float,float,float) r4.yzw, r4.yxzy, t4.wxyz, s3
+  add r2.w, -cb12[0].z, cb12[0].w
+  mul r3.w, r2.w, cb12[3].y
+  mov_sat r4.x, r4.x
+  add r4.x, -r4.x, l(1.000000)
+  mul r5.w, r4.x, l(0.700000)
+  mad r6.w, r4.x, l(0.600000), l(0.200000)
+  add r7.x, cb1[0].z, l(10000.000000)
+  mul r7.yz, r7.xxxx, l(0.000000, 0.001000, 20.000000, 0.000000)
+  dp2 r7.w, -cb12[0].xyxx, -cb12[0].xyxx
+  rsq r7.w, r7.w
+  mul r8.xy, r7.wwww, -cb12[0].xyxx
+  mul r9.xyzw, r7.yyzz, r8.xyxy
+  mad r2.z, -cb12[2].y, cb12[2].y, r2.z
+  sqrt r2.z, r2.z
+  mul r7.y, r2.z, cb12[2].z
+  add r7.y, r7.y, r7.y
+  mul r7.z, r6.w, l(0.100000)
+  mad r10.xyz, r6.wwww, l(-0.200000, -0.600000, 0.400000, 0.000000), l(3.000000, 1.000000, 0.800000, 0.000000)
+  mul r6.w, r7.z, r7.z
+  mul r6.w, r6.w, r10.x
+  mul r7.zw, r9.zzzw, cb12[1].xxxx
+  ne r8.z, cb12[1].x, l(0.000000)
+  mul r8.xy, r7.xxxx, r8.xyxx
+  mul r11.xyzw, r2.xxxx, l(0.400000, 0.560000, 0.720000, 0.880000)
+  mul r8.w, r2.x, l(1.040000)
+  mul r3.w, r3.w, l(0.027778)
+  mul r9.z, cb12[1].y, l(5.000000)
+  mad r1.x, r1.x, l(9.900000), l(0.100000)
+  mad r4.x, r4.x, l(2.000000), l(1.000000)
+  mov r12.xyz, l(0,0,0,0)
+  mov r13.xyz, r3.xyzx
+  mov r9.w, l(1.000000)
+  mov r10.xw, l(0,0,0,0)
+  mov r13.w, l(0)
   loop 
-    ilt r11.z, r11.y, r0.z
-    breakc_z r11.z
-
-#line 440
-    lt r11.z, l(0.000000), r10.w
-    if_nz r11.z
-
-#line 443
-      nop 
-      mov r10.xy, r10.xyxx
-
-#line 51
-      add r11.z, r0.y, cb1[0].z
-      mul r11.z, r11.z, l(0.001000)
-      mov r12.xy, -cb12[0].xyxx
-      dp2 r11.w, r12.xyxx, r12.xyxx
-      rsq r11.w, r11.w
-      mul r12.xy, r11.wwww, r12.xyxx
-      mul r11.zw, r11.zzzz, r12.xxxy
-      mul r11.zw, r11.zzzw, cb12[1].xxxx  // r11.z <- offset.x; r11.w <- offset.y
-
-#line 53
-      mul r12.x, cb12[0].z, cb12[0].z
-      mul r12.y, cb12[2].y, cb12[2].y
-      mov r12.y, -r12.y
-      add r12.x, r12.y, r12.x
-      sqrt r12.x, r12.x
-      mul r12.x, r12.x, cb12[2].z  // r12.x <- horizon_distance
-
-#line 54
-      add r13.x, r10.x, r12.x
-      mov r12.y, -r10.y
-      add r13.y, r12.y, r12.x
-      mul r12.x, r12.x, l(2.000000)
-      div r12.xy, r13.xyxx, r12.xxxx
-      add r11.zw, r11.zzzw, r12.xxxy
-      sample_indexable(texture2d)(float,float,float,float) r12.xyz, r11.zwzz, t2.xzyw, s2  // r12.x <- <SampleWeatherData return value>.x; r12.z <- <SampleWeatherData return value>.y; r12.y <- <SampleWeatherData return value>.z
-
-#line 443
-      mov r12.xyz, r12.xyzx  // r12.x <- weather_data.x; r12.y <- weather_data.z; r12.z <- weather_data.y
-
-#line 445
-      mov r11.z, l(-0.000000)
-      add r11.w, r11.z, l(10.000000)
-      add r11.z, r3.w, r11.z
-      div r11.w, l(1.000000, 1.000000, 1.000000, 1.000000), r11.w
-      mul r11.z, r11.w, r11.z
-      max r11.z, r11.z, l(0.000000)
-      min r11.z, r11.z, l(1.000000)
-      mul r11.w, r11.z, l(-2.000000)
-      add r11.w, r11.w, l(3.000000)
-      mul r11.z, r11.z, r11.z
-      mul r11.z, r11.z, r11.w  // r11.z <- detail_lod
-
-#line 447
-      nop 
-      mov r13.xz, r10.xxyx
-      mov r13.y, r10.z
-      mov r12.xy, r12.xyxx
-      mov r11.z, r11.z
-      mov r11.w, l(0)
-
-#line 149
-      nop 
-      dp3 r12.w, r13.xyzx, r13.xyzx
-      sqrt r12.w, r12.w
-
-#line 96
-      mov r13.w, -cb12[0].z
-      add r12.w, r12.w, r13.w
-      mov r13.w, -cb12[0].z
-      add r13.w, r13.w, cb12[0].w
-      div r12.w, r12.w, r13.w  // r12.w <- height_fraction
-
-#line 97
-      max r12.w, r12.w, l(0.000000)
-      min r12.w, r12.w, l(1.000000)  // r12.w <- <GetHeightFractionForPoint return value>
-
-#line 149
-      mov r12.w, r12.w  // r12.w <- height_fraction
-
-#line 152
-      mul r12.x, r12.x, cb12[1].z  // r12.x <- cloud_coverage
-
-#line 156
-      add r13.w, r0.y, cb1[0].z
-      mul r13.w, r13.w, l(20.000000)
-      mov r14.xy, -cb12[0].xyxx
-      dp2 r14.z, r14.xyxx, r14.xyxx
-      rsq r14.z, r14.z
-      mul r14.xy, r14.zzzz, r14.xyxx
-      mul r14.xy, r13.wwww, r14.xyxx
-      mul r14.xy, r14.xyxx, cb12[1].xxxx
-      mul r14.xy, r14.xyxx, l(0.600000, 0.600000, 0.000000, 0.000000)
-      add r13.xz, r13.xxzx, r14.xxyx
-
-#line 159
-      nop 
-      mov r13.xz, r13.xxzx
-      mov r13.y, r13.y
-      mov r13.w, l(-2.000000)
-      add r13.w, r11.z, r13.w
-      max r13.w, r13.w, l(0.000000)
-
-#line 43
-      mul r14.xyz, r13.xyzx, cb12[2].wwww
-      sample_l_indexable(texture3d)(float,float,float,float) r14.xyzw, r14.xyzx, t0.xyzw, s5, r13.w  // r14.x <- <SampleLowFrequencyNoises return value>.x; r14.y <- <SampleLowFrequencyNoises return value>.y; r14.z <- <SampleLowFrequencyNoises return value>.z; r14.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-      mov r14.xyzw, r14.xyzw  // r14.x <- low_frequency_noises.x; r14.y <- low_frequency_noises.y; r14.z <- low_frequency_noises.z; r14.w <- low_frequency_noises.w
-
-#line 163
-      mul r13.w, r14.y, l(0.625000)
-      mul r14.y, r14.z, l(0.250000)
-      add r13.w, r13.w, r14.y
-      mul r14.y, r14.w, l(0.125000)
-      add r13.w, r13.w, r14.y  // r13.w <- low_frequency_fbm
-
-#line 170
-      nop 
-      mov r14.x, r14.x
-      mov r13.w, -r13.w
-      add r13.w, r13.w, l(1.000000)
-      mov r13.w, -r13.w
-      mov r14.y, l(1.000000)
-      mov r14.z, l(0)
-      mov r14.w, l(1.000000)
-
-#line 71
-      mov r15.x, -r13.w
-      add r14.y, r14.y, r15.x  // r14.y <- denom
-
-#line 72
-      mov r15.x, -r14.y
-      max r15.x, r14.y, r15.x
-      lt r15.x, r15.x, l(0.000001)
-      if_nz r15.x
-
-#line 73
-        mov r15.y, r14.z
-      endif   // r15.y <- <Remap return value>
-
-#line 74
-      if_z r15.x
-        mov r13.w, -r13.w
-        add r13.w, r13.w, r14.x
-        div r13.w, r13.w, r14.y
-        mov r14.x, -r14.z
-        add r14.x, r14.x, r14.w
-        mul r13.w, r13.w, r14.x
-        add r15.y, r13.w, r14.z
+    ige r14.x, r13.w, r0.w
+    breakc_nz r14.x
+    lt r14.x, l(0.000000), r10.x
+    if_nz r14.x
+      mad r14.x, r2.z, cb12[2].z, r13.x
+      mad r14.y, r2.z, cb12[2].z, -r13.z
+      div r14.xy, r14.xyxx, r7.yyyy
+      mad r14.xy, r9.xyxx, cb12[1].xxxx, r14.xyxx
+      sample_indexable(texture2d)(float,float,float,float) r14.xyz, r14.xyxx, t2.xyzw, s2
+      dp3 r14.w, r13.xyzx, r13.xyzx
+      sqrt r14.w, r14.w
+      add r14.w, r14.w, -cb12[0].z
+      div_sat r14.w, r14.w, r2.w
+      mul r15.x, r14.x, cb12[1].z
+      mad r16.xz, r7.zzwz, l(0.600000, 0.000000, 0.600000, 0.000000), r13.xxzx
+      mov r16.y, r13.y
+      mul r15.yzw, r16.xxyz, cb12[2].wwww
+      sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r15.yzwy, t0.xyzw, s5, l(0.000000)
+      dp3 r15.y, r17.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+      add r15.z, -r15.y, r17.x
+      add r15.y, -r15.y, l(2.000000)
+      ge r15.w, |r15.y|, l(0.000001)
+      add r15.z, r15.z, l(1.000000)
+      div r15.y, r15.z, r15.y
+      and r15.y, r15.y, r15.w
+      mul_sat r14.z, r14.z, cb12[2].x
+      add r15.z, r14.z, r14.z
+      min r15.z, r15.z, l(1.000000)
+      add r15.z, -r15.z, l(1.000000)
+      add r14.z, r14.z, l(-0.500000)
+      mad r15.w, -|r14.z|, l(2.000000), l(1.000000)
+      max r14.z, r14.z, l(0.000000)
+      mul r17.xyzw, r15.wwww, l(0.020000, 0.200000, 0.480000, 0.625000)
+      mad r17.xyzw, r15.zzzz, l(0.020000, 0.050000, 0.090000, 0.110000), r17.xyzw
+      mad r17.xyzw, r14.zzzz, l(0.020000, 0.125000, 1.560000, 2.000000), r17.xyzw
+      add r15.zw, -r17.xxxz, r17.yyyw
+      add r17.xy, r14.wwww, -r17.xzxx
+      div r15.zw, l(1.000000, 1.000000, 1.000000, 1.000000), r15.zzzw
+      mul_sat r15.zw, r15.zzzw, r17.xxxy
+      mad r17.xy, r15.zwzz, l(-2.000000, -2.000000, 0.000000, 0.000000), l(3.000000, 3.000000, 0.000000, 0.000000)
+      mul r15.zw, r15.zzzw, r15.zzzw
+      mul r14.z, r15.w, r17.y
+      mad r14.z, r17.x, r15.z, -r14.z
+      mad r14.x, -r14.x, cb12[1].z, l(1.000000)
+      add r15.z, -r14.x, l(1.000000)
+      ge r15.w, |r15.z|, l(0.000001)
+      mad r14.x, r15.y, r14.z, -r14.x
+      div r14.x, r14.x, r15.z
+      and r14.x, r14.x, r15.w
+      mul r14.z, r15.x, r14.x
+      lt r15.y, l(0.000000), r14.z
+      if_nz r15.y
+        mad r17.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r16.xxzx
+        mad r17.y, -r7.x, l(40.000000), r13.y
+        movc r17.xyz, r8.zzzz, r17.xyzx, r16.xyzx
+        mul r15.zw, r17.xxxy, l(0.000000, 0.000000, 0.000008, 0.000008)
+        sample_l_indexable(texture2d)(float,float,float,float) r15.zw, r15.zwzz, t3.zwxy, s5, l(0.000000)
+        add r16.w, -r14.w, l(1.000000)
+        mad r17.xy, r15.zwzz, r16.wwww, r17.xyxx
+        mul r17.xyz, r17.xyzx, cb12[3].xxxx
+        sample_l_indexable(texture3d)(float,float,float,float) r17.xyz, r17.xyzx, t1.xyzw, s2, r6.w
+        dp3 r15.z, r17.xyzx, l(0.625000, 0.250000, 0.125000, 0.000000)
+        mul r15.w, r14.w, l(10.000000)
+        min r15.w, r15.w, l(1.000000)
+        mad r16.w, r15.z, l(-2.000000), l(1.000000)
+        mad r15.z, r15.w, r16.w, r15.z
+        mul r15.w, r15.z, l(0.200000)
+        mad r15.z, -r15.z, l(0.200000), l(1.000000)
+        ge r16.w, |r15.z|, l(0.000001)
+        mad r15.w, r14.x, r15.x, -r15.w
+        div r15.z, r15.w, r15.z
+        and r15.z, r15.z, r16.w
+      else 
+        mov r15.z, r14.z
       endif 
-
-#line 170
-      mov r15.y, r15.y  // r15.y <- base_cloud
-
-#line 178
-      mul r12.y, r12.y, cb12[2].x
-      max r12.y, r12.y, l(0.000000)
-      min r12.y, r12.y, l(1.000000)  // r12.y <- cloud_type
-
-#line 179
-      nop 
-      mov r12.w, r12.w
-      mov r12.y, r12.y
-
-#line 106
-      mov r14.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r14.x <- stratus_gradient.x; r14.y <- stratus_gradient.y; r14.z <- stratus_gradient.z; r14.w <- stratus_gradient.w
-
-#line 107
-      mov r16.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r16.x <- stratocumulus_gradient.x; r16.y <- stratocumulus_gradient.y; r16.z <- stratocumulus_gradient.z; r16.w <- stratocumulus_gradient.w
-
-#line 108
-      mov r17.xyzw, l(0.010000,0.062500,0.780000,1.000000)  // r17.x <- cumulus_gradient.x; r17.y <- cumulus_gradient.y; r17.z <- cumulus_gradient.z; r17.w <- cumulus_gradient.w
-
-#line 110
-      mul r13.w, r12.y, l(2.000000)
-      max r13.w, r13.w, l(0.000000)
-      min r13.w, r13.w, l(1.000000)
-      mov r13.w, -r13.w
-      add r13.w, r13.w, l(1.000000)  // r13.w <- stratus
-
-#line 111
-      mov r15.x, l(-0.500000)
-      add r15.x, r12.y, r15.x
-      mov r15.z, -r15.x
-      max r15.x, r15.z, r15.x
-      mul r15.x, r15.x, l(2.000000)
-      mov r15.x, -r15.x
-      add r15.x, r15.x, l(1.000000)  // r15.x <- stratocumulus
-
-#line 112
-      mov r15.z, l(-0.500000)
-      add r12.y, r12.y, r15.z
-      max r12.y, r12.y, l(0.000000)
-      min r12.y, r12.y, l(1.000000)
-      mul r12.y, r12.y, l(2.000000)  // r12.y <- cumulus
-
-#line 114
-      mul r14.xyzw, r13.wwww, r14.xyzw
-      mul r16.xyzw, r15.xxxx, r16.xyzw
-      add r14.xyzw, r14.xyzw, r16.xyzw
-      mul r16.xyzw, r12.yyyy, r17.xyzw
-      add r14.xyzw, r14.xyzw, r16.xyzw  // r14.x <- cloud_gradient.x; r14.y <- cloud_gradient.y; r14.z <- cloud_gradient.z; r14.w <- cloud_gradient.w
-
-#line 115
-      mov r12.y, -r14.x
-      add r13.w, r12.y, r14.y
-      add r12.y, r12.y, r12.w
-      div r13.w, l(1.000000, 1.000000, 1.000000, 1.000000), r13.w
-      mul r12.y, r12.y, r13.w
-      max r12.y, r12.y, l(0.000000)
-      min r12.y, r12.y, l(1.000000)
-      mul r13.w, r12.y, l(-2.000000)
-      add r13.w, r13.w, l(3.000000)
-      mul r12.y, r12.y, r12.y
-      mul r12.y, r12.y, r13.w
-      mov r13.w, -r14.z
-      add r14.x, r13.w, r14.w
-      add r13.w, r12.w, r13.w
-      div r14.x, l(1.000000, 1.000000, 1.000000, 1.000000), r14.x
-      mul r13.w, r13.w, r14.x
-      max r13.w, r13.w, l(0.000000)
-      min r13.w, r13.w, l(1.000000)
-      mul r14.x, r13.w, l(-2.000000)
-      add r14.x, r14.x, l(3.000000)
-      mul r13.w, r13.w, r13.w
-      mul r13.w, r13.w, r14.x
-      mov r13.w, -r13.w
-      add r12.y, r12.y, r13.w  // r12.y <- density_gradient
-
-#line 116
-      mov r12.y, r12.y  // r12.y <- <GetDensityHeightGradient return value>
-
-#line 179
-      mov r12.y, r12.y  // r12.y <- density_height_gradient
-
-#line 182
-      mul r12.y, r12.y, r15.y  // r12.y <- base_cloud
-
-#line 186
-      nop 
-      mov r12.y, r12.y
-      mov r13.w, -r12.x
-      add r13.w, r13.w, l(1.000000)
-      mov r14.x, l(1.000000)
-      mov r14.y, l(0)
-      mov r14.z, l(1.000000)
-
-#line 71
-      mov r14.w, -r13.w
-      add r14.x, r14.w, r14.x  // r14.x <- denom
-
-#line 72
-      mov r14.w, -r14.x
-      max r14.w, r14.w, r14.x
-      lt r14.w, r14.w, l(0.000001)
-      if_nz r14.w
-
-#line 73
-        mov r15.x, r14.y
-      endif   // r15.x <- <Remap return value>
-
-#line 74
-      if_z r14.w
-        mov r13.w, -r13.w
-        add r12.y, r12.y, r13.w
-        div r12.y, r12.y, r14.x
-        mov r13.w, -r14.y
-        add r13.w, r13.w, r14.z
-        mul r12.y, r12.y, r13.w
-        add r15.x, r12.y, r14.y
-      endif 
-
-#line 186
-      mov r15.x, r15.x  // r15.x <- base_cloud_with_coverage
-
-#line 187
-      mul r12.x, r12.x, r15.x  // r12.x <- base_cloud_with_coverage
-
-#line 189
-      mov r12.x, r12.x  // r12.x <- final_cloud
-
-#line 190
-      not r11.w, r11.w
-      lt r12.y, l(0.000000), r12.x
-      and r11.w, r11.w, r12.y
-      if_nz r11.w
-
-#line 196
-        ne r11.w, cb12[1].x, l(0.000000)
-        if_nz r11.w
-
-#line 198
-          add r11.w, r0.y, cb1[0].z
-          mov r14.xy, -cb12[0].xyxx
-          dp2 r12.y, r14.xyxx, r14.xyxx
-          rsq r12.y, r12.y
-          mul r14.xy, r12.yyyy, r14.xyxx
-          mul r14.xy, r11.wwww, r14.xyxx
-          mul r14.xy, r14.xyxx, l(40.000000, 40.000000, 0.000000, 0.000000)
-          mov r14.xy, -r14.xyxx
-          add r13.xz, r13.xxzx, r14.xxyx
-
-#line 199
-          add r11.w, r0.y, cb1[0].z
-          mul r11.w, r11.w, l(40.000000)
-          mov r11.w, -r11.w
-          add r13.y, r11.w, r13.y
-
-#line 200
-        else 
-          mov r13.xy, r13.xyxx
-        endif 
-
-#line 205
-        mul r14.xy, r13.xyxx, l(0.000008, 0.000008, 0.000000, 0.000000)
-        itof r11.w, l(0)
-        sample_l_indexable(texture2d)(float,float,float,float) r14.xy, r14.xyxx, t3.xyzw, s5, r11.w  // r14.x <- curl_noise.x; r14.y <- curl_noise.y
-
-#line 206
-        mov r11.w, -r12.w
-        add r11.w, r11.w, l(1.000000)
-        mul r14.xy, r11.wwww, r14.xyxx
-        add r13.xy, r13.xyxx, r14.xyxx
-
-#line 210
-        nop 
-        mov r13.xy, r13.xyxx
-        mov r13.z, r13.z
-        mov r11.z, r11.z
-
-#line 47
-        mul r13.xyz, r13.xyzx, cb12[3].xxxx
-        sample_l_indexable(texture3d)(float,float,float,float) r13.xyz, r13.xyzx, t1.xyzw, s2, r11.z  // r13.x <- <SampleHighFrequencyNoises return value>.x; r13.y <- <SampleHighFrequencyNoises return value>.y; r13.z <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-        mov r13.xyz, r13.xyzx  // r13.x <- high_frequency_noises.x; r13.y <- high_frequency_noises.y; r13.z <- high_frequency_noises.z
-
-#line 213
-        mul r11.z, r13.x, l(0.625000)
-        mul r11.w, r13.y, l(0.250000)
-        add r11.z, r11.w, r11.z
-        mul r11.w, r13.z, l(0.125000)
-        add r11.z, r11.w, r11.z  // r11.z <- high_frequency_fbm
-
-#line 220
-        mov r11.w, -r11.z
-        add r11.w, r11.w, l(1.000000)
-        mul r12.y, r12.w, l(10.000000)
-        max r12.y, r12.y, l(0.000000)
-        min r12.y, r12.y, l(1.000000)
-        mov r12.w, -r11.z
-        add r11.w, r11.w, r12.w
-        mul r11.w, r11.w, r12.y
-        add r11.z, r11.w, r11.z  // r11.z <- high_frequency_noise_modifier
-
-#line 228
-        nop 
-        mov r11.w, r12.x
-        mul r11.z, r11.z, l(0.200000)
-        mov r12.y, l(1.000000)
-        mov r12.w, l(0)
-        mov r13.x, l(1.000000)
-
-#line 71
-        mov r13.y, -r11.z
-        add r12.y, r12.y, r13.y  // r12.y <- denom
-
-#line 72
-        mov r13.y, -r12.y
-        max r13.y, r12.y, r13.y
-        lt r13.y, r13.y, l(0.000001)
-        if_nz r13.y
-
-#line 73
-          mov r12.x, r12.w
-        endif   // r12.x <- <Remap return value>
-
-#line 74
-        if_z r13.y
-          mov r11.z, -r11.z
-          add r11.z, r11.z, r11.w
-          div r11.z, r11.z, r12.y
-          mov r11.w, -r12.w
-          add r11.w, r11.w, r13.x
-          mul r11.z, r11.w, r11.z
-          add r12.x, r11.z, r12.w
-        endif 
-
-#line 228
-        mov r12.x, r12.x  // r12.x <- final_cloud
-
-#line 232
-      endif 
-
-#line 235
-      max r11.z, r12.x, l(0.000000)
-      min r11.z, r11.z, l(1.000000)  // r11.z <- <SampleCloudDensity return value>
-
-#line 447
-      mov r11.z, r11.z  // r11.z <- sampled_density
-
-#line 455
-      eq r11.w, r11.z, l(0.000000)
-      if_nz r11.w
-
-#line 457
-        iadd r11.x, r11.x, l(1)
-
-#line 458
-      endif 
-
-#line 460
-      ine r11.w, r11.x, l(6)
-      if_nz r11.w
-
-#line 466
-        ne r11.w, r11.z, l(0.000000)
-        if_nz r11.w
-
-#line 471
-          mov r11.w, l(0)  // r11.w <- optical_depth_along_light_ray
-
-#line 477
-          nop 
-          mov r13.xy, r10.xyxx
-          mov r13.z, r10.z
-          mov r12.xyw, r6.xyxz
-          mov r13.w, r0.w
-
-#line 262
-          mov r13.xyz, r13.xyzx  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-
-#line 263
-          mov r14.x, l(0)  // r14.x <- optical_depth
-
-#line 270
-          mov r14.y, l(0)  // r14.y <- i
-
-#line 272
-          itof r14.z, r14.y
-          itof r14.w, l(5)
-          div r14.z, r14.z, r14.w  // r14.z <- distance_t
-
-#line 273
-          mov r14.w, l(-0.400000)
-          add r14.w, r14.w, l(1.200000)
-          mul r14.z, r14.w, r14.z
-          add r14.z, r14.z, l(0.400000)
-          mul r14.z, r13.w, r14.z  // r14.z <- base_cone_width
-
-#line 275
-          nop 
-          mov r13.xy, r13.xyxx
-
-#line 51
-          add r14.w, r0.y, cb1[0].z
-          mul r14.w, r14.w, l(0.001000)
-          mov r15.xy, -cb12[0].xyxx
-          dp2 r15.z, r15.xyxx, r15.xyxx
-          rsq r15.z, r15.z
-          mul r15.xy, r15.zzzz, r15.xyxx
-          mul r15.xy, r14.wwww, r15.xyxx
-          mul r15.xy, r15.xyxx, cb12[1].xxxx  // r15.x <- offset.x; r15.y <- offset.y
-
-#line 53
-          mul r14.w, cb12[0].z, cb12[0].z
-          mul r15.z, cb12[2].y, cb12[2].y
-          mov r15.z, -r15.z
-          add r14.w, r14.w, r15.z
-          sqrt r14.w, r14.w
-          mul r14.w, r14.w, cb12[2].z  // r14.w <- horizon_distance
-
-#line 54
-          add r16.x, r13.x, r14.w
-          mov r15.z, -r13.y
-          add r16.y, r14.w, r15.z
-          mul r14.w, r14.w, l(2.000000)
-          div r15.zw, r16.xxxy, r14.wwww
-          add r15.xy, r15.xyxx, r15.zwzz
-          sample_indexable(texture2d)(float,float,float,float) r15.xy, r15.xyxx, t2.xzyw, s2
-          mov r15.xy, r15.xyxx  // r15.x <- <SampleWeatherData return value>.x; r15.y <- <SampleWeatherData return value>.z
-
-#line 275
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-
-#line 277
-          itof r14.w, r14.y  // r14.w <- mip
-
-#line 278
-          nop 
-          mov r13.xyz, r13.xyzx
-          mov r15.xy, r15.xyxx
-          mov r14.w, r14.w
-          mov r15.z, l(0)
-
-#line 149
-          nop 
-          dp3 r15.w, r13.xyzx, r13.xyzx
-          sqrt r15.w, r15.w
-
-#line 96
-          mov r16.x, -cb12[0].z
-          add r15.w, r15.w, r16.x
-          mov r16.x, -cb12[0].z
-          add r16.x, r16.x, cb12[0].w
-          div r15.w, r15.w, r16.x  // r15.w <- height_fraction
-
-#line 97
-          max r15.w, r15.w, l(0.000000)
-          min r15.w, r15.w, l(1.000000)  // r15.w <- <GetHeightFractionForPoint return value>
-
-#line 149
-          mov r15.w, r15.w  // r15.w <- height_fraction
-
-#line 152
-          mul r15.x, r15.x, cb12[1].z  // r15.x <- cloud_coverage
-
-#line 156
-          add r16.x, r0.y, cb1[0].z
-          mul r16.x, r16.x, l(20.000000)
-          mov r16.yz, -cb12[0].xxyx
-          dp2 r16.w, r16.yzyy, r16.yzyy
-          rsq r16.w, r16.w
-          mul r16.yz, r16.wwww, r16.yyzy
-          mul r16.xy, r16.yzyy, r16.xxxx
-          mul r16.xy, r16.xyxx, cb12[1].xxxx
-          mul r16.xy, r16.xyxx, l(0.600000, 0.600000, 0.000000, 0.000000)
-          add r16.xz, r13.xxyx, r16.xxyx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-
-#line 159
-          nop 
-          mov r16.xz, r16.xxzx
-          mov r16.y, r13.z
-          mov r16.w, l(-2.000000)
-          add r16.w, r14.w, r16.w
-          max r16.w, r16.w, l(0.000000)
-
-#line 43
-          mul r17.xyz, r16.xyzx, cb12[2].wwww
-          sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r17.xyzx, t0.xyzw, s5, r16.w  // r17.x <- <SampleLowFrequencyNoises return value>.x; r17.y <- <SampleLowFrequencyNoises return value>.y; r17.z <- <SampleLowFrequencyNoises return value>.z; r17.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-          mov r17.xyzw, r17.xyzw  // r17.x <- low_frequency_noises.x; r17.y <- low_frequency_noises.y; r17.z <- low_frequency_noises.z; r17.w <- low_frequency_noises.w
-
-#line 163
-          mul r16.w, r17.y, l(0.625000)
-          mul r17.y, r17.z, l(0.250000)
-          add r16.w, r16.w, r17.y
-          mul r17.y, r17.w, l(0.125000)
-          add r16.w, r16.w, r17.y  // r16.w <- low_frequency_fbm
-
-#line 170
-          nop 
-          mov r17.x, r17.x
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w
-          mov r17.y, l(1.000000)
-          mov r17.z, l(0)
-          mov r17.w, l(1.000000)
-
-#line 71
-          mov r18.x, -r16.w
-          add r17.y, r17.y, r18.x  // r17.y <- denom
-
-#line 72
-          mov r18.x, -r17.y
-          max r18.x, r17.y, r18.x
-          lt r18.x, r18.x, l(0.000001)
-          if_nz r18.x
-
-#line 73
-            mov r18.y, r17.z
-          endif   // r18.y <- <Remap return value>
-
-#line 74
-          if_z r18.x
-            mov r16.w, -r16.w
-            add r16.w, r16.w, r17.x
-            div r16.w, r16.w, r17.y
-            mov r17.x, -r17.z
-            add r17.x, r17.x, r17.w
-            mul r16.w, r16.w, r17.x
-            add r18.y, r16.w, r17.z
-          endif 
-
-#line 170
-          mov r18.y, r18.y  // r18.y <- base_cloud
-
-#line 178
-          mul r15.y, r15.y, cb12[2].x
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)  // r15.y <- cloud_type
-
-#line 179
-          nop 
-          mov r15.w, r15.w
-          mov r15.y, r15.y
-
-#line 106
-          mov r17.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r17.x <- stratus_gradient.x; r17.y <- stratus_gradient.y; r17.z <- stratus_gradient.z; r17.w <- stratus_gradient.w
-
-#line 107
-          mov r19.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r19.x <- stratocumulus_gradient.x; r19.y <- stratocumulus_gradient.y; r19.z <- stratocumulus_gradient.z; r19.w <- stratocumulus_gradient.w
-
-#line 108
-          mov r20.xyzw, l(0.010000,0.062500,0.780000,1.000000)  // r20.x <- cumulus_gradient.x; r20.y <- cumulus_gradient.y; r20.z <- cumulus_gradient.z; r20.w <- cumulus_gradient.w
-
-#line 110
-          mul r16.w, r15.y, l(2.000000)
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)  // r16.w <- stratus
-
-#line 111
-          mov r18.x, l(-0.500000)
-          add r18.x, r15.y, r18.x
-          mov r18.z, -r18.x
-          max r18.x, r18.z, r18.x
-          mul r18.x, r18.x, l(2.000000)
-          mov r18.x, -r18.x
-          add r18.x, r18.x, l(1.000000)  // r18.x <- stratocumulus
-
-#line 112
-          mov r18.z, l(-0.500000)
-          add r15.y, r15.y, r18.z
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r15.y, r15.y, l(2.000000)  // r15.y <- cumulus
-
-#line 114
-          mul r17.xyzw, r16.wwww, r17.xyzw
-          mul r19.xyzw, r18.xxxx, r19.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw
-          mul r19.xyzw, r15.yyyy, r20.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw  // r17.x <- cloud_gradient.x; r17.y <- cloud_gradient.y; r17.z <- cloud_gradient.z; r17.w <- cloud_gradient.w
-
-#line 115
-          mov r15.y, -r17.x
-          add r16.w, r15.y, r17.y
-          add r15.y, r15.y, r15.w
-          div r16.w, l(1.000000, 1.000000, 1.000000, 1.000000), r16.w
-          mul r15.y, r15.y, r16.w
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r16.w, r15.y, l(-2.000000)
-          add r16.w, r16.w, l(3.000000)
-          mul r15.y, r15.y, r15.y
-          mul r15.y, r15.y, r16.w
-          mov r16.w, -r17.z
-          add r17.x, r16.w, r17.w
-          add r16.w, r15.w, r16.w
-          div r17.x, l(1.000000, 1.000000, 1.000000, 1.000000), r17.x
-          mul r16.w, r16.w, r17.x
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mul r17.x, r16.w, l(-2.000000)
-          add r17.x, r17.x, l(3.000000)
-          mul r16.w, r16.w, r16.w
-          mul r16.w, r16.w, r17.x
-          mov r16.w, -r16.w
-          add r15.y, r15.y, r16.w  // r15.y <- density_gradient
-
-#line 116
-          mov r15.y, r15.y  // r15.y <- <GetDensityHeightGradient return value>
-
-#line 179
-          mov r15.y, r15.y  // r15.y <- density_height_gradient
-
-#line 182
-          mul r15.y, r15.y, r18.y  // r15.y <- base_cloud
-
-#line 186
-          nop 
-          mov r15.y, r15.y  // r15.y <- original_value
-          mov r16.w, -r15.x
-          add r16.w, r16.w, l(1.000000)  // r16.w <- original_min
-          mov r17.x, l(1.000000)  // r17.x <- original_max
-          mov r17.y, l(0)  // r17.y <- new_min
-          mov r17.z, l(1.000000)  // r17.z <- new_max
-
-#line 71
-          mov r17.w, -r16.w
-          add r17.x, r17.w, r17.x  // r17.x <- denom; r17.x <- denom
-
-#line 72
-          mov r17.w, -r17.x
-          max r17.w, r17.w, r17.x
-          lt r17.w, r17.w, l(0.000001)
-          if_nz r17.w
-
-#line 73
-            mov r18.x, r17.y
-          endif   // r18.x <- <Remap return value>; r18.x <- <Remap return value>
-
-#line 74
-          if_z r17.w
-            mov r16.w, -r16.w
-            add r15.y, r15.y, r16.w
-            div r15.y, r15.y, r17.x
-            mov r16.w, -r17.y
-            add r16.w, r16.w, r17.z
-            mul r15.y, r15.y, r16.w
-            add r18.x, r15.y, r17.y
-          endif 
-
-#line 186
-          mov r18.x, r18.x  // r18.x <- base_cloud_with_coverage
-
-#line 187
-          mul r15.x, r15.x, r18.x  // r15.x <- base_cloud_with_coverage
-
-#line 189
-          mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 190
-          not r15.y, r15.z
-          lt r15.z, l(0.000000), r15.x
-          and r15.y, r15.z, r15.y
+      mov_sat r15.z, r15.z
+      eq r15.w, r15.z, l(0.000000)
+      iadd r10.w, r10.w, -r15.w
+      ine r15.w, r10.w, l(6)
+      if_nz r15.w
+        ne r15.w, r15.z, l(0.000000)
+        if_nz r15.w
           if_nz r15.y
-
-#line 196
-            ne r15.y, cb12[1].x, l(0.000000)
-            if_nz r15.y
-
-#line 198
-              add r15.y, r0.y, cb1[0].z
-              mov r17.xy, -cb12[0].xyxx
-              dp2 r15.z, r17.xyxx, r17.xyxx
-              rsq r15.z, r15.z
-              mul r17.xy, r15.zzzz, r17.xyxx
-              mul r15.yz, r15.yyyy, r17.xxyx
-              mul r15.yz, r15.yyzy, l(0.000000, 40.000000, 40.000000, 0.000000)
-              mov r15.yz, -r15.yyzy
-              add r16.xz, r15.yyzy, r16.xxzx
-
-#line 199
-              add r15.y, r0.y, cb1[0].z
-              mul r15.y, r15.y, l(40.000000)
-              mov r15.y, -r15.y
-              add r16.y, r15.y, r16.y  // r16.y <- sample_point.y
-
-#line 200
-            else   // Prior locations: r13.z <- sample_point.y; r16.y <- sample_point.y; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom
-              mov r16.xy, r16.xyxx  // r16.y <- sample_point.y
-            endif 
-
-#line 205
-            mul r15.yz, r16.xxyx, l(0.000000, 0.000008, 0.000008, 0.000000)
-            itof r16.w, l(0)
-            sample_l_indexable(texture2d)(float,float,float,float) r15.yz, r15.yzyy, t3.zxyw, s5, r16.w  // r15.y <- curl_noise.x; r15.z <- curl_noise.y
-
-#line 206
-            mov r16.w, -r15.w
-            add r16.w, r16.w, l(1.000000)
-            mul r15.yz, r15.yyzy, r16.wwww
-            add r16.xy, r15.yzyy, r16.xyxx
-
-#line 210
-            nop 
-            mov r16.xy, r16.xyxx
-            mov r16.z, r16.z
-            mov r14.w, r14.w
-
-#line 47
+            mad r17.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r16.xxzx
+            mad r17.y, -r7.x, l(40.000000), r13.y
+            movc r16.xyz, r8.zzzz, r17.xyzx, r16.xyzx
+            mul r15.yw, r16.xxxy, l(0.000000, 0.000008, 0.000000, 0.000008)
+            sample_l_indexable(texture2d)(float,float,float,float) r15.yw, r15.ywyy, t3.zxwy, s5, l(0.000000)
+            add r16.w, -r14.w, l(1.000000)
+            mad r16.xy, r15.ywyy, r16.wwww, r16.xyxx
             mul r16.xyz, r16.xyzx, cb12[3].xxxx
-            sample_l_indexable(texture3d)(float,float,float,float) r16.xyz, r16.xyzx, t1.xyzw, s2, r14.w  // r16.x <- <SampleHighFrequencyNoises return value>.x; r16.y <- <SampleHighFrequencyNoises return value>.y; r16.z <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-            mov r16.xyz, r16.xyzx  // r16.x <- high_frequency_noises.x; r16.y <- high_frequency_noises.y; r16.z <- high_frequency_noises.z
-
-#line 213
-            mul r14.w, r16.x, l(0.625000)
-            mul r15.y, r16.y, l(0.250000)
-            add r14.w, r14.w, r15.y
-            mul r15.y, r16.z, l(0.125000)
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_fbm
-
-#line 220
-            mov r15.y, -r14.w
-            add r15.y, r15.y, l(1.000000)
-            mul r15.z, r15.w, l(10.000000)
-            max r15.z, r15.z, l(0.000000)
-            min r15.z, r15.z, l(1.000000)
-            mov r15.w, -r14.w
-            add r15.y, r15.w, r15.y
-            mul r15.y, r15.y, r15.z
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_noise_modifier
-
-#line 228
-            nop 
-            mov r15.y, r15.x  // r15.y <- original_value; r15.y <- original_value
-            mul r14.w, r14.w, l(0.200000)  // r14.w <- original_min; r14.w <- original_min
-            mov r15.z, l(1.000000)  // r15.z <- original_max; r15.z <- original_max
-            mov r15.w, l(0)  // r15.w <- new_min; r15.w <- new_min
-            mov r16.x, l(1.000000)  // r16.x <- new_max; r16.x <- new_max
-
-#line 71
-            mov r16.y, -r14.w
-            add r15.z, r15.z, r16.y  // r15.z <- denom; r15.z <- denom; r15.z <- denom
-
-#line 72
-            mov r16.y, -r15.z
-            max r16.y, r15.z, r16.y
-            lt r16.y, r16.y, l(0.000001)
-            if_nz r16.y
-
-#line 73
-              mov r15.x, r15.w
-            endif   // r15.x <- <Remap return value>; r15.x <- <Remap return value>; r15.x <- <Remap return value>
-
-#line 74
-            if_z r16.y
-              mov r14.w, -r14.w
-              add r14.w, r14.w, r15.y
-              div r14.w, r14.w, r15.z
-              mov r15.y, -r15.w
-              add r15.y, r15.y, r16.x
-              mul r14.w, r14.w, r15.y
-              add r15.x, r14.w, r15.w
-            endif 
-
-#line 228
-            mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 232
+            sample_l_indexable(texture3d)(float,float,float,float) r16.xyz, r16.xyzx, t1.xyzw, s2, l(0.000000)
+            dp3 r15.y, r16.xyzx, l(0.625000, 0.250000, 0.125000, 0.000000)
+            mul r14.w, r14.w, l(10.000000)
+            min r14.w, r14.w, l(1.000000)
+            mad r15.w, r15.y, l(-2.000000), l(1.000000)
+            mad r14.w, r14.w, r15.w, r15.y
+            mul r15.y, r14.w, l(0.200000)
+            mad r14.w, -r14.w, l(0.200000), l(1.000000)
+            ge r15.w, |r14.w|, l(0.000001)
+            mad r14.x, r14.x, r15.x, -r15.y
+            div r14.x, r14.x, r14.w
+            and r14.z, r14.x, r15.w
           endif 
-
-#line 235
-          max r14.w, r15.x, l(0.000000)
-          min r14.w, r14.w, l(1.000000)  // r14.w <- <SampleCloudDensity return value>
-
-#line 278
-          mov r14.w, r14.w  // r14.w <- density
-
-#line 286
-          mul r15.x, r14.w, l(2.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.x, -r15.x
-          add r15.x, r15.x, l(1.000000)  // r15.x <- cone_attenuation
-
-#line 287
-          mul r14.z, r14.z, r15.x  // r14.z <- cone_width
-
-#line 290
-          mul r15.x, r14.w, l(3.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.y, l(-1.000000)
-          add r15.y, r15.y, l(0.400000)
-          mul r15.x, r15.y, r15.x
-          add r15.x, r15.x, l(1.000000)
-          mul r15.x, r13.w, r15.x  // r15.x <- local_step
-
-#line 294
-          mul r15.yzw, r12.xxyw, r15.xxxx
-          mov r16.xyz, x0[0].xyzx
-          mul r16.xyz, r14.zzzz, r16.xyzx
-          add r15.yzw, r15.yyzw, r16.xxyz
-          add r13.xyz, r13.xyzx, r15.ywzy  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-
-#line 301
-          mul r14.z, r14.w, r15.x  // r14.z <- sigma
-
-#line 302
-          mov r14.z, -r14.z
-          mul r14.z, r14.z, l(1.442695)
-          exp r14.z, r14.z
-          mov r14.z, -r14.z
-          add r14.z, r14.z, l(1.000000)
-          add r14.x, r14.z, r14.x
-
-#line 307
-          iadd r14.y, r14.y, l(1)
-
-#line 272
-          itof r14.z, r14.y
-          itof r14.w, l(5)
-          div r14.z, r14.z, r14.w  // r14.z <- distance_t
-
-#line 273
-          mov r14.w, l(-0.400000)
-          add r14.w, r14.w, l(1.200000)
-          mul r14.z, r14.w, r14.z
-          add r14.z, r14.z, l(0.400000)
-          mul r14.z, r13.w, r14.z  // r14.z <- base_cone_width
-
-#line 275
-          nop 
-          mov r13.xy, r13.xyxx  // r13.x <- sample_point.x; r13.y <- sample_point.y
-
-#line 51
-          add r14.w, r0.y, cb1[0].z
-          mul r14.w, r14.w, l(0.001000)
-          mov r15.xy, -cb12[0].xyxx
-          dp2 r15.z, r15.xyxx, r15.xyxx
-          rsq r15.z, r15.z
-          mul r15.xy, r15.zzzz, r15.xyxx
-          mul r15.xy, r14.wwww, r15.xyxx
-          mul r15.xy, r15.xyxx, cb12[1].xxxx  // r15.x <- offset.x; r15.y <- offset.y
-
-#line 53
-          mul r14.w, cb12[0].z, cb12[0].z
-          mul r15.z, cb12[2].y, cb12[2].y
-          mov r15.z, -r15.z
-          add r14.w, r14.w, r15.z
-          sqrt r14.w, r14.w
-          mul r14.w, r14.w, cb12[2].z  // r14.w <- horizon_distance
-
-#line 54
-          add r16.x, r13.x, r14.w
-          mov r15.z, -r13.y
-          add r16.y, r14.w, r15.z
-          mul r14.w, r14.w, l(2.000000)
-          div r15.zw, r16.xxxy, r14.wwww
-          add r15.xy, r15.xyxx, r15.zwzz
-          sample_indexable(texture2d)(float,float,float,float) r15.xy, r15.xyxx, t2.xzyw, s2
-          mov r15.xy, r15.xyxx  // r15.x <- <SampleWeatherData return value>.x; r15.y <- <SampleWeatherData return value>.z
-
-#line 275
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-
-#line 277
-          itof r14.w, r14.y  // r14.w <- mip
-
-#line 278
-          nop 
-          mov r13.xyz, r13.xyzx  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-          mov r14.w, r14.w  // r14.w <- mip_level
-          mov r15.z, l(0)  // r15.z <- cheap_sample
-
-#line 149
-          nop 
-          dp3 r15.w, r13.xyzx, r13.xyzx
-          sqrt r15.w, r15.w  // r15.w <- position
-
-#line 96
-          mov r16.x, -cb12[0].z
-          add r15.w, r15.w, r16.x
-          mov r16.x, -cb12[0].z
-          add r16.x, r16.x, cb12[0].w
-          div r15.w, r15.w, r16.x  // r15.w <- height_fraction
-
-#line 97
-          max r15.w, r15.w, l(0.000000)
-          min r15.w, r15.w, l(1.000000)  // r15.w <- <GetHeightFractionForPoint return value>
-
-#line 149
-          mov r15.w, r15.w  // r15.w <- height_fraction
-
-#line 152
-          mul r15.x, r15.x, cb12[1].z  // r15.x <- cloud_coverage
-
-#line 156
-          add r16.x, r0.y, cb1[0].z
-          mul r16.x, r16.x, l(20.000000)
-          mov r16.yz, -cb12[0].xxyx
-          dp2 r16.w, r16.yzyy, r16.yzyy
-          rsq r16.w, r16.w
-          mul r16.yz, r16.wwww, r16.yyzy
-          mul r16.xy, r16.yzyy, r16.xxxx
-          mul r16.xy, r16.xyxx, cb12[1].xxxx
-          mul r16.xy, r16.xyxx, l(0.600000, 0.600000, 0.000000, 0.000000)
-          add r16.xz, r13.xxyx, r16.xxyx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-
-#line 159
-          nop 
-          mov r16.xz, r16.xxzx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-          mov r16.y, r13.z  // r16.y <- sample_point.y
-          mov r16.w, l(-2.000000)
-          add r16.w, r14.w, r16.w
-          max r16.w, r16.w, l(0.000000)  // r16.w <- mip_level
-
-#line 43
-          mul r17.xyz, r16.xyzx, cb12[2].wwww
-          sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r17.xyzx, t0.xyzw, s5, r16.w  // r17.x <- <SampleLowFrequencyNoises return value>.x; r17.y <- <SampleLowFrequencyNoises return value>.y; r17.z <- <SampleLowFrequencyNoises return value>.z; r17.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-          mov r17.xyzw, r17.xyzw  // r17.x <- low_frequency_noises.x; r17.y <- low_frequency_noises.y; r17.z <- low_frequency_noises.z; r17.w <- low_frequency_noises.w
-
-#line 163
-          mul r16.w, r17.y, l(0.625000)
-          mul r17.y, r17.z, l(0.250000)
-          add r16.w, r16.w, r17.y
-          mul r17.y, r17.w, l(0.125000)
-          add r16.w, r16.w, r17.y  // r16.w <- low_frequency_fbm
-
-#line 170
-          nop 
-          mov r17.x, r17.x  // r17.x <- original_value; r17.x <- original_value; r17.x <- original_value
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.y, l(1.000000)  // r17.y <- original_max; r17.y <- original_max; r17.y <- original_max
-          mov r17.z, l(0)  // r17.z <- new_min; r17.z <- new_min; r17.z <- new_min
-          mov r17.w, l(1.000000)  // r17.w <- new_max; r17.w <- new_max; r17.w <- new_max
-
-#line 71
-          mov r18.x, -r16.w
-          add r17.y, r17.y, r18.x  // r17.y <- denom; r17.y <- denom; r17.y <- denom
-
-#line 72
-          mov r18.x, -r17.y
-          max r18.x, r17.y, r18.x
-          lt r18.x, r18.x, l(0.000001)
-          if_nz r18.x
-
-#line 73
-            mov r18.y, r17.z
-          endif   // r18.y <- <Remap return value>; r18.y <- <Remap return value>; r18.y <- <Remap return value>
-
-#line 74
-          if_z r18.x
-            mov r16.w, -r16.w
-            add r16.w, r16.w, r17.x
-            div r16.w, r16.w, r17.y
-            mov r17.x, -r17.z
-            add r17.x, r17.x, r17.w
-            mul r16.w, r16.w, r17.x
-            add r18.y, r16.w, r17.z
-          endif 
-
-#line 170
-          mov r18.y, r18.y  // r18.y <- base_cloud
-
-#line 178
-          mul r15.y, r15.y, cb12[2].x
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)  // r15.y <- cloud_type
-
-#line 179
-          nop 
-          mov r15.w, r15.w  // r15.w <- height_fraction
-          mov r15.y, r15.y  // r15.y <- cloud_type
-
-#line 106
-          mov r17.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r17.x <- stratus_gradient.x; r17.y <- stratus_gradient.y; r17.z <- stratus_gradient.z; r17.w <- stratus_gradient.w
-
-#line 107
-          mov r19.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r19.x <- stratocumulus_gradient.x; r19.y <- stratocumulus_gradient.y; r19.z <- stratocumulus_gradient.z; r19.w <- stratocumulus_gradient.w
-
-#line 108
-          mov r20.xyzw, l(0.010000,0.062500,0.780000,1.000000)
-
-#line 110
-          mul r16.w, r15.y, l(2.000000)
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)  // r16.w <- stratus
-
-#line 111
-          mov r18.x, l(-0.500000)
-          add r18.x, r15.y, r18.x
-          mov r18.z, -r18.x
-          max r18.x, r18.z, r18.x
-          mul r18.x, r18.x, l(2.000000)
-          mov r18.x, -r18.x
-          add r18.x, r18.x, l(1.000000)  // r18.x <- stratocumulus
-
-#line 112
-          mov r18.z, l(-0.500000)
-          add r15.y, r15.y, r18.z
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r15.y, r15.y, l(2.000000)  // r15.y <- cumulus
-
-#line 114
-          mul r17.xyzw, r16.wwww, r17.xyzw
-          mul r19.xyzw, r18.xxxx, r19.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw
-          mul r19.xyzw, r15.yyyy, r20.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw  // r17.x <- cloud_gradient.x; r17.y <- cloud_gradient.y; r17.z <- cloud_gradient.z; r17.w <- cloud_gradient.w
-
-#line 115
-          mov r15.y, -r17.x
-          add r16.w, r15.y, r17.y
-          add r15.y, r15.y, r15.w
-          div r16.w, l(1.000000, 1.000000, 1.000000, 1.000000), r16.w
-          mul r15.y, r15.y, r16.w
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r16.w, r15.y, l(-2.000000)
-          add r16.w, r16.w, l(3.000000)
-          mul r15.y, r15.y, r15.y
-          mul r15.y, r15.y, r16.w
-          mov r16.w, -r17.z
-          add r17.x, r16.w, r17.w
-          add r16.w, r15.w, r16.w
-          div r17.x, l(1.000000, 1.000000, 1.000000, 1.000000), r17.x
-          mul r16.w, r16.w, r17.x
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mul r17.x, r16.w, l(-2.000000)
-          add r17.x, r17.x, l(3.000000)
-          mul r16.w, r16.w, r16.w
-          mul r16.w, r16.w, r17.x
-          mov r16.w, -r16.w
-          add r15.y, r15.y, r16.w  // r15.y <- density_gradient
-
-#line 116
-          mov r15.y, r15.y  // r15.y <- <GetDensityHeightGradient return value>
-
-#line 179
-          mov r15.y, r15.y  // r15.y <- density_height_gradient
-
-#line 182
-          mul r15.y, r15.y, r18.y  // r15.y <- base_cloud
-
-#line 186
-          nop 
-          mov r15.y, r15.y  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-          mov r16.w, -r15.x
-          add r16.w, r16.w, l(1.000000)  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.x, l(1.000000)  // r17.x <- original_max; r17.x <- original_max; r17.x <- original_max
-          mov r17.y, l(0)  // r17.y <- new_min; r17.y <- new_min; r17.y <- new_min
-          mov r17.z, l(1.000000)  // r17.z <- new_max; r17.z <- new_max; r17.z <- new_max
-
-#line 71
-          mov r17.w, -r16.w
-          add r17.x, r17.w, r17.x  // r17.x <- denom; r17.x <- denom; r17.x <- denom
-
-#line 72
-          mov r17.w, -r17.x
-          max r17.w, r17.w, r17.x
-          lt r17.w, r17.w, l(0.000001)
-          if_nz r17.w
-
-#line 73
-            mov r18.x, r17.y
-          endif   // r18.x <- <Remap return value>; r18.x <- <Remap return value>; r18.x <- <Remap return value>
-
-#line 74
-          if_z r17.w
-            mov r16.w, -r16.w
-            add r15.y, r15.y, r16.w
-            div r15.y, r15.y, r17.x
-            mov r16.w, -r17.y
-            add r16.w, r16.w, r17.z
-            mul r15.y, r15.y, r16.w
-            add r18.x, r15.y, r17.y
-          endif 
-
-#line 186
-          mov r18.x, r18.x  // r18.x <- base_cloud_with_coverage
-
-#line 187
-          mul r15.x, r15.x, r18.x  // r15.x <- base_cloud_with_coverage
-
-#line 189
-          mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 190
-          not r15.y, r15.z
-          lt r15.z, l(0.000000), r15.x
-          and r15.y, r15.z, r15.y
-          if_nz r15.y
-
-#line 196
-            ne r15.y, cb12[1].x, l(0.000000)
-            if_nz r15.y
-
-#line 198
-              add r15.y, r0.y, cb1[0].z
-              mov r17.xy, -cb12[0].xyxx
-              dp2 r15.z, r17.xyxx, r17.xyxx
-              rsq r15.z, r15.z
-              mul r17.xy, r15.zzzz, r17.xyxx
-              mul r15.yz, r15.yyyy, r17.xxyx
-              mul r15.yz, r15.yyzy, l(0.000000, 40.000000, 40.000000, 0.000000)
-              mov r15.yz, -r15.yyzy
-              add r16.xz, r15.yyzy, r16.xxzx
-
-#line 199
-              add r15.y, r0.y, cb1[0].z
-              mul r15.y, r15.y, l(40.000000)
-              mov r15.y, -r15.y
-              add r16.y, r15.y, r16.y  // r16.y <- sample_point.y
-
-#line 200
-            else   // Prior locations: r13.z <- sample_point.y; r16.y <- sample_point.y; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom
-              mov r16.xy, r16.xyxx  // r16.y <- sample_point.y
-            endif 
-
-#line 205
-            mul r15.yz, r16.xxyx, l(0.000000, 0.000008, 0.000008, 0.000000)
-            itof r16.w, l(0)
-            sample_l_indexable(texture2d)(float,float,float,float) r15.yz, r15.yzyy, t3.zxyw, s5, r16.w  // r15.y <- curl_noise.x; r15.z <- curl_noise.y
-
-#line 206
-            mov r16.w, -r15.w
-            add r16.w, r16.w, l(1.000000)
-            mul r15.yz, r15.yyzy, r16.wwww
-            add r16.xy, r15.yzyy, r16.xyxx
-
-#line 210
-            nop 
-            mov r16.xy, r16.xyxx  // r16.x <- sample_point.x; r16.y <- sample_point.y
-            mov r16.z, r16.z  // r16.z <- sample_point.z
-            mov r14.w, r14.w  // r14.w <- mip_level
-
-#line 47
-            mul r16.xyz, r16.xyzx, cb12[3].xxxx
-            sample_l_indexable(texture3d)(float,float,float,float) r16.xyz, r16.xyzx, t1.xyzw, s2, r14.w  // r16.x <- <SampleHighFrequencyNoises return value>.x; r16.y <- <SampleHighFrequencyNoises return value>.y; r16.z <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-            mov r16.xyz, r16.xyzx  // r16.x <- high_frequency_noises.x; r16.y <- high_frequency_noises.y; r16.z <- high_frequency_noises.z
-
-#line 213
-            mul r14.w, r16.x, l(0.625000)
-            mul r15.y, r16.y, l(0.250000)
-            add r14.w, r14.w, r15.y
-            mul r15.y, r16.z, l(0.125000)
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_fbm
-
-#line 220
-            mov r15.y, -r14.w
-            add r15.y, r15.y, l(1.000000)
-            mul r15.z, r15.w, l(10.000000)
-            max r15.z, r15.z, l(0.000000)
-            min r15.z, r15.z, l(1.000000)
-            mov r15.w, -r14.w
-            add r15.y, r15.w, r15.y
-            mul r15.y, r15.y, r15.z
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_noise_modifier
-
-#line 228
-            nop 
-            mov r15.y, r15.x  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-            mul r14.w, r14.w, l(0.200000)  // r14.w <- original_min; r14.w <- original_min; r14.w <- original_min
-            mov r15.z, l(1.000000)  // r15.z <- original_max; r15.z <- original_max; r15.z <- original_max
-            mov r15.w, l(0)  // r15.w <- new_min; r15.w <- new_min; r15.w <- new_min
-            mov r16.x, l(1.000000)  // r16.x <- new_max; r16.x <- new_max; r16.x <- new_max
-
-#line 71
-            mov r16.y, -r14.w
-            add r15.z, r15.z, r16.y  // r15.z <- denom; r15.z <- denom; r15.z <- denom
-
-#line 72
-            mov r16.y, -r15.z
-            max r16.y, r15.z, r16.y
-            lt r16.y, r16.y, l(0.000001)
-            if_nz r16.y
-
-#line 73
-              mov r15.x, r15.w
-            endif   // r15.x <- <Remap return value>; r15.x <- <Remap return value>; r15.x <- <Remap return value>
-
-#line 74
-            if_z r16.y
-              mov r14.w, -r14.w
-              add r14.w, r14.w, r15.y
-              div r14.w, r14.w, r15.z
-              mov r15.y, -r15.w
-              add r15.y, r15.y, r16.x
-              mul r14.w, r14.w, r15.y
-              add r15.x, r14.w, r15.w
-            endif 
-
-#line 228
-            mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 232
-          endif 
-
-#line 235
-          max r14.w, r15.x, l(0.000000)
-          min r14.w, r14.w, l(1.000000)  // r14.w <- <SampleCloudDensity return value>
-
-#line 278
-          mov r14.w, r14.w  // r14.w <- density
-
-#line 286
-          mul r15.x, r14.w, l(2.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.x, -r15.x
-          add r15.x, r15.x, l(1.000000)  // r15.x <- cone_attenuation
-
-#line 287
-          mul r14.z, r14.z, r15.x  // r14.z <- cone_width
-
-#line 290
-          mul r15.x, r14.w, l(3.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.y, l(-1.000000)
-          add r15.y, r15.y, l(0.400000)
-          mul r15.x, r15.y, r15.x
-          add r15.x, r15.x, l(1.000000)
-          mul r15.x, r13.w, r15.x  // r15.x <- local_step
-
-#line 294
-          mul r15.yzw, r12.xxyw, r15.xxxx
-          mov r16.xyz, x0[1].xyzx
-          mul r16.xyz, r14.zzzz, r16.xyzx
-          add r15.yzw, r15.yyzw, r16.xxyz
-          add r13.xyz, r13.xyzx, r15.ywzy  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-
-#line 301
-          mul r14.z, r14.w, r15.x  // r14.z <- sigma
-
-#line 302
-          mov r14.z, -r14.z
-          mul r14.z, r14.z, l(1.442695)
-          exp r14.z, r14.z
-          mov r14.z, -r14.z
-          add r14.z, r14.z, l(1.000000)
-          add r14.x, r14.z, r14.x
-
-#line 307
-          iadd r14.y, r14.y, l(1)
-
-#line 272
-          itof r14.z, r14.y
-          itof r14.w, l(5)
-          div r14.z, r14.z, r14.w  // r14.z <- distance_t
-
-#line 273
-          mov r14.w, l(-0.400000)
-          add r14.w, r14.w, l(1.200000)
-          mul r14.z, r14.w, r14.z
-          add r14.z, r14.z, l(0.400000)
-          mul r14.z, r13.w, r14.z  // r14.z <- base_cone_width
-
-#line 275
-          nop 
-          mov r13.xy, r13.xyxx  // r13.x <- sample_point.x; r13.y <- sample_point.y
-
-#line 51
-          add r14.w, r0.y, cb1[0].z
-          mul r14.w, r14.w, l(0.001000)
-          mov r15.xy, -cb12[0].xyxx
-          dp2 r15.z, r15.xyxx, r15.xyxx
-          rsq r15.z, r15.z
-          mul r15.xy, r15.zzzz, r15.xyxx
-          mul r15.xy, r14.wwww, r15.xyxx
-          mul r15.xy, r15.xyxx, cb12[1].xxxx  // r15.x <- offset.x; r15.y <- offset.y
-
-#line 53
-          mul r14.w, cb12[0].z, cb12[0].z
-          mul r15.z, cb12[2].y, cb12[2].y
-          mov r15.z, -r15.z
-          add r14.w, r14.w, r15.z
-          sqrt r14.w, r14.w
-          mul r14.w, r14.w, cb12[2].z  // r14.w <- horizon_distance
-
-#line 54
-          add r16.x, r13.x, r14.w
-          mov r15.z, -r13.y
-          add r16.y, r14.w, r15.z
-          mul r14.w, r14.w, l(2.000000)
-          div r15.zw, r16.xxxy, r14.wwww
-          add r15.xy, r15.xyxx, r15.zwzz
-          sample_indexable(texture2d)(float,float,float,float) r15.xy, r15.xyxx, t2.xzyw, s2
-          mov r15.xy, r15.xyxx  // r15.x <- <SampleWeatherData return value>.x; r15.y <- <SampleWeatherData return value>.z
-
-#line 275
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-
-#line 277
-          itof r14.w, r14.y  // r14.w <- mip
-
-#line 278
-          nop 
-          mov r13.xyz, r13.xyzx  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-          mov r14.w, r14.w  // r14.w <- mip_level
-          mov r15.z, l(0)  // r15.z <- cheap_sample
-
-#line 149
-          nop 
-          dp3 r15.w, r13.xyzx, r13.xyzx
-          sqrt r15.w, r15.w  // r15.w <- position
-
-#line 96
-          mov r16.x, -cb12[0].z
-          add r15.w, r15.w, r16.x
-          mov r16.x, -cb12[0].z
-          add r16.x, r16.x, cb12[0].w
-          div r15.w, r15.w, r16.x  // r15.w <- height_fraction
-
-#line 97
-          max r15.w, r15.w, l(0.000000)
-          min r15.w, r15.w, l(1.000000)  // r15.w <- <GetHeightFractionForPoint return value>
-
-#line 149
-          mov r15.w, r15.w  // r15.w <- height_fraction
-
-#line 152
-          mul r15.x, r15.x, cb12[1].z  // r15.x <- cloud_coverage
-
-#line 156
-          add r16.x, r0.y, cb1[0].z
-          mul r16.x, r16.x, l(20.000000)
-          mov r16.yz, -cb12[0].xxyx
-          dp2 r16.w, r16.yzyy, r16.yzyy
-          rsq r16.w, r16.w
-          mul r16.yz, r16.wwww, r16.yyzy
-          mul r16.xy, r16.yzyy, r16.xxxx
-          mul r16.xy, r16.xyxx, cb12[1].xxxx
-          mul r16.xy, r16.xyxx, l(0.600000, 0.600000, 0.000000, 0.000000)
-          add r16.xz, r13.xxyx, r16.xxyx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-
-#line 159
-          nop 
-          mov r16.xz, r16.xxzx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-          mov r16.y, r13.z  // r16.y <- sample_point.y
-          mov r16.w, l(-2.000000)
-          add r16.w, r14.w, r16.w
-          max r16.w, r16.w, l(0.000000)  // r16.w <- mip_level
-
-#line 43
-          mul r17.xyz, r16.xyzx, cb12[2].wwww
-          sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r17.xyzx, t0.xyzw, s5, r16.w  // r17.x <- <SampleLowFrequencyNoises return value>.x; r17.y <- <SampleLowFrequencyNoises return value>.y; r17.z <- <SampleLowFrequencyNoises return value>.z; r17.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-          mov r17.xyzw, r17.xyzw  // r17.x <- low_frequency_noises.x; r17.y <- low_frequency_noises.y; r17.z <- low_frequency_noises.z; r17.w <- low_frequency_noises.w
-
-#line 163
-          mul r16.w, r17.y, l(0.625000)
-          mul r17.y, r17.z, l(0.250000)
-          add r16.w, r16.w, r17.y
-          mul r17.y, r17.w, l(0.125000)
-          add r16.w, r16.w, r17.y  // r16.w <- low_frequency_fbm
-
-#line 170
-          nop 
-          mov r17.x, r17.x  // r17.x <- original_value; r17.x <- original_value; r17.x <- original_value
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.y, l(1.000000)  // r17.y <- original_max; r17.y <- original_max; r17.y <- original_max
-          mov r17.z, l(0)  // r17.z <- new_min; r17.z <- new_min; r17.z <- new_min
-          mov r17.w, l(1.000000)  // r17.w <- new_max; r17.w <- new_max; r17.w <- new_max
-
-#line 71
-          mov r18.x, -r16.w
-          add r17.y, r17.y, r18.x  // r17.y <- denom; r17.y <- denom; r17.y <- denom
-
-#line 72
-          mov r18.x, -r17.y
-          max r18.x, r17.y, r18.x
-          lt r18.x, r18.x, l(0.000001)
-          if_nz r18.x
-
-#line 73
-            mov r18.y, r17.z
-          endif   // r18.y <- <Remap return value>; r18.y <- <Remap return value>; r18.y <- <Remap return value>
-
-#line 74
-          if_z r18.x
-            mov r16.w, -r16.w
-            add r16.w, r16.w, r17.x
-            div r16.w, r16.w, r17.y
-            mov r17.x, -r17.z
-            add r17.x, r17.x, r17.w
-            mul r16.w, r16.w, r17.x
-            add r18.y, r16.w, r17.z
-          endif 
-
-#line 170
-          mov r18.y, r18.y  // r18.y <- base_cloud
-
-#line 178
-          mul r15.y, r15.y, cb12[2].x
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)  // r15.y <- cloud_type
-
-#line 179
-          nop 
-          mov r15.w, r15.w  // r15.w <- height_fraction
-          mov r15.y, r15.y  // r15.y <- cloud_type
-
-#line 106
-          mov r17.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r17.x <- stratus_gradient.x; r17.y <- stratus_gradient.y; r17.z <- stratus_gradient.z; r17.w <- stratus_gradient.w
-
-#line 107
-          mov r19.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r19.x <- stratocumulus_gradient.x; r19.y <- stratocumulus_gradient.y; r19.z <- stratocumulus_gradient.z; r19.w <- stratocumulus_gradient.w
-
-#line 108
-          mov r20.xyzw, l(0.010000,0.062500,0.780000,1.000000)
-
-#line 110
-          mul r16.w, r15.y, l(2.000000)
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)  // r16.w <- stratus
-
-#line 111
-          mov r18.x, l(-0.500000)
-          add r18.x, r15.y, r18.x
-          mov r18.z, -r18.x
-          max r18.x, r18.z, r18.x
-          mul r18.x, r18.x, l(2.000000)
-          mov r18.x, -r18.x
-          add r18.x, r18.x, l(1.000000)  // r18.x <- stratocumulus
-
-#line 112
-          mov r18.z, l(-0.500000)
-          add r15.y, r15.y, r18.z
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r15.y, r15.y, l(2.000000)  // r15.y <- cumulus
-
-#line 114
-          mul r17.xyzw, r16.wwww, r17.xyzw
-          mul r19.xyzw, r18.xxxx, r19.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw
-          mul r19.xyzw, r15.yyyy, r20.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw  // r17.x <- cloud_gradient.x; r17.y <- cloud_gradient.y; r17.z <- cloud_gradient.z; r17.w <- cloud_gradient.w
-
-#line 115
-          mov r15.y, -r17.x
-          add r16.w, r15.y, r17.y
-          add r15.y, r15.y, r15.w
-          div r16.w, l(1.000000, 1.000000, 1.000000, 1.000000), r16.w
-          mul r15.y, r15.y, r16.w
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r16.w, r15.y, l(-2.000000)
-          add r16.w, r16.w, l(3.000000)
-          mul r15.y, r15.y, r15.y
-          mul r15.y, r15.y, r16.w
-          mov r16.w, -r17.z
-          add r17.x, r16.w, r17.w
-          add r16.w, r15.w, r16.w
-          div r17.x, l(1.000000, 1.000000, 1.000000, 1.000000), r17.x
-          mul r16.w, r16.w, r17.x
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mul r17.x, r16.w, l(-2.000000)
-          add r17.x, r17.x, l(3.000000)
-          mul r16.w, r16.w, r16.w
-          mul r16.w, r16.w, r17.x
-          mov r16.w, -r16.w
-          add r15.y, r15.y, r16.w  // r15.y <- density_gradient
-
-#line 116
-          mov r15.y, r15.y  // r15.y <- <GetDensityHeightGradient return value>
-
-#line 179
-          mov r15.y, r15.y  // r15.y <- density_height_gradient
-
-#line 182
-          mul r15.y, r15.y, r18.y  // r15.y <- base_cloud
-
-#line 186
-          nop 
-          mov r15.y, r15.y  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-          mov r16.w, -r15.x
-          add r16.w, r16.w, l(1.000000)  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.x, l(1.000000)  // r17.x <- original_max; r17.x <- original_max; r17.x <- original_max
-          mov r17.y, l(0)  // r17.y <- new_min; r17.y <- new_min; r17.y <- new_min
-          mov r17.z, l(1.000000)  // r17.z <- new_max; r17.z <- new_max; r17.z <- new_max
-
-#line 71
-          mov r17.w, -r16.w
-          add r17.x, r17.w, r17.x  // r17.x <- denom; r17.x <- denom; r17.x <- denom
-
-#line 72
-          mov r17.w, -r17.x
-          max r17.w, r17.w, r17.x
-          lt r17.w, r17.w, l(0.000001)
-          if_nz r17.w
-
-#line 73
-            mov r18.x, r17.y
-          endif   // r18.x <- <Remap return value>; r18.x <- <Remap return value>; r18.x <- <Remap return value>
-
-#line 74
-          if_z r17.w
-            mov r16.w, -r16.w
-            add r15.y, r15.y, r16.w
-            div r15.y, r15.y, r17.x
-            mov r16.w, -r17.y
-            add r16.w, r16.w, r17.z
-            mul r15.y, r15.y, r16.w
-            add r18.x, r15.y, r17.y
-          endif 
-
-#line 186
-          mov r18.x, r18.x  // r18.x <- base_cloud_with_coverage
-
-#line 187
-          mul r15.x, r15.x, r18.x  // r15.x <- base_cloud_with_coverage
-
-#line 189
-          mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 190
-          not r15.y, r15.z
-          lt r15.z, l(0.000000), r15.x
-          and r15.y, r15.z, r15.y
-          if_nz r15.y
-
-#line 196
-            ne r15.y, cb12[1].x, l(0.000000)
-            if_nz r15.y
-
-#line 198
-              add r15.y, r0.y, cb1[0].z
-              mov r17.xy, -cb12[0].xyxx
-              dp2 r15.z, r17.xyxx, r17.xyxx
-              rsq r15.z, r15.z
-              mul r17.xy, r15.zzzz, r17.xyxx
-              mul r15.yz, r15.yyyy, r17.xxyx
-              mul r15.yz, r15.yyzy, l(0.000000, 40.000000, 40.000000, 0.000000)
-              mov r15.yz, -r15.yyzy
-              add r16.xz, r15.yyzy, r16.xxzx
-
-#line 199
-              add r15.y, r0.y, cb1[0].z
-              mul r15.y, r15.y, l(40.000000)
-              mov r15.y, -r15.y
-              add r16.y, r15.y, r16.y  // r16.y <- sample_point.y
-
-#line 200
-            else   // Prior locations: r13.z <- sample_point.y; r16.y <- sample_point.y; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom
-              mov r16.xy, r16.xyxx  // r16.y <- sample_point.y
-            endif 
-
-#line 205
-            mul r15.yz, r16.xxyx, l(0.000000, 0.000008, 0.000008, 0.000000)
-            itof r16.w, l(0)
-            sample_l_indexable(texture2d)(float,float,float,float) r15.yz, r15.yzyy, t3.zxyw, s5, r16.w  // r15.y <- curl_noise.x; r15.z <- curl_noise.y
-
-#line 206
-            mov r16.w, -r15.w
-            add r16.w, r16.w, l(1.000000)
-            mul r15.yz, r15.yyzy, r16.wwww
-            add r16.xy, r15.yzyy, r16.xyxx
-
-#line 210
-            nop 
-            mov r16.xy, r16.xyxx  // r16.x <- sample_point.x; r16.y <- sample_point.y
-            mov r16.z, r16.z  // r16.z <- sample_point.z
-            mov r14.w, r14.w  // r14.w <- mip_level
-
-#line 47
-            mul r16.xyz, r16.xyzx, cb12[3].xxxx
-            sample_l_indexable(texture3d)(float,float,float,float) r16.xyz, r16.xyzx, t1.xyzw, s2, r14.w  // r16.x <- <SampleHighFrequencyNoises return value>.x; r16.y <- <SampleHighFrequencyNoises return value>.y; r16.z <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-            mov r16.xyz, r16.xyzx  // r16.x <- high_frequency_noises.x; r16.y <- high_frequency_noises.y; r16.z <- high_frequency_noises.z
-
-#line 213
-            mul r14.w, r16.x, l(0.625000)
-            mul r15.y, r16.y, l(0.250000)
-            add r14.w, r14.w, r15.y
-            mul r15.y, r16.z, l(0.125000)
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_fbm
-
-#line 220
-            mov r15.y, -r14.w
-            add r15.y, r15.y, l(1.000000)
-            mul r15.z, r15.w, l(10.000000)
-            max r15.z, r15.z, l(0.000000)
-            min r15.z, r15.z, l(1.000000)
-            mov r15.w, -r14.w
-            add r15.y, r15.w, r15.y
-            mul r15.y, r15.y, r15.z
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_noise_modifier
-
-#line 228
-            nop 
-            mov r15.y, r15.x  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-            mul r14.w, r14.w, l(0.200000)  // r14.w <- original_min; r14.w <- original_min; r14.w <- original_min
-            mov r15.z, l(1.000000)  // r15.z <- original_max; r15.z <- original_max; r15.z <- original_max
-            mov r15.w, l(0)  // r15.w <- new_min; r15.w <- new_min; r15.w <- new_min
-            mov r16.x, l(1.000000)  // r16.x <- new_max; r16.x <- new_max; r16.x <- new_max
-
-#line 71
-            mov r16.y, -r14.w
-            add r15.z, r15.z, r16.y  // r15.z <- denom; r15.z <- denom; r15.z <- denom
-
-#line 72
-            mov r16.y, -r15.z
-            max r16.y, r15.z, r16.y
-            lt r16.y, r16.y, l(0.000001)
-            if_nz r16.y
-
-#line 73
-              mov r15.x, r15.w
-            endif   // r15.x <- <Remap return value>; r15.x <- <Remap return value>; r15.x <- <Remap return value>
-
-#line 74
-            if_z r16.y
-              mov r14.w, -r14.w
-              add r14.w, r14.w, r15.y
-              div r14.w, r14.w, r15.z
-              mov r15.y, -r15.w
-              add r15.y, r15.y, r16.x
-              mul r14.w, r14.w, r15.y
-              add r15.x, r14.w, r15.w
-            endif 
-
-#line 228
-            mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 232
-          endif 
-
-#line 235
-          max r14.w, r15.x, l(0.000000)
-          min r14.w, r14.w, l(1.000000)  // r14.w <- <SampleCloudDensity return value>
-
-#line 278
-          mov r14.w, r14.w  // r14.w <- density
-
-#line 286
-          mul r15.x, r14.w, l(2.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.x, -r15.x
-          add r15.x, r15.x, l(1.000000)  // r15.x <- cone_attenuation
-
-#line 287
-          mul r14.z, r14.z, r15.x  // r14.z <- cone_width
-
-#line 290
-          mul r15.x, r14.w, l(3.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.y, l(-1.000000)
-          add r15.y, r15.y, l(0.400000)
-          mul r15.x, r15.y, r15.x
-          add r15.x, r15.x, l(1.000000)
-          mul r15.x, r13.w, r15.x  // r15.x <- local_step
-
-#line 294
-          mul r15.yzw, r12.xxyw, r15.xxxx
-          mov r16.xyz, x0[2].xyzx
-          mul r16.xyz, r14.zzzz, r16.xyzx
-          add r15.yzw, r15.yyzw, r16.xxyz
-          add r13.xyz, r13.xyzx, r15.ywzy  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-
-#line 301
-          mul r14.z, r14.w, r15.x  // r14.z <- sigma
-
-#line 302
-          mov r14.z, -r14.z
-          mul r14.z, r14.z, l(1.442695)
-          exp r14.z, r14.z
-          mov r14.z, -r14.z
-          add r14.z, r14.z, l(1.000000)
-          add r14.x, r14.z, r14.x
-
-#line 307
-          iadd r14.y, r14.y, l(1)
-
-#line 272
-          itof r14.z, r14.y
-          itof r14.w, l(5)
-          div r14.z, r14.z, r14.w  // r14.z <- distance_t
-
-#line 273
-          mov r14.w, l(-0.400000)
-          add r14.w, r14.w, l(1.200000)
-          mul r14.z, r14.w, r14.z
-          add r14.z, r14.z, l(0.400000)
-          mul r14.z, r13.w, r14.z  // r14.z <- base_cone_width
-
-#line 275
-          nop 
-          mov r13.xy, r13.xyxx  // r13.x <- sample_point.x; r13.y <- sample_point.y
-
-#line 51
-          add r14.w, r0.y, cb1[0].z
-          mul r14.w, r14.w, l(0.001000)
-          mov r15.xy, -cb12[0].xyxx
-          dp2 r15.z, r15.xyxx, r15.xyxx
-          rsq r15.z, r15.z
-          mul r15.xy, r15.zzzz, r15.xyxx
-          mul r15.xy, r14.wwww, r15.xyxx
-          mul r15.xy, r15.xyxx, cb12[1].xxxx  // r15.x <- offset.x; r15.y <- offset.y
-
-#line 53
-          mul r14.w, cb12[0].z, cb12[0].z
-          mul r15.z, cb12[2].y, cb12[2].y
-          mov r15.z, -r15.z
-          add r14.w, r14.w, r15.z
-          sqrt r14.w, r14.w
-          mul r14.w, r14.w, cb12[2].z  // r14.w <- horizon_distance
-
-#line 54
-          add r16.x, r13.x, r14.w
-          mov r15.z, -r13.y
-          add r16.y, r14.w, r15.z
-          mul r14.w, r14.w, l(2.000000)
-          div r15.zw, r16.xxxy, r14.wwww
-          add r15.xy, r15.xyxx, r15.zwzz
-          sample_indexable(texture2d)(float,float,float,float) r15.xy, r15.xyxx, t2.xzyw, s2
-          mov r15.xy, r15.xyxx  // r15.x <- <SampleWeatherData return value>.x; r15.y <- <SampleWeatherData return value>.z
-
-#line 275
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-
-#line 277
-          itof r14.w, r14.y  // r14.w <- mip
-
-#line 278
-          nop 
-          mov r13.xyz, r13.xyzx  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-          mov r14.w, r14.w  // r14.w <- mip_level
-          mov r15.z, l(0)  // r15.z <- cheap_sample
-
-#line 149
-          nop 
-          dp3 r15.w, r13.xyzx, r13.xyzx
-          sqrt r15.w, r15.w  // r15.w <- position
-
-#line 96
-          mov r16.x, -cb12[0].z
-          add r15.w, r15.w, r16.x
-          mov r16.x, -cb12[0].z
-          add r16.x, r16.x, cb12[0].w
-          div r15.w, r15.w, r16.x  // r15.w <- height_fraction
-
-#line 97
-          max r15.w, r15.w, l(0.000000)
-          min r15.w, r15.w, l(1.000000)  // r15.w <- <GetHeightFractionForPoint return value>
-
-#line 149
-          mov r15.w, r15.w  // r15.w <- height_fraction
-
-#line 152
-          mul r15.x, r15.x, cb12[1].z  // r15.x <- cloud_coverage
-
-#line 156
-          add r16.x, r0.y, cb1[0].z
-          mul r16.x, r16.x, l(20.000000)
-          mov r16.yz, -cb12[0].xxyx
-          dp2 r16.w, r16.yzyy, r16.yzyy
-          rsq r16.w, r16.w
-          mul r16.yz, r16.wwww, r16.yyzy
-          mul r16.xy, r16.yzyy, r16.xxxx
-          mul r16.xy, r16.xyxx, cb12[1].xxxx
-          mul r16.xy, r16.xyxx, l(0.600000, 0.600000, 0.000000, 0.000000)
-          add r16.xz, r13.xxyx, r16.xxyx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-
-#line 159
-          nop 
-          mov r16.xz, r16.xxzx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-          mov r16.y, r13.z  // r16.y <- sample_point.y
-          mov r16.w, l(-2.000000)
-          add r16.w, r14.w, r16.w
-          max r16.w, r16.w, l(0.000000)  // r16.w <- mip_level
-
-#line 43
-          mul r17.xyz, r16.xyzx, cb12[2].wwww
-          sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r17.xyzx, t0.xyzw, s5, r16.w  // r17.x <- <SampleLowFrequencyNoises return value>.x; r17.y <- <SampleLowFrequencyNoises return value>.y; r17.z <- <SampleLowFrequencyNoises return value>.z; r17.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-          mov r17.xyzw, r17.xyzw  // r17.x <- low_frequency_noises.x; r17.y <- low_frequency_noises.y; r17.z <- low_frequency_noises.z; r17.w <- low_frequency_noises.w
-
-#line 163
-          mul r16.w, r17.y, l(0.625000)
-          mul r17.y, r17.z, l(0.250000)
-          add r16.w, r16.w, r17.y
-          mul r17.y, r17.w, l(0.125000)
-          add r16.w, r16.w, r17.y  // r16.w <- low_frequency_fbm
-
-#line 170
-          nop 
-          mov r17.x, r17.x  // r17.x <- original_value; r17.x <- original_value; r17.x <- original_value
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.y, l(1.000000)  // r17.y <- original_max; r17.y <- original_max; r17.y <- original_max
-          mov r17.z, l(0)  // r17.z <- new_min; r17.z <- new_min; r17.z <- new_min
-          mov r17.w, l(1.000000)  // r17.w <- new_max; r17.w <- new_max; r17.w <- new_max
-
-#line 71
-          mov r18.x, -r16.w
-          add r17.y, r17.y, r18.x  // r17.y <- denom; r17.y <- denom; r17.y <- denom
-
-#line 72
-          mov r18.x, -r17.y
-          max r18.x, r17.y, r18.x
-          lt r18.x, r18.x, l(0.000001)
-          if_nz r18.x
-
-#line 73
-            mov r18.y, r17.z
-          endif   // r18.y <- <Remap return value>; r18.y <- <Remap return value>; r18.y <- <Remap return value>
-
-#line 74
-          if_z r18.x
-            mov r16.w, -r16.w
-            add r16.w, r16.w, r17.x
-            div r16.w, r16.w, r17.y
-            mov r17.x, -r17.z
-            add r17.x, r17.x, r17.w
-            mul r16.w, r16.w, r17.x
-            add r18.y, r16.w, r17.z
-          endif 
-
-#line 170
-          mov r18.y, r18.y  // r18.y <- base_cloud
-
-#line 178
-          mul r15.y, r15.y, cb12[2].x
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)  // r15.y <- cloud_type
-
-#line 179
-          nop 
-          mov r15.w, r15.w  // r15.w <- height_fraction
-          mov r15.y, r15.y  // r15.y <- cloud_type
-
-#line 106
-          mov r17.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r17.x <- stratus_gradient.x; r17.y <- stratus_gradient.y; r17.z <- stratus_gradient.z; r17.w <- stratus_gradient.w
-
-#line 107
-          mov r19.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r19.x <- stratocumulus_gradient.x; r19.y <- stratocumulus_gradient.y; r19.z <- stratocumulus_gradient.z; r19.w <- stratocumulus_gradient.w
-
-#line 108
-          mov r20.xyzw, l(0.010000,0.062500,0.780000,1.000000)
-
-#line 110
-          mul r16.w, r15.y, l(2.000000)
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)  // r16.w <- stratus
-
-#line 111
-          mov r18.x, l(-0.500000)
-          add r18.x, r15.y, r18.x
-          mov r18.z, -r18.x
-          max r18.x, r18.z, r18.x
-          mul r18.x, r18.x, l(2.000000)
-          mov r18.x, -r18.x
-          add r18.x, r18.x, l(1.000000)  // r18.x <- stratocumulus
-
-#line 112
-          mov r18.z, l(-0.500000)
-          add r15.y, r15.y, r18.z
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r15.y, r15.y, l(2.000000)  // r15.y <- cumulus
-
-#line 114
-          mul r17.xyzw, r16.wwww, r17.xyzw
-          mul r19.xyzw, r18.xxxx, r19.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw
-          mul r19.xyzw, r15.yyyy, r20.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw  // r17.x <- cloud_gradient.x; r17.y <- cloud_gradient.y; r17.z <- cloud_gradient.z; r17.w <- cloud_gradient.w
-
-#line 115
-          mov r15.y, -r17.x
-          add r16.w, r15.y, r17.y
-          add r15.y, r15.y, r15.w
-          div r16.w, l(1.000000, 1.000000, 1.000000, 1.000000), r16.w
-          mul r15.y, r15.y, r16.w
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r16.w, r15.y, l(-2.000000)
-          add r16.w, r16.w, l(3.000000)
-          mul r15.y, r15.y, r15.y
-          mul r15.y, r15.y, r16.w
-          mov r16.w, -r17.z
-          add r17.x, r16.w, r17.w
-          add r16.w, r15.w, r16.w
-          div r17.x, l(1.000000, 1.000000, 1.000000, 1.000000), r17.x
-          mul r16.w, r16.w, r17.x
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mul r17.x, r16.w, l(-2.000000)
-          add r17.x, r17.x, l(3.000000)
-          mul r16.w, r16.w, r16.w
-          mul r16.w, r16.w, r17.x
-          mov r16.w, -r16.w
-          add r15.y, r15.y, r16.w  // r15.y <- density_gradient
-
-#line 116
-          mov r15.y, r15.y  // r15.y <- <GetDensityHeightGradient return value>
-
-#line 179
-          mov r15.y, r15.y  // r15.y <- density_height_gradient
-
-#line 182
-          mul r15.y, r15.y, r18.y  // r15.y <- base_cloud
-
-#line 186
-          nop 
-          mov r15.y, r15.y  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-          mov r16.w, -r15.x
-          add r16.w, r16.w, l(1.000000)  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.x, l(1.000000)  // r17.x <- original_max; r17.x <- original_max; r17.x <- original_max
-          mov r17.y, l(0)  // r17.y <- new_min; r17.y <- new_min; r17.y <- new_min
-          mov r17.z, l(1.000000)  // r17.z <- new_max; r17.z <- new_max; r17.z <- new_max
-
-#line 71
-          mov r17.w, -r16.w
-          add r17.x, r17.w, r17.x  // r17.x <- denom; r17.x <- denom; r17.x <- denom
-
-#line 72
-          mov r17.w, -r17.x
-          max r17.w, r17.w, r17.x
-          lt r17.w, r17.w, l(0.000001)
-          if_nz r17.w
-
-#line 73
-            mov r18.x, r17.y
-          endif   // r18.x <- <Remap return value>; r18.x <- <Remap return value>; r18.x <- <Remap return value>
-
-#line 74
-          if_z r17.w
-            mov r16.w, -r16.w
-            add r15.y, r15.y, r16.w
-            div r15.y, r15.y, r17.x
-            mov r16.w, -r17.y
-            add r16.w, r16.w, r17.z
-            mul r15.y, r15.y, r16.w
-            add r18.x, r15.y, r17.y
-          endif 
-
-#line 186
-          mov r18.x, r18.x  // r18.x <- base_cloud_with_coverage
-
-#line 187
-          mul r15.x, r15.x, r18.x  // r15.x <- base_cloud_with_coverage
-
-#line 189
-          mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 190
-          not r15.y, r15.z
-          lt r15.z, l(0.000000), r15.x
-          and r15.y, r15.z, r15.y
-          if_nz r15.y
-
-#line 196
-            ne r15.y, cb12[1].x, l(0.000000)
-            if_nz r15.y
-
-#line 198
-              add r15.y, r0.y, cb1[0].z
-              mov r17.xy, -cb12[0].xyxx
-              dp2 r15.z, r17.xyxx, r17.xyxx
-              rsq r15.z, r15.z
-              mul r17.xy, r15.zzzz, r17.xyxx
-              mul r15.yz, r15.yyyy, r17.xxyx
-              mul r15.yz, r15.yyzy, l(0.000000, 40.000000, 40.000000, 0.000000)
-              mov r15.yz, -r15.yyzy
-              add r16.xz, r15.yyzy, r16.xxzx
-
-#line 199
-              add r15.y, r0.y, cb1[0].z
-              mul r15.y, r15.y, l(40.000000)
-              mov r15.y, -r15.y
-              add r16.y, r15.y, r16.y  // r16.y <- sample_point.y
-
-#line 200
-            else   // Prior locations: r13.z <- sample_point.y; r16.y <- sample_point.y; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom
-              mov r16.xy, r16.xyxx  // r16.y <- sample_point.y
-            endif 
-
-#line 205
-            mul r15.yz, r16.xxyx, l(0.000000, 0.000008, 0.000008, 0.000000)
-            itof r16.w, l(0)
-            sample_l_indexable(texture2d)(float,float,float,float) r15.yz, r15.yzyy, t3.zxyw, s5, r16.w  // r15.y <- curl_noise.x; r15.z <- curl_noise.y
-
-#line 206
-            mov r16.w, -r15.w
-            add r16.w, r16.w, l(1.000000)
-            mul r15.yz, r15.yyzy, r16.wwww
-            add r16.xy, r15.yzyy, r16.xyxx
-
-#line 210
-            nop 
-            mov r16.xy, r16.xyxx  // r16.x <- sample_point.x; r16.y <- sample_point.y
-            mov r16.z, r16.z  // r16.z <- sample_point.z
-            mov r14.w, r14.w  // r14.w <- mip_level
-
-#line 47
-            mul r16.xyz, r16.xyzx, cb12[3].xxxx
-            sample_l_indexable(texture3d)(float,float,float,float) r16.xyz, r16.xyzx, t1.xyzw, s2, r14.w  // r16.x <- <SampleHighFrequencyNoises return value>.x; r16.y <- <SampleHighFrequencyNoises return value>.y; r16.z <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-            mov r16.xyz, r16.xyzx  // r16.x <- high_frequency_noises.x; r16.y <- high_frequency_noises.y; r16.z <- high_frequency_noises.z
-
-#line 213
-            mul r14.w, r16.x, l(0.625000)
-            mul r15.y, r16.y, l(0.250000)
-            add r14.w, r14.w, r15.y
-            mul r15.y, r16.z, l(0.125000)
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_fbm
-
-#line 220
-            mov r15.y, -r14.w
-            add r15.y, r15.y, l(1.000000)
-            mul r15.z, r15.w, l(10.000000)
-            max r15.z, r15.z, l(0.000000)
-            min r15.z, r15.z, l(1.000000)
-            mov r15.w, -r14.w
-            add r15.y, r15.w, r15.y
-            mul r15.y, r15.y, r15.z
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_noise_modifier
-
-#line 228
-            nop 
-            mov r15.y, r15.x  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-            mul r14.w, r14.w, l(0.200000)  // r14.w <- original_min; r14.w <- original_min; r14.w <- original_min
-            mov r15.z, l(1.000000)  // r15.z <- original_max; r15.z <- original_max; r15.z <- original_max
-            mov r15.w, l(0)  // r15.w <- new_min; r15.w <- new_min; r15.w <- new_min
-            mov r16.x, l(1.000000)  // r16.x <- new_max; r16.x <- new_max; r16.x <- new_max
-
-#line 71
-            mov r16.y, -r14.w
-            add r15.z, r15.z, r16.y  // r15.z <- denom; r15.z <- denom; r15.z <- denom
-
-#line 72
-            mov r16.y, -r15.z
-            max r16.y, r15.z, r16.y
-            lt r16.y, r16.y, l(0.000001)
-            if_nz r16.y
-
-#line 73
-              mov r15.x, r15.w
-            endif   // r15.x <- <Remap return value>; r15.x <- <Remap return value>; r15.x <- <Remap return value>
-
-#line 74
-            if_z r16.y
-              mov r14.w, -r14.w
-              add r14.w, r14.w, r15.y
-              div r14.w, r14.w, r15.z
-              mov r15.y, -r15.w
-              add r15.y, r15.y, r16.x
-              mul r14.w, r14.w, r15.y
-              add r15.x, r14.w, r15.w
-            endif 
-
-#line 228
-            mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 232
-          endif 
-
-#line 235
-          max r14.w, r15.x, l(0.000000)
-          min r14.w, r14.w, l(1.000000)  // r14.w <- <SampleCloudDensity return value>
-
-#line 278
-          mov r14.w, r14.w  // r14.w <- density
-
-#line 286
-          mul r15.x, r14.w, l(2.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.x, -r15.x
-          add r15.x, r15.x, l(1.000000)  // r15.x <- cone_attenuation
-
-#line 287
-          mul r14.z, r14.z, r15.x  // r14.z <- cone_width
-
-#line 290
-          mul r15.x, r14.w, l(3.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.y, l(-1.000000)
-          add r15.y, r15.y, l(0.400000)
-          mul r15.x, r15.y, r15.x
-          add r15.x, r15.x, l(1.000000)
-          mul r15.x, r13.w, r15.x  // r15.x <- local_step
-
-#line 294
-          mul r15.yzw, r12.xxyw, r15.xxxx
-          mov r16.xyz, x0[3].xyzx
-          mul r16.xyz, r14.zzzz, r16.xyzx
-          add r15.yzw, r15.yyzw, r16.xxyz
-          add r13.xyz, r13.xyzx, r15.ywzy  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-
-#line 301
-          mul r14.z, r14.w, r15.x  // r14.z <- sigma
-
-#line 302
-          mov r14.z, -r14.z
-          mul r14.z, r14.z, l(1.442695)
-          exp r14.z, r14.z
-          mov r14.z, -r14.z
-          add r14.z, r14.z, l(1.000000)
-          add r14.x, r14.z, r14.x
-
-#line 307
-          iadd r14.y, r14.y, l(1)
-
-#line 272
-          itof r14.z, r14.y
-          itof r14.w, l(5)
-          div r14.z, r14.z, r14.w  // r14.z <- distance_t
-
-#line 273
-          mov r14.w, l(-0.400000)
-          add r14.w, r14.w, l(1.200000)
-          mul r14.z, r14.w, r14.z
-          add r14.z, r14.z, l(0.400000)
-          mul r14.z, r13.w, r14.z  // r14.z <- base_cone_width
-
-#line 275
-          nop 
-          mov r13.xy, r13.xyxx  // r13.x <- sample_point.x; r13.y <- sample_point.y
-
-#line 51
-          add r14.w, r0.y, cb1[0].z
-          mul r14.w, r14.w, l(0.001000)
-          mov r15.xy, -cb12[0].xyxx
-          dp2 r15.z, r15.xyxx, r15.xyxx
-          rsq r15.z, r15.z
-          mul r15.xy, r15.zzzz, r15.xyxx
-          mul r15.xy, r14.wwww, r15.xyxx
-          mul r15.xy, r15.xyxx, cb12[1].xxxx  // r15.x <- offset.x; r15.y <- offset.y
-
-#line 53
-          mul r14.w, cb12[0].z, cb12[0].z
-          mul r15.z, cb12[2].y, cb12[2].y
-          mov r15.z, -r15.z
-          add r14.w, r14.w, r15.z
-          sqrt r14.w, r14.w
-          mul r14.w, r14.w, cb12[2].z  // r14.w <- horizon_distance
-
-#line 54
-          add r16.x, r13.x, r14.w
-          mov r15.z, -r13.y
-          add r16.y, r14.w, r15.z
-          mul r14.w, r14.w, l(2.000000)
-          div r15.zw, r16.xxxy, r14.wwww
-          add r15.xy, r15.xyxx, r15.zwzz
-          sample_indexable(texture2d)(float,float,float,float) r15.xy, r15.xyxx, t2.xzyw, s2
-          mov r15.xy, r15.xyxx  // r15.x <- <SampleWeatherData return value>.x; r15.y <- <SampleWeatherData return value>.z
-
-#line 275
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-
-#line 277
-          itof r14.w, r14.y  // r14.w <- mip
-
-#line 278
-          nop 
-          mov r13.xyz, r13.xyzx  // r13.x <- sample_point.x; r13.y <- sample_point.z; r13.z <- sample_point.y
-          mov r15.xy, r15.xyxx  // r15.x <- weather_data.x; r15.y <- weather_data.z
-          mov r14.w, r14.w  // r14.w <- mip_level
-          mov r15.z, l(0)  // r15.z <- cheap_sample
-
-#line 149
-          nop 
-          dp3 r15.w, r13.xyzx, r13.xyzx
-          sqrt r15.w, r15.w  // r15.w <- position
-
-#line 96
-          mov r16.x, -cb12[0].z
-          add r15.w, r15.w, r16.x
-          mov r16.x, -cb12[0].z
-          add r16.x, r16.x, cb12[0].w
-          div r15.w, r15.w, r16.x  // r15.w <- height_fraction
-
-#line 97
-          max r15.w, r15.w, l(0.000000)
-          min r15.w, r15.w, l(1.000000)  // r15.w <- <GetHeightFractionForPoint return value>
-
-#line 149
-          mov r15.w, r15.w  // r15.w <- height_fraction
-
-#line 152
-          mul r15.x, r15.x, cb12[1].z  // r15.x <- cloud_coverage
-
-#line 156
-          add r16.x, r0.y, cb1[0].z
-          mul r16.x, r16.x, l(20.000000)
-          mov r16.yz, -cb12[0].xxyx
-          dp2 r16.w, r16.yzyy, r16.yzyy
-          rsq r16.w, r16.w
-          mul r16.yz, r16.wwww, r16.yyzy
-          mul r16.xy, r16.yzyy, r16.xxxx
-          mul r16.xy, r16.xyxx, cb12[1].xxxx
-          mul r16.xy, r16.xyxx, l(0.600000, 0.600000, 0.000000, 0.000000)
-          add r16.xz, r13.xxyx, r16.xxyx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-
-#line 159
-          nop 
-          mov r16.xz, r16.xxzx  // r16.x <- sample_point.x; r16.z <- sample_point.z
-          mov r16.y, r13.z  // r16.y <- sample_point.y
-          mov r16.w, l(-2.000000)
-          add r16.w, r14.w, r16.w
-          max r16.w, r16.w, l(0.000000)  // r16.w <- mip_level
-
-#line 43
-          mul r17.xyz, r16.xyzx, cb12[2].wwww
-          sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r17.xyzx, t0.xyzw, s5, r16.w  // r17.x <- <SampleLowFrequencyNoises return value>.x; r17.y <- <SampleLowFrequencyNoises return value>.y; r17.z <- <SampleLowFrequencyNoises return value>.z; r17.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-          mov r17.xyzw, r17.xyzw  // r17.x <- low_frequency_noises.x; r17.y <- low_frequency_noises.y; r17.z <- low_frequency_noises.z; r17.w <- low_frequency_noises.w
-
-#line 163
-          mul r16.w, r17.y, l(0.625000)
-          mul r17.y, r17.z, l(0.250000)
-          add r16.w, r16.w, r17.y
-          mul r17.y, r17.w, l(0.125000)
-          add r16.w, r16.w, r17.y  // r16.w <- low_frequency_fbm
-
-#line 170
-          nop 
-          mov r17.x, r17.x  // r17.x <- original_value; r17.x <- original_value; r17.x <- original_value
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.y, l(1.000000)  // r17.y <- original_max; r17.y <- original_max; r17.y <- original_max
-          mov r17.z, l(0)  // r17.z <- new_min; r17.z <- new_min; r17.z <- new_min
-          mov r17.w, l(1.000000)  // r17.w <- new_max; r17.w <- new_max; r17.w <- new_max
-
-#line 71
-          mov r18.x, -r16.w
-          add r17.y, r17.y, r18.x  // r17.y <- denom; r17.y <- denom; r17.y <- denom
-
-#line 72
-          mov r18.x, -r17.y
-          max r18.x, r17.y, r18.x
-          lt r18.x, r18.x, l(0.000001)
-          if_nz r18.x
-
-#line 73
-            mov r18.y, r17.z
-          endif   // r18.y <- <Remap return value>; r18.y <- <Remap return value>; r18.y <- <Remap return value>
-
-#line 74
-          if_z r18.x
-            mov r16.w, -r16.w
-            add r16.w, r16.w, r17.x
-            div r16.w, r16.w, r17.y
-            mov r17.x, -r17.z
-            add r17.x, r17.x, r17.w
-            mul r16.w, r16.w, r17.x
-            add r18.y, r16.w, r17.z
-          endif 
-
-#line 170
-          mov r18.y, r18.y  // r18.y <- base_cloud
-
-#line 178
-          mul r15.y, r15.y, cb12[2].x
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)  // r15.y <- cloud_type
-
-#line 179
-          nop 
-          mov r15.w, r15.w  // r15.w <- height_fraction
-          mov r15.y, r15.y  // r15.y <- cloud_type
-
-#line 106
-          mov r17.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r17.x <- stratus_gradient.x; r17.y <- stratus_gradient.y; r17.z <- stratus_gradient.z; r17.w <- stratus_gradient.w
-
-#line 107
-          mov r19.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r19.x <- stratocumulus_gradient.x; r19.y <- stratocumulus_gradient.y; r19.z <- stratocumulus_gradient.z; r19.w <- stratocumulus_gradient.w
-
-#line 108
-          mov r20.xyzw, l(0.010000,0.062500,0.780000,1.000000)
-
-#line 110
-          mul r16.w, r15.y, l(2.000000)
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mov r16.w, -r16.w
-          add r16.w, r16.w, l(1.000000)  // r16.w <- stratus
-
-#line 111
-          mov r18.x, l(-0.500000)
-          add r18.x, r15.y, r18.x
-          mov r18.z, -r18.x
-          max r18.x, r18.z, r18.x
-          mul r18.x, r18.x, l(2.000000)
-          mov r18.x, -r18.x
-          add r18.x, r18.x, l(1.000000)  // r18.x <- stratocumulus
-
-#line 112
-          mov r18.z, l(-0.500000)
-          add r15.y, r15.y, r18.z
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r15.y, r15.y, l(2.000000)  // r15.y <- cumulus
-
-#line 114
-          mul r17.xyzw, r16.wwww, r17.xyzw
-          mul r19.xyzw, r18.xxxx, r19.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw
-          mul r19.xyzw, r15.yyyy, r20.xyzw
-          add r17.xyzw, r17.xyzw, r19.xyzw  // r17.x <- cloud_gradient.x; r17.y <- cloud_gradient.y; r17.z <- cloud_gradient.z; r17.w <- cloud_gradient.w
-
-#line 115
-          mov r15.y, -r17.x
-          add r16.w, r15.y, r17.y
-          add r15.y, r15.y, r15.w
-          div r16.w, l(1.000000, 1.000000, 1.000000, 1.000000), r16.w
-          mul r15.y, r15.y, r16.w
-          max r15.y, r15.y, l(0.000000)
-          min r15.y, r15.y, l(1.000000)
-          mul r16.w, r15.y, l(-2.000000)
-          add r16.w, r16.w, l(3.000000)
-          mul r15.y, r15.y, r15.y
-          mul r15.y, r15.y, r16.w
-          mov r16.w, -r17.z
-          add r17.x, r16.w, r17.w
-          add r16.w, r15.w, r16.w
-          div r17.x, l(1.000000, 1.000000, 1.000000, 1.000000), r17.x
-          mul r16.w, r16.w, r17.x
-          max r16.w, r16.w, l(0.000000)
-          min r16.w, r16.w, l(1.000000)
-          mul r17.x, r16.w, l(-2.000000)
-          add r17.x, r17.x, l(3.000000)
-          mul r16.w, r16.w, r16.w
-          mul r16.w, r16.w, r17.x
-          mov r16.w, -r16.w
-          add r15.y, r15.y, r16.w  // r15.y <- density_gradient
-
-#line 116
-          mov r15.y, r15.y  // r15.y <- <GetDensityHeightGradient return value>
-
-#line 179
-          mov r15.y, r15.y  // r15.y <- density_height_gradient
-
-#line 182
-          mul r15.y, r15.y, r18.y  // r15.y <- base_cloud
-
-#line 186
-          nop 
-          mov r15.y, r15.y  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-          mov r16.w, -r15.x
-          add r16.w, r16.w, l(1.000000)  // r16.w <- original_min; r16.w <- original_min; r16.w <- original_min
-          mov r17.x, l(1.000000)  // r17.x <- original_max; r17.x <- original_max; r17.x <- original_max
-          mov r17.y, l(0)  // r17.y <- new_min; r17.y <- new_min; r17.y <- new_min
-          mov r17.z, l(1.000000)  // r17.z <- new_max; r17.z <- new_max; r17.z <- new_max
-
-#line 71
-          mov r17.w, -r16.w
-          add r17.x, r17.w, r17.x  // r17.x <- denom; r17.x <- denom; r17.x <- denom
-
-#line 72
-          mov r17.w, -r17.x
-          max r17.w, r17.w, r17.x
-          lt r17.w, r17.w, l(0.000001)
-          if_nz r17.w
-
-#line 73
-            mov r18.x, r17.y
-          endif   // r18.x <- <Remap return value>; r18.x <- <Remap return value>; r18.x <- <Remap return value>
-
-#line 74
-          if_z r17.w
-            mov r16.w, -r16.w
-            add r15.y, r15.y, r16.w
-            div r15.y, r15.y, r17.x
-            mov r16.w, -r17.y
-            add r16.w, r16.w, r17.z
-            mul r15.y, r15.y, r16.w
-            add r18.x, r15.y, r17.y
-          endif 
-
-#line 186
-          mov r18.x, r18.x  // r18.x <- base_cloud_with_coverage
-
-#line 187
-          mul r15.x, r15.x, r18.x  // r15.x <- base_cloud_with_coverage
-
-#line 189
-          mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 190
-          not r15.y, r15.z
-          lt r15.z, l(0.000000), r15.x
-          and r15.y, r15.z, r15.y
-          if_nz r15.y
-
-#line 196
-            ne r15.y, cb12[1].x, l(0.000000)
-            if_nz r15.y
-
-#line 198
-              add r15.y, r0.y, cb1[0].z
-              mov r17.xy, -cb12[0].xyxx
-              dp2 r15.z, r17.xyxx, r17.xyxx
-              rsq r15.z, r15.z
-              mul r17.xy, r15.zzzz, r17.xyxx
-              mul r15.yz, r15.yyyy, r17.xxyx
-              mul r15.yz, r15.yyzy, l(0.000000, 40.000000, 40.000000, 0.000000)
-              mov r15.yz, -r15.yyzy
-              add r16.xz, r15.yyzy, r16.xxzx
-
-#line 199
-              add r15.y, r0.y, cb1[0].z
-              mul r15.y, r15.y, l(40.000000)
-              mov r15.y, -r15.y
-              add r16.y, r15.y, r16.y  // r16.y <- sample_point.y
-
-#line 200
-            else   // Prior locations: r13.z <- sample_point.y; r16.y <- sample_point.y; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom; r17.y <- new_min; r17.x <- denom
-              mov r16.xy, r16.xyxx  // r16.y <- sample_point.y
-            endif 
-
-#line 205
-            mul r15.yz, r16.xxyx, l(0.000000, 0.000008, 0.000008, 0.000000)
-            itof r16.w, l(0)
-            sample_l_indexable(texture2d)(float,float,float,float) r15.yz, r15.yzyy, t3.zxyw, s5, r16.w  // r15.y <- curl_noise.x; r15.z <- curl_noise.y
-
-#line 206
-            mov r16.w, -r15.w
-            add r16.w, r16.w, l(1.000000)
-            mul r15.yz, r15.yyzy, r16.wwww
-            add r16.xy, r15.yzyy, r16.xyxx
-
-#line 210
-            nop 
-            mov r16.xy, r16.xyxx  // r16.x <- sample_point.x; r16.y <- sample_point.y
-            mov r16.z, r16.z  // r16.z <- sample_point.z
-            mov r14.w, r14.w  // r14.w <- mip_level
-
-#line 47
-            mul r16.xyz, r16.xyzx, cb12[3].xxxx
-            sample_l_indexable(texture3d)(float,float,float,float) r16.xyz, r16.xyzx, t1.xyzw, s2, r14.w  // r16.x <- <SampleHighFrequencyNoises return value>.x; r16.y <- <SampleHighFrequencyNoises return value>.y; r16.z <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-            mov r16.xyz, r16.xyzx  // r16.x <- high_frequency_noises.x; r16.y <- high_frequency_noises.y; r16.z <- high_frequency_noises.z
-
-#line 213
-            mul r14.w, r16.x, l(0.625000)
-            mul r15.y, r16.y, l(0.250000)
-            add r14.w, r14.w, r15.y
-            mul r15.y, r16.z, l(0.125000)
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_fbm
-
-#line 220
-            mov r15.y, -r14.w
-            add r15.y, r15.y, l(1.000000)
-            mul r15.z, r15.w, l(10.000000)
-            max r15.z, r15.z, l(0.000000)
-            min r15.z, r15.z, l(1.000000)
-            mov r15.w, -r14.w
-            add r15.y, r15.w, r15.y
-            mul r15.y, r15.y, r15.z
-            add r14.w, r14.w, r15.y  // r14.w <- high_frequency_noise_modifier
-
-#line 228
-            nop 
-            mov r15.y, r15.x  // r15.y <- original_value; r15.y <- original_value; r15.y <- original_value
-            mul r14.w, r14.w, l(0.200000)  // r14.w <- original_min; r14.w <- original_min; r14.w <- original_min
-            mov r15.z, l(1.000000)  // r15.z <- original_max; r15.z <- original_max; r15.z <- original_max
-            mov r15.w, l(0)  // r15.w <- new_min; r15.w <- new_min; r15.w <- new_min
-            mov r16.x, l(1.000000)  // r16.x <- new_max; r16.x <- new_max; r16.x <- new_max
-
-#line 71
-            mov r16.y, -r14.w
-            add r15.z, r15.z, r16.y  // r15.z <- denom; r15.z <- denom; r15.z <- denom
-
-#line 72
-            mov r16.y, -r15.z
-            max r16.y, r15.z, r16.y
-            lt r16.y, r16.y, l(0.000001)
-            if_nz r16.y
-
-#line 73
-              mov r15.x, r15.w
-            endif   // r15.x <- <Remap return value>; r15.x <- <Remap return value>; r15.x <- <Remap return value>
-
-#line 74
-            if_z r16.y
-              mov r14.w, -r14.w
-              add r14.w, r14.w, r15.y
-              div r14.w, r14.w, r15.z
-              mov r15.y, -r15.w
-              add r15.y, r15.y, r16.x
-              mul r14.w, r14.w, r15.y
-              add r15.x, r14.w, r15.w
-            endif 
-
-#line 228
-            mov r15.x, r15.x  // r15.x <- final_cloud
-
-#line 232
-          endif 
-
-#line 235
-          max r14.w, r15.x, l(0.000000)
-          min r14.w, r14.w, l(1.000000)  // r14.w <- <SampleCloudDensity return value>
-
-#line 278
-          mov r14.w, r14.w  // r14.w <- density
-
-#line 286
-          mul r15.x, r14.w, l(2.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.x, -r15.x
-          add r15.x, r15.x, l(1.000000)  // r15.x <- cone_attenuation
-
-#line 287
-          mul r14.z, r14.z, r15.x  // r14.z <- cone_width
-
-#line 290
-          mul r15.x, r14.w, l(3.000000)
-          max r15.x, r15.x, l(0.000000)
-          min r15.x, r15.x, l(1.000000)
-          mov r15.y, l(-1.000000)
-          add r15.y, r15.y, l(0.400000)
-          mul r15.x, r15.y, r15.x
-          add r15.x, r15.x, l(1.000000)
-          mul r15.x, r13.w, r15.x  // r15.x <- local_step
-
-#line 294
-          mul r12.xyw, r12.xyxw, r15.xxxx
-          mov r15.yzw, x0[4].xxyz
-          mul r15.yzw, r14.zzzz, r15.yyzw
-          add r12.xyw, r12.xyxw, r15.yzyw
-          add r12.xyw, r12.xwxy, r13.xyxz  // r12.x <- sample_point.x; r12.y <- sample_point.z; r12.w <- sample_point.y
-
-#line 301
-          mul r13.x, r14.w, r15.x  // r13.x <- sigma
-
-#line 302
-          mov r13.x, -r13.x
-          mul r13.x, r13.x, l(1.442695)
-          exp r13.x, r13.x
-          mov r13.x, -r13.x
-          add r13.x, r13.x, l(1.000000)
-          add r13.x, r13.x, r14.x  // r13.x <- optical_depth
-
-#line 307
-          iadd r13.y, r14.y, l(1)  // r13.y <- i
-
-#line 275
-          nop 
-          mov r12.xy, r12.xyxx  // r12.x <- sample_point.x; r12.y <- sample_point.y
-
-#line 51
-          add r13.z, r0.y, cb1[0].z
-          mul r13.z, r13.z, l(0.001000)
-          mov r14.xy, -cb12[0].xyxx
-          dp2 r14.z, r14.xyxx, r14.xyxx
-          rsq r14.z, r14.z
-          mul r14.xy, r14.zzzz, r14.xyxx
-          mul r14.xy, r13.zzzz, r14.xyxx
-          mul r14.xy, r14.xyxx, cb12[1].xxxx  // r14.x <- offset.x; r14.y <- offset.y
-
-#line 53
-          mul r13.z, cb12[0].z, cb12[0].z
-          mul r14.z, cb12[2].y, cb12[2].y
-          mov r14.z, -r14.z
-          add r13.z, r13.z, r14.z
-          sqrt r13.z, r13.z
-          mul r13.z, r13.z, cb12[2].z  // r13.z <- horizon_distance
-
-#line 54
-          add r15.x, r12.x, r13.z
-          mov r14.z, -r12.y
-          add r15.y, r13.z, r14.z
-          mul r13.z, r13.z, l(2.000000)
-          div r14.zw, r15.xxxy, r13.zzzz
-          add r14.xy, r14.xyxx, r14.zwzz
-          sample_indexable(texture2d)(float,float,float,float) r14.xy, r14.xyxx, t2.xzyw, s2  // r14.x <- <SampleWeatherData return value>.x; r14.y <- <SampleWeatherData return value>.z
-
-#line 275
-          mov r14.xy, r14.xyxx  // r14.x <- weather_data.x; r14.y <- weather_data.z
-
-#line 277
-          itof r13.y, r13.y  // r13.y <- mip
-
-#line 278
-          nop 
-          mov r12.xyw, r12.xyxw  // r12.x <- sample_point.x; r12.y <- sample_point.z; r12.w <- sample_point.y
-          mov r14.xy, r14.xyxx  // r14.x <- weather_data.x; r14.y <- weather_data.z
-          mov r13.y, r13.y  // r13.y <- mip_level
-          mov r13.z, l(0)  // r13.z <- cheap_sample
-
-#line 149
-          nop 
-          dp3 r14.z, r12.xywx, r12.xywx
-          sqrt r14.z, r14.z  // r14.z <- position
-
-#line 96
-          mov r14.w, -cb12[0].z
-          add r14.z, r14.w, r14.z
-          mov r14.w, -cb12[0].z
-          add r14.w, r14.w, cb12[0].w
-          div r14.z, r14.z, r14.w  // r14.z <- height_fraction
-
-#line 97
-          max r14.z, r14.z, l(0.000000)
-          min r14.z, r14.z, l(1.000000)  // r14.z <- <GetHeightFractionForPoint return value>
-
-#line 149
-          mov r14.z, r14.z  // r14.z <- height_fraction
-
-#line 152
-          mul r14.x, r14.x, cb12[1].z  // r14.x <- cloud_coverage
-
-#line 156
-          add r14.w, r0.y, cb1[0].z
-          mul r14.w, r14.w, l(20.000000)
-          mov r15.xy, -cb12[0].xyxx
-          dp2 r15.z, r15.xyxx, r15.xyxx
-          rsq r15.z, r15.z
-          mul r15.xy, r15.zzzz, r15.xyxx
-          mul r15.xy, r14.wwww, r15.xyxx
-          mul r15.xy, r15.xyxx, cb12[1].xxxx
-          mul r15.xy, r15.xyxx, l(0.600000, 0.600000, 0.000000, 0.000000)
-          add r12.xy, r12.xyxx, r15.xyxx
-
-#line 159
-          nop 
-          mov r12.xy, r12.xyxx  // r12.x <- sample_point.x; r12.y <- sample_point.z
-          mov r12.w, r12.w  // r12.w <- sample_point.y
-          mov r14.w, l(-2.000000)
-          add r14.w, r13.y, r14.w
-          max r14.w, r14.w, l(0.000000)  // r14.w <- mip_level
-
-#line 43
-          mul r15.xyz, r12.xwyx, cb12[2].wwww
-          sample_l_indexable(texture3d)(float,float,float,float) r15.xyzw, r15.xyzx, t0.xyzw, s5, r14.w  // r15.x <- <SampleLowFrequencyNoises return value>.x; r15.y <- <SampleLowFrequencyNoises return value>.y; r15.z <- <SampleLowFrequencyNoises return value>.z; r15.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-          mov r15.xyzw, r15.xyzw  // r15.x <- low_frequency_noises.x; r15.y <- low_frequency_noises.y; r15.z <- low_frequency_noises.z; r15.w <- low_frequency_noises.w
-
-#line 163
-          mul r14.w, r15.y, l(0.625000)
-          mul r15.y, r15.z, l(0.250000)
-          add r14.w, r14.w, r15.y
-          mul r15.y, r15.w, l(0.125000)
-          add r14.w, r14.w, r15.y  // r14.w <- low_frequency_fbm
-
-#line 170
-          nop 
-          mov r15.x, r15.x  // r15.x <- original_value; r15.x <- original_value; r15.x <- original_value
-          mov r14.w, -r14.w
-          add r14.w, r14.w, l(1.000000)
-          mov r14.w, -r14.w  // r14.w <- original_min; r14.w <- original_min; r14.w <- original_min
-          mov r15.y, l(1.000000)  // r15.y <- original_max; r15.y <- original_max; r15.y <- original_max
-          mov r15.z, l(0)  // r15.z <- new_min; r15.z <- new_min; r15.z <- new_min
-          mov r15.w, l(1.000000)  // r15.w <- new_max; r15.w <- new_max; r15.w <- new_max
-
-#line 71
-          mov r16.x, -r14.w
-          add r15.y, r15.y, r16.x  // r15.y <- denom; r15.y <- denom; r15.y <- denom
-
-#line 72
-          mov r16.x, -r15.y
-          max r16.x, r15.y, r16.x
-          lt r16.x, r16.x, l(0.000001)
-          if_nz r16.x
-
-#line 73
-            mov r16.y, r15.z
-          endif   // r16.y <- <Remap return value>; r16.y <- <Remap return value>; r16.y <- <Remap return value>
-
-#line 74
-          if_z r16.x
-            mov r14.w, -r14.w
-            add r14.w, r14.w, r15.x
-            div r14.w, r14.w, r15.y
-            mov r15.x, -r15.z
-            add r15.x, r15.x, r15.w
-            mul r14.w, r14.w, r15.x
-            add r16.y, r14.w, r15.z
-          endif 
-
-#line 170
-          mov r16.y, r16.y  // r16.y <- base_cloud
-
-#line 178
-          mul r14.y, r14.y, cb12[2].x
-          max r14.y, r14.y, l(0.000000)
-          min r14.y, r14.y, l(1.000000)  // r14.y <- cloud_type
-
-#line 179
-          nop 
-          mov r14.z, r14.z  // r14.z <- height_fraction
-          mov r14.y, r14.y  // r14.y <- cloud_type
-
-#line 106
-          mov r15.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r15.x <- stratus_gradient.x; r15.y <- stratus_gradient.y; r15.z <- stratus_gradient.z; r15.w <- stratus_gradient.w
-
-#line 107
-          mov r17.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r17.x <- stratocumulus_gradient.x; r17.y <- stratocumulus_gradient.y; r17.z <- stratocumulus_gradient.z; r17.w <- stratocumulus_gradient.w
-
-#line 108
-          mov r18.xyzw, l(0.010000,0.062500,0.780000,1.000000)  // r18.x <- cumulus_gradient.x; r18.y <- cumulus_gradient.y; r18.z <- cumulus_gradient.z; r18.w <- cumulus_gradient.w
-
-#line 110
-          mul r14.w, r14.y, l(2.000000)
-          max r14.w, r14.w, l(0.000000)
+          mov_sat r14.z, r14.z
+          add r14.x, r14.z, r14.z
+          min r14.x, r14.x, l(1.000000)
+          add r14.x, -r14.x, l(1.000000)
+          mul r14.x, r11.x, r14.x
+          mul r14.w, r14.z, l(3.000000)
           min r14.w, r14.w, l(1.000000)
-          mov r14.w, -r14.w
-          add r14.w, r14.w, l(1.000000)  // r14.w <- stratus
-
-#line 111
-          mov r16.x, l(-0.500000)
-          add r16.x, r14.y, r16.x
-          mov r16.z, -r16.x
-          max r16.x, r16.z, r16.x
-          mul r16.x, r16.x, l(2.000000)
-          mov r16.x, -r16.x
-          add r16.x, r16.x, l(1.000000)  // r16.x <- stratocumulus
-
-#line 112
-          mov r16.z, l(-0.500000)
-          add r14.y, r14.y, r16.z
-          max r14.y, r14.y, l(0.000000)
-          min r14.y, r14.y, l(1.000000)
-          mul r14.y, r14.y, l(2.000000)  // r14.y <- cumulus
-
-#line 114
-          mul r15.xyzw, r14.wwww, r15.xyzw
-          mul r17.xyzw, r16.xxxx, r17.xyzw
-          add r15.xyzw, r15.xyzw, r17.xyzw
-          mul r17.xyzw, r14.yyyy, r18.xyzw
-          add r15.xyzw, r15.xyzw, r17.xyzw  // r15.x <- cloud_gradient.x; r15.y <- cloud_gradient.y; r15.z <- cloud_gradient.z; r15.w <- cloud_gradient.w
-
-#line 115
-          mov r14.y, -r15.x
-          add r14.w, r14.y, r15.y
-          add r14.y, r14.y, r14.z
-          div r14.w, l(1.000000, 1.000000, 1.000000, 1.000000), r14.w
-          mul r14.y, r14.w, r14.y
-          max r14.y, r14.y, l(0.000000)
-          min r14.y, r14.y, l(1.000000)
-          mul r14.w, r14.y, l(-2.000000)
-          add r14.w, r14.w, l(3.000000)
-          mul r14.y, r14.y, r14.y
-          mul r14.y, r14.y, r14.w
-          mov r14.w, -r15.z
-          add r15.x, r14.w, r15.w
-          add r14.w, r14.w, r14.z
-          div r15.x, l(1.000000, 1.000000, 1.000000, 1.000000), r15.x
-          mul r14.w, r14.w, r15.x
+          mad r14.w, r14.w, l(-0.600000), l(1.000000)
+          mul r14.w, r2.x, r14.w
+          mul r15.xyw, r14.xxxx, l(0.380513, 0.924534, 0.000000, -0.021113)
+          mad r15.xyw, r5.xyxz, r14.wwww, r15.xyxw
+          add r15.xyw, r13.xyxz, r15.xyxw
+          mul r14.x, r14.w, r14.z
+          mul r14.x, r14.x, l(-1.442695)
+          exp r14.x, r14.x
+          add r14.x, -r14.x, l(1.000000)
+          mad r16.x, r2.z, cb12[2].z, r15.x
+          mad r16.y, r2.z, cb12[2].z, -r15.w
+          div r14.zw, r16.xxxy, r7.yyyy
+          mad r14.zw, r9.xxxy, cb12[1].xxxx, r14.zzzw
+          sample_indexable(texture2d)(float,float,float,float) r14.zw, r14.zwzz, t2.ywxz, s2
+          dp3 r16.x, r15.xywx, r15.xywx
+          sqrt r16.x, r16.x
+          add r16.x, r16.x, -cb12[0].z
+          div_sat r16.x, r16.x, r2.w
+          mul r16.y, r14.z, cb12[1].z
+          mad r17.xz, r7.zzwz, l(0.600000, 0.000000, 0.600000, 0.000000), r15.xxwx
+          mov r17.y, r15.y
+          mul r18.xyz, r17.xyzx, cb12[2].wwww
+          sample_l_indexable(texture3d)(float,float,float,float) r18.xyzw, r18.xyzx, t0.xyzw, s5, l(0.000000)
+          dp3 r16.z, r18.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+          add r16.w, -r16.z, r18.x
+          add r16.z, -r16.z, l(2.000000)
+          ge r17.w, |r16.z|, l(0.000001)
+          add r16.w, r16.w, l(1.000000)
+          div r16.z, r16.w, r16.z
+          and r16.z, r16.z, r17.w
+          mul_sat r14.w, r14.w, cb12[2].x
+          add r16.w, r14.w, r14.w
+          min r16.w, r16.w, l(1.000000)
+          add r16.w, -r16.w, l(1.000000)
+          add r14.w, r14.w, l(-0.500000)
+          mad r17.w, -|r14.w|, l(2.000000), l(1.000000)
           max r14.w, r14.w, l(0.000000)
-          min r14.w, r14.w, l(1.000000)
-          mul r15.x, r14.w, l(-2.000000)
-          add r15.x, r15.x, l(3.000000)
-          mul r14.w, r14.w, r14.w
-          mul r14.w, r14.w, r15.x
-          mov r14.w, -r14.w
-          add r14.y, r14.w, r14.y  // r14.y <- density_gradient
-
-#line 116
-          mov r14.y, r14.y  // r14.y <- <GetDensityHeightGradient return value>
-
-#line 179
-          mov r14.y, r14.y  // r14.y <- density_height_gradient
-
-#line 182
-          mul r14.y, r14.y, r16.y  // r14.y <- base_cloud
-
-#line 186
-          nop 
-          mov r14.y, r14.y  // r14.y <- original_value; r14.y <- original_value
-          mov r14.w, -r14.x
-          add r14.w, r14.w, l(1.000000)  // r14.w <- original_min; r14.w <- original_min
-          mov r15.x, l(1.000000)  // r15.x <- original_max; r15.x <- original_max
-          mov r15.y, l(0)  // r15.y <- new_min; r15.y <- new_min
-          mov r15.z, l(1.000000)  // r15.z <- new_max; r15.z <- new_max
-
-#line 71
-          mov r15.w, -r14.w
-          add r15.x, r15.w, r15.x  // r15.x <- denom; r15.x <- denom
-
-#line 72
-          mov r15.w, -r15.x
-          max r15.w, r15.w, r15.x
-          lt r15.w, r15.w, l(0.000001)
-          if_nz r15.w
-
-#line 73
-            mov r16.x, r15.y
-          endif   // r16.x <- <Remap return value>; r16.x <- <Remap return value>
-
-#line 74
-          if_z r15.w
-            mov r14.w, -r14.w
-            add r14.y, r14.w, r14.y
-            div r14.y, r14.y, r15.x
-            mov r14.w, -r15.y
-            add r14.w, r14.w, r15.z
-            mul r14.y, r14.w, r14.y
-            add r16.x, r14.y, r15.y
+          mul r18.xyzw, r17.wwww, l(0.020000, 0.200000, 0.480000, 0.625000)
+          mad r18.xyzw, r16.wwww, l(0.020000, 0.050000, 0.090000, 0.110000), r18.xyzw
+          mad r18.xyzw, r14.wwww, l(0.020000, 0.125000, 1.560000, 2.000000), r18.xyzw
+          add r18.yw, -r18.xxxz, r18.yyyw
+          add r18.xz, r16.xxxx, -r18.xxzx
+          div r18.yw, l(1.000000, 1.000000, 1.000000, 1.000000), r18.yyyw
+          mul_sat r18.xy, r18.ywyy, r18.xzxx
+          mad r18.zw, r18.xxxy, l(0.000000, 0.000000, -2.000000, -2.000000), l(0.000000, 0.000000, 3.000000, 3.000000)
+          mul r18.xy, r18.xyxx, r18.xyxx
+          mul r14.w, r18.y, r18.w
+          mad r14.w, r18.z, r18.x, -r14.w
+          mad r14.z, -r14.z, cb12[1].z, l(1.000000)
+          add r16.w, -r14.z, l(1.000000)
+          ge r17.w, |r16.w|, l(0.000001)
+          mad r14.z, r16.z, r14.w, -r14.z
+          div r14.z, r14.z, r16.w
+          and r14.z, r14.z, r17.w
+          mul r14.w, r16.y, r14.z
+          lt r16.z, l(0.000000), r14.w
+          if_nz r16.z
+            mad r18.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r17.xxzx
+            mad r18.y, -r7.x, l(40.000000), r17.y
+            movc r17.xyz, r8.zzzz, r18.xyzx, r17.xyzx
+            mul r16.zw, r17.xxxy, l(0.000000, 0.000000, 0.000008, 0.000008)
+            sample_l_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t3.zwxy, s5, l(0.000000)
+            add r17.w, -r16.x, l(1.000000)
+            mad r17.xy, r16.zwzz, r17.wwww, r17.xyxx
+            mul r17.xyz, r17.xyzx, cb12[3].xxxx
+            sample_l_indexable(texture3d)(float,float,float,float) r17.xyz, r17.xyzx, t1.xyzw, s2, l(1.000000)
+            dp3 r16.z, r17.xyzx, l(0.625000, 0.250000, 0.125000, 0.000000)
+            mul r16.x, r16.x, l(10.000000)
+            min r16.x, r16.x, l(1.000000)
+            mad r16.w, r16.z, l(-2.000000), l(1.000000)
+            mad r16.x, r16.x, r16.w, r16.z
+            mul r16.z, r16.x, l(0.200000)
+            mad r16.x, -r16.x, l(0.200000), l(1.000000)
+            ge r16.w, |r16.x|, l(0.000001)
+            mad r14.z, r14.z, r16.y, -r16.z
+            div r14.z, r14.z, r16.x
+            and r14.w, r14.z, r16.w
           endif 
-
-#line 186
-          mov r16.x, r16.x  // r16.x <- base_cloud_with_coverage
-
-#line 187
-          mul r14.x, r14.x, r16.x  // r14.x <- base_cloud_with_coverage
-
-#line 189
-          mov r14.x, r14.x  // r14.x <- final_cloud
-
-#line 190
-          not r13.z, r13.z
-          lt r14.y, l(0.000000), r14.x
-          and r13.z, r13.z, r14.y
-          if_nz r13.z
-
-#line 196
-            ne r13.z, cb12[1].x, l(0.000000)
-            if_nz r13.z
-
-#line 198
-              add r13.z, r0.y, cb1[0].z
-              mov r14.yw, -cb12[0].xxxy
-              dp2 r15.x, r14.ywyy, r14.ywyy
-              rsq r15.x, r15.x
-              mul r14.yw, r14.yyyw, r15.xxxx
-              mul r14.yw, r13.zzzz, r14.yyyw
-              mul r14.yw, r14.yyyw, l(0.000000, 40.000000, 0.000000, 40.000000)
-              mov r14.yw, -r14.yyyw
-              add r12.xy, r12.xyxx, r14.ywyy
-
-#line 199
-              add r13.z, r0.y, cb1[0].z
-              mul r13.z, r13.z, l(40.000000)
-              mov r13.z, -r13.z
-              add r12.w, r12.w, r13.z
-
-#line 200
-            else   // Prior locations: r12.w <- sample_point.y; r15.x <- denom
-              mov r12.xw, r12.xxxw
-            endif 
-
-#line 205
-            mul r14.yw, r12.xxxw, l(0.000000, 0.000008, 0.000000, 0.000008)
-            itof r13.z, l(0)
-            sample_l_indexable(texture2d)(float,float,float,float) r14.yw, r14.ywyy, t3.zxwy, s5, r13.z  // r14.y <- curl_noise.x; r14.w <- curl_noise.y
-
-#line 206
-            mov r13.z, -r14.z
-            add r13.z, r13.z, l(1.000000)
-            mul r14.yw, r13.zzzz, r14.yyyw
-            add r12.xw, r12.xxxw, r14.yyyw
-
-#line 210
-            nop 
-            mov r12.xw, r12.xxxw  // r12.x <- sample_point.x; r12.w <- sample_point.y
-            mov r12.y, r12.y  // r12.y <- sample_point.z
-            mov r13.y, r13.y  // r13.y <- mip_level
-
-#line 47
-            mul r12.xyw, r12.xwxy, cb12[3].xxxx
-            sample_l_indexable(texture3d)(float,float,float,float) r12.xyw, r12.xywx, t1.xywz, s2, r13.y  // r12.x <- <SampleHighFrequencyNoises return value>.x; r12.y <- <SampleHighFrequencyNoises return value>.y; r12.w <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-            mov r12.xyw, r12.xyxw  // r12.x <- high_frequency_noises.x; r12.y <- high_frequency_noises.y; r12.w <- high_frequency_noises.z
-
-#line 213
-            mul r12.x, r12.x, l(0.625000)
-            mul r12.y, r12.y, l(0.250000)
-            add r12.x, r12.y, r12.x
-            mul r12.y, r12.w, l(0.125000)
-            add r12.x, r12.y, r12.x  // r12.x <- high_frequency_fbm
-
-#line 220
-            mov r12.y, -r12.x
-            add r12.y, r12.y, l(1.000000)
-            mul r12.w, r14.z, l(10.000000)
-            max r12.w, r12.w, l(0.000000)
-            min r12.w, r12.w, l(1.000000)
-            mov r13.y, -r12.x
-            add r12.y, r12.y, r13.y
-            mul r12.y, r12.y, r12.w
-            add r12.x, r12.y, r12.x  // r12.x <- high_frequency_noise_modifier
-
-#line 228
-            nop 
-            mov r12.y, r14.x  // r12.y <- original_value
-            mul r12.x, r12.x, l(0.200000)  // r12.x <- original_min
-            mov r12.w, l(1.000000)  // r12.w <- original_max
-            mov r13.y, l(0)  // r13.y <- new_min
-            mov r13.z, l(1.000000)  // r13.z <- new_max
-
-#line 71
-            mov r14.y, -r12.x
-            add r12.w, r12.w, r14.y  // r12.w <- denom
-
-#line 72
-            mov r14.y, -r12.w
-            max r14.y, r12.w, r14.y
-            lt r14.y, r14.y, l(0.000001)
-            if_nz r14.y
-
-#line 73
-              mov r14.x, r13.y
-            endif   // r14.x <- <Remap return value>
-
-#line 74
-            if_z r14.y
-              mov r12.x, -r12.x
-              add r12.x, r12.x, r12.y
-              div r12.x, r12.x, r12.w
-              mov r12.y, -r13.y
-              add r12.y, r12.y, r13.z
-              mul r12.x, r12.y, r12.x
-              add r14.x, r12.x, r13.y
-            endif 
-
-#line 228
-            mov r14.x, r14.x  // r14.x <- final_cloud
-
-#line 232
-          endif 
-
-#line 235
-          max r12.x, r14.x, l(0.000000)
-          min r12.x, r12.x, l(1.000000)  // r12.x <- <SampleCloudDensity return value>
-
-#line 278
-          mov r12.x, r12.x  // r12.x <- density
-
-#line 290
-          mul r12.y, r12.x, l(3.000000)
-          max r12.y, r12.y, l(0.000000)
-          min r12.y, r12.y, l(1.000000)
-          mov r12.w, l(-1.000000)
-          add r12.w, r12.w, l(0.400000)
-          mul r12.y, r12.w, r12.y
-          add r12.y, r12.y, l(1.000000)
-          mul r12.y, r12.y, r13.w  // r12.y <- local_step
-
-#line 301
-          mul r12.x, r12.y, r12.x  // r12.x <- sigma
-
-#line 302
-          mov r12.x, -r12.x
-          mul r12.x, r12.x, l(1.442695)
-          exp r12.x, r12.x
-          mov r12.x, -r12.x
-          add r12.x, r12.x, l(1.000000)
-          add r12.x, r12.x, r13.x  // r12.x <- optical_depth
-
-#line 309
-          mov r12.x, r12.x  // r12.x <- <SampleCloudOpticalDepthAlongCone return value>
-
-#line 477
-          add r11.w, r11.w, r12.x
-
-#line 479
-          nop 
-          mov r10.xy, r10.xyxx
-          mov r10.z, r10.z
-          mov r12.xyw, r6.xyxz
-          mov r13.x, r1.w
-
-#line 316
-          mul r13.x, r13.x, cb12[3].y  // r13.x <- long_distance
-
-#line 318
-          mul r12.xyw, r12.xyxw, r13.xxxx
-          add r12.xyw, r10.xyxz, r12.xwxy  // r12.x <- sample_point.x; r12.y <- sample_point.z; r12.w <- sample_point.y
-
-#line 320
-          nop 
-          dp3 r13.x, r12.xywx, r12.xywx
-          sqrt r13.x, r13.x
-
-#line 96
-          mov r13.y, -cb12[0].z
-          add r13.x, r13.y, r13.x
-          mov r13.y, -cb12[0].z
-          add r13.y, r13.y, cb12[0].w
-          div r13.x, r13.x, r13.y  // r13.x <- height_fraction
-
-#line 97
-          max r13.x, r13.x, l(0.000000)
-          min r13.x, r13.x, l(1.000000)  // r13.x <- <GetHeightFractionForPoint return value>
-
-#line 320
-          mov r13.x, r13.x  // r13.x <- height_fraction
-
-#line 321
-          nop 
-          mov r12.xy, r12.xyxx
-
-#line 51
-          add r13.y, r0.y, cb1[0].z
-          mul r13.y, r13.y, l(0.001000)
-          mov r13.zw, -cb12[0].xxxy
-          dp2 r14.x, r13.zwzz, r13.zwzz
-          rsq r14.x, r14.x
-          mul r13.zw, r13.zzzw, r14.xxxx
-          mul r13.yz, r13.zzwz, r13.yyyy
-          mul r13.yz, r13.yyzy, cb12[1].xxxx  // r13.y <- offset.x; r13.z <- offset.y
-
-#line 53
-          mul r13.w, cb12[0].z, cb12[0].z
-          mul r14.x, cb12[2].y, cb12[2].y
-          mov r14.x, -r14.x
-          add r13.w, r13.w, r14.x
-          sqrt r13.w, r13.w
-          mul r13.w, r13.w, cb12[2].z  // r13.w <- horizon_distance
-
-#line 54
-          add r14.x, r12.x, r13.w
-          mov r14.z, -r12.y
-          add r14.y, r13.w, r14.z
-          mul r13.w, r13.w, l(2.000000)
-          div r14.xy, r14.xyxx, r13.wwww
-          add r13.yz, r13.yyzy, r14.xxyx
-          sample_indexable(texture2d)(float,float,float,float) r13.yz, r13.yzyy, t2.yxzw, s2  // r13.y <- <SampleWeatherData return value>.x; r13.z <- <SampleWeatherData return value>.z
-
-#line 321
-          mov r13.yz, r13.yyzy  // r13.y <- weather_data.x; r13.z <- weather_data.z
-
-#line 323
-          nop 
-          mov r12.xyw, r12.xyxw
-          mov r13.yz, r13.yyzy
-          mov r13.w, l(5.000000)
-          mov r14.x, l(0)
-
-#line 149
-          nop 
-          dp3 r14.y, r12.xywx, r12.xywx
-          sqrt r14.y, r14.y
-
-#line 96
-          mov r14.z, -cb12[0].z
-          add r14.y, r14.z, r14.y
-          mov r14.z, -cb12[0].z
-          add r14.z, r14.z, cb12[0].w
-          div r14.y, r14.y, r14.z  // r14.y <- height_fraction
-
-#line 97
-          max r14.y, r14.y, l(0.000000)
-          min r14.y, r14.y, l(1.000000)  // r14.y <- <GetHeightFractionForPoint return value>
-
-#line 149
-          mov r14.y, r14.y  // r14.y <- height_fraction
-
-#line 152
-          mul r13.y, r13.y, cb12[1].z  // r13.y <- cloud_coverage
-
-#line 156
-          add r14.z, r0.y, cb1[0].z
-          mul r14.z, r14.z, l(20.000000)
-          mov r15.xy, -cb12[0].xyxx
-          dp2 r14.w, r15.xyxx, r15.xyxx
-          rsq r14.w, r14.w
-          mul r15.xy, r14.wwww, r15.xyxx
-          mul r14.zw, r14.zzzz, r15.xxxy
-          mul r14.zw, r14.zzzw, cb12[1].xxxx
-          mul r14.zw, r14.zzzw, l(0.000000, 0.000000, 0.600000, 0.600000)
-          add r12.xy, r12.xyxx, r14.zwzz
-
-#line 159
-          nop 
-          mov r12.xy, r12.xyxx
-          mov r12.w, r12.w
-          mov r14.z, l(-2.000000)
-          add r14.z, r13.w, r14.z
-          max r14.z, r14.z, l(0.000000)
-
-#line 43
-          mul r15.xyz, r12.xwyx, cb12[2].wwww
-          sample_l_indexable(texture3d)(float,float,float,float) r15.xyzw, r15.xyzx, t0.xyzw, s5, r14.z  // r15.x <- <SampleLowFrequencyNoises return value>.x; r15.y <- <SampleLowFrequencyNoises return value>.y; r15.z <- <SampleLowFrequencyNoises return value>.z; r15.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-          mov r15.xyzw, r15.xyzw  // r15.x <- low_frequency_noises.x; r15.y <- low_frequency_noises.y; r15.z <- low_frequency_noises.z; r15.w <- low_frequency_noises.w
-
-#line 163
-          mul r14.z, r15.y, l(0.625000)
-          mul r14.w, r15.z, l(0.250000)
-          add r14.z, r14.w, r14.z
-          mul r14.w, r15.w, l(0.125000)
-          add r14.z, r14.w, r14.z  // r14.z <- low_frequency_fbm
-
-#line 170
-          nop 
-          mov r15.x, r15.x
-          mov r14.z, -r14.z
-          add r14.z, r14.z, l(1.000000)
-          mov r14.z, -r14.z
-          mov r14.w, l(1.000000)
-          mov r15.y, l(0)
-          mov r15.z, l(1.000000)
-
-#line 71
-          mov r15.w, -r14.z
-          add r14.w, r14.w, r15.w  // r14.w <- denom
-
-#line 72
-          mov r15.w, -r14.w
-          max r15.w, r14.w, r15.w
-          lt r15.w, r15.w, l(0.000001)
-          if_nz r15.w  // r10.x <- sample_point.x; r10.y <- sample_point.z
-
-#line 73
-            mov r16.x, r15.y
-          endif   // r16.x <- <Remap return value>
-
-#line 74
-          if_z r15.w
-            mov r14.z, -r14.z
-            add r14.z, r14.z, r15.x
-            div r14.z, r14.z, r14.w
-            mov r14.w, -r15.y
-            add r14.w, r14.w, r15.z
-            mul r14.z, r14.w, r14.z
-            add r16.x, r14.z, r15.y
-          endif 
-
-#line 170
-          mov r16.x, r16.x  // r16.x <- base_cloud
-
-#line 178
-          mul r13.z, r13.z, cb12[2].x
-          max r13.z, r13.z, l(0.000000)
-          min r13.z, r13.z, l(1.000000)  // r13.z <- cloud_type
-
-#line 179
-          nop 
-          mov r14.y, r14.y
-          mov r13.z, r13.z
-
-#line 106
-          mov r15.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r15.x <- stratus_gradient.x; r15.y <- stratus_gradient.y; r15.z <- stratus_gradient.z; r15.w <- stratus_gradient.w
-
-#line 107
-          mov r17.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r17.x <- stratocumulus_gradient.x; r17.y <- stratocumulus_gradient.y; r17.z <- stratocumulus_gradient.z; r17.w <- stratocumulus_gradient.w
-
-#line 108
-          mov r18.xyzw, l(0.010000,0.062500,0.780000,1.000000)  // r18.x <- cumulus_gradient.x; r18.y <- cumulus_gradient.y; r18.z <- cumulus_gradient.z; r18.w <- cumulus_gradient.w
-
-#line 110
-          mul r14.z, r13.z, l(2.000000)
-          max r14.z, r14.z, l(0.000000)
+          mov_sat r14.w, r14.w
+          add r14.z, r14.w, r14.w
           min r14.z, r14.z, l(1.000000)
-          mov r14.z, -r14.z
-          add r14.z, r14.z, l(1.000000)  // r14.z <- stratus
-
-#line 111
-          mov r14.w, l(-0.500000)
-          add r14.w, r13.z, r14.w
-          mov r16.y, -r14.w
-          max r14.w, r14.w, r16.y
-          mul r14.w, r14.w, l(2.000000)
-          mov r14.w, -r14.w
-          add r14.w, r14.w, l(1.000000)  // r14.w <- stratocumulus
-
-#line 112
-          mov r16.y, l(-0.500000)
-          add r13.z, r13.z, r16.y
-          max r13.z, r13.z, l(0.000000)
-          min r13.z, r13.z, l(1.000000)
-          mul r13.z, r13.z, l(2.000000)  // r13.z <- cumulus
-
-#line 114
-          mul r15.xyzw, r14.zzzz, r15.xyzw
-          mul r17.xyzw, r14.wwww, r17.xyzw
-          add r15.xyzw, r15.xyzw, r17.xyzw
-          mul r17.xyzw, r13.zzzz, r18.xyzw
-          add r15.xyzw, r15.xyzw, r17.xyzw  // r15.x <- cloud_gradient.x; r15.y <- cloud_gradient.y; r15.z <- cloud_gradient.z; r15.w <- cloud_gradient.w
-
-#line 115
-          mov r13.z, -r15.x
-          add r14.z, r13.z, r15.y
-          add r13.z, r13.z, r14.y
-          div r14.z, l(1.000000, 1.000000, 1.000000, 1.000000), r14.z
-          mul r13.z, r13.z, r14.z
-          max r13.z, r13.z, l(0.000000)
-          min r13.z, r13.z, l(1.000000)
-          mul r14.z, r13.z, l(-2.000000)
-          add r14.z, r14.z, l(3.000000)
-          mul r13.z, r13.z, r13.z
-          mul r13.z, r13.z, r14.z
-          mov r14.z, -r15.z
-          add r14.w, r14.z, r15.w
-          add r14.z, r14.z, r14.y
-          div r14.w, l(1.000000, 1.000000, 1.000000, 1.000000), r14.w
-          mul r14.z, r14.w, r14.z
-          max r14.z, r14.z, l(0.000000)
+          add r14.z, -r14.z, l(1.000000)
+          mul r14.z, r11.y, r14.z
+          mul r16.x, r14.w, l(3.000000)
+          min r16.x, r16.x, l(1.000000)
+          mad r16.x, r16.x, l(-0.600000), l(1.000000)
+          mul r16.x, r2.x, r16.x
+          mul r16.yzw, r14.zzzz, l(0.000000, -0.506258, -0.035908, -0.861634)
+          mad r16.yzw, r5.xxyz, r16.xxxx, r16.yyzw
+          add r15.xyw, r15.xyxw, r16.yzyw
+          mul r14.z, r14.w, r16.x
+          mul r14.z, r14.z, l(-1.442695)
+          exp r14.z, r14.z
+          add r14.x, -r14.z, r14.x
+          add r14.x, r14.x, l(1.000000)
+          mad r16.x, r2.z, cb12[2].z, r15.x
+          mad r16.y, r2.z, cb12[2].z, -r15.w
+          div r14.zw, r16.xxxy, r7.yyyy
+          mad r14.zw, r9.xxxy, cb12[1].xxxx, r14.zzzw
+          sample_indexable(texture2d)(float,float,float,float) r14.zw, r14.zwzz, t2.ywxz, s2
+          dp3 r16.x, r15.xywx, r15.xywx
+          sqrt r16.x, r16.x
+          add r16.x, r16.x, -cb12[0].z
+          div_sat r16.x, r16.x, r2.w
+          mul r16.y, r14.z, cb12[1].z
+          mad r17.xz, r7.zzwz, l(0.600000, 0.000000, 0.600000, 0.000000), r15.xxwx
+          mov r17.y, r15.y
+          mul r18.xyz, r17.xyzx, cb12[2].wwww
+          sample_l_indexable(texture3d)(float,float,float,float) r18.xyzw, r18.xyzx, t0.xyzw, s5, l(0.000000)
+          dp3 r16.z, r18.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+          add r16.w, -r16.z, r18.x
+          add r16.z, -r16.z, l(2.000000)
+          ge r17.w, |r16.z|, l(0.000001)
+          add r16.w, r16.w, l(1.000000)
+          div r16.z, r16.w, r16.z
+          and r16.z, r16.z, r17.w
+          mul_sat r14.w, r14.w, cb12[2].x
+          add r16.w, r14.w, r14.w
+          min r16.w, r16.w, l(1.000000)
+          add r16.w, -r16.w, l(1.000000)
+          add r14.w, r14.w, l(-0.500000)
+          mad r17.w, -|r14.w|, l(2.000000), l(1.000000)
+          max r14.w, r14.w, l(0.000000)
+          mul r18.xyzw, r17.wwww, l(0.020000, 0.200000, 0.480000, 0.625000)
+          mad r18.xyzw, r16.wwww, l(0.020000, 0.050000, 0.090000, 0.110000), r18.xyzw
+          mad r18.xyzw, r14.wwww, l(0.020000, 0.125000, 1.560000, 2.000000), r18.xyzw
+          add r18.yw, -r18.xxxz, r18.yyyw
+          add r18.xz, r16.xxxx, -r18.xxzx
+          div r18.yw, l(1.000000, 1.000000, 1.000000, 1.000000), r18.yyyw
+          mul_sat r18.xy, r18.ywyy, r18.xzxx
+          mad r18.zw, r18.xxxy, l(0.000000, 0.000000, -2.000000, -2.000000), l(0.000000, 0.000000, 3.000000, 3.000000)
+          mul r18.xy, r18.xyxx, r18.xyxx
+          mul r14.w, r18.y, r18.w
+          mad r14.w, r18.z, r18.x, -r14.w
+          mad r14.z, -r14.z, cb12[1].z, l(1.000000)
+          add r16.w, -r14.z, l(1.000000)
+          ge r17.w, |r16.w|, l(0.000001)
+          mad r14.z, r16.z, r14.w, -r14.z
+          div r14.z, r14.z, r16.w
+          and r14.z, r14.z, r17.w
+          mul r14.w, r16.y, r14.z
+          lt r16.z, l(0.000000), r14.w
+          if_nz r16.z
+            mad r18.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r17.xxzx
+            mad r18.y, -r7.x, l(40.000000), r17.y
+            movc r17.xyz, r8.zzzz, r18.xyzx, r17.xyzx
+            mul r16.zw, r17.xxxy, l(0.000000, 0.000000, 0.000008, 0.000008)
+            sample_l_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t3.zwxy, s5, l(0.000000)
+            add r17.w, -r16.x, l(1.000000)
+            mad r17.xy, r16.zwzz, r17.wwww, r17.xyxx
+            mul r17.xyz, r17.xyzx, cb12[3].xxxx
+            sample_l_indexable(texture3d)(float,float,float,float) r17.xyz, r17.xyzx, t1.xyzw, s2, l(2.000000)
+            dp3 r16.z, r17.xyzx, l(0.625000, 0.250000, 0.125000, 0.000000)
+            mul r16.x, r16.x, l(10.000000)
+            min r16.x, r16.x, l(1.000000)
+            mad r16.w, r16.z, l(-2.000000), l(1.000000)
+            mad r16.x, r16.x, r16.w, r16.z
+            mul r16.z, r16.x, l(0.200000)
+            mad r16.x, -r16.x, l(0.200000), l(1.000000)
+            ge r16.w, |r16.x|, l(0.000001)
+            mad r14.z, r14.z, r16.y, -r16.z
+            div r14.z, r14.z, r16.x
+            and r14.w, r14.z, r16.w
+          endif 
+          mov_sat r14.w, r14.w
+          add r14.z, r14.w, r14.w
           min r14.z, r14.z, l(1.000000)
-          mul r14.w, r14.z, l(-2.000000)
-          add r14.w, r14.w, l(3.000000)
-          mul r14.z, r14.z, r14.z
+          add r14.z, -r14.z, l(1.000000)
+          mul r14.z, r11.z, r14.z
+          mul r16.x, r14.w, l(3.000000)
+          min r16.x, r16.x, l(1.000000)
+          mad r16.x, r16.x, l(-0.600000), l(1.000000)
+          mul r16.x, r2.x, r16.x
+          mul r16.yzw, r14.zzzz, l(0.000000, -0.325092, -0.945574, 0.014288)
+          mad r16.yzw, r5.xxyz, r16.xxxx, r16.yyzw
+          add r15.xyw, r15.xyxw, r16.yzyw
+          mul r14.z, r14.w, r16.x
+          mul r14.z, r14.z, l(-1.442695)
+          exp r14.z, r14.z
+          add r14.x, -r14.z, r14.x
+          add r14.x, r14.x, l(1.000000)
+          mad r16.x, r2.z, cb12[2].z, r15.x
+          mad r16.y, r2.z, cb12[2].z, -r15.w
+          div r14.zw, r16.xxxy, r7.yyyy
+          mad r14.zw, r9.xxxy, cb12[1].xxxx, r14.zzzw
+          sample_indexable(texture2d)(float,float,float,float) r14.zw, r14.zwzz, t2.ywxz, s2
+          dp3 r16.x, r15.xywx, r15.xywx
+          sqrt r16.x, r16.x
+          add r16.x, r16.x, -cb12[0].z
+          div_sat r16.x, r16.x, r2.w
+          mul r16.y, r14.z, cb12[1].z
+          mad r17.xz, r7.zzwz, l(0.600000, 0.000000, 0.600000, 0.000000), r15.xxwx
+          mov r17.y, r15.y
+          mul r18.xyz, r17.xyzx, cb12[2].wwww
+          sample_l_indexable(texture3d)(float,float,float,float) r18.xyzw, r18.xyzx, t0.xyzw, s5, l(1.000000)
+          dp3 r16.z, r18.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+          add r16.w, -r16.z, r18.x
+          add r16.z, -r16.z, l(2.000000)
+          ge r17.w, |r16.z|, l(0.000001)
+          add r16.w, r16.w, l(1.000000)
+          div r16.z, r16.w, r16.z
+          and r16.z, r16.z, r17.w
+          mul_sat r14.w, r14.w, cb12[2].x
+          add r16.w, r14.w, r14.w
+          min r16.w, r16.w, l(1.000000)
+          add r16.w, -r16.w, l(1.000000)
+          add r14.w, r14.w, l(-0.500000)
+          mad r17.w, -|r14.w|, l(2.000000), l(1.000000)
+          max r14.w, r14.w, l(0.000000)
+          mul r18.xyzw, r17.wwww, l(0.020000, 0.200000, 0.480000, 0.625000)
+          mad r18.xyzw, r16.wwww, l(0.020000, 0.050000, 0.090000, 0.110000), r18.xyzw
+          mad r18.xyzw, r14.wwww, l(0.020000, 0.125000, 1.560000, 2.000000), r18.xyzw
+          add r18.yw, -r18.xxxz, r18.yyyw
+          add r18.xz, r16.xxxx, -r18.xxzx
+          div r18.yw, l(1.000000, 1.000000, 1.000000, 1.000000), r18.yyyw
+          mul_sat r18.xy, r18.ywyy, r18.xzxx
+          mad r18.zw, r18.xxxy, l(0.000000, 0.000000, -2.000000, -2.000000), l(0.000000, 0.000000, 3.000000, 3.000000)
+          mul r18.xy, r18.xyxx, r18.xyxx
+          mul r14.w, r18.y, r18.w
+          mad r14.w, r18.z, r18.x, -r14.w
+          mad r14.z, -r14.z, cb12[1].z, l(1.000000)
+          add r16.w, -r14.z, l(1.000000)
+          ge r17.w, |r16.w|, l(0.000001)
+          mad r14.z, r16.z, r14.w, -r14.z
+          div r14.z, r14.z, r16.w
+          and r14.z, r14.z, r17.w
+          mul r14.w, r16.y, r14.z
+          lt r16.z, l(0.000000), r14.w
+          if_nz r16.z
+            mad r18.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r17.xxzx
+            mad r18.y, -r7.x, l(40.000000), r17.y
+            movc r17.xyz, r8.zzzz, r18.xyzx, r17.xyzx
+            mul r16.zw, r17.xxxy, l(0.000000, 0.000000, 0.000008, 0.000008)
+            sample_l_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t3.zwxy, s5, l(0.000000)
+            add r17.w, -r16.x, l(1.000000)
+            mad r17.xy, r16.zwzz, r17.wwww, r17.xyxx
+            mul r17.xyz, r17.xyzx, cb12[3].xxxx
+            sample_l_indexable(texture3d)(float,float,float,float) r17.xyz, r17.xyzx, t1.xyzw, s2, l(3.000000)
+            dp3 r16.z, r17.xyzx, l(0.625000, 0.250000, 0.125000, 0.000000)
+            mul r16.x, r16.x, l(10.000000)
+            min r16.x, r16.x, l(1.000000)
+            mad r16.w, r16.z, l(-2.000000), l(1.000000)
+            mad r16.x, r16.x, r16.w, r16.z
+            mul r16.z, r16.x, l(0.200000)
+            mad r16.x, -r16.x, l(0.200000), l(1.000000)
+            ge r16.w, |r16.x|, l(0.000001)
+            mad r14.z, r14.z, r16.y, -r16.z
+            div r14.z, r14.z, r16.x
+            and r14.w, r14.z, r16.w
+          endif 
+          mov_sat r14.w, r14.w
+          add r14.z, r14.w, r14.w
+          min r14.z, r14.z, l(1.000000)
+          add r14.z, -r14.z, l(1.000000)
+          mul r14.z, r11.w, r14.z
+          mul r16.x, r14.w, l(3.000000)
+          min r16.x, r16.x, l(1.000000)
+          mad r16.x, r16.x, l(-0.600000), l(1.000000)
+          mul r16.x, r2.x, r16.x
+          mul r16.yzw, r14.zzzz, l(0.000000, 0.090262, -0.273765, 0.957552)
+          mad r16.yzw, r5.xxyz, r16.xxxx, r16.yyzw
+          add r15.xyw, r15.xyxw, r16.yzyw
+          mul r14.z, r14.w, r16.x
+          mul r14.z, r14.z, l(-1.442695)
+          exp r14.z, r14.z
+          add r14.x, -r14.z, r14.x
+          add r14.x, r14.x, l(1.000000)
+          mad r16.x, r2.z, cb12[2].z, r15.x
+          mad r16.y, r2.z, cb12[2].z, -r15.w
+          div r14.zw, r16.xxxy, r7.yyyy
+          mad r14.zw, r9.xxxy, cb12[1].xxxx, r14.zzzw
+          sample_indexable(texture2d)(float,float,float,float) r14.zw, r14.zwzz, t2.ywxz, s2
+          dp3 r16.x, r15.xywx, r15.xywx
+          sqrt r16.x, r16.x
+          add r16.x, r16.x, -cb12[0].z
+          div_sat r16.x, r16.x, r2.w
+          mul r16.y, r14.z, cb12[1].z
+          mad r17.xz, r7.zzwz, l(0.600000, 0.000000, 0.600000, 0.000000), r15.xxwx
+          mov r17.y, r15.y
+          mul r18.xyz, r17.xyzx, cb12[2].wwww
+          sample_l_indexable(texture3d)(float,float,float,float) r18.xyzw, r18.xyzx, t0.xyzw, s5, l(2.000000)
+          dp3 r16.z, r18.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+          add r16.w, -r16.z, r18.x
+          add r16.z, -r16.z, l(2.000000)
+          ge r17.w, |r16.z|, l(0.000001)
+          add r16.w, r16.w, l(1.000000)
+          div r16.z, r16.w, r16.z
+          and r16.z, r16.z, r17.w
+          mul_sat r14.w, r14.w, cb12[2].x
+          add r16.w, r14.w, r14.w
+          min r16.w, r16.w, l(1.000000)
+          add r16.w, -r16.w, l(1.000000)
+          add r14.w, r14.w, l(-0.500000)
+          mad r17.w, -|r14.w|, l(2.000000), l(1.000000)
+          max r14.w, r14.w, l(0.000000)
+          mul r18.xyzw, r17.wwww, l(0.020000, 0.200000, 0.480000, 0.625000)
+          mad r18.xyzw, r16.wwww, l(0.020000, 0.050000, 0.090000, 0.110000), r18.xyzw
+          mad r18.xyzw, r14.wwww, l(0.020000, 0.125000, 1.560000, 2.000000), r18.xyzw
+          add r18.yw, -r18.xxxz, r18.yyyw
+          add r18.xz, r16.xxxx, -r18.xxzx
+          div r18.yw, l(1.000000, 1.000000, 1.000000, 1.000000), r18.yyyw
+          mul_sat r18.xy, r18.ywyy, r18.xzxx
+          mad r18.zw, r18.xxxy, l(0.000000, 0.000000, -2.000000, -2.000000), l(0.000000, 0.000000, 3.000000, 3.000000)
+          mul r18.xy, r18.xyxx, r18.xyxx
+          mul r14.w, r18.y, r18.w
+          mad r14.w, r18.z, r18.x, -r14.w
+          mad r14.z, -r14.z, cb12[1].z, l(1.000000)
+          add r16.w, -r14.z, l(1.000000)
+          ge r17.w, |r16.w|, l(0.000001)
+          mad r14.z, r16.z, r14.w, -r14.z
+          div r14.z, r14.z, r16.w
+          and r14.z, r14.z, r17.w
+          mul r14.w, r16.y, r14.z
+          lt r16.z, l(0.000000), r14.w
+          if_nz r16.z
+            mad r18.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r17.xxzx
+            mad r18.y, -r7.x, l(40.000000), r17.y
+            movc r17.xyz, r8.zzzz, r18.xyzx, r17.xyzx
+            mul r16.zw, r17.xxxy, l(0.000000, 0.000000, 0.000008, 0.000008)
+            sample_l_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t3.zwxy, s5, l(0.000000)
+            add r17.w, -r16.x, l(1.000000)
+            mad r17.xy, r16.zwzz, r17.wwww, r17.xyxx
+            mul r17.xyz, r17.xyzx, cb12[3].xxxx
+            sample_l_indexable(texture3d)(float,float,float,float) r17.xyz, r17.xyzx, t1.xyzw, s2, l(4.000000)
+            dp3 r16.z, r17.xyzx, l(0.625000, 0.250000, 0.125000, 0.000000)
+            mul r16.x, r16.x, l(10.000000)
+            min r16.x, r16.x, l(1.000000)
+            mad r16.w, r16.z, l(-2.000000), l(1.000000)
+            mad r16.x, r16.x, r16.w, r16.z
+            mul r16.z, r16.x, l(0.200000)
+            mad r16.x, -r16.x, l(0.200000), l(1.000000)
+            ge r16.w, |r16.x|, l(0.000001)
+            mad r14.z, r14.z, r16.y, -r16.z
+            div r14.z, r14.z, r16.x
+            and r14.w, r14.z, r16.w
+          endif 
+          mov_sat r14.w, r14.w
+          add r14.z, r14.w, r14.w
+          min r14.z, r14.z, l(1.000000)
+          add r14.z, -r14.z, l(1.000000)
+          mul r14.z, r8.w, r14.z
+          mul r16.x, r14.w, l(3.000000)
+          min r16.x, r16.x, l(1.000000)
+          mad r16.x, r16.x, l(-0.600000), l(1.000000)
+          mul r16.x, r2.x, r16.x
+          mul r16.yzw, r14.zzzz, l(0.000000, 0.281286, 0.424436, -0.860658)
+          mad r16.yzw, r5.xxyz, r16.xxxx, r16.yyzw
+          add r15.xyw, r15.xyxw, r16.yzyw
+          mul r14.z, r14.w, r16.x
+          mul r14.z, r14.z, l(-1.442695)
+          exp r14.z, r14.z
+          add r14.x, -r14.z, r14.x
+          add r14.x, r14.x, l(1.000000)
+          mad r16.x, r2.z, cb12[2].z, r15.x
+          mad r16.y, r2.z, cb12[2].z, -r15.w
+          div r14.zw, r16.xxxy, r7.yyyy
+          mad r14.zw, r9.xxxy, cb12[1].xxxx, r14.zzzw
+          sample_indexable(texture2d)(float,float,float,float) r14.zw, r14.zwzz, t2.ywxz, s2
+          dp3 r16.x, r15.xywx, r15.xywx
+          sqrt r16.x, r16.x
+          add r16.x, r16.x, -cb12[0].z
+          div_sat r16.x, r16.x, r2.w
+          mul r16.y, r14.z, cb12[1].z
+          mad r15.xw, r7.zzzw, l(0.600000, 0.000000, 0.000000, 0.600000), r15.xxxw
+          mul r17.xyz, r15.xywx, cb12[2].wwww
+          sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r17.xyzx, t0.xyzw, s5, l(3.000000)
+          dp3 r16.z, r17.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+          add r16.w, -r16.z, r17.x
+          add r16.z, -r16.z, l(2.000000)
+          ge r17.x, |r16.z|, l(0.000001)
+          add r16.w, r16.w, l(1.000000)
+          div r16.z, r16.w, r16.z
+          and r16.z, r16.z, r17.x
+          mul_sat r14.w, r14.w, cb12[2].x
+          add r16.w, r14.w, r14.w
+          min r16.w, r16.w, l(1.000000)
+          add r16.w, -r16.w, l(1.000000)
+          add r14.w, r14.w, l(-0.500000)
+          mad r17.x, -|r14.w|, l(2.000000), l(1.000000)
+          max r14.w, r14.w, l(0.000000)
+          mul r17.xyzw, r17.xxxx, l(0.020000, 0.200000, 0.480000, 0.625000)
+          mad r17.xyzw, r16.wwww, l(0.020000, 0.050000, 0.090000, 0.110000), r17.xyzw
+          mad r17.xyzw, r14.wwww, l(0.020000, 0.125000, 1.560000, 2.000000), r17.xyzw
+          add r17.yw, -r17.xxxz, r17.yyyw
+          add r17.xz, r16.xxxx, -r17.xxzx
+          div r17.yw, l(1.000000, 1.000000, 1.000000, 1.000000), r17.yyyw
+          mul_sat r17.xy, r17.ywyy, r17.xzxx
+          mad r17.zw, r17.xxxy, l(0.000000, 0.000000, -2.000000, -2.000000), l(0.000000, 0.000000, 3.000000, 3.000000)
+          mul r17.xy, r17.xyxx, r17.xyxx
+          mul r14.w, r17.y, r17.w
+          mad r14.w, r17.z, r17.x, -r14.w
+          mad r14.z, -r14.z, cb12[1].z, l(1.000000)
+          add r16.w, -r14.z, l(1.000000)
+          ge r17.x, |r16.w|, l(0.000001)
+          mad r14.z, r16.z, r14.w, -r14.z
+          div r14.z, r14.z, r16.w
+          and r14.z, r14.z, r17.x
+          mul r14.w, r16.y, r14.z
+          lt r16.z, l(0.000000), r14.w
+          if_nz r16.z
+            mad r17.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r15.xxwx
+            mad r17.y, -r7.x, l(40.000000), r15.y
+            movc r15.xyw, r8.zzzz, r17.xyxz, r15.xyxw
+            mul r16.zw, r15.xxxy, l(0.000000, 0.000000, 0.000008, 0.000008)
+            sample_l_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t3.zwxy, s5, l(0.000000)
+            add r17.x, -r16.x, l(1.000000)
+            mad r15.xy, r16.zwzz, r17.xxxx, r15.xyxx
+            mul r15.xyw, r15.xyxw, cb12[3].xxxx
+            sample_l_indexable(texture3d)(float,float,float,float) r15.xyw, r15.xywx, t1.xywz, s2, l(5.000000)
+            dp3 r15.x, r15.xywx, l(0.625000, 0.250000, 0.125000, 0.000000)
+            mul r15.y, r16.x, l(10.000000)
+            min r15.y, r15.y, l(1.000000)
+            mad r15.w, r15.x, l(-2.000000), l(1.000000)
+            mad r15.x, r15.y, r15.w, r15.x
+            mul r15.y, r15.x, l(0.200000)
+            mad r15.x, -r15.x, l(0.200000), l(1.000000)
+            ge r15.w, |r15.x|, l(0.000001)
+            mad r14.z, r14.z, r16.y, -r15.y
+            div r14.z, r14.z, r15.x
+            and r14.w, r14.z, r15.w
+          endif 
+          mov_sat r14.w, r14.w
+          mul r14.z, r14.w, l(3.000000)
+          min r14.z, r14.z, l(1.000000)
+          mad r14.z, r14.z, l(-0.600000), l(1.000000)
+          mul r14.z, r2.x, r14.z
           mul r14.z, r14.z, r14.w
-          mov r14.z, -r14.z
-          add r13.z, r13.z, r14.z  // r13.z <- density_gradient
-
-#line 116
-          mov r13.z, r13.z  // r13.z <- <GetDensityHeightGradient return value>
-
-#line 179
-          mov r13.z, r13.z  // r13.z <- density_height_gradient
-
-#line 182
-          mul r13.z, r13.z, r16.x  // r13.z <- base_cloud
-
-#line 186
-          nop 
-          mov r13.z, r13.z
-          mov r14.z, -r13.y
-          add r14.z, r14.z, l(1.000000)
-          mov r14.w, l(1.000000)
-          mov r15.x, l(0)
-          mov r15.y, l(1.000000)
-
-#line 71
-          mov r15.z, -r14.z
-          add r14.w, r14.w, r15.z  // r14.w <- denom
-
-#line 72
-          mov r15.z, -r14.w
-          max r15.z, r14.w, r15.z
-          lt r15.z, r15.z, l(0.000001)
-          if_nz r15.z
-
-#line 73
-            mov r15.w, r15.x
-          endif   // r15.w <- <Remap return value>
-
-#line 74
-          if_z r15.z
-            mov r14.z, -r14.z
-            add r13.z, r13.z, r14.z
-            div r13.z, r13.z, r14.w
-            mov r14.z, -r15.x
-            add r14.z, r14.z, r15.y
-            mul r13.z, r13.z, r14.z
-            add r15.w, r13.z, r15.x
+          mul r14.z, r14.z, l(-1.442695)
+          exp r14.z, r14.z
+          add r14.x, -r14.z, r14.x
+          add r14.x, r14.x, l(1.000000)
+          mad r15.xyw, r5.xyxz, r3.wwww, r13.xyxz
+          dp3 r14.z, r15.xywx, r15.xywx
+          sqrt r14.z, r14.z
+          add r14.z, r14.z, -cb12[0].z
+          div_sat r14.z, r14.z, r2.w
+          mad r16.x, r2.z, cb12[2].z, r15.x
+          mad r16.y, r2.z, cb12[2].z, -r15.w
+          div r16.xy, r16.xyxx, r7.yyyy
+          mad r16.xy, r9.xyxx, cb12[1].xxxx, r16.xyxx
+          sample_indexable(texture2d)(float,float,float,float) r16.xy, r16.xyxx, t2.xzyw, s2
+          mul r14.w, r16.x, cb12[1].z
+          mad r15.xw, r7.zzzw, l(0.600000, 0.000000, 0.000000, 0.600000), r15.xxxw
+          mul r17.xyz, r15.xywx, cb12[2].wwww
+          sample_l_indexable(texture3d)(float,float,float,float) r17.xyzw, r17.xyzx, t0.xyzw, s5, l(3.000000)
+          dp3 r16.z, r17.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+          add r16.w, -r16.z, r17.x
+          add r16.z, -r16.z, l(2.000000)
+          ge r17.x, |r16.z|, l(0.000001)
+          add r16.w, r16.w, l(1.000000)
+          div r16.z, r16.w, r16.z
+          and r16.z, r16.z, r17.x
+          mul_sat r16.y, r16.y, cb12[2].x
+          add r16.w, r16.y, r16.y
+          min r16.w, r16.w, l(1.000000)
+          add r16.w, -r16.w, l(1.000000)
+          add r16.y, r16.y, l(-0.500000)
+          mad r17.x, -|r16.y|, l(2.000000), l(1.000000)
+          max r16.y, r16.y, l(0.000000)
+          mul r17.xyzw, r17.xxxx, l(0.020000, 0.200000, 0.480000, 0.625000)
+          mad r17.xyzw, r16.wwww, l(0.020000, 0.050000, 0.090000, 0.110000), r17.xyzw
+          mad r17.xyzw, r16.yyyy, l(0.020000, 0.125000, 1.560000, 2.000000), r17.xyzw
+          add r16.yw, -r17.xxxz, r17.yyyw
+          add r17.xy, r14.zzzz, -r17.xzxx
+          div r16.yw, l(1.000000, 1.000000, 1.000000, 1.000000), r16.yyyw
+          mul_sat r16.yw, r16.yyyw, r17.xxxy
+          mad r17.xy, r16.ywyy, l(-2.000000, -2.000000, 0.000000, 0.000000), l(3.000000, 3.000000, 0.000000, 0.000000)
+          mul r16.yw, r16.yyyw, r16.yyyw
+          mul r16.w, r16.w, r17.y
+          mad r16.y, r17.x, r16.y, -r16.w
+          mad r16.x, -r16.x, cb12[1].z, l(1.000000)
+          add r16.w, -r16.x, l(1.000000)
+          ge r17.x, |r16.w|, l(0.000001)
+          mad r16.x, r16.z, r16.y, -r16.x
+          div r16.x, r16.x, r16.w
+          and r16.x, r16.x, r17.x
+          mul r16.y, r14.w, r16.x
+          lt r16.z, l(0.000000), r16.y
+          if_nz r16.z
+            mad r17.xz, -r8.xxyx, l(40.000000, 0.000000, 40.000000, 0.000000), r15.xxwx
+            mad r17.y, -r7.x, l(40.000000), r15.y
+            movc r15.xyw, r8.zzzz, r17.xyxz, r15.xyxw
+            mul r16.zw, r15.xxxy, l(0.000000, 0.000000, 0.000008, 0.000008)
+            sample_l_indexable(texture2d)(float,float,float,float) r16.zw, r16.zwzz, t3.zwxy, s5, l(0.000000)
+            add r17.x, -r14.z, l(1.000000)
+            mad r15.xy, r16.zwzz, r17.xxxx, r15.xyxx
+            mul r15.xyw, r15.xyxw, cb12[3].xxxx
+            sample_l_indexable(texture3d)(float,float,float,float) r15.xyw, r15.xywx, t1.xywz, s2, l(5.000000)
+            dp3 r15.x, r15.xywx, l(0.625000, 0.250000, 0.125000, 0.000000)
+            mul r15.y, r14.z, l(10.000000)
+            min r15.y, r15.y, l(1.000000)
+            mad r15.w, r15.x, l(-2.000000), l(1.000000)
+            mad r15.x, r15.y, r15.w, r15.x
+            mul r15.y, r15.x, l(0.200000)
+            mad r15.x, -r15.x, l(0.200000), l(1.000000)
+            ge r15.w, |r15.x|, l(0.000001)
+            mad r14.w, r16.x, r14.w, -r15.y
+            div r14.w, r14.w, r15.x
+            and r16.y, r14.w, r15.w
           endif 
-
-#line 186
-          mov r15.w, r15.w  // r15.w <- base_cloud_with_coverage
-
-#line 187
-          mul r13.y, r13.y, r15.w  // r13.y <- base_cloud_with_coverage
-
-#line 189
-          mov r13.y, r13.y  // r13.y <- final_cloud
-
-#line 190
-          not r13.z, r14.x
-          lt r14.x, l(0.000000), r13.y
-          and r13.z, r13.z, r14.x
-          if_nz r13.z
-
-#line 196
-            ne r13.z, cb12[1].x, l(0.000000)
-            if_nz r13.z
-
-#line 198
-              add r13.z, r0.y, cb1[0].z
-              mov r14.xz, -cb12[0].xxyx
-              dp2 r14.w, r14.xzxx, r14.xzxx
-              rsq r14.w, r14.w
-              mul r14.xz, r14.wwww, r14.xxzx
-              mul r14.xz, r13.zzzz, r14.xxzx
-              mul r14.xz, r14.xxzx, l(40.000000, 0.000000, 40.000000, 0.000000)
-              mov r14.xz, -r14.xxzx
-              add r12.xy, r12.xyxx, r14.xzxx
-
-#line 199
-              add r13.z, r0.y, cb1[0].z
-              mul r13.z, r13.z, l(40.000000)
-              mov r13.z, -r13.z
-              add r12.w, r12.w, r13.z
-
-#line 200
-            else   // Prior locations: r12.w <- sample_point.y
-              mov r12.xw, r12.xxxw
-            endif 
-
-#line 205
-            mul r14.xz, r12.xxwx, l(0.000008, 0.000000, 0.000008, 0.000000)
-            itof r13.z, l(0)
-            sample_l_indexable(texture2d)(float,float,float,float) r14.xz, r14.xzxx, t3.xzyw, s5, r13.z  // r14.x <- curl_noise.x; r14.z <- curl_noise.y
-
-#line 206
-            mov r13.z, -r14.y
-            add r13.z, r13.z, l(1.000000)
-            mul r14.xz, r13.zzzz, r14.xxzx
-            add r12.xw, r12.xxxw, r14.xxxz
-
-#line 210
-            nop 
-            mov r12.xw, r12.xxxw
-            mov r12.y, r12.y
-            mov r13.w, r13.w
-
-#line 47
-            mul r12.xyw, r12.xwxy, cb12[3].xxxx
-            sample_l_indexable(texture3d)(float,float,float,float) r12.xyw, r12.xywx, t1.xywz, s2, r13.w  // r12.x <- <SampleHighFrequencyNoises return value>.x; r12.y <- <SampleHighFrequencyNoises return value>.y; r12.w <- <SampleHighFrequencyNoises return value>.z
-
-#line 210
-            mov r12.xyw, r12.xyxw  // r12.x <- high_frequency_noises.x; r12.y <- high_frequency_noises.y; r12.w <- high_frequency_noises.z
-
-#line 213
-            mul r12.x, r12.x, l(0.625000)
-            mul r12.y, r12.y, l(0.250000)
-            add r12.x, r12.y, r12.x
-            mul r12.y, r12.w, l(0.125000)
-            add r12.x, r12.y, r12.x  // r12.x <- high_frequency_fbm
-
-#line 220
-            mov r12.y, -r12.x
-            add r12.y, r12.y, l(1.000000)
-            mul r12.w, r14.y, l(10.000000)
-            max r12.w, r12.w, l(0.000000)
-            min r12.w, r12.w, l(1.000000)
-            mov r13.z, -r12.x
-            add r12.y, r12.y, r13.z
-            mul r12.y, r12.y, r12.w
-            add r12.x, r12.y, r12.x  // r12.x <- high_frequency_noise_modifier
-
-#line 228
-            nop 
-            mov r12.y, r13.y
-            mul r12.x, r12.x, l(0.200000)
-            mov r12.w, l(1.000000)
-            mov r13.z, l(0)
-            mov r13.w, l(1.000000)
-
-#line 71
-            mov r14.x, -r12.x
-            add r12.w, r12.w, r14.x  // r12.w <- denom
-
-#line 72
-            mov r14.x, -r12.w
-            max r14.x, r12.w, r14.x
-            lt r14.x, r14.x, l(0.000001)
-            if_nz r14.x
-
-#line 73
-              mov r13.y, r13.z
-            endif   // r13.y <- <Remap return value>
-
-#line 74
-            if_z r14.x
-              mov r12.x, -r12.x
-              add r12.x, r12.x, r12.y
-              div r12.x, r12.x, r12.w
-              mov r12.y, -r13.z
-              add r12.y, r12.y, r13.w
-              mul r12.x, r12.y, r12.x
-              add r13.y, r12.x, r13.z
-            endif 
-
-#line 228
-            mov r13.y, r13.y  // r13.y <- final_cloud
-
-#line 232
-          endif 
-
-#line 235
-          max r12.x, r13.y, l(0.000000)
-          min r12.x, r12.x, l(1.000000)  // r12.x <- <SampleCloudDensity return value>
-
-#line 323
-          mov r12.y, -r13.x
-          add r12.y, r12.y, l(1.000000)
-          mul r12.y, r12.y, l(0.800000)
-          add r12.y, r12.y, l(0.500000)
-          log r12.x, r12.x
-          mul r12.x, r12.x, r12.y
-          exp r12.x, r12.x  // r12.x <- <sample_cloud_density_long_distance return value>
-
-#line 479
-          mul r12.x, r12.x, l(10.000000)
-          add r11.w, r11.w, r12.x
-
-#line 489
-          mov r12.x, l(5.000000)  // r12.x <- shadow_strength
-
-#line 490
-          mul r12.x, r12.x, cb12[1].y  // r12.x <- light_density_scale
-
-#line 491
-          mul r11.w, r11.w, r12.x  // r11.w <- optical_thickness
-
-#line 493
-          mov r12.x, -r12.z
-          mul r12.x, r12.x, l(1.442695)
-          exp r12.x, r12.x
-          mul r12.x, r12.x, cb12[1].w  // r12.x <- rain_cloud_absorption
-
-#line 495
-          mov r12.y, l(-1.000000)
-          add r12.y, r12.y, l(0.400000)
-          mul r12.y, r3.w, r12.y
-          add r12.y, r12.y, l(1.000000)  // r12.y <- horizon_optical_scale
-
-#line 496
-          mov r12.z, -r11.w
-          mul r12.y, r12.y, r12.z
-          mul r12.x, r12.x, r12.y
-          mul r12.x, r12.x, l(1.442695)
-          exp r12.x, r12.x  // r12.x <- beers_law
-
-#line 499
-          ine r12.y, l(0, 0, 0, 0), cb12[3].z
-          mov r11.w, -r11.w
-          mul r11.w, r11.w, l(1.442695)
-          exp r11.w, r11.w
-          mul r11.w, r11.w, l(2.000000)
-          mov r11.w, -r11.w
-          add r11.w, r11.w, l(1.000000)
-          movc r11.w, r12.y, r11.w, l(0.500000)  // r11.w <- powdered_sugar
-
-#line 501
-          mov r12.y, l(-0.800000)
-          add r12.y, r12.y, l(1.200000)
-          mul r12.y, r3.w, r12.y
-          add r12.y, r12.y, l(0.800000)
-          mul r11.w, r11.w, r12.y
-
-#line 504
-          mov r12.y, -cb12[0].z
-          add r12.y, r10.z, r12.y
-          mov r12.z, -cb12[0].z
-          add r12.z, r12.z, cb12[0].w
-          div r12.y, r12.y, r12.z
-          max r12.y, r12.y, l(0.000000)
-          min r12.y, r12.y, l(1.000000)  // r12.y <- height
-
-#line 508
-          mov r12.z, l(-0.000000)
-          add r12.w, r12.z, l(1.000000)
-          add r12.y, r12.z, r12.y
-          div r12.z, l(1.000000, 1.000000, 1.000000, 1.000000), r12.w
-          mul r12.y, r12.z, r12.y
-          max r12.y, r12.y, l(0.000000)
-          min r12.y, r12.y, l(1.000000)
-          mul r12.z, r12.y, l(-2.000000)
-          add r12.z, r12.z, l(3.000000)
-          mul r12.y, r12.y, r12.y
-          mul r12.y, r12.y, r12.z  // r12.y <- top_light
-
-#line 509
-          itof r13.xyz, l(0, 1, 0, 0)
-          dp3 r12.z, r6.xyzx, r13.xyzx
-          max r12.z, r12.z, l(0.000000)
-          min r12.z, r12.z, l(1.000000)  // r12.z <- up_light
-
-#line 511
-          mul r12.w, r12.x, l(1.000000)
-          mul r11.w, r11.w, r12.w
-          mov r12.w, l(-0.100000)
-          add r12.w, r12.w, l(10.000000)
-          mul r12.w, r0.x, r12.w
-          add r12.w, r12.w, l(0.100000)
-          mul r11.w, r11.w, r12.w
-          mul r12.y, r12.y, r12.z
-          mov r12.z, l(-0.000000)
-          add r12.z, r12.z, l(1.000000)
-          mul r12.y, r12.z, r12.y
-          add r12.y, r12.y, l(0.000000)  // v0.x <- pin.pos.x; v0.y <- pin.pos.y; v0.z <- pin.pos.z; v0.w <- pin.pos.w; v1.x <- pin.uv.x; v1.y <- pin.uv.y; o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
-          mul r11.w, r11.w, r12.y
-          add r12.yzw, r1.xxyz, r11.wwww  // r0.y <- time_offset; r12.y <- direct_light.x; r12.z <- direct_light.y; r12.w <- direct_light.z
-
-#line 523
-          itof r13.xyz, l(0, 1, 0, 0)
-          dp3 r11.w, r5.xyzx, r13.xyzx
-          max r11.w, r11.w, l(0.000000)
-          min r11.w, r11.w, l(1.000000)  // r11.w <- view_zenith
-
-#line 526
-          mov r11.w, -r11.w
-          add r11.w, r11.w, l(1.000000)  // r11.w <- lateral
-
-#line 529
-          sqrt r13.x, r12.x
-          mul r11.w, r11.w, l(0.700000)
-          mov r13.y, -r12.x
-          add r13.x, r13.y, r13.x
-          mul r11.w, r11.w, r13.x
-          add r11.w, r11.w, r12.x  // r11.w <- beer_lateral
-
-#line 532
-          sqrt r12.x, r11.w
-          mul r11.w, r11.w, r12.x  // r11.w <- shadow
-
-#line 533
-          mul r12.xyz, r11.wwww, r12.yzwy
-          mov r12.w, l(-0.500000)
-          add r11.w, r11.w, r12.w
-          mul r11.w, r11.w, l(0.200000)
-          add r11.w, r11.w, l(0.500000)
-          mul r13.xyz, r7.xyzx, r11.wwww
-          add r12.xyz, r12.xyzx, r13.xyzx  // r12.x <- lighting.x; r12.y <- lighting.y; r12.z <- lighting.z
-
-#line 539
-          mul r11.z, r11.z, cb12[1].y  // r11.z <- sigma
-
-#line 542
-          mov r11.z, -r11.z
-          mul r11.z, r0.w, r11.z
-          mul r11.z, r11.z, l(1.442695)
-          exp r11.z, r11.z  // r11.z <- T_step
-
-#line 545
-          mov r11.w, -r11.z
-          add r11.w, r11.w, l(1.000000)
-          mul r11.w, r8.w, r11.w  // r11.w <- delta
-
-#line 548
-          mul r12.xyz, r11.wwww, r12.xyzx
-          add r12.xyz, r9.xyzx, r12.xyzx  // r12.x <- color.x; r12.y <- color.y; r12.z <- color.z
-
-#line 551
-          mul r11.z, r8.w, r11.z  // r11.z <- transmittence
-
-#line 556
-          ge r11.w, l(0.001000), r11.z
-          if_nz r11.w
-
-#line 558
-            mov r9.xyz, r12.xyzx  // r9.x <- color.x; r9.y <- color.y; r9.z <- color.z
-            mov r8.w, r11.z  // r8.w <- transmittence
+          mov_sat r16.y, r16.y
+          add r14.z, -r14.z, l(1.000000)
+          mad r14.z, r14.z, l(0.800000), l(0.500000)
+          log r14.w, r16.y
+          mul r14.z, r14.w, r14.z
+          exp r14.z, r14.z
+          mad r14.x, r14.z, l(10.000000), r14.x
+          mul r14.x, r9.z, r14.x
+          mul r14.y, r14.y, l(-1.442695)
+          exp r14.y, r14.y
+          mul r14.y, r14.y, cb12[1].w
+          mul r14.z, r10.y, -r14.x
+          mul r14.y, r14.y, r14.z
+          mul r14.xy, r14.xyxx, l(-1.442695, 1.442695, 0.000000, 0.000000)
+          exp r14.y, r14.y
+          exp r14.x, r14.x
+          mad r14.x, -r14.x, l(2.000000), l(1.000000)
+          movc r14.x, cb12[3].z, r14.x, l(0.500000)
+          mul r14.x, r10.z, r14.x
+          add r14.z, r13.y, -cb12[0].z
+          div_sat r14.z, r14.z, r2.w
+          mad r14.w, r14.z, l(-2.000000), l(3.000000)
+          mul r14.z, r14.z, r14.z
+          mul r14.xz, r14.xxzx, r14.yywy
+          mul r14.x, r1.x, r14.x
+          mul r14.z, r2.y, r14.z
+          mad r14.xzw, r14.xxxx, r14.zzzz, r6.xxyz
+          sqrt r15.x, r14.y
+          add r15.x, -r14.y, r15.x
+          mad r14.y, r5.w, r15.x, r14.y
+          sqrt r15.x, r14.y
+          mul r15.y, r14.y, r15.x
+          mad r14.y, r14.y, r15.x, l(-0.500000)
+          mad r14.y, r14.y, l(0.200000), l(0.500000)
+          mul r16.xyz, r4.yzwy, r14.yyyy
+          mad r14.xyz, r14.xzwx, r15.yyyy, r16.xyzx
+          mul r14.w, r15.z, cb12[1].y
+          mul r14.w, r2.x, -r14.w
+          mul r14.w, r14.w, l(1.442695)
+          exp r14.w, r14.w
+          add r15.x, -r14.w, l(1.000000)
+          mul r15.x, r9.w, r15.x
+          mad r14.xyz, r14.xyzx, r15.xxxx, r12.xyzx
+          mul r14.w, r9.w, r14.w
+          ge r15.x, l(0.001000), r14.w
+          if_nz r15.x
+            mov r12.xyz, r14.xyzx
+            mov r9.w, r14.w
             break 
-
-#line 559
-          endif   // r12.x <- color.x; r12.y <- color.y; r12.z <- color.z; r11.z <- transmittence
-
-#line 561
-          mov r9.xyz, r12.xyzx  // r9.x <- color.x; r9.y <- color.y; r9.z <- color.z
-          mov r8.w, r11.z  // r8.w <- transmittence
+          endif 
+          mov r12.xyz, r14.xyzx
+          mov r9.w, r14.w
         endif 
-
-#line 563
-      else   // Prior locations: r10.x <- sample_point.x; r10.y <- sample_point.z; r10.z <- sample_point.y; r12.z <- weather_data.y; r11.z <- sampled_density
-
-#line 567
-        mov r10.w, l(0)
-
-#line 568
-        mov r11.x, l(0)
-
-#line 569
+      else 
+        mov r10.xw, l(0,0,0,0)
       endif 
-
-#line 571
-      add r10.xyz, r2.xzyx, r10.xyzx  // r10.x <- sample_point.x; r10.y <- sample_point.z; r10.z <- sample_point.y
-
-#line 572
+      add r13.xyz, r1.yzwy, r13.xyzx
     else 
-
-#line 576
-      nop 
-      mov r10.xy, r10.xyxx
-
-#line 51
-      add r11.z, r0.y, cb1[0].z
-      mul r11.z, r11.z, l(0.001000)
-      mov r12.xy, -cb12[0].xyxx
-      dp2 r11.w, r12.xyxx, r12.xyxx
-      rsq r11.w, r11.w
-      mul r12.xy, r11.wwww, r12.xyxx
-      mul r11.zw, r11.zzzz, r12.xxxy
-      mul r11.zw, r11.zzzw, cb12[1].xxxx  // r11.z <- offset.x; r11.w <- offset.y
-
-#line 53
-      mul r12.x, cb12[0].z, cb12[0].z
-      mul r12.y, cb12[2].y, cb12[2].y
-      mov r12.y, -r12.y
-      add r12.x, r12.y, r12.x
-      sqrt r12.x, r12.x
-      mul r12.x, r12.x, cb12[2].z  // r12.x <- horizon_distance
-
-#line 54
-      add r13.x, r10.x, r12.x
-      mov r12.y, -r10.y
-      add r13.y, r12.y, r12.x  // r3.x <- view_dir.x; r3.y <- view_dir.y; r3.z <- view_dir.z
-      mul r12.x, r12.x, l(2.000000)
-      div r12.xy, r13.xyxx, r12.xxxx
-      add r11.zw, r11.zzzw, r12.xxxy
-      sample_indexable(texture2d)(float,float,float,float) r11.zw, r11.zwzz, t2.ywxz, s2  // r11.z <- <SampleWeatherData return value>.x; r11.w <- <SampleWeatherData return value>.z
-
-#line 576
-      mov r11.zw, r11.zzzw  // r11.z <- weather_data.x; r11.w <- weather_data.z
-
-#line 578
-      nop 
-      mov r12.xz, r10.xxyx
-      mov r12.y, r10.z
-      mov r11.zw, r11.zzzw
-      mov r12.w, l(0)
-
-#line 149
-      nop 
-      dp3 r13.x, r12.xyzx, r12.xyzx
-      sqrt r13.x, r13.x
-
-#line 96
-      mov r13.y, -cb12[0].z
-      add r13.x, r13.y, r13.x
-      mov r13.y, -cb12[0].z
-      add r13.y, r13.y, cb12[0].w
-      div r13.x, r13.x, r13.y  // r13.x <- height_fraction
-
-#line 97
-      max r13.x, r13.x, l(0.000000)
-      min r13.x, r13.x, l(1.000000)  // r13.x <- <GetHeightFractionForPoint return value>
-
-#line 149
-      mov r13.x, r13.x  // r13.x <- height_fraction
-
-#line 152
-      mul r11.z, r11.z, cb12[1].z  // r11.z <- cloud_coverage
-
-#line 156
-      add r13.y, r0.y, cb1[0].z
-      mul r13.y, r13.y, l(20.000000)
-      mov r13.zw, -cb12[0].xxxy
-      dp2 r14.x, r13.zwzz, r13.zwzz
-      rsq r14.x, r14.x
-      mul r13.zw, r13.zzzw, r14.xxxx
-      mul r13.yz, r13.zzwz, r13.yyyy
-      mul r13.yz, r13.yyzy, cb12[1].xxxx
-      mul r13.yz, r13.yyzy, l(0.000000, 0.600000, 0.600000, 0.000000)
-      add r12.xz, r12.xxzx, r13.yyzy
-
-#line 159
-      nop 
-      mov r12.xz, r12.xxzx
-      mov r12.y, r12.y
-      mov r13.y, l(-2.000000)
-      add r12.w, r12.w, r13.y
-      max r12.w, r12.w, l(0.000000)
-
-#line 43
-      mul r12.xyz, r12.xyzx, cb12[2].wwww
-      sample_l_indexable(texture3d)(float,float,float,float) r12.xyzw, r12.xyzx, t0.xyzw, s5, r12.w  // r12.x <- <SampleLowFrequencyNoises return value>.x; r12.y <- <SampleLowFrequencyNoises return value>.y; r12.z <- <SampleLowFrequencyNoises return value>.z; r12.w <- <SampleLowFrequencyNoises return value>.w
-
-#line 159
-      mov r12.xyzw, r12.xyzw  // r12.x <- low_frequency_noises.x; r12.y <- low_frequency_noises.y; r12.z <- low_frequency_noises.z; r12.w <- low_frequency_noises.w
-
-#line 163
-      mul r12.y, r12.y, l(0.625000)
-      mul r12.z, r12.z, l(0.250000)
-      add r12.y, r12.z, r12.y
-      mul r12.z, r12.w, l(0.125000)
-      add r12.y, r12.z, r12.y  // r12.y <- low_frequency_fbm
-
-#line 170
-      nop 
-      mov r12.x, r12.x
-      mov r12.y, -r12.y
-      add r12.y, r12.y, l(1.000000)
-      mov r12.y, -r12.y
-      mov r12.z, l(1.000000)
-      mov r12.w, l(0)
-      mov r13.y, l(1.000000)
-
-#line 71
-      mov r13.z, -r12.y
-      add r12.z, r12.z, r13.z  // r12.z <- denom
-
-#line 72
-      mov r13.z, -r12.z
-      max r13.z, r12.z, r13.z
-      lt r13.z, r13.z, l(0.000001)
-      if_nz r13.z
-
-#line 73
-        mov r13.w, r12.w
-      endif   // r13.w <- <Remap return value>
-
-#line 74
-      if_z r13.z
-        mov r12.y, -r12.y
-        add r12.x, r12.y, r12.x
-        div r12.x, r12.x, r12.z
-        mov r12.y, -r12.w
-        add r12.y, r12.y, r13.y
-        mul r12.x, r12.y, r12.x
-        add r13.w, r12.x, r12.w
-      endif 
-
-#line 170
-      mov r13.w, r13.w  // r13.w <- base_cloud
-
-#line 178
-      mul r11.w, r11.w, cb12[2].x
-      max r11.w, r11.w, l(0.000000)
-      min r11.w, r11.w, l(1.000000)  // r11.w <- cloud_type
-
-#line 179
-      nop 
-      mov r13.x, r13.x
-      mov r11.w, r11.w
-
-#line 106
-      mov r12.xyzw, l(0.020000,0.050000,0.090000,0.110000)  // r12.x <- stratus_gradient.x; r12.y <- stratus_gradient.y; r12.z <- stratus_gradient.z; r12.w <- stratus_gradient.w
-
-#line 107
-      mov r14.xyzw, l(0.020000,0.200000,0.480000,0.625000)  // r14.x <- stratocumulus_gradient.x; r14.y <- stratocumulus_gradient.y; r14.z <- stratocumulus_gradient.z; r14.w <- stratocumulus_gradient.w
-
-#line 108
-      mov r15.xyzw, l(0.010000,0.062500,0.780000,1.000000)  // r15.x <- cumulus_gradient.x; r15.y <- cumulus_gradient.y; r15.z <- cumulus_gradient.z; r15.w <- cumulus_gradient.w
-
-#line 110
-      mul r13.y, r11.w, l(2.000000)
-      max r13.y, r13.y, l(0.000000)
-      min r13.y, r13.y, l(1.000000)
-      mov r13.y, -r13.y  // r2.x <- ray_step.x; r2.y <- ray_step.y; r2.z <- ray_step.z
-      add r13.y, r13.y, l(1.000000)  // r13.y <- stratus
-
-#line 111
-      mov r13.z, l(-0.500000)
-      add r13.z, r11.w, r13.z  // r2.x <- ray_step.x; r2.y <- ray_step.y; r2.z <- ray_step.z; r0.z <- steps; r0.y <- time_offset
-      mov r16.x, -r13.z
-      max r13.z, r13.z, r16.x  // r0.w <- step_size
-      mul r13.z, r13.z, l(2.000000)
-      mov r13.z, -r13.z  // r5.x <- ray_direction.x; r5.y <- ray_direction.y; r5.z <- ray_direction.z
-      add r13.z, r13.z, l(1.000000)  // r13.z <- stratocumulus
-
-#line 112
-      mov r16.x, l(-0.500000)
-      add r11.w, r11.w, r16.x
-      max r11.w, r11.w, l(0.000000)
-      min r11.w, r11.w, l(1.000000)
-      mul r11.w, r11.w, l(2.000000)  // r11.w <- cumulus
-
-#line 114
-      mul r12.xyzw, r12.xyzw, r13.yyyy
-      mul r14.xyzw, r13.zzzz, r14.xyzw
-      add r12.xyzw, r12.xyzw, r14.xyzw
-      mul r14.xyzw, r11.wwww, r15.xyzw
-      add r12.xyzw, r12.xyzw, r14.xyzw  // r12.x <- cloud_gradient.x; r12.y <- cloud_gradient.y; r12.z <- cloud_gradient.z; r12.w <- cloud_gradient.w
-
-#line 115
-      mov r11.w, -r12.x
-      add r12.x, r11.w, r12.y
-      add r11.w, r11.w, r13.x
-      div r12.x, l(1.000000, 1.000000, 1.000000, 1.000000), r12.x
-      mul r11.w, r11.w, r12.x
-      max r11.w, r11.w, l(0.000000)
-      min r11.w, r11.w, l(1.000000)  // r6.x <- sun_direction.x; r6.y <- sun_direction.y; r6.z <- sun_direction.z
-      mul r12.x, r11.w, l(-2.000000)
-      add r12.x, r12.x, l(3.000000)
-      mul r11.w, r11.w, r11.w
-      mul r11.w, r11.w, r12.x
-      mov r12.x, -r12.z
-      add r12.y, r12.x, r12.w
-      add r12.x, r12.x, r13.x
-      div r12.y, l(1.000000, 1.000000, 1.000000, 1.000000), r12.y
-      mul r12.x, r12.y, r12.x
-      max r12.x, r12.x, l(0.000000)
-      min r12.x, r12.x, l(1.000000)
-      mul r12.y, r12.x, l(-2.000000)
-      add r12.y, r12.y, l(3.000000)
-      mul r12.x, r12.x, r12.x
-      mul r12.x, r12.x, r12.y
-      mov r12.x, -r12.x
-      add r11.w, r11.w, r12.x  // r11.w <- density_gradient
-
-#line 116
-      mov r11.w, r11.w  // r11.w <- <GetDensityHeightGradient return value>
-
-#line 179
-      mov r11.w, r11.w  // r11.w <- density_height_gradient
-
-#line 182
-      mul r11.w, r11.w, r13.w  // r11.w <- base_cloud
-
-#line 186
-      nop   // r0.x <- henyey_greenstein_phase
-      mov r11.w, r11.w
-      mov r12.x, -r11.z
-      add r12.x, r12.x, l(1.000000)
-      mov r12.y, l(1.000000)
-      mov r12.z, l(0)
-      mov r12.w, l(1.000000)
-
-#line 71
-      mov r13.x, -r12.x
-      add r12.y, r12.y, r13.x  // r12.y <- denom
-
-#line 72
-      mov r13.x, -r12.y
-      max r13.x, r12.y, r13.x
-      lt r13.x, r13.x, l(0.000001)
-      if_nz r13.x
-
-#line 73
-        mov r13.y, r12.z
-      endif   // r13.y <- <Remap return value>
-
-#line 74
-      if_z r13.x
-        mov r12.x, -r12.x
-        add r11.w, r11.w, r12.x
-        div r11.w, r11.w, r12.y
-        mov r12.x, -r12.z
-        add r12.x, r12.x, r12.w
-        mul r11.w, r11.w, r12.x
-        add r13.y, r11.w, r12.z
-      endif 
-
-#line 186
-      mov r13.y, r13.y  // r13.y <- base_cloud_with_coverage
-
-#line 187
-      mul r11.z, r11.z, r13.y  // r11.z <- base_cloud_with_coverage
-
-#line 189
-      mov r11.z, r11.z  // r11.z <- final_cloud
-
-#line 235
-      max r11.z, r11.z, l(0.000000)
-      min r10.w, r11.z, l(1.000000)  // r10.w <- <SampleCloudDensity return value>
-
-#line 578
-      mov r10.w, r10.w  // r10.w <- cloud_test
-
-#line 580
-      mov r11.z, l(1.000000)  // r11.z <- step_scale
-
-#line 581
-      ge r11.w, l(0.000000), r10.w
-      if_nz r11.w
-
-#line 584
-        mov r11.w, l(-1.000000)
-        add r11.w, r11.w, l(3.000000)
-        mul r11.w, r2.w, r11.w
-        add r11.z, r11.w, l(1.000000)
-
-#line 585
-      endif 
-
-#line 586
-      mul r12.xyz, r2.xyzx, r11.zzzz
-      add r10.xyz, r12.xzyx, r10.xyzx
-
-#line 587
+      mad r14.x, r2.z, cb12[2].z, r13.x
+      mad r14.y, r2.z, cb12[2].z, -r13.z
+      div r14.xy, r14.xyxx, r7.yyyy
+      mad r14.xy, r9.xyxx, cb12[1].xxxx, r14.xyxx
+      sample_indexable(texture2d)(float,float,float,float) r14.xy, r14.xyxx, t2.xzyw, s2
+      dp3 r14.z, r13.xyzx, r13.xyzx
+      sqrt r14.z, r14.z
+      add r14.z, r14.z, -cb12[0].z
+      div_sat r14.z, r14.z, r2.w
+      mul r14.w, r14.x, cb12[1].z
+      mad r15.xz, r7.zzwz, l(0.600000, 0.000000, 0.600000, 0.000000), r13.xxzx
+      mov r15.y, r13.y
+      mul r15.xyz, r15.xyzx, cb12[2].wwww
+      sample_l_indexable(texture3d)(float,float,float,float) r15.xyzw, r15.xyzx, t0.xyzw, s5, l(0.000000)
+      dp3 r15.y, r15.yzwy, l(0.625000, 0.250000, 0.125000, 0.000000)
+      add r15.x, -r15.y, r15.x
+      add r15.y, -r15.y, l(2.000000)
+      ge r15.z, |r15.y|, l(0.000001)
+      add r15.x, r15.x, l(1.000000)
+      div r15.x, r15.x, r15.y
+      and r15.x, r15.x, r15.z
+      mul_sat r14.y, r14.y, cb12[2].x
+      add r15.y, r14.y, r14.y
+      min r15.y, r15.y, l(1.000000)
+      add r15.y, -r15.y, l(1.000000)
+      add r14.y, r14.y, l(-0.500000)
+      mad r15.z, -|r14.y|, l(2.000000), l(1.000000)
+      max r14.y, r14.y, l(0.000000)
+      mul r16.xyzw, r15.zzzz, l(0.020000, 0.200000, 0.480000, 0.625000)
+      mad r16.xyzw, r15.yyyy, l(0.020000, 0.050000, 0.090000, 0.110000), r16.xyzw
+      mad r16.xyzw, r14.yyyy, l(0.020000, 0.125000, 1.560000, 2.000000), r16.xyzw
+      add r15.yz, -r16.xxzx, r16.yywy
+      add r14.yz, r14.zzzz, -r16.xxzx
+      div r15.yz, l(1.000000, 1.000000, 1.000000, 1.000000), r15.yyzy
+      mul_sat r14.yz, r14.yyzy, r15.yyzy
+      mad r15.yz, r14.yyzy, l(0.000000, -2.000000, -2.000000, 0.000000), l(0.000000, 3.000000, 3.000000, 0.000000)
+      mul r14.yz, r14.yyzy, r14.yyzy
+      mul r14.z, r14.z, r15.z
+      mad r14.y, r15.y, r14.y, -r14.z
+      mad r14.x, -r14.x, cb12[1].z, l(1.000000)
+      add r14.z, -r14.x, l(1.000000)
+      ge r15.y, |r14.z|, l(0.000001)
+      mad r14.x, r15.x, r14.y, -r14.x
+      div r14.x, r14.x, r14.z
+      and r14.x, r14.x, r15.y
+      mul_sat r10.x, r14.w, r14.x
+      ge r14.x, l(0.000000), r10.x
+      movc r14.x, r14.x, r4.x, l(1.000000)
+      mad r13.xyz, r1.yzwy, r14.xxxx, r13.xyzx
     endif 
-
-#line 437
-    iadd r11.y, r11.y, l(1)
-
-#line 594
+    iadd r13.w, r13.w, l(1)
   endloop 
-
-#line 596
-  mov r0.x, -r8.w
-  add r0.x, r0.x, l(1.000000)
-  max r0.x, r0.x, l(0.000000)
-  min r9.w, r0.x, l(1.000000)  // r9.w <- alpha
-
-#line 598
-  max r0.xyzw, r9.xyzw, l(0.000000, 0.000000, 0.000000, 0.000000)  // r0.x <- <RayMarch return value>.x; r0.y <- <RayMarch return value>.y; r0.z <- <RayMarch return value>.z; r0.w <- <RayMarch return value>.w
-
-#line 653
-  mov r0.xyzw, r0.xyzw  // r0.x <- volume.x; r0.y <- volume.y; r0.z <- volume.z; r0.w <- volume.w
-
-#line 656
-  sample_indexable(texturecube)(float,float,float,float) r1.xyz, r3.xyzx, t4.xyzw, s3  // r1.x <- background.x; r1.y <- background.y; r1.z <- background.z
-
-#line 663
-  itof r2.xyz, l(0, 1, 0, 0)
-  dp3 r1.w, r3.xyzx, r2.xyzx
-  max r1.w, r1.w, l(0.000000)
-  min r1.w, r1.w, l(1.000000)  // r1.w <- view_up
-
-#line 664
-  mov r1.w, -r1.w
-  add r1.w, r1.w, l(1.000000)  // r1.w <- horizon
-
-#line 665
-  mul r2.x, r1.w, r1.w
-  mul r2.y, r1.w, r1.w
-  mul r2.x, r2.y, r2.x
-  mul r2.y, r1.w, r1.w
-  mul r1.w, r1.w, r1.w
-  mul r1.w, r1.w, r2.y
-  mul r1.w, r1.w, r2.x  // r1.w <- horizon_fade
-
-#line 668
-  mul r2.xyz, r0.wwww, r1.xyzx
-  mov r4.xyz, -r0.xyzx
-  add r2.xyz, r2.xyzx, r4.xyzx
-  mul r2.xyz, r1.wwww, r2.xyzx
-  add r0.xyz, r0.xyzx, r2.xyzx  // r0.x <- cloud_color_only.x; r0.y <- cloud_color_only.y; r0.z <- cloud_color_only.z
-
-#line 671
-  mov r0.w, -r0.w
-  add r0.w, r0.w, l(1.000000)
-  mul r1.xyz, r0.wwww, r1.xyzx
-  add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
-
-#line 676
-else   // Prior locations: r4.x <- ray_origin.x; r4.y <- ray_origin.y; r4.z <- ray_origin.z; r0.z <- shell_dist; r0.x <- PI; r0.y <- time_offset; r1.x <- INV_WAVELENGTH4.x; r1.y <- INV_WAVELENGTH4.y; r1.z <- INV_WAVELENGTH4.z
-
-#line 679
-  sample_indexable(texturecube)(float,float,float,float) r0.xyz, r3.xyzx, t4.xyzw, s3  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
-
-#line 680
+  add_sat r12.w, -r9.w, l(1.000000)
+  max r1.xyzw, r12.xyzw, l(0.000000, 0.000000, 0.000000, 0.000000)
+  sample_indexable(texturecube)(float,float,float,float) r2.xyz, r0.yxzy, t4.xyzw, s3
+  mov_sat r0.x, r0.x
+  add r0.w, -r0.x, l(1.000000)
+  mul r0.w, r0.w, r0.w
+  mul r0.w, r0.w, r0.w
+  mul r0.w, r0.w, r0.w
+  mad r3.xyz, r2.xyzx, r1.wwww, -r1.xyzx
+  mad r1.xyz, r0.wwww, r3.xyzx, r1.xyzx
+  add r0.w, -r1.w, l(1.000000)
+  mad r1.xyz, r2.xyzx, r0.wwww, r1.xyzx
+else 
+  sample_indexable(texturecube)(float,float,float,float) r1.xyz, r0.yxzy, t4.xyzw, s3
 endif 
-
-#line 684
-mov o0.xyz, r0.xyzx
+mov o0.xyz, r1.xyzx
 mov o0.w, l(1.000000)
 ret 
-// Approximately 2932 instruction slots used
+// Approximately 894 instruction slots used

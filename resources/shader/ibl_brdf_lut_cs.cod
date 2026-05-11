@@ -22,328 +22,104 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // no Output
 cs_5_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_uav_typed_texture2d (float,float,float,float) u0
 dcl_input vThreadID.xy
-dcl_temps 8
+dcl_temps 6
 dcl_thread_group 8, 8, 1
-//
-// Initial variable locations:
-//   vThreadID.x <- id.x; vThreadID.y <- id.y; vThreadID.z <- id.z
-//
-#line 116 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\ibl_brdf_lut_cs.hlsl"
 resinfo_indexable(texture2d)(float,float,float,float)_uint r0.xy, l(0), u0.xyzw
-mov r0.x, r0.x  // r0.x <- width
-mov r0.y, r0.y  // r0.y <- height
-
-#line 118
-uge r0.z, vThreadID.x, r0.x
-uge r0.w, vThreadID.y, r0.y
+uge r0.zw, vThreadID.xxxy, r0.xxxy
 or r0.z, r0.w, r0.z
 if_nz r0.z
-
-#line 119
   ret 
 endif 
-
-#line 121
 utof r0.zw, vThreadID.xxxy
 add r0.zw, r0.zzzw, l(0.000000, 0.000000, 0.500000, 0.500000)
-utof r1.x, r0.x
-utof r1.y, r0.y
-div r0.xy, r0.zwzz, r1.xyxx  // r0.x <- uv.x; r0.y <- uv.y
-
-#line 122
-max r0.x, r0.x, l(0.000000)
-min r1.z, r0.x, l(1.000000)  // r1.z <- NdotV
-
-#line 123
-max r0.x, r0.y, l(0.000000)
-min r0.x, r0.x, l(1.000000)  // r0.x <- roughness
-
-#line 125
-nop 
-mov r1.z, r1.z
-mov r0.x, r0.x
-
-#line 78
-itof r0.yzw, l(0, 0, 0, 1)  // r0.y <- N.x; r0.z <- N.y; r0.w <- N.z
-
-#line 79
-mul r1.w, r1.z, r1.z
-mov r1.w, -r1.w
-add r1.w, r1.w, l(1.000000)
-sqrt r1.x, r1.w  // r1.x <- V.x
-itof r1.y, l(0)  // r1.y <- V.y
-mov r1.z, r1.z  // r1.z <- V.z
-
-#line 81
-mov r1.w, l(1024)  // r1.w <- SAMPLE_COUNT
-
-#line 82
-mov r2.x, l(0)  // r2.x <- A
-
-#line 83
-mov r2.y, l(0)  // r2.y <- B
-
-#line 85
-mov r2.z, l(0)  // r2.z <- i
-mov r3.x, r2.x  // r3.x <- A
-mov r3.y, r2.y  // r3.y <- B
-mov r3.z, r2.z  // r3.z <- i
+utof r0.xy, r0.xyxx
+div r0.xy, r0.zwzz, r0.xyxx
+min r0.yz, r0.xxyx, l(0.000000, 1.000000, 1.000000, 0.000000)
+mul r0.z, r0.z, r0.z
+mad r1.x, -r0.y, r0.y, l(1.000000)
+sqrt r0.x, r1.x
+mul r1.x, r0.z, r0.z
+mad r0.z, r0.z, r0.z, l(-1.000000)
+mov r0.w, l(0)
+mul r1.y, r1.x, l(0.500000)
+mad r1.x, -r1.x, l(0.500000), l(1.000000)
+mad r1.z, r0.y, r1.x, r1.y
+div r1.z, r0.y, r1.z
+mov r2.xy, l(0,0,0,0)
+mov r1.w, l(0)
 loop 
-  ult r2.w, r3.z, r1.w
-  breakc_z r2.w
-
-#line 87
-  nop 
-  mov r2.w, r3.z
-  mov r3.w, r1.w
-
-#line 26
-  utof r4.x, r2.w
-  utof r3.w, r3.w
-  div r4.x, r4.x, r3.w  // r4.x <- <Hammersley return value>.x
-  nop 
-  mov r2.w, r2.w
-
-#line 16
-  ishl r3.w, r2.w, l(16)
-  ushr r2.w, r2.w, l(16)
-  iadd r2.w, r2.w, r3.w  // r2.w <- bits
-
-#line 17
-  and r3.w, r2.w, l(0x55555555)
-  ishl r3.w, r3.w, l(1)
+  uge r2.z, r1.w, l(1024)
+  breakc_nz r2.z
+  utof r2.z, r1.w
+  ushr r2.w, r1.w, l(16)
+  bfi r3.x, l(16), l(16), r1.w, r2.w
+  ishl r2.w, r2.w, l(1)
+  bfi r2.w, l(16), l(17), r1.w, r2.w
   and r2.w, r2.w, l(0xaaaaaaaa)
-  ushr r2.w, r2.w, l(1)
-  iadd r2.w, r2.w, r3.w  // r2.w <- bits
-
-#line 18
-  and r3.w, r2.w, l(0x33333333)
-  ishl r3.w, r3.w, l(2)
-  and r2.w, r2.w, l(0xcccccccc)
+  ushr r3.x, r3.x, l(1)
+  and r3.x, r3.x, l(0x55555555)
+  iadd r2.w, r2.w, r3.x
+  ishl r3.x, r2.w, l(2)
+  and r3.x, r3.x, l(0xcccccccc)
   ushr r2.w, r2.w, l(2)
-  iadd r2.w, r2.w, r3.w  // r2.w <- bits
-
-#line 19
-  and r3.w, r2.w, l(0x0f0f0f0f)
-  ishl r3.w, r3.w, l(4)
-  and r2.w, r2.w, l(0xf0f0f0f0)
+  and r2.w, r2.w, l(0x33333333)
+  iadd r2.w, r2.w, r3.x
+  ishl r3.x, r2.w, l(4)
+  and r3.x, r3.x, l(0xf0f0f0f0)
   ushr r2.w, r2.w, l(4)
-  iadd r2.w, r2.w, r3.w  // r2.w <- bits
-
-#line 20
-  and r3.w, r2.w, l(0x00ff00ff)
-  ishl r3.w, r3.w, l(8)
-  and r2.w, r2.w, l(0xff00ff00)
+  and r2.w, r2.w, l(0x0f0f0f0f)
+  iadd r2.w, r2.w, r3.x
+  ishl r3.x, r2.w, l(8)
+  and r3.x, r3.x, l(0xff00ff00)
   ushr r2.w, r2.w, l(8)
-  iadd r2.w, r2.w, r3.w  // r2.w <- bits
-
-#line 21
+  and r2.w, r2.w, l(0x00ff00ff)
+  iadd r2.w, r2.w, r3.x
   utof r2.w, r2.w
-  mul r4.y, r2.w, l(0.000000)  // r4.y <- <RadicalInverse_VdC return value>
-
-#line 26
-  mov r4.y, r4.y  // r4.y <- <Hammersley return value>.y
-
-#line 87
-  mov r4.xy, r4.xyxx  // r4.x <- Xi.x; r4.y <- Xi.y
-
-#line 88
-  nop 
-  mov r4.xy, r4.xyxx
-  mov r2.w, r0.x
-  mov r5.xyz, r0.yzwy
-
-#line 34
-  mul r2.w, r2.w, r2.w  // r2.w <- a
-
-#line 35
-  mul r3.w, r4.x, l(6.283185)  // r3.w <- Phi
-
-#line 36
-  itof r4.x, l(1)
-  mov r4.z, -r4.y
-  add r4.x, r4.z, r4.x
-  itof r4.z, l(1)
-  mul r2.w, r2.w, r2.w
-  itof r4.w, l(1)
-  mov r4.w, -r4.w
-  add r2.w, r2.w, r4.w
-  mul r2.w, r4.y, r2.w
-  add r2.w, r2.w, r4.z
-  div r2.w, r4.x, r2.w
-  sqrt r2.w, r2.w  // r2.w <- CosTheta
-
-#line 37
-  itof r4.x, l(1)
-  mul r4.y, r2.w, r2.w
-  mov r4.y, -r4.y
-  add r4.x, r4.y, r4.x
-  sqrt r4.x, r4.x  // r4.x <- SinTheta
-
-#line 39
-  sincos null, r4.y, r3.w
-  mul r4.y, r4.y, r4.x  // r4.y <- H.x
-
-#line 40
-  sincos r3.w, null, r3.w
-  mul r3.w, r3.w, r4.x  // r3.w <- H.y
-
-#line 41
-  mov r2.w, r2.w  // r2.w <- H.z
-
-#line 43
-  itof r4.xzw, l(0, 0, 1, 0)  // r4.x <- UpVector.z; r4.z <- UpVector.x; r4.w <- UpVector.y
-
-#line 44
-  mul r6.xyz, r5.zxyz, r4.wxzw
-  mul r4.xzw, r5.yyzx, r4.xxzw
-  mov r4.xzw, -r4.xxzw
-  add r4.xzw, r4.xxzw, r6.xxyz
-  dp3 r5.w, r4.xzwx, r4.xzwx
-  rsq r5.w, r5.w
-  mul r4.xzw, r4.xxzw, r5.wwww  // r4.x <- TangentX.x; r4.z <- TangentX.y; r4.w <- TangentX.z
-
-#line 45
-  mul r6.xyz, r4.wxzw, r5.yzxy
-  mul r7.xyz, r4.zwxz, r5.zxyz
-  mov r7.xyz, -r7.xyzx
-  add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- TangentY.x; r6.y <- TangentY.y; r6.z <- TangentY.z
-
-#line 47
-  mul r4.xyz, r4.yyyy, r4.xzwx
-  mul r6.xyz, r3.wwww, r6.xyzx
-  add r4.xyz, r4.xyzx, r6.xyzx
-  mul r5.xyz, r2.wwww, r5.xyzx
-  add r4.xyz, r4.xyzx, r5.xyzx  // r4.x <- <ImportanceSampleGGX return value>.x; r4.y <- <ImportanceSampleGGX return value>.y; r4.z <- <ImportanceSampleGGX return value>.z
-
-#line 88
-  mov r4.xyz, r4.xyzx  // r4.x <- H.x; r4.y <- H.y; r4.z <- H.z
-
-#line 89
-  dp3 r2.w, r1.xyzx, r4.xyzx
-  mul r2.w, r2.w, l(2.000000)
-  mul r5.xyz, r4.xyzx, r2.wwww
-  mov r6.xyz, -r1.xyzx
-  add r5.xyz, r5.xyzx, r6.xyzx
-  dp3 r2.w, r5.xyzx, r5.xyzx
+  mul r3.x, r2.w, l(0.000000)
+  mul r2.z, r2.z, l(0.006136)
+  mad r2.w, -r2.w, l(0.000000), l(1.000000)
+  mad r3.x, r0.z, r3.x, l(1.000000)
+  div r2.w, r2.w, r3.x
+  sqrt r3.x, r2.w
+  add r2.w, -r2.w, l(1.000000)
+  sqrt r2.w, r2.w
+  sincos r4.x, r5.x, r2.z
+  mul r2.z, r2.w, r5.x
+  mul r2.w, r2.w, r4.x
+  mul r3.yzw, r2.wwww, l(0.000000, 1.000000, 0.000000, 0.000000)
+  mad r3.yzw, r2.zzzz, l(0.000000, 0.000000, -1.000000, 0.000000), r3.yyzw
+  mad r3.xyz, r3.xxxx, l(0.000000, 0.000000, 1.000000, 0.000000), r3.yzwy
+  dp2 r2.z, r0.xyxx, r3.xzxx
+  add r2.w, r2.z, r2.z
+  mad r3.xyw, r2.wwww, r3.xyxz, -r0.xwxy
+  dp3 r2.w, r3.xywx, r3.xywx
   rsq r2.w, r2.w
-  mul r2.w, r2.w, r5.z  // r2.w <- L.z
-
-#line 91
-  max r2.w, r2.w, l(0.000000)
-  min r2.w, r2.w, l(1.000000)  // r2.w <- NdotL
-
-#line 92
-  max r3.w, r4.z, l(0.000000)
-  min r3.w, r3.w, l(1.000000)  // r3.w <- NdotH
-
-#line 93
-  dp3 r4.x, r1.xyzx, r4.xyzx
-  max r4.x, r4.x, l(0.000000)
-  min r4.x, r4.x, l(1.000000)  // r4.x <- VdotH
-
-#line 95
-  lt r4.y, l(0.000000), r2.w
-  if_nz r4.y
-
-#line 97
-    nop 
-    mov r4.y, r1.z
-    mov r2.w, r2.w
-    mov r4.z, r0.x
-
-#line 68
-    nop 
-    mov r4.y, r4.y
-    mov r4.z, r4.z
-
-#line 61
-    mul r4.w, r4.z, r4.z  // r4.w <- r
-
-#line 62
-    mul r4.w, r4.w, r4.w
-    mul r4.w, r4.w, l(0.500000)  // r4.w <- k
-
-#line 63
-    mov r5.x, -r4.w
-    add r5.x, r5.x, l(1.000000)
-    mul r5.x, r4.y, r5.x
-    add r4.w, r4.w, r5.x
-    div r4.y, r4.y, r4.w  // r4.y <- <GeometrySchlickGGX return value>
-
-#line 68
-    mov r4.y, r4.y  // r4.y <- ggx1
-
-#line 69
-    nop 
-    mov r2.w, r2.w
-
-#line 61
-    mul r4.z, r4.z, r4.z  // r4.z <- r
-
-#line 62
-    mul r4.z, r4.z, r4.z
-    mul r4.z, r4.z, l(0.500000)  // r4.z <- k
-
-#line 63
-    mov r4.w, -r4.z
-    add r4.w, r4.w, l(1.000000)
-    mul r4.w, r2.w, r4.w
-    add r4.z, r4.z, r4.w
-    div r2.w, r2.w, r4.z  // r2.w <- <GeometrySchlickGGX return value>
-
-#line 69
-    mov r2.w, r2.w  // r2.w <- ggx2
-
-#line 70
-    mul r2.w, r2.w, r4.y  // r2.w <- <GeometrySmith return value>
-
-#line 97
-    mov r2.w, r2.w  // r2.w <- G
-
-#line 98
-    mul r2.w, r4.x, r2.w
-    mul r3.w, r1.z, r3.w
-    max r3.w, r3.w, l(0.000100)
-    div r2.w, r2.w, r3.w  // r2.w <- G_Vis
-
-#line 99
-    mov r3.w, -r4.x
-    add r3.w, r3.w, l(1.000000)
-    mov r4.x, l(1.000000)
-    mul r4.x, r3.w, r4.x
-    mul r3.w, r3.w, r3.w
-    mul r3.w, r3.w, r3.w
-    mul r3.w, r3.w, r4.x  // r3.w <- Fc
-
-#line 101
-    mov r4.x, -r3.w
-    add r4.x, r4.x, l(1.000000)
-    mul r4.x, r2.w, r4.x
-    add r3.x, r3.x, r4.x
-
-#line 102
-    mul r2.w, r2.w, r3.w
-    add r3.y, r2.w, r3.y
-
-#line 103
-  endif 
-
-#line 104
-  iadd r3.z, r3.z, l(1)
+  mul_sat r2.w, r2.w, r3.w
+  min r3.x, r3.z, l(1.000000)
+  mov_sat r2.z, r2.z
+  lt r3.y, l(0.000000), r2.w
+  mad r3.z, r2.w, r1.x, r1.y
+  div r2.w, r2.w, r3.z
+  mul r2.w, r1.z, r2.w
+  mul r2.w, r2.z, r2.w
+  mul r3.x, r0.y, r3.x
+  max r3.x, r3.x, l(0.000100)
+  div r2.w, r2.w, r3.x
+  add r2.z, -r2.z, l(1.000000)
+  mul r3.x, r2.z, r2.z
+  mul r3.x, r3.x, r3.x
+  mul r3.z, r2.z, r3.x
+  mad r2.z, -r2.z, r3.x, l(1.000000)
+  mad r4.x, r2.z, r2.w, r2.x
+  mad r4.y, r3.z, r2.w, r2.y
+  movc r2.xy, r3.yyyy, r4.xyxx, r2.xyxx
+  iadd r1.w, r1.w, l(1)
 endloop 
-mov r0.xyzw, r3.xyxx  // r0.w <- A; r0.y <- B
-
-#line 106
-utof r1.xyzw, r1.wwww
-div r0.xyzw, r0.xyzw, r1.xyzw  // r0.y <- <IntegrateBRDF return value>.y; r0.w <- <IntegrateBRDF return value>.x
-
-#line 125
+mov r0.xyzw, r2.xyxx
+mul r0.xyzw, r0.xyzw, l(0.000977, 0.000977, 0.000977, 0.000977)
 store_uav_typed u0.xyzw, vThreadID.xyyy, r0.xyzw
-
-#line 126
 ret 
-// Approximately 190 instruction slots used
+// Approximately 95 instruction slots used

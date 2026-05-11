@@ -91,147 +91,48 @@
 // SV_TARGET                0   xyzw        0   TARGET   float   xyzw
 //
 ps_5_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_constantbuffer CB7[15], immediateIndexed
 dcl_constantbuffer CB3[12], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
-dcl_temps 4
-//
-// Initial variable locations:
-//   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
-//   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
-//   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
-//
-#line 32 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\light_space_cloud_occlusion_ps.hlsl"
-mov r0.xy, v1.xyxx  // r0.x <- uv.x; r0.y <- uv.y
-
-#line 35
-nop 
-
-#line 14
-mov r1.xyz, -cb3[11].xyzx
-dp3 r0.z, r1.xyzx, r1.xyzx
-rsq r0.z, r0.z
-mul r1.xyz, r0.zzzz, r1.xyzx  // r1.x <- sunDir.x; r1.y <- sunDir.y; r1.z <- sunDir.z
-
-#line 17
-mul r1.xyz, r1.xyzx, l(100000.000000, 100000.000000, 100000.000000, 0.000000)
-add r1.xyz, r1.xyzx, cb7[0].xyzx  // r1.x <- sunWorldPos.x; r1.y <- sunWorldPos.y; r1.z <- sunWorldPos.z
-
-#line 19
-mul r2.xyz, r1.xxxx, cb7[11].xywx
-mul r1.xyw, r1.yyyy, cb7[12].xyxw
-add r1.xyw, r1.xyxw, r2.xyxz
-mul r2.xyz, r1.zzzz, cb7[13].xywx
-add r1.xyz, r1.xywx, r2.xyzx
-mul r2.xyz, cb7[14].xywx, l(1.000000, 1.000000, 1.000000, 0.000000)
-add r1.xyz, r1.xyzx, r2.xyzx  // r1.x <- sunClip.x; r1.y <- sunClip.y; r1.z <- sunClip.w
-
-#line 24
-div r0.zw, r1.xxxy, r1.zzzz  // r0.z <- sunUV.x; r0.w <- sunUV.y
-
-#line 25
-mul r0.zw, r0.zzzw, l(0.000000, 0.000000, 0.500000, 0.500000)
-add r0.zw, r0.zzzw, l(0.000000, 0.000000, 0.500000, 0.500000)  // r0.z <- sunUV.x; r0.w <- sunUV.y
-
-#line 27
-mov r0.zw, r0.zzzw  // r0.z <- <GetSunScreenUV return value>.x; r0.w <- <GetSunScreenUV return value>.y
-
-#line 35
-mov r0.zw, r0.zzzw  // r0.z <- sunUV.x; r0.w <- sunUV.y
-
-#line 37
-dp2 r1.x, r0.xyxx, r0.zwzz
-lt r1.x, r1.x, l(0.000000)
-if_nz r1.x
-
-#line 40
-  itof r1.x, l(-1)
-  lt r1.x, r1.x, l(0.000000)
-  and r1.x, r1.x, l(-1)
-  discard_nz r1.x
-
-#line 41
-endif 
-
-#line 44
-mov r1.xy, -r0.xyxx
-add r0.zw, r0.zzzw, r1.xxxy  // r0.z <- dir.x; r0.w <- dir.y
-
-#line 45
-dp2 r1.x, r0.zwzz, r0.zwzz
-sqrt r1.x, r1.x  // r1.x <- dist
-
-#line 46
-max r1.x, r1.x, l(0.000100)
-div r0.zw, r0.zzzw, r1.xxxx
-
-#line 48
-mov r1.x, l(32)  // r1.x <- SAMPLE_COUNT
-
-#line 49
-mov r1.y, l(0.030000)  // r1.y <- BLUR_LENGTH
-
-#line 51
-mov r1.z, l(0)  // r1.z <- sum
-
-#line 52
-mov r1.w, l(0)  // r1.w <- weightSum
-
-#line 55
-mov r2.x, l(0)  // r2.x <- i
-mov r3.x, r1.z  // r3.x <- sum
-mov r3.y, r1.w  // r3.y <- weightSum
-mov r2.y, r2.x  // r2.y <- i
+dcl_temps 2
+dp3 r0.x, -cb3[11].xyzx, -cb3[11].xyzx
+rsq r0.x, r0.x
+mul r0.xyz, r0.xxxx, -cb3[11].xyzx
+mad r0.xyz, r0.xyzx, l(100000.000000, 100000.000000, 100000.000000, 0.000000), cb7[0].xyzx
+mul r1.xyz, r0.yyyy, cb7[12].xywx
+mad r0.xyw, r0.xxxx, cb7[11].xyxw, r1.xyxz
+mad r0.xyz, r0.zzzz, cb7[13].xywx, r0.xywx
+add r0.xyz, r0.xyzx, cb7[14].xywx
+div r0.xy, r0.xyxx, r0.zzzz
+mad r0.xy, r0.xyxx, l(0.500000, 0.500000, 0.000000, 0.000000), l(0.500000, 0.500000, 0.000000, 0.000000)
+dp2 r0.z, v1.xyxx, r0.xyxx
+lt r0.z, r0.z, l(0.000000)
+discard_nz r0.z
+add r0.xy, r0.xyxx, -v1.xyxx
+dp2 r0.z, r0.xyxx, r0.xyxx
+sqrt r0.z, r0.z
+max r0.z, r0.z, l(0.000100)
+div r0.xy, r0.xyxx, r0.zzzz
+mov r0.zw, l(0,0,0,0)
 loop 
-  ilt r2.z, r2.y, r1.x
-  breakc_z r2.z
-
-#line 57
-  itof r2.z, r2.y
-  add r2.z, r2.z, l(1.000000)
-  itof r2.w, r1.x
-  div r2.z, r2.z, r2.w  // r2.z <- t
-
-#line 59
-  mul r3.zw, r0.zzzw, r2.zzzz
-  mul r3.zw, r1.yyyy, r3.zzzw
-  add r3.zw, r0.xxxy, r3.zzzw  // r3.z <- sampleUV.x; r3.w <- sampleUV.y
-
-#line 61
-  itof r2.w, l(0)
-  sample_l_indexable(texture2d)(float,float,float,float) r2.w, r3.zwzz, t0.yzwx, s3, r2.w
-  mov r2.w, r2.w  // r2.w <- cloud
-
-#line 68
-  mov r2.z, -r2.z
-  add r2.z, r2.z, l(1.000000)  // r2.z <- w
-
-#line 70
-  mul r2.w, r2.z, r2.w
-  add r3.x, r2.w, r3.x
-
-#line 71
-  add r3.y, r2.z, r3.y
-
-#line 72
-  iadd r2.y, r2.y, l(1)
+  ige r1.x, r0.w, l(32)
+  breakc_nz r1.x
+  itof r1.x, r0.w
+  add r1.x, r1.x, l(1.000000)
+  mul r1.y, r1.x, l(0.031250)
+  mul r1.yz, r0.xxyx, r1.yyyy
+  mad r1.yz, r1.yyzy, l(0.000000, 0.030000, 0.030000, 0.000000), v1.xxyx
+  sample_l_indexable(texture2d)(float,float,float,float) r1.y, r1.yzyy, t0.yxzw, s3, l(0.000000)
+  mad r1.x, -r1.x, l(0.031250), l(1.000000)
+  mad r0.z, r1.y, r1.x, r0.z
+  iadd r0.w, r0.w, l(1)
 endloop 
-
-#line 74
-max r0.x, r3.y, l(0.000010)
-div r0.x, r3.x, r0.x  // r0.x <- blurredCloud
-
-#line 77
-mul r0.x, r0.x, l(1.500000)
-max r0.x, r0.x, l(0.000000)
-min r0.xyz, r0.xxxx, l(1.000000, 1.000000, 1.000000, 0.000000)  // r0.z <- shaft
-
-#line 79
-itof o0.w, l(1)
-mov o0.xyz, r0.xyzx
+mul r0.x, r0.z, l(0.096774)
+mov_sat o0.xyz, r0.xxxx
+mov o0.w, l(1.000000)
 ret 
-// Approximately 70 instruction slots used
+// Approximately 36 instruction slots used

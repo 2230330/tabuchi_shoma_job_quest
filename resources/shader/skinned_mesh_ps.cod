@@ -45,7 +45,7 @@
 // SV_TARGET                0   xyzw        0   TARGET   float   xyzw
 //
 ps_5_0
-dcl_globalFlags refactoringAllowed | skipOptimization
+dcl_globalFlags refactoringAllowed
 dcl_constantbuffer CB1[6], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_sampler s4, mode_default
@@ -57,116 +57,53 @@ dcl_input_ps linear v3.xyzw
 dcl_input_ps linear v4.xy
 dcl_input_ps linear v5.xyzw
 dcl_output o0.xyzw
-dcl_temps 7
-//
-// Initial variable locations:
-//   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
-//   v1.x <- pin.world_position.x; v1.y <- pin.world_position.y; v1.z <- pin.world_position.z; v1.w <- pin.world_position.w; 
-//   v2.x <- pin.world_normal.x; v2.y <- pin.world_normal.y; v2.z <- pin.world_normal.z; v2.w <- pin.world_normal.w; 
-//   v3.x <- pin.world_tangent.x; v3.y <- pin.world_tangent.y; v3.z <- pin.world_tangent.z; v3.w <- pin.world_tangent.w; 
-//   v4.x <- pin.texcoord.x; v4.y <- pin.texcoord.y; 
-//   v5.x <- pin.color.x; v5.y <- pin.color.y; v5.z <- pin.color.z; v5.w <- pin.color.w; 
-//   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
-//
-#line 12 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\skinned_mesh_ps.hlsl"
-sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v4.xyxx, t0.xyzw, s4  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
-
-#line 13
-mov r0.w, r0.w  // r0.w <- alpha
-
-#line 17
-mov r1.x, l(2.200000)  // r1.x <- GAMMA
-
-#line 18
-log r1.yzw, r0.xxyz
-mul r1.xyz, r1.yzwy, r1.xxxx
-exp r1.xyz, r1.xyzx  // r1.x <- color.x; r1.y <- color.y; r1.z <- color.z
-
-#line 20
-dp3 r1.w, v2.xyzx, v2.xyzx
-rsq r1.w, r1.w
-mul r2.xyz, r1.wwww, v2.xyzx  // r2.x <- N.x; r2.y <- N.y; r2.z <- N.z
-
-#line 22
-dp3 r1.w, v3.xyzx, v3.xyzx
-rsq r1.w, r1.w
-mul r3.xyz, r1.wwww, v3.xyzx  // r3.x <- T.x; r3.y <- T.y; r3.z <- T.z
-
-#line 23
-mov r1.w, v3.w  // r1.w <- sigma
-
-#line 24
-dp3 r2.w, r2.xyzx, r3.xyzx
-mul r4.xyz, r2.wwww, r2.xyzx
-mov r4.xyz, -r4.xyzx
-add r3.xyz, r3.xyzx, r4.xyzx
-dp3 r2.w, r3.xyzx, r3.xyzx
-rsq r2.w, r2.w
-mul r3.xyz, r2.wwww, r3.xyzx  // r3.x <- T.x; r3.y <- T.y; r3.z <- T.z
-
-#line 25
-mul r4.xyz, r2.yzxy, r3.zxyz
-mul r5.xyz, r2.zxyz, r3.yzxy
-mov r5.xyz, -r5.xyzx
-add r4.xyz, r4.xyzx, r5.xyzx
-mul r4.xyz, r1.wwww, r4.xyzx
-dp3 r1.w, r4.xyzx, r4.xyzx
-rsq r1.w, r1.w
-mul r4.xyz, r1.wwww, r4.xyzx  // r4.x <- B.x; r4.y <- B.y; r4.z <- B.z
-
-#line 27
-sample_indexable(texture2d)(float,float,float,float) r5.xyz, v4.xyxx, t1.xyzw, s3
-mov r5.xyz, r5.xyzx  // r5.x <- normal.x; r5.y <- normal.y; r5.z <- normal.z
-
-#line 28
-mul r5.xyz, r5.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000)
-mov r6.xyz, l(-1.000000,-1.000000,-1.000000,-0.000000)
-add r5.xyz, r5.xyzx, r6.xyzx
-
-#line 29
-mul r3.xyz, r3.xyzx, r5.xxxx
-mul r4.xyz, r4.xyzx, r5.yyyy
-add r3.xyz, r3.xyzx, r4.xyzx
-mul r2.xyz, r2.xyzx, r5.zzzz
-add r2.xyz, r2.xyzx, r3.xyzx
-dp3 r1.w, r2.xyzx, r2.xyzx
-rsq r1.w, r1.w
-mul r2.xyz, r1.wwww, r2.xyzx  // r2.x <- N.x; r2.y <- N.y; r2.z <- N.z
-
-#line 31
-mov r3.xyz, -cb1[4].xyzx
-dp3 r1.w, r3.xyzx, r3.xyzx
-rsq r1.w, r1.w
-mul r3.xyz, r1.wwww, r3.xyzx  // r3.x <- L.x; r3.y <- L.y; r3.z <- L.z
-
-#line 32
-itof r1.w, l(0)
-dp3 r2.w, r2.xyzx, r3.xyzx
-max r1.w, r1.w, r2.w
-mul r1.xyz, r1.wwww, r1.xyzx  // r1.x <- diffuse.x; r1.y <- diffuse.y; r1.z <- diffuse.z
-
-#line 33
-mov r4.xyz, -v1.xyzx
-add r4.xyz, r4.xyzx, cb1[5].xyzx
-dp3 r1.w, r4.xyzx, r4.xyzx
-rsq r1.w, r1.w
-mul r4.xyz, r1.wwww, r4.xyzx  // r4.x <- V.x; r4.y <- V.y; r4.z <- V.z
-
-#line 34
-itof r1.w, l(0)
-add r3.xyz, r3.xyzx, r4.xyzx
-dp3 r2.w, r3.xyzx, r3.xyzx
-rsq r2.w, r2.w
-mul r3.xyz, r2.wwww, r3.xyzx
-dp3 r2.x, r2.xyzx, r3.xyzx
-max r1.w, r1.w, r2.x
-itof r2.x, l(128)
-log r1.w, r1.w
-mul r1.w, r1.w, r2.x
-exp r2.xyz, r1.wwww  // r2.x <- specular.x; r2.y <- specular.y; r2.z <- specular.z
-
-#line 36
-add r0.xyz, r1.xyzx, r2.xyzx
-mul o0.xyzw, r0.xyzw, v5.xyzw
+dcl_temps 4
+dp3 r0.x, v3.xyzx, v3.xyzx
+rsq r0.x, r0.x
+mul r0.xyz, r0.xxxx, v3.xyzx
+dp3 r0.w, v2.xyzx, v2.xyzx
+rsq r0.w, r0.w
+mul r1.xyz, r0.wwww, v2.xyzx
+dp3 r0.w, r1.xyzx, r0.xyzx
+mad r0.xyz, -r1.xyzx, r0.wwww, r0.xyzx
+dp3 r0.w, r0.xyzx, r0.xyzx
+rsq r0.w, r0.w
+mul r0.xyz, r0.wwww, r0.xyzx
+mul r2.xyz, r0.yzxy, r1.zxyz
+mad r2.xyz, r1.yzxy, r0.zxyz, -r2.xyzx
+mul r2.xyz, r2.xyzx, v3.wwww
+dp3 r0.w, r2.xyzx, r2.xyzx
+rsq r0.w, r0.w
+mul r2.xyz, r0.wwww, r2.xyzx
+sample_indexable(texture2d)(float,float,float,float) r3.xyz, v4.xyxx, t1.xyzw, s3
+mad r3.xyz, r3.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000), l(-1.000000, -1.000000, -1.000000, 0.000000)
+mul r2.xyz, r2.xyzx, r3.yyyy
+mad r0.xyz, r3.xxxx, r0.xyzx, r2.xyzx
+mad r0.xyz, r3.zzzz, r1.xyzx, r0.xyzx
+dp3 r0.w, r0.xyzx, r0.xyzx
+rsq r0.w, r0.w
+mul r0.xyz, r0.wwww, r0.xyzx
+dp3 r0.w, -cb1[4].xyzx, -cb1[4].xyzx
+rsq r0.w, r0.w
+mul r1.xyz, r0.wwww, -cb1[4].xyzx
+add r2.xyz, -v1.xyzx, cb1[5].xyzx
+dp3 r0.w, r2.xyzx, r2.xyzx
+rsq r0.w, r0.w
+mad r2.xyz, r2.xyzx, r0.wwww, r1.xyzx
+dp3 r0.w, r0.xyzx, r1.xyzx
+dp3 r1.x, r2.xyzx, r2.xyzx
+rsq r1.x, r1.x
+mul r1.xyz, r1.xxxx, r2.xyzx
+dp3 r0.x, r0.xyzx, r1.xyzx
+max r0.xw, r0.xxxw, l(0.000000, 0.000000, 0.000000, 0.000000)
+log r0.x, r0.x
+mul r0.x, r0.x, l(128.000000)
+exp r0.x, r0.x
+sample_indexable(texture2d)(float,float,float,float) r1.xyzw, v4.xyxx, t0.xyzw, s4
+log r2.xyz, r1.xyzx
+mul r2.xyz, r2.xyzx, l(2.200000, 2.200000, 2.200000, 0.000000)
+exp r2.xyz, r2.xyzx
+mad r1.xyz, r2.xyzx, r0.wwww, r0.xxxx
+mul o0.xyzw, r1.xyzw, v5.xyzw
 ret 
-// Approximately 68 instruction slots used
+// Approximately 48 instruction slots used
