@@ -6,6 +6,11 @@
 #include"../../headers/resource_manager.h"
 #include"../../headers/constant_buffer_slot.h"
 #include"../../headers/misc.h"
+#include"../../headers/component/component_manager.h"
+#include"../../headers/framebuffer.h"
+#include"../../headers/fullscreen_quad.h"
+
+
 RenderScreenSpaceReflectionSystem::RenderScreenSpaceReflectionSystem(ComponentManager& comp_mng, RenderPass render_pass)
     :comp_mng_(comp_mng)
     , IRenderSystem(render_pass)
@@ -23,11 +28,6 @@ RenderScreenSpaceReflectionSystem::RenderScreenSpaceReflectionSystem(ComponentMa
         {
             buffer_desc.ByteWidth = (sizeof(SsrConstants) + 15) / 16 * 16;
             hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr, ssr_constant_buffer_.GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        }
-        {
-            buffer_desc.ByteWidth = (sizeof(HizConstants) + 15) / 16 * 16;
-            hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr, hiz_constant_buffer_.GetAddressOf());
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
         }
     }
@@ -167,6 +167,11 @@ void RenderScreenSpaceReflectionSystem::Render()
             ssr.depth = depth_srv_.Get();
             ssr.color = color_srv_.Get();
         });
+}
+
+ID3D11ShaderResourceView* RenderScreenSpaceReflectionSystem::GetSSRTexture()
+{
+    return ssr_framebuffer_->GetShaderResourceView(0).Get();
 }
 
 void RenderScreenSpaceReflectionSystem::ComputeHiz(ID3D11DeviceContext* ctx)

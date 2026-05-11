@@ -106,6 +106,16 @@ bool OutOfBounds(float2 uv)
     return uv.x <= 0 || uv.x >= 1 || uv.y <= 0 || uv.y >= 1;
 }
 
+//hi-zでのループ時の制御用
+int ComputeMip(float2 delta,float2 dims)
+{
+    float2 texel_size = abs(delta) / dims;
+    float max_component = max(texel_size.x, texel_size.y);
+    
+    float mip = log2(max_component * max(dims.x, dims.y));
+    return clamp((int) mip, 0, max_mip);
+}
+
 float4 main(VS_OUT pin) : SV_TARGET
 {
     //オブジェクトのパラメータ
@@ -161,12 +171,16 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     float2 increment = delta / steps;
     float2 frag = start_frag;
+    float2 uv;
     
     float t_min = 0.0f;
     float t_max = 0.0f;
     
     bool hit = false;
     float depth_delta = 0.0f;
+    
+    float t = 0.0f;
+
     
     //coarse march
     [loop]
@@ -175,7 +189,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     
         frag += increment;
         
-        float2 uv = frag / dimensions;
+        uv = frag / dimensions;
         
         if (OutOfBounds(uv))
         {
@@ -187,7 +201,6 @@ float4 main(VS_OUT pin) : SV_TARGET
         float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
         
         //compute interpolation parameter along ray
-        float t;
         if (use_x)
             t = (frag.x - start_frag.x) / delta.x;
         else
@@ -201,9 +214,12 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         if (depth_delta > 0 && depth_delta < thickness)
         {
-            hit = true;
-            t_max = t;
-            break;
+
+            {
+                hit = true;
+                t_max = t;
+                break;
+            }
         }
         
         t_min = t;
@@ -214,7 +230,7 @@ float4 main(VS_OUT pin) : SV_TARGET
             return 0;
     
     //Binary refinement
-    float t = 0.5f * (t_min + t_max);
+    t = 0.5f * (t_min + t_max);
     
     [loop]
     for (int i = 0; i < num_steps;i++)
@@ -242,6 +258,10 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     //final hit information
     float2 hit_uv = lerp(start_frag, end_frag, t) / dimensions;
+    if(OutOfBounds(hit_uv))
+    {
+        return (float4) 0;
+    }
     float hit_depth = GetSceneDepth(hit_uv, mip) * camera_clip_distance.y;
     float3 hit_pos = ReconstructViewPosition(hit_uv, hit_depth, projection_scale);
     
@@ -250,10 +270,12 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     //fade reflections facing toward the camera 
     visibility *= (1.0f - max(dot(-v, r),0));
+    visibility *= (1.0f - max(dot(v, n),0));
     //fade based on depth mismatch within thickness tolerance
     visibility *= (1.0f - saturate(depth_delta / thickness));
     //fade near maximum ray distance to avoid hard cutoff
     visibility *= (1.0f - saturate(length(hit_pos - view_pos) / distance));
+    
     
     float n_o_v = saturate(dot(n, -v));
     float f0 = 0.04f;

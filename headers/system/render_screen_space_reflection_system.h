@@ -3,12 +3,15 @@
 //深度情報と法線情報を元に、画面上で販社の情報を生成します
 //反射の情報は、ディファードレンダリングのライティングパスで合成されます。
 #include<vector>
+#include<d3d11.h>
+#include<wrl.h>
+#include<memory>
 
 #include"i_render_system.h"
-#include"../component/component_manager.h"
-#include"../framebuffer.h"
-#include"../fullscreen_quad.h"
-#include"../deferred_g_buffer.h"
+
+class ComponentManager;
+class FrameBuffer;
+class FullscreenQuad;
 
 class RenderScreenSpaceReflectionSystem :public IRenderSystem
 {
@@ -26,9 +29,7 @@ public:
 
     //生成したスクリーンスペースリフレクションのテクスチャを取得する関数
     //このテクスチャは、ディファードレンダリングのライティングパスで合成されます。
-    ID3D11ShaderResourceView* GetSSRTexture(){
-        return ssr_framebuffer_->GetShaderResourceView(0).Get();
-    }
+    ID3D11ShaderResourceView* GetSSRTexture();
     
 private:
     ComponentManager& comp_mng_;
@@ -60,13 +61,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>hiz_process_uavs_[2];
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>hiz_process_srvs_[2];
     Microsoft::WRL::ComPtr<ID3D11ComputeShader>hiz_cs_ = nullptr;
-    struct HizConstants
-    {
-        int srv_mip;
-        int dst_mip;
-        int dummy[2];
-    };
-    Microsoft::WRL::ComPtr<ID3D11Buffer>hiz_constant_buffer_ = nullptr;
+
 
 
     //スクリーンスペースリフレクションの描画に必要なリソース
