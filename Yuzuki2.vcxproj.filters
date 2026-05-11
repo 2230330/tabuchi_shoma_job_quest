@@ -107,9 +107,6 @@
     <ClInclude Include="headers\model.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="headers\skinned_mesh.h">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="external\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -311,9 +308,6 @@
       <Filter>sources\scenes</Filter>
     </ClCompile>
     <ClCompile Include="sources\static_mesh.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\skinned_mesh.cpp">
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="external\imgui\imgui.cpp">

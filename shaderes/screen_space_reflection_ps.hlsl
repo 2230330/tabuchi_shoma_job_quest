@@ -31,8 +31,7 @@ float3 GetNormalVS(float2 uv)
 {
     //テクスチャはワールド空間で算出されている 
     //gltf_model_gbuffer_vs.hlsl
-    float3 n= normal_texture.SampleLevel(　
-        sampler_states[POINT_CLAMP], uv, 0).xyz;
+    float3 n= normal_texture.SampleLevel(sampler_states[POINT_CLAMP], uv, 0).xyz;
     
     //ワールド空間からからビュー空間へ変換
     n = normalize(mul(float4(n, 0), view_transform));

@@ -95,7 +95,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -104,7 +104,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;.\external\fbx\2020.3.7\lib\x64\debug;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
@@ -124,7 +124,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -134,7 +134,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
@@ -152,7 +152,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Disabled</Optimization>
@@ -161,7 +161,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Debug;.\external\fbx\2020.3.7\lib\x64\debug;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
@@ -181,7 +181,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\fbx\2020.3.7\include;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\external\json-develop\include;.\external\DirectXTK-main\Inc;.\external\DirectXTex-oct2025\DirectXTex;.\external\cereal\cereal-master\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <Optimization>Full</Optimization>
@@ -191,7 +191,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>zlib-md.lib;libxml2-md.lib;libfbxsdk-md.lib;d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;dxgi.lib;DirectXTK.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>.\external\DirectXTK-main\Bin\Desktop_2022\x64\Release;.\external\DirectXTex-oct2025\DirectXTex\Bin\Desktop_2022\x64\Release;.\external\fbx\2020.3.7\lib\x64\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <FxCompile>
@@ -253,7 +253,6 @@
     <ClInclude Include="headers\scene\scene.h" />
     <ClInclude Include="headers\scene\scene_test.h" />
     <ClInclude Include="headers\shader.h" />
-    <ClInclude Include="headers\skinned_mesh.h" />
     <ClInclude Include="headers\sprite.h" />
     <ClInclude Include="headers\sprite_batch.h" />
     <ClInclude Include="headers\static_mesh.h" />
@@ -299,7 +298,6 @@
     <ClCompile Include="sources\scenes\scene.cpp" />
     <ClCompile Include="sources\scenes\scene_test.cpp" />
     <ClCompile Include="sources\shader.cpp" />
-    <ClCompile Include="sources\skinned_mesh.cpp" />
     <ClCompile Include="sources\sprite.cpp" />
     <ClCompile Include="sources\sprite_batch.cpp" />
     <ClCompile Include="sources\static_mesh.cpp" />
