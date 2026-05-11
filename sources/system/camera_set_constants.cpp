@@ -2,6 +2,7 @@
 
 #include"../../headers/graphics.h"
 #include"../../headers/misc.h"
+#include"../../headers/component/component_manager.h"
 #include"../../headers/constant_buffer_slot.h"
 
 CameraSetConstants::CameraSetConstants(ComponentManager& comp_mng)

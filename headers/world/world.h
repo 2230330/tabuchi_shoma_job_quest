@@ -1,18 +1,22 @@
 #pragma once
-#include"../entity/entity_manager.h"
+
+#include<memory>
+
+//前方宣言
+class EntityManager;
+
 
 /// ゲーム全体の状態を管理するクラス
 //現在はエンティティマネージャーのみを持つが、将来的にはシステムマネージャーやアーキタイプマネージャーも持つ予定
 class World
 {
-private:
-    EntityManager entity_manager_;
-
 public:
-    World() 
-    {
-    }
+    World();
+    ~World();
 
-    EntityManager* GetEntityManager() { return &entity_manager_; }
+    EntityManager* GetEntityManager();
+private:
+    std::unique_ptr<EntityManager> entity_manager_=nullptr;
+
 
 };

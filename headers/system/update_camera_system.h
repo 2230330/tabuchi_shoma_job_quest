@@ -1,6 +1,10 @@
 #pragma once
+#include<windows.h>
+#include<DirectXMath.h>
 #include"i_update_system.h"
-#include"../component/component_manager.h"
+
+//前方宣言
+class ComponentManager;
 
 //カメラの更新を行うシステム
 //このシステムは、ComponentCameraを持つエンティティが存在する場合に、

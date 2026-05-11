@@ -5,7 +5,9 @@
 #include<functional>
 
 #include"../../headers/graphics.h"
+#include"../../headers/gltf_model.h"
 #include"../../headers/misc.h"
+#include"../../headers/component/component_manager.h"
 
 InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng, RenderPass render_pass )
     :comp_mng_(comp_mng)
@@ -54,7 +56,7 @@ void InstancingRenderSystem::Render()
         {
             D3D11_BUFFER_DESC desc{};
             desc.Usage = D3D11_USAGE_DYNAMIC;
-            desc.ByteWidth = std::max(required_size, 16u);
+            desc.ByteWidth = (std::max)(required_size, 16u);
             desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
             desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 

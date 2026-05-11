@@ -1,8 +1,12 @@
 #include "../../headers/system/render_sprite_system.h"
+
+#include<algorithm>
+
 #include"../../headers/misc.h"
 #include"../../headers/graphics.h"
 #include"../../headers/render_state.h"
 #include"../../headers/resource_manager.h"
+#include"../../headers/component/component_manager.h"
 
 SpriteRenderSystem::SpriteRenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
@@ -103,7 +107,7 @@ void SpriteRenderSystem::Render()
         {
             D3D11_BUFFER_DESC desc{};
             desc.Usage = D3D11_USAGE_DYNAMIC;
-            desc.ByteWidth = std::max(required_size, 16u);
+            desc.ByteWidth = (std::max)(required_size, 16u);
             desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
             desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 

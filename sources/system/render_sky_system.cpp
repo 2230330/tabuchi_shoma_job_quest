@@ -1,12 +1,16 @@
 #include"../../headers/system/render_sky_system.h"
 
 #include <DirectXTex.h>
+#include<DirectXMath.h>
 
 #include"../../headers/graphics.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/render_state.h"
-#include"../../headers/misc.h"
 #include"../../headers/constant_buffer_slot.h"
+#include"../../headers/fullscreen_quad.h"
+#include"../../headers/framebuffer.h"
+#include"../../headers/misc.h"
+#include"../../headers/component/component_manager.h"
 
 RenderSkySystem::RenderSkySystem(ComponentManager& comp_mng, RenderPass render_pass)
     :comp_mng_(comp_mng)

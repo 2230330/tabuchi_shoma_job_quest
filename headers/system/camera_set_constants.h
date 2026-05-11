@@ -2,11 +2,13 @@
 #include"i_render_system.h"
 #include<d3d11.h>
 #include<wrl.h>
-#include"../component/component_manager.h"
+#include<DirectXMath.h>
+
+//前方宣言
+class ComponentManager;
 
 //レンダーマネージャの先頭でカメラの定数バッファを更新するシステム
 //カメラのコンポーネント化、複数化に備えて、カメラの定数バッファを更新するシステムを分けておく
-
 class CameraSetConstants 
 {
 public:

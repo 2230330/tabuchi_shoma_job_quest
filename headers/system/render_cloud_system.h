@@ -2,9 +2,14 @@
 #include"i_render_system.h"
 #include<d3d11.h>
 #include<wrl.h>
-#include"../component/component_manager.h"
-#include"../fullscreen_quad.h"
-#include"../framebuffer.h"
+#include<memory>
+#include<DirectXMath.h>
+
+//前方宣言
+class ComponentManager;
+class FrameBuffer;
+class FullscreenQuad;
+struct ComponentVolumetricCloud;
 
 //ボリュームクラウドの描画システム
 //このシステムは、ComponentVolumetricCloudを持つエンティティが存在する場合に、
@@ -17,23 +22,17 @@ public:
     RenderCloudSystem(ComponentManager&comp_mng,RenderPass render_pass);
     
     //スカイカラーをセットする関数
-    void SetSkyColorSRV(ID3D11ShaderResourceView* sky_color_srv) {
-        sky_color_srv_ = sky_color_srv;
-    }
+    void SetSkyColorSRV(ID3D11ShaderResourceView* sky_color_srv);
     //オブジェクトの深度情報をセットする関数
-    void SetObjectDepthSRV(ID3D11ShaderResourceView* object_depth_srv) {
-        object_depth_srv_ = object_depth_srv;
-    }
+    void SetObjectDepthSRV(ID3D11ShaderResourceView* object_depth_srv);
 
-    void SetObjectResolution(float width, float height) {
-        cloud_ray_marching_constant_.object_resolution = DirectX::XMFLOAT2(width, height);
-    }
+    void SetObjectResolution(float width, float height);
 
-    ID3D11ShaderResourceView* GetCloudShadowSRV() { return shadow_map_->GetShaderResourceView(0).Get(); }
+    ID3D11ShaderResourceView* GetCloudShadowSRV();
 
     void Render()override;
 
-    bool HasRenderableCloud() { return enable_cloud_; }
+    bool HasRenderableCloud();
 
 private:
     //enable cloud
@@ -46,7 +45,7 @@ private:
     ComponentManager& comp_mng_;
 
     //シェーダー
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_ps_;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_ps_=nullptr;
 
     //定数バッファ
     struct CloudRayMarchingConstants
@@ -79,7 +78,7 @@ private:
         //DirectX::XMFLOAT2 dummy;//16バイトアラインメントのためのダミー
 
     }cloud_ray_marching_constant_;
-    Microsoft::WRL::ComPtr<ID3D11Buffer>cloud_ray_marching_constant_buffer_;
+    Microsoft::WRL::ComPtr<ID3D11Buffer>cloud_ray_marching_constant_buffer_=nullptr;
 
     //ノイズテクスチャ
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_srv_ = nullptr;
@@ -110,7 +109,7 @@ private:
         float dummy[2];
     };
     CurlParams curl_params_;
-    Microsoft::WRL::ComPtr<ID3D11Buffer>curl_params_buffer_;
+    Microsoft::WRL::ComPtr<ID3D11Buffer>curl_params_buffer_ = nullptr;
 
     //スカイカラー
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>sky_color_srv_ = nullptr;
@@ -119,10 +118,11 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>object_depth_srv_ = nullptr;
 
     //フルスクリーンクワッド
-    std::unique_ptr<FullscreenQuad>fullscreen_quad_;
+    std::unique_ptr<FullscreenQuad>fullscreen_quad_ = nullptr;
 
     //シャドウマップ用
     const int SHADOW_RES = 512;
+
     std::unique_ptr<FrameBuffer>shadow_map_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps_ = nullptr;
 

@@ -2,11 +2,23 @@
 
 #include"../../headers/graphics.h"
 #include"../../headers/render_state.h"
+#include"../../headers/resource_manager.h"
+#include"../../headers/light_manager.h"
+#include"../../headers/fullscreen_quad.h"
+#include"../../headers/framebuffer.h"
+#include"../../headers/deferred_g_buffer.h"
 #include"../../headers/system/render_gltf_system.h"
 #include"../../headers/system/render_instancing_system.h"
 #include"../../headers/system/render_sprite_system.h"
-#include"../../headers/resource_manager.h"
-
+#include"../../headers/system/i_render_system.h"
+#include"../../headers/system/render_sky_system.h"
+#include"../../headers/system/render_cloud_system.h"
+#include"../../headers/system/render_deferred_system.h"
+#include"../../headers/system/render_screen_space_reflection_system.h"
+#include"../../headers/system/ibl_manager.h"
+#include"../../headers/system/camera_set_constants.h"
+#include"../../headers/post_process/post_process_manager.h"
+#include"../../headers/component/component_manager.h"
 
 
 RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
@@ -68,6 +80,10 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()));
 
 }
+
+//デストラクタ
+RenderSystemManager::~RenderSystemManager() = default;
+
 
 void RenderSystemManager::AddSystem(std::unique_ptr<IRenderSystem> system)
 {
@@ -218,6 +234,11 @@ void RenderSystemManager::RenderAll()
     bit_block_transfer_->blit(ctx, post_process_manager_->GetResultShaderResourceView().GetAddressOf(), 0, 1);
 
 
+}
+
+void RenderSystemManager::SetLightManager(LightManager* light_manager)
+{
+    this->light_manager_ = light_manager;
 }
 
 //レンダーパスごとにシステムを回す

@@ -5,16 +5,16 @@
 #include<d3d11.h>
 #include<wrl.h>
 
-#include"../graphics.h"
-#include"../light_manager.h"
+//前方宣言
+class Graphics;
 
 struct scene_constants
 {
-	DirectX::XMFLOAT4 options;	//	xy : マウスの座標値, z : タイマー, w : フラグ
-	DirectX::XMFLOAT4 z_buffer_parameteres;
-	DirectX::XMFLOAT4 viewport_size;
-	DirectX::XMFLOAT2 sun_uv; //画面上の太陽位置
-	float sun_visible; //カメラ前方にあるか
+	DirectX::XMFLOAT4 options{0.f,0.f,0.f,0.f};	//	xy : マウスの座標値, z : タイマー, w : フラグ
+	DirectX::XMFLOAT4 z_buffer_parameteres{ 0.f,0.f,0.f,0.f };
+	DirectX::XMFLOAT4 viewport_size{ 0.f,0.f,0.f,0.f };
+	DirectX::XMFLOAT2 sun_uv{ 0.f,0.f }; //画面上の太陽位置
+	float sun_visible{ 0 }; //カメラ前方にあるか
 	float dummy;
 };
 
@@ -50,11 +50,12 @@ protected:
 	virtual void RenderCore(float elapsed_time){}
 	virtual void DrawImguiCore(){}
 
+	//ビューポートサイズに何も入っていない場合、graphicsのデフォルトを入れます
 	void SetSceneConstant(
 		int start_slot = 1,
 		bool is_update_resource = true,
 		DirectX::XMFLOAT4 directional_light = { 0,0,0,1 },
-		DirectX::XMFLOAT2 viewport_size = DirectX::XMFLOAT2(Graphics::Instance().GetScreenWidth(), Graphics::Instance().GetScreenHeight()));
+		DirectX::XMFLOAT2 viewport_size = DirectX::XMFLOAT2(-1.0f, -1.0f));
 
 	//static constexpr DirectX::XMFLOAT4X4 coordinate_system_transforms[]
 	//{
@@ -83,12 +84,12 @@ private:
 	float far_clip_distance{ 1000.0f };
 	float fov_y{ DirectX::XMConvertToRadians(30) };
 
-	DirectX::XMFLOAT3 camera_position;
+	DirectX::XMFLOAT3 camera_position{};
 	DirectX::XMFLOAT3 camera_focus{ 0.0f, 0.0f, 0.0f };
-	DirectX::XMFLOAT4X4 view;
-	DirectX::XMFLOAT4X4 projection;
-	DirectX::XMFLOAT4X4 view_projection;
-	DirectX::XMFLOAT4X4 previous_view_projection;
+	DirectX::XMFLOAT4X4 view{};
+	DirectX::XMFLOAT4X4 projection{};
+	DirectX::XMFLOAT4X4 view_projection{};
+	DirectX::XMFLOAT4X4 previous_view_projection{};
 	float rotateX{ 0.0f };
 	float rotateY{ 0.0f };
 	float wheel{ 0 };
@@ -101,6 +102,6 @@ private:
 	int sun_visible_{ 0 };//カメラ前方にあるか
 	
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> scene_constant_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> scene_constant_buffer=nullptr;
 };
 #endif // !PART2_SCENE_H

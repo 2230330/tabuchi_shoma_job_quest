@@ -317,6 +317,7 @@
     <ClCompile Include="sources\system\update_system_manager.cpp" />
     <ClCompile Include="sources\system\update_transform_system.cpp" />
     <ClCompile Include="sources\texture.cpp" />
+    <ClCompile Include="sources\world\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaderes\bidirectional_reflectance_distribution_function.hlsli" />

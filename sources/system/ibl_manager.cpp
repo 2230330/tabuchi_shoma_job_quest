@@ -9,6 +9,7 @@
 #include<filesystem>
 
 #include"../../headers/graphics.h"
+#include"../../headers/framebuffer.h"
 #include "../../headers/resource_manager.h"
 #include"../../headers/misc.h"
 #include"../../headers/constant_buffer_slot.h"
@@ -16,7 +17,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 
-// ---- ƒwƒ‹ƒp ----
+// ---- ãƒ˜ãƒ«ãƒ‘ ----
 UINT IBLManager::CalcMipCount(UINT size) {
     UINT mips = 1;
     while (size > 1) { size >>= 1; ++mips; }
@@ -24,14 +25,14 @@ UINT IBLManager::CalcMipCount(UINT size) {
 }
 
 // ============================
-// IBLManager À‘•
+// IBLManager å®Ÿè£…
 // ============================
 void IBLManager::Initialize(ID3D11Device* dev)
 {
     dev_ = dev;
     dev_->GetImmediateContext(ctx_.GetAddressOf());
 
-    // --- ƒTƒ“ƒvƒ‰ilinear clampj ---
+    // --- ã‚µãƒ³ãƒ—ãƒ©ï¼ˆlinear clampï¼‰ ---
     {
         D3D11_SAMPLER_DESC sd{};
         sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -40,7 +41,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         dev_->CreateSamplerState(&sd, samp_linear_clamp_.GetAddressOf());
     }
 
-    // --- BRDF LUTiRG16F 2Dj + UAV/SRV ---
+    // --- BRDF LUTï¼ˆRG16F 2Dï¼‰ + UAV/SRV ---
     {
         D3D11_TEXTURE2D_DESC td{};
         td.Width = kBrdfLutSize;
@@ -70,7 +71,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         srv_brdf_lut_ = brdf_lut_srv_;
     }
 
-    // --- BRDF LUT CS ‚ğƒ[ƒh•¶¬i‹N“®1‰ñj ---
+    // --- BRDF LUT CS ã‚’ãƒ­ãƒ¼ãƒ‰ï¼†ç”Ÿæˆï¼ˆèµ·å‹•æ™‚1å›ï¼‰ ---
     {
         auto cs = ResourceManager::Instance().
             LoadComputeShader(dev_.Get(), L".\\resources\\shader\\ibl_brdf_lut_cs.cso");
@@ -85,9 +86,9 @@ void IBLManager::Initialize(ID3D11Device* dev)
         ctx_->CSSetShader(nullptr, nullptr, 0);
     }
 
-    // --- Prefilter —p VS/PS ‚Æ b0 ---
+    // --- Prefilter ç”¨ VS/PS ã¨ b0 ---
     {
-        // VS ‚Í FullscreenQuad —piSV_VertexIDA“ü—ÍƒŒƒCƒAƒEƒg–³‚µj
+        // VS ã¯ FullscreenQuad ç”¨ï¼ˆSV_VertexIDã€å…¥åŠ›ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆç„¡ã—ï¼‰
         ibl_screen_vs_ = 
             ResourceManager::Instance().LoadVertexShader(dev_.Get(), L".\\resources\\shader\\ibl_screen_vs.cso", nullptr, nullptr, 0);
 
@@ -96,7 +97,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         ps_diffuse_ =
             ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\ibl_diffuse_ps.cso");
 
-        //”wŒi¶¬—p
+        //èƒŒæ™¯ç”Ÿæˆç”¨
         sky_cube_ps_ = 
             ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\ibl_sky_atmosphere_ps.cso");
         cloud_cube_ps_ =
@@ -113,14 +114,14 @@ void IBLManager::Initialize(ID3D11Device* dev)
         cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         dev_->CreateBuffer(&cbd, nullptr, cb_diffuse_.GetAddressOf());
 
-        //sky_cube —p b0
+        //sky_cube ç”¨ b0
         cbd.ByteWidth = sizeof(SkyCubeCB);
         cbd.Usage = D3D11_USAGE_DEFAULT;
         cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         dev_->CreateBuffer(&cbd, nullptr, cb_sky_cube_.GetAddressOf());
     }
 
-    // --- Specular Prefilter o—ÍƒLƒ…[ƒuimip •t‚«j ---
+    // --- Specular Prefilter å‡ºåŠ›ã‚­ãƒ¥ãƒ¼ãƒ–ï¼ˆmip ä»˜ãï¼‰ ---
     {
         const UINT mipCount = CalcMipCount(kPrefilterSize);
         for(int k=0;k<2;k++)
@@ -163,7 +164,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         }
     }
 
-    // --- diffuse o—ÍƒLƒ…[ƒu ---
+    // --- diffuse å‡ºåŠ›ã‚­ãƒ¥ãƒ¼ãƒ– ---
     {
         const UINT mipCount = CalcMipCount(kPrefilterSize);
         for (int k = 0; k < 2; ++k)
@@ -252,7 +253,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         }
 
     }
-    //‰_ƒ{ƒbƒNƒX
+    //é›²ãƒœãƒƒã‚¯ã‚¹
     {
         const UINT mipCount = CalcMipCount(kSkyCubeSize);
 
@@ -293,17 +294,17 @@ void IBLManager::Initialize(ID3D11Device* dev)
         }
     }
 
-    //‰_—pƒmƒCƒYƒeƒNƒXƒ`ƒƒ
+    //é›²ç”¨ãƒã‚¤ã‚ºãƒ†ã‚¯ã‚¹ãƒãƒ£
     {
         HRESULT hr{ S_OK };
 
         const wchar_t* low_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley.dds";
-        _ASSERT_EXPR(std::filesystem::exists(low_freq_noise_tex_path), "ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñ");
+        _ASSERT_EXPR(std::filesystem::exists(low_freq_noise_tex_path), "ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“");
         {
             low_freq_perlin_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), low_freq_noise_tex_path);
         }
         const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
-        _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñ");
+        _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“");
         {
             high_freq_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), high_freq_noise_tex_path);
         }
@@ -314,7 +315,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         curl_noise_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), curl_noise_tex_path);
     }
 
-    // isó‘Ô‰Šú‰»
+    // é€²è¡ŒçŠ¶æ…‹åˆæœŸåŒ–
     dirty_ = true;
     prefilter_next_face_ = 0;
     prefilter_next_mip_ = 0;
@@ -324,14 +325,14 @@ void IBLManager::Initialize(ID3D11Device* dev)
 
 }
 
-//”wŒiƒ\[ƒX‚Ì¶¬
+//èƒŒæ™¯ã‚½ãƒ¼ã‚¹ã®ç”Ÿæˆ
 void IBLManager::BuildSkyCubeFromEnvSource()
 {
 
     if(!sky_cube_ps_ )
         return;
 
-    //viewportİ’è
+    //viewportè¨­å®š
     D3D11_VIEWPORT vp{};
     vp.Width = static_cast<float>(kSkyCubeSize);
     vp.Height = static_cast<float>(kSkyCubeSize);
@@ -343,17 +344,17 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
     ctx_->OMSetRenderTargets(1, &sky_rtv, nullptr);
 
-    //’è”XV
+    //å®šæ•°æ›´æ–°
     SkyCubeCB cb{};
     cb.faceIndex = sky_cube_next_face_;
     ctx_->UpdateSubresource(cb_sky_cube_.Get(), 0, nullptr, &cb, 0, 0);
 
-    //“ü—ÍSRV
+    //å…¥åŠ›SRV
     ID3D11SamplerState* sampls[] = { samp_linear_clamp_.Get() };
 
     ctx_->PSSetConstantBuffers(0, 1, cb_sky_cube_.GetAddressOf());
 
-    //ƒtƒ‹ƒXƒNƒŠ[ƒ“ƒNƒƒbƒh
+    //ãƒ•ãƒ«ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ã‚¯ãƒ¯ãƒƒãƒ‰
     ctx_->IASetInputLayout(nullptr);
     ctx_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -364,7 +365,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
     ctx_->Draw(3, 0);
 
-    //ƒAƒ“ƒoƒCƒ“ƒh
+    //ã‚¢ãƒ³ãƒã‚¤ãƒ³ãƒ‰
     //ID3D11ShaderResourceView* nullSRV[] = { nullptr };
     //ctx_->PSSetShaderResources(0, 1, nullSRV);
 
@@ -376,7 +377,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
     if (cloud_flag_||!cloud_cube_ps_)
     {
 
-        //viewportİ’è
+        //viewportè¨­å®š
         D3D11_VIEWPORT vp{};
         vp.Width = static_cast<float>(kSkyCubeSize);
         vp.Height = static_cast<float>(kSkyCubeSize);
@@ -390,7 +391,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
 
 
-        //’è”XV
+        //å®šæ•°æ›´æ–°
         SkyCubeCB cb{};
         cb.faceIndex = sky_cube_next_face_;
         ctx_->UpdateSubresource(cb_sky_cube_.Get(), 0, nullptr, &cb, 0, 0);
@@ -430,7 +431,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
             ctx_->GenerateMips(sky_cube_srv_.Get());
         }
         sky_cube_next_face_ = 0;
-        //ÅŒã
+        //æœ€å¾Œ
         dirty_ = true;
         want_save_dds_ = true;
 
@@ -444,18 +445,18 @@ void IBLManager::UpdateDiffuseSH()
     {
 
 
-        // “ü—ÍiŠÂ‹«ƒLƒ…[ƒuj
+        // å…¥åŠ›ï¼ˆç’°å¢ƒã‚­ãƒ¥ãƒ¼ãƒ–ï¼‰
         ID3D11ShaderResourceView* envSrv = (cloud_flag_) ? cloud_cube_srv_.Get() : sky_cube_srv_.Get();
         if (!envSrv) return;
 
-        // ¡‰ñ‘‚­–Ê
+        // ä»Šå›æ›¸ãé¢
         static UINT next_face = 0;
         UINT face = next_face;
 
-        // ‘‚«æ RTViwrite‘¤j
+        // æ›¸ãå…ˆ RTVï¼ˆwriteå´ï¼‰
         ID3D11RenderTargetView* rtv = diffuse_rtvs_[diffuse_write_index_][face].Get();
 
-        // “Ç‚İŒ³ SRViprevj
+        // èª­ã¿å…ƒ SRVï¼ˆprevï¼‰
         ID3D11ShaderResourceView* prevIrradianceSRV = diffuse_srv_[diffuse_read_index_].Get();
 
         // VP
@@ -463,20 +464,20 @@ void IBLManager::UpdateDiffuseSH()
         D3D11_VIEWPORT vp{}; vp.Width = (float)td.Width; vp.Height = (float)td.Height; vp.MinDepth = 0; vp.MaxDepth = 1;
         ctx_->RSSetViewports(1, &vp);
 
-        // RTV ƒZƒbƒg & ƒNƒŠƒAiã‘‚«‚È‚Ì‚ÅƒNƒŠƒA‚Í”CˆÓj
+        // RTV ã‚»ãƒƒãƒˆ & ã‚¯ãƒªã‚¢ï¼ˆä¸Šæ›¸ããªã®ã§ã‚¯ãƒªã‚¢ã¯ä»»æ„ï¼‰
         const float clear[4] = { 0,0,0,0 };
         ctx_->OMSetRenderTargets(1, &rtv, nullptr);
 
-        // ’è”ƒoƒbƒtƒ@
+        // å®šæ•°ãƒãƒƒãƒ•ã‚¡
         
         DiffuseCB cb{  };
         cb.faceIndex = face;
         cb.frameIndex = frame_index_;
-        cb.alpha = 0.05f;  // „§”ÍˆÍ 0.05`0.2
-        cb.mip_lod = 1.f;   // 1.0`2.5
+        cb.alpha = 0.05f;  // æ¨å¥¨ç¯„å›² 0.05ï½0.2
+        cb.mip_lod = 1.f;   // 1.0ï½2.5
         ctx_->UpdateSubresource(cb_diffuse_.Get(), 0, nullptr,&cb, 0, 0);
 
-        // ƒoƒCƒ“ƒh
+        // ãƒã‚¤ãƒ³ãƒ‰
         ID3D11SamplerState* samp = samp_linear_clamp_.Get();
         ctx_->PSSetSamplers(0, 1, &samp);
 
@@ -494,25 +495,25 @@ void IBLManager::UpdateDiffuseSH()
         ctx_->PSSetShader(ps_diffuse_.Get(), nullptr, 0);
         ctx_->Draw(3, 0);
 
-        // ƒAƒ“ƒoƒCƒ“ƒh
+        // ã‚¢ãƒ³ãƒã‚¤ãƒ³ãƒ‰
         ID3D11ShaderResourceView* nullSRV[2] = { nullptr, nullptr };
         ctx_->PSSetShaderResources(0, 2, nullSRV);
 
 
-        // Ÿ‚Ì–Ê‚Ö
+        // æ¬¡ã®é¢ã¸
         next_face = (next_face + 1) % 6;
 
-        // 6–ÊÄ‚«I‚í‚Á‚½ƒ^ƒCƒ~ƒ“ƒO‚Å Ping-Pong ‚ğ“ü‚ê‘Ö‚¦‚é‚ÆŠÇ—‚ªŠy
+        // 6é¢ç„¼ãçµ‚ã‚ã£ãŸã‚¿ã‚¤ãƒŸãƒ³ã‚°ã§ Ping-Pong ã‚’å…¥ã‚Œæ›¿ãˆã‚‹ã¨ç®¡ç†ãŒæ¥½
         if (next_face == 0) {
             ctx_->GenerateMips(diffuse_srv_[diffuse_write_index_].Get());
             std::swap(diffuse_write_index_, diffuse_read_index_);
-            frame_index_++; // ƒTƒ“ƒvƒ‹‰ñ“]
+            frame_index_++; // ã‚µãƒ³ãƒ—ãƒ«å›è»¢
         }
 
     }
 }
 
-// 1ƒtƒŒ[ƒ€‚É 1 face ‚ğÄ‚­iŒy—Ê•ªŠ„j
+// 1ãƒ•ãƒ¬ãƒ¼ãƒ ã« 1 face ã‚’ç„¼ãï¼ˆè»½é‡åˆ†å‰²ï¼‰
 void IBLManager::UpdateSpecularPrefilter()
 {
     if (!sky_cube_srv_ || !ps_prefilter_ || !ibl_screen_vs_ || prefilter_rtvs_[pmrem_write_index_].empty())
@@ -548,7 +549,7 @@ void IBLManager::UpdateSpecularPrefilter()
         cb.env_resolution = env_resolution;
         ctx_->UpdateSubresource(cb_prefilter_.Get(), 0, nullptr, &cb, 0, 0);
 
-        // “ü—Í‚Í SkyCubeiTextureCubej
+        // å…¥åŠ›ã¯ SkyCubeï¼ˆTextureCubeï¼‰
         ID3D11ShaderResourceView* srvs[1] = {
             (cloud_flag_) ? cloud_cube_srv_.Get() : sky_cube_srv_.Get()
         };
@@ -566,12 +567,12 @@ void IBLManager::UpdateSpecularPrefilter()
 
         ctx_->OMSetRenderTargets(0, nullptr, nullptr);
     }
-    // ƒAƒ“ƒoƒCƒ“ƒh
+    // ã‚¢ãƒ³ãƒã‚¤ãƒ³ãƒ‰
     ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
     ctx_->PSSetShaderResources(0, 1, nullSRV);
 
 
-    // is
+    // é€²è¡Œ
     prefilter_next_face_++;
     if (prefilter_next_face_ >= kCubeFaces) {
         prefilter_next_face_ = 0;
@@ -579,13 +580,13 @@ void IBLManager::UpdateSpecularPrefilter()
         //if (prefilter_next_mip_ >= pmrem_mip_count_) 
         {
             prefilter_next_mip_ = 0;
-            dirty_ = false; // ‘S–Ê~mip Ä¬Š®—¹
+            dirty_ = false; // å…¨é¢Ã—mip ç„¼æˆå®Œäº†
 
-            //“ü‚ê‘Ö‚¦
+            //å…¥ã‚Œæ›¿ãˆ
             std::swap(pmrem_read_index_,pmrem_write_index_);
             pmrem_baking_ = false;
 
-            //DDS•Û‘¶
+            //DDSä¿å­˜
             if (want_save_dds_)
             {
                 //SaveTextureToDDS(
@@ -637,7 +638,7 @@ void IBLManager::SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,
     HRESULT hr = CaptureTexture(dev_.Get(), ctx_.Get(), tex, image);
     if (FAILED(hr))
     {
-        HRTrace(hr); // ƒƒO‚¾‚¯o‚·
+        HRTrace(hr); // ãƒ­ã‚°ã ã‘å‡ºã™
         return;
     }
     //
@@ -647,7 +648,7 @@ void IBLManager::SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,
     tex->GetDesc(&desc);
     if (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE)
     {
-        //ƒLƒ…[ƒuƒ}ƒbƒv
+        //ã‚­ãƒ¥ãƒ¼ãƒ–ãƒãƒƒãƒ—
         meta.miscFlags |= DirectX::TEX_MISC_TEXTURECUBE;
         meta.arraySize =desc.ArraySize;//
         meta.dimension = DirectX::TEX_DIMENSION_TEXTURE2D;
@@ -656,12 +657,12 @@ void IBLManager::SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,
     //_ASSERT(!(meta.miscFlags & DirectX::TEX_MISC_TEXTURECUBE) || meta.arraySize == 1);
 
 
-    //ƒZ[ƒu
+    //ã‚»ãƒ¼ãƒ–
     hr = DirectX::SaveToDDSFile(
         image.GetImages(), image.GetImageCount(), meta, DirectX::DDS_FLAGS_NONE, filepath);
     if (FAILED(hr))
     {
-        HRTrace(hr); // ƒƒO‚¾‚¯o‚·
+        HRTrace(hr); // ãƒ­ã‚°ã ã‘å‡ºã™
         return;
     }
 

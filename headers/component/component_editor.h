@@ -1,10 +1,14 @@
 #pragma once
 #include<cstdint>
 #include<string>
+
 #include"../../external/imgui/imgui.h"
 
+//前方宣言
 class ComponentManager;
 class EntityManager;
+
+
 
 //���̃N���X�́A�R���|�[�l���g�}�l�[�W���[�̏������
 //�R���|�[�l���g�̊m�F�ƒǉ��A�폜����s�����߂ɍ쐬���ꂽ�N���X�ł���B
@@ -35,6 +39,6 @@ private:
     bool is_renaming_ = false;
     bool renaming_just_started_ = false;
     bool renaming_ever_active_ = false;
-    ImVec2 rename_text_pos_{};
+    ImVec2 rename_text_pos_;
     float rename_text_width_ = 0.0f;
 };

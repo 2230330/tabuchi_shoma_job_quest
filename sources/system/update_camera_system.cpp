@@ -1,7 +1,9 @@
 #include"../../headers/system/update_camera_system.h"
 
+#include<algorithm>
 
 #include"../../headers/graphics.h"
+#include"../../headers/component/component_manager.h"
 
 CameraUpdateSystem::CameraUpdateSystem(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)
@@ -126,7 +128,7 @@ void CameraUpdateSystem::Update(float elapsed_time)
 					if (wheel_ != 0.0)	// ズーム
 					{
 						distance -= static_cast<float>(wheel_) * distance * 0.001f;
-						distance = std::max(std::min(distance, max_distance), min_distance);
+						distance = (std::max)((std::min)(distance, max_distance), min_distance);
 						wheel_ = 0.;
 					}
 				}

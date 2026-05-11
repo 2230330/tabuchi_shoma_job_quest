@@ -5,7 +5,6 @@
 #include<filesystem>
 #include<fstream>
 #include<nlohmann/json.hpp>
-#include"../../external/imgui/imgui.h"
 #include"../../headers/graphics.h"
 #include"../../headers/component/component_manager.h"
 #include"../../headers/resource_manager.h"

@@ -6,8 +6,12 @@
 #include<filesystem>
 
 #include"../../headers/graphics.h"
+#include"../../headers/component/component_manager.h"
+#include"../../headers/fullscreen_quad.h"
+#include"../../headers/framebuffer.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/constant_buffer_slot.h"
+#include"../../headers/render_state.h"
 #include"../../headers/misc.h"
 
 RenderCloudSystem::RenderCloudSystem(ComponentManager& comp_mng,RenderPass render_pass)
@@ -100,6 +104,27 @@ RenderCloudSystem::RenderCloudSystem(ComponentManager& comp_mng,RenderPass rende
             SHADOW_RES,
             FrameBuffer::usage::color);
 }
+
+void RenderCloudSystem::SetSkyColorSRV(ID3D11ShaderResourceView* sky_color_srv)
+{
+    sky_color_srv_ = sky_color_srv;
+}
+
+void RenderCloudSystem::SetObjectDepthSRV(ID3D11ShaderResourceView* object_depth_srv)
+{
+    object_depth_srv_ = object_depth_srv;
+}
+
+void RenderCloudSystem::SetObjectResolution(float width, float height)
+{
+    cloud_ray_marching_constant_.object_resolution = DirectX::XMFLOAT2(width, height);
+}
+
+ID3D11ShaderResourceView* RenderCloudSystem::GetCloudShadowSRV()
+{
+    return this->shadow_map_->GetShaderResourceView(0).Get();
+}
+
 void RenderCloudSystem::Render()
 {
     enable_cloud_ = false;
@@ -158,6 +183,11 @@ void RenderCloudSystem::Render()
             //一つ見つかればそれで終わり
         });
 }
+bool RenderCloudSystem::HasRenderableCloud()
+{
+    return enable_cloud_;
+}
+
 //初期に1度だけ呼び出し、ノイズマップを作成
 void RenderCloudSystem::CreateNoiseTextures(ID3D11Device* device)
 {

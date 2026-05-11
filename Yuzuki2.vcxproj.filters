@@ -60,6 +60,9 @@
     <Filter Include="Shaders\GeometryShader">
       <UniqueIdentifier>{b409e5cc-bc7e-41a2-a3df-3db4c62abc5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sources\world">
+      <UniqueIdentifier>{ebfdf93f-67d0-4122-bcc2-ef648fabe2c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\geometric_primitive.h">
@@ -402,6 +405,9 @@
     </ClCompile>
     <ClCompile Include="sources\system\render_screen_space_reflection_system.cpp">
       <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\world\world.cpp">
+      <Filter>sources\world</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,16 +1,22 @@
 #pragma once
+#include<d3d11.h>
+#include<wrl.h>
+#include<DirectXMath.h>
+#include<memory>
 #include<array>
 #include<unordered_map>
 
 #include"i_render_system.h"
 #include"../deferred_g_buffer.h"
-#include"../light_manager.h"
-#include"../fullscreen_quad.h"
 #include"../render_state.h"
-#include"../framebuffer.h"
+
 
 class ComponentManager;
 class GltfModel;
+class FrameBuffer;
+class RenderState;
+class LightManager;
+class FullscreenQuad;
 
 //ディファードレンダリングのシステム
 //オブジェクト描画時にGバッファに必要な情報を描画しておいて、
@@ -20,14 +26,15 @@ class RenderDeferredSystem :public IRenderSystem
 {
 public: 
     RenderDeferredSystem(ComponentManager&comp_mng,RenderPass render_pass);
+    ~RenderDeferredSystem();
 
     void Render()override;
 
-    void SetLightManager(LightManager* light_manager) { this->light_manager_ = light_manager; }
+    void SetLightManager(LightManager* light_manager);
 
-    void SetSRV(ID3D11ShaderResourceView* srv, int num) { this->srvs_[num] = srv; }
+    void SetSRV(ID3D11ShaderResourceView* srv, int num);
 
-    void SetSSRSRV(ID3D11ShaderResourceView* ssr_srv) { this->ssr_srv_ = ssr_srv; }
+    void SetSSRSRV(ID3D11ShaderResourceView* ssr_srv);
     
     enum CASCADE : int
     {
@@ -59,24 +66,21 @@ private:
     const float shadowmap_width_ = 4096.f;
     const float shadowmap_height_ = 4096.f;
     const float shadowmap_fov_y_ = DirectX::XMConvertToRadians(90.f);
-    DirectX::XMFLOAT4 camera_position_, camera_front_, camera_right_;
+    DirectX::XMFLOAT4 camera_position_{ 0.f, 0.f, 0.f, 0.f };
+    DirectX::XMFLOAT4 camera_front_{ 0.f, 0.f, 0.f, 0.f };
+    DirectX::XMFLOAT4 camera_right_{ 0.f, 0.f, 0.f, 0.f };
 
 
     //インスタンスバッファのプール
     //インスタンス化したオブジェのシャドウマップ用
     //モデルごとにバッファを用意して、必要なサイズが足りなくなったら大きいバッファに入れ替える
-    struct InstanceBufferInfo {
+    struct InstanceBufferInfo 
+    {
         Microsoft::WRL::ComPtr<ID3D11Buffer>buffer;
         size_t cepasity = 0;
     };
     std::unordered_map<GltfModel*, InstanceBufferInfo>instance_buffer_pool_;
 
-    struct LightSceneConstants
-    {
-        DirectX::XMFLOAT4X4 light_view_projection;
-        DirectX::XMFLOAT4X4 inverse_light_view_projection;
-    };
-    LightSceneConstants light_scene_constant_;
     struct CascadeShadowSceneConstants
     {
         DirectX::XMFLOAT4X4 light_view_projection[4];
@@ -84,7 +88,7 @@ private:
         int current_index = 0;
         int dummy[3];
     };
-    CascadeShadowSceneConstants cascade_shadow_scene_constant_;
+    CascadeShadowSceneConstants cascade_shadow_scene_constant_{}; 
 
     static constexpr float split_aria_table_[] = 
     {
@@ -95,8 +99,8 @@ private:
         500.f,
     };
     std::array<std::unique_ptr<FrameBuffer>,CASCADE::CascadeCount> shadowmap_framebuffers_;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowmap_depth_stencil_view_;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>shadowmap_shader_resource_view_;
-    Microsoft::WRL::ComPtr<ID3D11Buffer>shadow_scene_constant_buffer_;
-    Microsoft::WRL::ComPtr<ID3D11Buffer>cascade_shadow_scene_constant_buffer_;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowmap_depth_stencil_view_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>shadowmap_shader_resource_view_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11Buffer>shadow_scene_constant_buffer_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11Buffer>cascade_shadow_scene_constant_buffer_=nullptr;
 };

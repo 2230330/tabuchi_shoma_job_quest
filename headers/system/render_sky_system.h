@@ -3,9 +3,12 @@
 
 #include<d3d11.h>
 #include<wrl.h>
-#include"../component/component_manager.h"
-#include"../fullscreen_quad.h"
-#include"../framebuffer.h"
+#include<memory>
+
+//前方宣言
+class ComponentManager;
+class FullscreenQuad;
+class FrameBuffer;
 
 //スカイの描画システム
 //このシステムは、ComponentSkyAtmosphereを持つエンティティが存在する場合に、
@@ -46,7 +49,7 @@ private:
         int max_sample{ 64 };
         float height{ 0.f };//自身の高度
 
-        DirectX::XMFLOAT3 dummy;
+        int dummy[3];
     };
     SkyAtmosphereCB sky_atmosphere_constant;
     Microsoft::WRL::ComPtr<ID3D11Buffer>rayleigh_constant_buffer_;

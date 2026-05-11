@@ -6,10 +6,13 @@
 #include"../../headers/resource_manager.h"
 #include"../../headers/graphics.h"
 #include"../../headers/scene/scene.h"
-#include"../../headers/misc.h"
 #include"../../headers/component/component_manager.h"
 #include"../../headers/gltf_model.h"
-
+#include"../../headers/deferred_g_buffer.h"
+#include"../../headers/light_manager.h"
+#include"../../headers/fullscreen_quad.h"
+#include"../../headers/framebuffer.h"
+#include"../../headers/misc.h"
 
 
 RenderDeferredSystem::RenderDeferredSystem(ComponentManager&comp_mng,RenderPass render_pass)
@@ -66,11 +69,7 @@ RenderDeferredSystem::RenderDeferredSystem(ComponentManager&comp_mng,RenderPass 
         buffer_desc.CPUAccessFlags = 0;
         buffer_desc.MiscFlags = 0;
         buffer_desc.StructureByteStride = 0;
-        {
-            buffer_desc.ByteWidth = (sizeof(LightSceneConstants) + 15) / 16 * 16;
-            hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr, shadow_scene_constant_buffer_.GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        }
+
         {
             buffer_desc.ByteWidth = (sizeof(CascadeShadowSceneConstants) + 15) / 16 * 16;
             hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr, cascade_shadow_scene_constant_buffer_.GetAddressOf());
@@ -98,6 +97,9 @@ RenderDeferredSystem::RenderDeferredSystem(ComponentManager&comp_mng,RenderPass 
     fullscreen_quad_ = std::make_unique<FullscreenQuad>(device);
     render_state_ = std::make_unique<RenderState>(device);
 }
+
+RenderDeferredSystem::~RenderDeferredSystem() = default;
+
 
 void RenderDeferredSystem::Render()
 {
@@ -173,6 +175,21 @@ void RenderDeferredSystem::Render()
 
         fullscreen_quad_->blit(ctx, srvs, 0,_countof(srvs), deferred_rendering_directional_ps_.Get());
     }
+}
+
+void RenderDeferredSystem::SetLightManager(LightManager* light_manager)
+{
+    this->light_manager_ = light_manager;
+}
+
+void RenderDeferredSystem::SetSRV(ID3D11ShaderResourceView* srv, int num)
+{
+    this->srvs_[num] = srv;
+}
+
+void RenderDeferredSystem::SetSSRSRV(ID3D11ShaderResourceView* ssr_srv)
+{
+    this->ssr_srv_ = ssr_srv;
 }
 
 void RenderDeferredSystem::directional_shadow_rendering()
@@ -381,8 +398,6 @@ void RenderDeferredSystem::directional_shadow_rendering()
                     //クロップ行列をかけた行列を保存
                     DirectX::XMStoreFloat4x4(&light_view_projection, VP*clop_matrix);
                     DirectX::XMStoreFloat4x4(&inverse_light_view_projection, DirectX::XMMatrixInverse(nullptr, VP*clop_matrix));
-                    light_scene_constant_.light_view_projection = light_view_projection;
-                    light_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
                     cascade_shadow_scene_constant_.light_view_projection[i] = light_view_projection;
                     cascade_shadow_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
                     cascade_shadow_scene_constant_.current_index = i;

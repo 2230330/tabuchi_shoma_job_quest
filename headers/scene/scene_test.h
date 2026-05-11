@@ -5,22 +5,13 @@
 #include<d3d11.h>
 
 #include"scene.h"
-#include"../light_manager.h"
-#include"../sprite_batch.h"
-#include"../geometric_primitive.h"
-#include"../static_mesh.h"
-#include"../skinned_mesh.h"
-#include"../framebuffer.h"
-#include"../fullscreen_quad.h"
-#include"../gltf_model.h"
-#include"../component/component_manager.h"
-#include"../resource_manager.h"
-#include"../entity/entity_manager.h"
-#include"../component/component_editor.h"
-#include"../system/update_system_manager.h"
-#include"../system/render_system_manager.h"
-#include"../world/world.h"
-#include"../post_process/post_process_manager.h"
+
+class ComponentManager;
+class ComponentEditor;
+class UpdateSystemManager;
+class RenderSystemManager;
+class World;
+class LightManager;
 
 class SceneTest :public Scene
 {
@@ -39,21 +30,14 @@ private:
     //GUI描画処理
     void DrawImguiCore()override;
 
-    Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer_;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shaders_[8];
-
-    std::unique_ptr<GeometricPrimitive>  geometric_primitives_[8];
-    std::unique_ptr<StaticMesh>          static_meshes_[8];
-    std::unique_ptr<FrameBuffer>         framebuffers_[2];
-    std::unique_ptr<FullscreenQuad>     bit_block_transfer_;
 
 
-    std::unique_ptr<ComponentManager> comp_mng;
-    std::unique_ptr<ComponentEditor>comp_edit;
-    std::unique_ptr<UpdateSystemManager>update_sys_mng;
-    std::unique_ptr<RenderSystemManager>render_sys_mng;
-    std::unique_ptr<World>world;
-    std::unique_ptr<LightManager>light_manager_;
+    std::unique_ptr<ComponentManager> comp_mng = nullptr;
+    std::unique_ptr<ComponentEditor>comp_edit = nullptr;
+    std::unique_ptr<UpdateSystemManager>update_sys_mng = nullptr;
+    std::unique_ptr<RenderSystemManager>render_sys_mng = nullptr;
+    std::unique_ptr<World>world = nullptr;
+    std::unique_ptr<LightManager>light_manager_ = nullptr;
 };
 
 #endif // !PART2_SCENE_TEST_H

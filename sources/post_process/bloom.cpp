@@ -3,6 +3,9 @@
 #include<vector>
 
 #include"../../headers/misc.h"
+#include"../../headers/framebuffer.h"
+#include"../../headers/fullscreen_quad.h"
+#include"../../headers/resource_manager.h"
 #include"../../headers/render_state.h"
 #include"../../headers/constant_buffer_slot.h"
 #include"../../external/imgui/imgui.h"
@@ -155,6 +158,11 @@ void Bloom::Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceVie
 	{
 		if (cached_shader_resource_view) cached_shader_resource_view->Release();
 	}
+}
+
+Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Bloom::GetShaderResourceView()
+{
+	return glow_extraction_->GetShaderResourceView(0);
 }
 
 void Bloom::DrawImgui()

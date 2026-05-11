@@ -1,5 +1,7 @@
 #include"../../headers/system/render_gltf_system.h"
 #include"../../headers/graphics.h"
+#include"../../headers/component/component_manager.h"
+
 
 GltfRenderSystem::GltfRenderSystem(ComponentManager& comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
@@ -17,7 +19,7 @@ void GltfRenderSystem::Render()
                 auto* l2w = comp_mng_.TryGetByEntity < ComponentLocalToWorld>(entity_id);
                 auto* ins = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
                 
-                //—v‹‚µ‚½‚à‚Ì‚ª‚ ‚Á‚½‚ç
+                //è¦æ±‚ã—ãŸã‚‚ã®ãŒã‚ã£ãŸã‚‰
                 if (l2w && !ins)
                 {
                     auto* adjast = comp_mng_.TryGetByEntity<ComponentAdjastPbrParamter>(entity_id);

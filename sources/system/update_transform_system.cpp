@@ -1,12 +1,15 @@
 #include"../../headers/system/update_transform_system.h"
 #include<DirectXMath.h>
 
+#include"../../headers/component/component_manager.h"
+
+
 TransformSystem::TransformSystem(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)
 {
 }
 
-//簡単な姿勢制御用
+//邁｡蜊倥↑蟋ｿ蜍｢蛻ｶ蠕｡逕ｨ
 void TransformSystem::Update(float elapsed_time)
 {
     comp_mng_.ForEach<ComponentLocalToWorld>([this,elapsed_time](uint32_t entity_id, ComponentLocalToWorld& l2w) {
@@ -14,7 +17,7 @@ void TransformSystem::Update(float elapsed_time)
         auto* rot = comp_mng_.TryGetByEntity<ComponentRotation>(entity_id);
         auto* scale = comp_mng_.TryGetByEntity<ComponentScale>(entity_id);
 
-        //全て持っている場合、行列制御を行う
+        //蜈ｨ縺ｦ謖√▲縺ｦ縺�繧句ｴ蜷医∬｡悟�怜宛蠕｡繧定｡後≧
         if (pos && rot && scale)
         {
             DirectX::XMMATRIX scale_matrix = DirectX::XMMatrixScaling(
