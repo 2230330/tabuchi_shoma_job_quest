@@ -34,7 +34,6 @@ public:
 
     void SetSRV(ID3D11ShaderResourceView* srv, int num);
 
-    void SetSSRSRV(ID3D11ShaderResourceView* ssr_srv);
     
     enum CASCADE : int
     {
@@ -50,7 +49,6 @@ private:
     LightManager* light_manager_ = nullptr;
     std::unique_ptr<FullscreenQuad>fullscreen_quad_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>srvs_[Target::Count];
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>ssr_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>deferred_rendering_directional_ps_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>deferred_rendering_indirect_ps_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>deferred_rendering_emissive_ps_=nullptr;

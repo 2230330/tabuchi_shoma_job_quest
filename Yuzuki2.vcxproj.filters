@@ -551,7 +551,7 @@
     <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\synthesis_ps.hlsl">
+    <FxCompile Include="shaderes\bloom_synthesis_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\static_mesh_ps.hlsl">
@@ -658,6 +658,9 @@
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\ssr_hiz_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\screen_space_reflection_synthesis_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

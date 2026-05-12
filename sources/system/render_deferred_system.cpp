@@ -118,7 +118,6 @@ void RenderDeferredSystem::Render()
             srvs_[Target::Parameter].Get(),
             srvs_[Target::Depth].Get(),
             srvs_[Target::Velocity].Get(),
-            ssr_srv_.Get(),
         };
         fullscreen_quad_->blit(ctx, srvs, 0, _countof(srvs), deferred_rendering_indirect_ps_.Get());
     }
@@ -187,10 +186,6 @@ void RenderDeferredSystem::SetSRV(ID3D11ShaderResourceView* srv, int num)
     this->srvs_[num] = srv;
 }
 
-void RenderDeferredSystem::SetSSRSRV(ID3D11ShaderResourceView* ssr_srv)
-{
-    this->ssr_srv_ = ssr_srv;
-}
 
 void RenderDeferredSystem::directional_shadow_rendering()
 {

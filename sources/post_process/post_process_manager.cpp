@@ -13,7 +13,7 @@ PostProcessManager::PostProcessManager(ID3D11Device* device, uint32_t width, uin
     //リザルトを表示する奴
     synthesiser_framebuffer_ = std::make_unique<FrameBuffer>(device, width, height);
     fullscreen_transfer_ = std::make_unique<FullscreenQuad>(device);
-    synthesiser_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//synthesis_ps.cso");
+    synthesiser_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//bloom_synthesis_ps.cso");
 
     //ブルーム
     bloom_ = std::make_unique<Bloom>(device, width, height);

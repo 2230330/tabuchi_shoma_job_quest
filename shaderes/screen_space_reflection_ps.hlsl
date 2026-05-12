@@ -137,14 +137,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 v = normalize(view_pos);
     float3 r = normalize(reflect(v, n));
     
-    
-    //SSRは見えている箇所しか反射できないので、反射レイがオブジェの裏側に当たらないようにする
-    //if (dot(v,n) < -0.9)
-    //    return float4(0, 0, 0, 0);
-    
-    //return float4(r, 1.0f);
-    
-    float3 view_end = view_pos + r * distance;
+    float3 view_end = view_pos + (r * distance);
     
     //スクリーンスペースに
     uint2 dimensions;
@@ -268,12 +261,16 @@ float4 main(VS_OUT pin) : SV_TARGET
     float visibility = 1.0f;
     
     //fade reflections facing toward the camera 
-    visibility *= (1.0f - max(dot(-v, r),0));
-    visibility *= (1.0f - max(dot(v, n),0));
+    visibility *= (1.0f - max(dot(-v, r), 0));
     //fade based on depth mismatch within thickness tolerance
     visibility *= (1.0f - saturate(depth_delta / thickness));
     //fade near maximum ray distance to avoid hard cutoff
     visibility *= (1.0f - saturate(length(hit_pos - view_pos) / distance));
+    
+    //画面端に近づくほど透過させる
+    const float ssr_border = 0.3f;
+    visibility *= smoothstep(1.0f, 1.0f - ssr_border, saturate(2.0f * abs(hit_uv.x - 0.5f)));
+    visibility *= smoothstep(1.0f, 1.0f - ssr_border, saturate(2.0f * abs(hit_uv.y - 0.5f)));
     
     
     float n_o_v = saturate(dot(n, -v));
@@ -283,6 +280,6 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     visibility = saturate(visibility);
     
-    return float4(GetColor(hit_uv), visibility*intensity);
+    return float4(GetColor(hit_uv), saturate(visibility*intensity));
     
 }

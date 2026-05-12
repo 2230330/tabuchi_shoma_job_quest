@@ -72,6 +72,11 @@ private:
     std::unique_ptr<FrameBuffer>ssr_framebuffer_ = nullptr;
     std::unique_ptr<FullscreenQuad>ssr_fullscreen_quad_ = nullptr;
 
+    //SSRと元の画像を合成
+    std::unique_ptr<FrameBuffer>ssr_synthesis_framebuffer_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>ssr_synthesis_ps_ = nullptr;
+
+
 private:
     //コンピュートシェーダーでHi-Zを行う関数
     void ComputeHiz(ID3D11DeviceContext*context);

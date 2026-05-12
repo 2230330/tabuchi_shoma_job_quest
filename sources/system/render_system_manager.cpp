@@ -185,23 +185,12 @@ void RenderSystemManager::RenderAll()
     }
 
 
-
-    //ライティング前にSSRを行う
-    ssr_render_system_->SetNormalSRV(deferred_framebuffer_->GetSRV(Target::Normal));
-    ssr_render_system_->SetDepthSRV(deferred_framebuffer_->GetSRV(Target::Depth));
-    ssr_render_system_->SetColorSRV(deferred_framebuffer_->GetSRV(Target::BaseColor));
-    ssr_render_system_->SetParameterSRV(deferred_framebuffer_->GetSRV(Target::Parameter));
-    ssr_render_system_->SetDepthTex(deferred_framebuffer_->GetDepthTex());
-    ssr_render_system_->Render();
-
     //オブジェクトのライティング
     for (int i = 0; i < Target::Count; i++)
     {
         ID3D11ShaderResourceView* srv = deferred_framebuffer_->GetSRV(i);
         deferred_render_system_->SetSRV(srv, i);
     }
-    //SSRの結果も渡す
-    deferred_render_system_->SetSSRSRV(ssr_render_system_->GetSSRTexture());
     object_framebuffer_->Clear(ctx);
     object_framebuffer_->Activate(ctx);
     //オブジェクトのライティング
@@ -209,13 +198,21 @@ void RenderSystemManager::RenderAll()
 
     object_framebuffer_->Deactivate(ctx);
 
+    //SSRを行う
+    ssr_render_system_->SetNormalSRV(deferred_framebuffer_->GetSRV(Target::Normal));
+    ssr_render_system_->SetDepthSRV(deferred_framebuffer_->GetSRV(Target::Depth));
+    ssr_render_system_->SetColorSRV(object_framebuffer_->GetShaderResourceView(0).Get());
+    ssr_render_system_->SetParameterSRV(deferred_framebuffer_->GetSRV(Target::Parameter));
+    ssr_render_system_->SetDepthTex(deferred_framebuffer_->GetDepthTex());
+    ssr_render_system_->Render();
+
     // === 合成
     final_framebuffer_->Clear(ctx);
     final_framebuffer_->Activate(ctx);
 
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),
-        object_framebuffer_->GetShaderResourceView(0).Get(),
+        ssr_render_system_->GetSSRTexture(),
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));

@@ -115,8 +115,16 @@ RenderScreenSpaceReflectionSystem::RenderScreenSpaceReflectionSystem(ComponentMa
 
     ssr_ps_ =
         ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\screen_space_reflection_ps.cso");
+    ssr_synthesis_ps_=
+        ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\screen_space_reflection_synthesis_ps.cso");
+
 
     ssr_framebuffer_ =
+        std::make_unique<FrameBuffer>(device,
+            static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
+            static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
+        );
+    ssr_synthesis_framebuffer_ =
         std::make_unique<FrameBuffer>(device,
             static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
             static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
@@ -161,6 +169,19 @@ void RenderScreenSpaceReflectionSystem::Render()
 
             ssr_framebuffer_->Deactivate(context);
 
+            //オブジェ画像とSSR画像を合成
+            ssr_synthesis_framebuffer_->Clear(context);
+            ssr_synthesis_framebuffer_->Activate(context);
+
+            ID3D11ShaderResourceView* synthesis_srvs[] = {
+                ssr_framebuffer_->GetShaderResourceView(0).Get(),
+                color_srv_.Get(),
+            };
+            ssr_fullscreen_quad_->blit(context, synthesis_srvs, 0, _countof(synthesis_srvs), ssr_synthesis_ps_.Get());
+            Graphics::Instance().ClearShaderResourceViews(0, _countof(synthesis_srvs));
+
+            ssr_synthesis_framebuffer_->Deactivate(context);
+
             //確認用にコンポーネントに収納
             ssr.ssr_texture = ssr_framebuffer_->GetShaderResourceView(0).Get();
             ssr.normal = normal_srv_.Get();
@@ -171,7 +192,7 @@ void RenderScreenSpaceReflectionSystem::Render()
 
 ID3D11ShaderResourceView* RenderScreenSpaceReflectionSystem::GetSSRTexture()
 {
-    return ssr_framebuffer_->GetShaderResourceView(0).Get();
+    return ssr_synthesis_framebuffer_->GetShaderResourceView(0).Get();
 }
 
 void RenderScreenSpaceReflectionSystem::ComputeHiz(ID3D11DeviceContext* ctx)
