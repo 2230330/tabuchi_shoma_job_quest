@@ -117,6 +117,7 @@ int ComputeMip(float2 delta,float2 dims)
 
 float4 main(VS_OUT pin) : SV_TARGET
 {
+    
     //オブジェクトのパラメータ
     //1:メタリック、2:ラフネス
     //float2 parameter = GetParameter(pin.texcoord);
@@ -137,6 +138,14 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 v = normalize(view_pos);
     float3 r = normalize(reflect(v, n));
     
+    //ある程度反射方向と視線方向の角度が近い場合、早期処理を行う。
+    //SSRはスクリーン空間で行うため、画面に映っていない裏側を映すことが出来ない為、
+    //こちら側へと伸びて来るレイには対応できない
+    if(dot(-v,r)>0.0f)
+    {
+        return float4(0, 0, 0, 0);
+    }
+    
     float3 view_end = view_pos + (r * distance);
     
     //スクリーンスペースに
@@ -154,11 +163,11 @@ float4 main(VS_OUT pin) : SV_TARGET
     float steps = max_delta * saturate(resolution);
     
     if (steps < 1.0f)
-        return 0;
+        return (float4) 0;
     
     //最大ステップ数を制限
-    if (steps > 10000)
-        steps = 10000;
+    if (steps > 2000)
+        steps = 2000;
     
     
     float2 increment = delta / steps;
@@ -185,7 +194,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         if (OutOfBounds(uv))
         {
-            return 0;
+            return (float4)0;
         }
         
         float scene_linear_depth = GetSceneDepth(uv, 0);
@@ -219,7 +228,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     //もし当たっていなかったらここで終了
         if (!hit)
-            return 0;
+        return (float4) 0;
     
     //Binary refinement
     t = 0.5f * (t_min + t_max);
@@ -231,7 +240,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         float2 uv = frag_refined / dimensions;
         
         if(OutOfBounds(uv))
-            return 0;
+            return (float4) 0;
         
         float scene_linear_depth = GetSceneDepth(uv, mip);
         scene_linear_depth *= camera_clip_distance.y;
@@ -279,6 +288,8 @@ float4 main(VS_OUT pin) : SV_TARGET
     visibility *= fresnel;
     
     visibility = saturate(visibility);
+    if (visibility < 0.05f)
+        visibility = 0.f;
     
     return float4(GetColor(hit_uv), saturate(visibility*intensity));
     
