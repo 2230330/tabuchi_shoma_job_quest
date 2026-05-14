@@ -537,7 +537,6 @@ void ComponentEditor::DrawImgui()
                     ImGui::DragInt("Max Mip", &ssr.max_mip, 1, 1, 10);
                     ImGui::DragFloat("Thickness", &ssr.thickness, 0.01f, 0.01f, 1.0f);
                     ImGui::DragFloat("Resolution", &ssr.resolution, 0.01f, 0.01f, 1.0f);
-                    ImGui::DragFloat("Start Bias", &ssr.start_bias, 0.01f, 0.0f, 1.0f);
                     ImGui::SliderFloat("Intensity", &ssr.intensity, 0.0f, 10.0f);
 
                     ImGui::Image(ssr.ssr_texture.Get(), { 256,256, }, { 0,0 });
@@ -823,7 +822,6 @@ void ComponentEditor::Save(const std::string& filename)
                 {"max_mip", ssr.max_mip},
                 {"thickness", ssr.thickness},
                 {"resolution", ssr.resolution},
-                {"start_bias", ssr.start_bias},
                 {"intensity",ssr.intensity}
             };
 
@@ -1039,6 +1037,7 @@ void ComponentEditor::Load(const std::string& filename)
         {
             ComponentCascadeShadow shadow;
             comp_mng_.Add(entity, shadow);
+            has_cascade_shadow_ = entity;
         }
 
         // SSR
@@ -1051,7 +1050,6 @@ void ComponentEditor::Load(const std::string& filename)
             ssr.max_mip = j["max_mip"];
             ssr.thickness = j["thickness"];
             ssr.resolution = j["resolution"];
-            ssr.start_bias = j["start_bias"];
             ssr.intensity = j["intensity"];
             comp_mng_.Add(entity, ssr);
             has_ssr_ = entity;
@@ -1060,7 +1058,8 @@ void ComponentEditor::Load(const std::string& filename)
         if (comp_json.contains("Name"))
         {
             ComponentName n;
-            n.value = comp_json["Name"]["value"];
+            auto& j = comp_json["Name"];
+            n.value = j["value"];
             comp_mng_.Add(entity, n);
 
         }

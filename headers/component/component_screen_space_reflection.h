@@ -10,9 +10,8 @@ struct ComponentSsr :public IComponent
     float distance{ 10.0f };
     int num_steps{ 10 };
     int max_mip{ 6 };
-    float thickness{ 0.5f };
+    float thickness{ 0.2f };
     float resolution{ 0.3f };
-    float start_bias{ 0.05f };
     float intensity{ 1.0f };
 
 

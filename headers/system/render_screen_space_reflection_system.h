@@ -23,7 +23,6 @@ public:
     void SetNormalSRV(ID3D11ShaderResourceView* normal_srv) { this->normal_srv_ = normal_srv; }
     void SetDepthSRV(ID3D11ShaderResourceView* depth_srv) { this->depth_srv_ = depth_srv; }
     void SetColorSRV(ID3D11ShaderResourceView* color_srv) { this->color_srv_ = color_srv; }
-    void SetParameterSRV(ID3D11ShaderResourceView* parameter_srv) { this->parameter_srv_ = parameter_srv; }
     void SetDepthTex(ID3D11Texture2D* depth_tex) { this->hiz_copy_tex_ = depth_tex; }
 
 
@@ -40,12 +39,11 @@ private:
         float distance{ 10.0f };
         int num_steps{ 10 };
         int max_mip{ 6 };
-        float thickness{ 0.5f };
+        float thickness{ 0.2f };
 
         float resolution{ 0.3f };
-        float start_bias{ 0.05f };
         float intensity{ 1.0f };
-        float dummy;
+        float dummy[2];
     };
     Microsoft::WRL::ComPtr<ID3D11Buffer>ssr_constant_buffer_ = nullptr;
 
@@ -68,7 +66,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>normal_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>depth_srv_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>color_srv_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>parameter_srv_ = nullptr;
     std::unique_ptr<FrameBuffer>ssr_framebuffer_ = nullptr;
     std::unique_ptr<FullscreenQuad>ssr_fullscreen_quad_ = nullptr;
 

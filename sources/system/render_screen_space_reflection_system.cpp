@@ -151,7 +151,6 @@ void RenderScreenSpaceReflectionSystem::Render()
             ssr_constants.max_mip = ssr.max_mip;
             ssr_constants.thickness = ssr.thickness;
             ssr_constants.resolution = ssr.resolution;
-            ssr_constants.start_bias = ssr.start_bias;
             ssr_constants.intensity = ssr.intensity;
 
             context->UpdateSubresource(ssr_constant_buffer_.Get(), 0, nullptr, &ssr_constants, 0, 0);
@@ -161,7 +160,6 @@ void RenderScreenSpaceReflectionSystem::Render()
                 normal_srv_.Get(),
                 hiz_depth_srv_.Get(),
                 color_srv_.Get(),
-                parameter_srv_.Get(),
             };
             ssr_fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), ssr_ps_.Get());
 

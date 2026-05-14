@@ -33,7 +33,7 @@ dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
-dcl_temps 2
+dcl_temps 3
 //
 // Initial variable locations:
 //   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
@@ -47,6 +47,9 @@ sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v1.xyxx, t0.xyzw, 
 sample_indexable(texture2d)(float,float,float,float) r1.xyzw, v1.xyxx, t1.xyzw, s1  // r1.x <- obj_color.x; r1.y <- obj_color.y; r1.z <- obj_color.z; r1.w <- obj_color.w
 
 #line 21
+mov r2.x, -r0.w
+add r2.x, r2.x, l(1.000000)
+mul r1.xyz, r1.xyzx, r2.xxxx
 mul r0.xyz, r0.wwww, r0.xyzx
 add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
@@ -57,4 +60,4 @@ mov r1.w, r1.w  // r1.w <- color.w
 mov o0.xyz, r0.xyzx
 mov o0.w, r1.w
 ret 
-// Approximately 8 instruction slots used
+// Approximately 11 instruction slots used

@@ -18,7 +18,7 @@ float4 main(VS_OUT pin):SV_TARGET
     float4 ssr_color = ssr_texture.Sample(sampler_states[POINT_CLAMP], pin.texcoord);
     float4 obj_color = obj_texture.Sample(sampler_states[POINT_CLAMP], pin.texcoord);
     
-    color.rgb = obj_color.rgb + (ssr_color.rgb*ssr_color.a);
+    color.rgb = (obj_color.rgb * (1.0f - ssr_color.a)) + (ssr_color.rgb * ssr_color.a);
     color.a = obj_color.a;
     
     return color;
