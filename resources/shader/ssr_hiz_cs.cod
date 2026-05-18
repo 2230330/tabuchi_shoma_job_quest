@@ -23,27 +23,54 @@
 // -------------------- ----- ------ -------- -------- ------- ------
 // no Output
 cs_5_0
-dcl_globalFlags refactoringAllowed
+dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_uav_typed_texture2d (float,float,float,float) u0
 dcl_input vThreadID.xy
 dcl_temps 3
 dcl_thread_group 8, 8, 1
-ishl r0.xy, vThreadID.xyxx, l(1, 1, 0, 0)
+//
+// Initial variable locations:
+//   vThreadID.x <- id.x; vThreadID.y <- id.y; vThreadID.z <- id.z
+//
+#line 9 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\ssr_hiz_cs.hlsl"
+mov r0.xy, l(2,2,0,0)
+imul null, r0.xy, r0.xyxx, vThreadID.xyxx  // r0.x <- texel.x; r0.y <- texel.y
+
+#line 11
 mov r0.zw, l(0,0,0,0)
-ld_indexable(texture2d)(float,float,float,float) r0.x, r0.xyzw, t0.xyzw
+ld_indexable(texture2d)(float,float,float,float) r0.z, r0.xyzw, t0.yzxw
+mov r0.z, r0.z  // r0.z <- d0
+
+#line 12
+mov r1.xy, l(1,0,0,0)
+iadd r1.xy, r0.xyxx, r1.xyxx
 mov r1.zw, l(0,0,0,0)
-imad r2.xyzw, vThreadID.xyxy, l(2, 2, 2, 2), l(0, 1, 1, 0)
-mov r1.xy, r2.zwzz
-ld_indexable(texture2d)(float,float,float,float) r0.y, r1.xyzw, t0.yxzw
-min r0.x, r0.y, r0.x
+ld_indexable(texture2d)(float,float,float,float) r0.w, r1.xyzw, t0.yzwx
+mov r0.w, r0.w  // r0.w <- d1
+
+#line 13
+mov r1.xy, l(0,1,0,0)
+iadd r1.xy, r0.xyxx, r1.xyxx
+mov r1.zw, l(0,0,0,0)
+ld_indexable(texture2d)(float,float,float,float) r1.x, r1.xyzw, t0.xyzw
+mov r1.x, r1.x  // r1.x <- d2
+
+#line 14
+mov r1.yz, l(0,1,1,0)
+iadd r2.xy, r0.xyxx, r1.yzyy
 mov r2.zw, l(0,0,0,0)
-ld_indexable(texture2d)(float,float,float,float) r0.y, r2.xyzw, t0.yxzw
-imad r1.xy, vThreadID.xyxx, l(2, 2, 0, 0), l(1, 1, 0, 0)
-mov r1.zw, l(0,0,0,0)
-ld_indexable(texture2d)(float,float,float,float) r0.z, r1.xyzw, t0.yzxw
-min r0.y, r0.z, r0.y
-min r0.x, r0.y, r0.x
+ld_indexable(texture2d)(float,float,float,float) r0.x, r2.xyzw, t0.xyzw
+mov r0.x, r0.x  // r0.x <- d3
+
+#line 16
+min r0.y, r0.w, r0.z
+min r0.x, r0.x, r1.x
+min r0.x, r0.x, r0.y  // r0.x <- min_depth
+
+#line 18
 store_uav_typed u0.xyzw, vThreadID.xyyy, r0.xxxx
+
+#line 19
 ret 
-// Approximately 17 instruction slots used
+// Approximately 25 instruction slots used

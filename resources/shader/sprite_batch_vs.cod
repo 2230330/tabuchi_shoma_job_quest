@@ -51,7 +51,7 @@
 // TEXCOORD                 0   xy          2     NONE   float   xy  
 //
 vs_5_0
-dcl_globalFlags refactoringAllowed
+dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB7[15], immediateIndexed
 dcl_input v0.xyz
 dcl_input v1.xyzw
@@ -63,16 +63,51 @@ dcl_input v6.xyzw
 dcl_output_siv o0.xyzw, position
 dcl_output o1.xyzw
 dcl_output o2.xy
-dcl_temps 2
-mul r0.xyzw, v0.yyyy, v4.xyzw
-mad r0.xyzw, v0.xxxx, v3.xyzw, r0.xyzw
-mad r0.xyzw, v0.zzzz, v5.xyzw, r0.xyzw
-add r0.xyzw, r0.xyzw, v6.xyzw
-mul r1.xyzw, r0.yyyy, cb7[12].xyzw
-mad r1.xyzw, r0.xxxx, cb7[11].xyzw, r1.xyzw
-mad r1.xyzw, r0.zzzz, cb7[13].xyzw, r1.xyzw
-mad o0.xyzw, r0.wwww, cb7[14].xyzw, r1.xyzw
-mov o1.xyzw, v1.xyzw
-mov o2.xy, v2.xyxx
+dcl_temps 3
+//
+// Initial variable locations:
+//   v0.x <- vin.position.x; v0.y <- vin.position.y; v0.z <- vin.position.z; 
+//   v1.x <- vin.color.x; v1.y <- vin.color.y; v1.z <- vin.color.z; v1.w <- vin.color.w; 
+//   v2.x <- vin.texcoord.x; v2.y <- vin.texcoord.y; 
+//   v3.x <- vin.world._m00; v3.y <- vin.world._m01; v3.z <- vin.world._m02; v3.w <- vin.world._m03; 
+//   v4.x <- vin.world._m10; v4.y <- vin.world._m11; v4.z <- vin.world._m12; v4.w <- vin.world._m13; 
+//   v5.x <- vin.world._m20; v5.y <- vin.world._m21; v5.z <- vin.world._m22; v5.w <- vin.world._m23; 
+//   v6.x <- vin.world._m30; v6.y <- vin.world._m31; v6.z <- vin.world._m32; v6.w <- vin.world._m33; 
+//   o2.x <- <main return value>.texcoord.x; o2.y <- <main return value>.texcoord.y; 
+//   o1.x <- <main return value>.color.x; o1.y <- <main return value>.color.y; o1.z <- <main return value>.color.z; o1.w <- <main return value>.color.w; 
+//   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
+//
+#line 9 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\sprite_batch_vs.hlsl"
+mov r0.xyz, v0.xyzx  // r0.x <- pos.x; r0.y <- pos.y; r0.z <- pos.z
+mov r0.w, l(1.000000)  // r0.w <- pos.w
+
+#line 12
+mul r1.xyzw, r0.xxxx, v3.xyzw
+mul r2.xyzw, r0.yyyy, v4.xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw
+mul r2.xyzw, r0.zzzz, v5.xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw
+mul r0.xyzw, r0.wwww, v6.xyzw
+add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- world_pos.x; r0.y <- world_pos.y; r0.z <- world_pos.z; r0.w <- world_pos.w
+
+#line 13
+mul r1.xyzw, r0.xxxx, cb7[11].xyzw
+mul r2.xyzw, r0.yyyy, cb7[12].xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw
+mul r2.xyzw, r0.zzzz, cb7[13].xyzw
+add r1.xyzw, r1.xyzw, r2.xyzw
+mul r0.xyzw, r0.wwww, cb7[14].xyzw
+add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z; r0.w <- vout.position.w
+
+#line 16
+mov r1.xyzw, v1.xyzw  // r1.x <- vout.color.x; r1.y <- vout.color.y; r1.z <- vout.color.z; r1.w <- vout.color.w
+
+#line 17
+mov r2.xy, v2.xyxx  // r2.x <- vout.texcoord.x; r2.y <- vout.texcoord.y
+
+#line 19
+mov o0.xyzw, r0.xyzw
+mov o1.xyzw, r1.xyzw
+mov o2.xy, r2.xyxx
 ret 
-// Approximately 11 instruction slots used
+// Approximately 22 instruction slots used

@@ -34,7 +34,6 @@ float3 GetNormalVS(float2 uv)
     //ワールド空間からからビュー空間へ変換
     n = normalize(mul(float4(n, 0), view_transform));
     
-    n /= (abs(n.x) + abs(n.y) + abs(n.z));
 
     return normalize(n);
 }
@@ -97,14 +96,14 @@ bool OutOfBounds(float2 uv)
 }
 
 //hi-zでのループ時の制御用
-int ComputeMip(float2 delta,float2 dims)
-{
-    float2 texel_size = abs(delta) / dims;
-    float max_component = max(texel_size.x, texel_size.y);
+//int ComputeMip(float2 delta,float2 dims)
+//{
+//    float2 texel_size = abs(delta) / dims;
+//    float max_component = max(texel_size.x, texel_size.y);
     
-    float mip = log2(max_component * max(dims.x, dims.y));
-    return clamp((int) mip, 0, max_mip);
-}
+//    float mip = log2(max_component * max(dims.x, dims.y));
+//    return clamp((int) mip, 0, max_mip);
+//}
 
 float4 main(VS_OUT pin) : SV_TARGET
 {
@@ -125,7 +124,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     //ある程度反射方向と視線方向の角度が近い場合、早期処理を行う。
     //SSRはスクリーン空間で行うため、画面に映っていない裏側を映すことが出来ない為、
     //こちら側へと伸びて来るレイには対応できない
-    if(dot(-v,r)>0.8f)
+    if(dot(-v,r)>0.75f)
     {
         return float4(0, 0, 0, 0);
     }
@@ -150,8 +149,8 @@ float4 main(VS_OUT pin) : SV_TARGET
         return (float4) 0;
     
     //最大ステップ数を制限
-    if (steps > 2000)
-        steps = 2000;
+    if (steps > 64)
+        steps = 64;
     
     
     float2 increment = delta / steps;
@@ -168,6 +167,8 @@ float4 main(VS_OUT pin) : SV_TARGET
     bool hit = false;
     float depth_delta = 0.0f;
     
+    //前のステップの深度マップ-現在の深度
+    float prev_delta = 0;
     
     //荒いレイマーチング
     [loop]
@@ -200,7 +201,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         depth_delta = view_z - scene_pos.z;
         
-        if (depth_delta > 0 && depth_delta < thickness)
+        if (depth_delta > 0 && prev_delta < 0)
         {
             
             {
@@ -209,6 +210,9 @@ float4 main(VS_OUT pin) : SV_TARGET
                 break;
             }
         }
+        
+        
+        prev_delta = depth_delta;
         
         t_min = t;
     }
@@ -253,14 +257,15 @@ float4 main(VS_OUT pin) : SV_TARGET
     {
         return (float4) 0;
     }
-    float3 hit_pos = ReconstructViewPosition(hit_uv, scene_depth, projection_scale);
+    float hit_depth = GetSceneDepth(hit_uv, 0) * camera_clip_distance.y;
+    float3 hit_pos = ReconstructViewPosition(hit_uv, hit_depth, projection_scale);
 
     //現在、同オブジェクトのヒット判定を取っている事がありました。
     //本来なら深度チェックの精度を上げるなどで対処したいところでしたが、何故か無理だったので、
     //反射のスタート位置とヒット位置が余りにも近い場合は透過するようにしました。
     //尚、スタートバイオスを設定するとこれは壊れます
     float start_to_hit = abs(length(start_frag - hit_uv * dimensions));
-    if(start_to_hit<1.0f)
+    if (start_to_hit < 1.0f)
     {
         return float4(0, 0, 0, 0);
     }

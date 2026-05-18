@@ -73,6 +73,9 @@ private:
     std::unique_ptr<FrameBuffer>ssr_synthesis_framebuffer_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>ssr_synthesis_ps_ = nullptr;
 
+    //SSRのエンティティ番号
+    //確認用
+    bool has_ssr_=false;
 
 private:
     //コンピュートシェーダーでHi-Zを行う関数

@@ -134,6 +134,8 @@ RenderScreenSpaceReflectionSystem::RenderScreenSpaceReflectionSystem(ComponentMa
 
 void RenderScreenSpaceReflectionSystem::Render()
 {
+    has_ssr_ = false;
+
     comp_mng_.ForEach<ComponentSsr>([&](uint32_t entity_id, ComponentSsr& ssr)
         {
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
@@ -185,12 +187,25 @@ void RenderScreenSpaceReflectionSystem::Render()
             ssr.normal = normal_srv_.Get();
             ssr.depth = depth_srv_.Get();
             ssr.color = color_srv_.Get();
+
+            has_ssr_ = true;
+
         });
 }
 
 ID3D11ShaderResourceView* RenderScreenSpaceReflectionSystem::GetSSRTexture()
 {
-    return ssr_synthesis_framebuffer_->GetShaderResourceView(0).Get();
+    ID3D11ShaderResourceView* srv;
+    if (has_ssr_)
+    {
+        srv = ssr_synthesis_framebuffer_->GetShaderResourceView(0).Get();
+    }
+    else
+    {
+        srv = color_srv_.Get();
+    }
+
+    return srv;
 }
 
 void RenderScreenSpaceReflectionSystem::ComputeHiz(ID3D11DeviceContext* ctx)

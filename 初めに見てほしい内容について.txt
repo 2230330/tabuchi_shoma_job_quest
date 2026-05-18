@@ -1,8 +1,11 @@
 このプロジェクトは技術デモになります。
+参照ライブラリ以外は基本的に全て自作になります。
 
 開発環境
-描画API：DirectX11
-開発言語：C++,HLSL
+描画API　：DirectX11
+開発言語  ：C++,HLSL
+
+制作人数  ：1人
 
 
 実装した技術
@@ -20,3 +23,6 @@ sources/system/deferred_render_system.cpp
 
 ・カスケードシャドウマップ
 sources/system/deferred_render_system.cpp
+
+・SSR
+shaderes/screen_space_reflection_ps.hlsl
