@@ -283,7 +283,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     //反射レイが遠くに行くほどフェードで消えていく
     visibility *= (1.0f - saturate(length(hit_pos - view_pos) / distance));
     
-    //画面端に近づくほど透過させる
+    //反射位置が画面端に近づくほど透過させる
     const float ssr_border = 0.2f;
     visibility *= smoothstep(1.0f, 1.0f - ssr_border, saturate(2.0f * abs(hit_uv.x - 0.5f)));
     visibility *= smoothstep(1.0f, 1.0f - ssr_border, saturate(2.0f * abs(hit_uv.y - 0.5f)));
