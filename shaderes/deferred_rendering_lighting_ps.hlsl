@@ -19,13 +19,13 @@ Texture2D<float4> gbuffer_velocity : register(t5);
 #define SHADOWMAP 6
 SamplerState sampler_states[7] : register(s0);
 
-//  ƒVƒƒƒhƒEƒ}ƒbƒv—pƒeƒNƒXƒ`ƒƒ
+//  ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ç”¨ãƒ†ã‚¯ã‚¹ãƒãƒ£
 Texture2D shadow_map[4] : register(t10);
 
 
 float4 main(VS_OUT pin) : SV_TARGET
 {
-    //  GBufferƒeƒNƒXƒ`ƒƒ‚©‚çî•ñ‚ğƒfƒR[ƒh‚·‚é
+    //  GBufferãƒ†ã‚¯ã‚¹ãƒãƒ£ã‹ã‚‰æƒ…å ±ã‚’ãƒ‡ã‚³ãƒ¼ãƒ‰ã™ã‚‹
     PSGBufferTextures gbuffer_textures;
     gbuffer_textures.base_color = gbuffer_base_color;
     gbuffer_textures.emissive_color = gbuffer_emissive_color;
@@ -39,7 +39,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     gbuffer_textures, pin.texcoord, inverse_view_projection_transform, z_buffer_parameteres);
 
 
-    //ƒ‰ƒCƒgî•ñ‚ğæ“¾
+    //ãƒ©ã‚¤ãƒˆæƒ…å ±ã‚’å–å¾—
     float3 diffuse = (float3) 0, specular = (float3) 0;
     LightingData lighting_data;
     switch (get_light_kinds())
@@ -53,12 +53,12 @@ float4 main(VS_OUT pin) : SV_TARGET
                 {
                     for (int i = 0; i < 4;i++)
                     {
-                	    //  ƒVƒƒƒhƒEƒ}ƒbƒv—p‚Ìƒpƒ‰ƒ[ƒ^[ŒvZ
+                	    //  ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ç”¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼è¨ˆç®—
                         float3 shadow_texcoord;
 	                    {
-		                    // ƒ‰ƒCƒg‚©‚çŒ©‚½NDCÀ•W‚ğZo
+		                    // ãƒ©ã‚¤ãƒˆã‹ã‚‰è¦‹ãŸNDCåº§æ¨™ã‚’ç®—å‡º
                             float4 wvpPos = mul(float4(data.w_position.xyz, 1.0f), cascade_light_view_projection[i]);
-		                    // NDCÀ•W‚©‚çUVÀ•W‚ğZo‚·‚é
+		                    // NDCåº§æ¨™ã‹ã‚‰UVåº§æ¨™ã‚’ç®—å‡ºã™ã‚‹
                             wvpPos /= wvpPos.w;
                             wvpPos.y = -wvpPos.y;
                             wvpPos.xy = 0.5f * wvpPos.xy + 0.5f;
@@ -69,9 +69,9 @@ float4 main(VS_OUT pin) : SV_TARGET
                         shadow_texcoord.x>=0&&shadow_texcoord.x<=1&&
                         shadow_texcoord.y>=0&&shadow_texcoord.y<=1)
                         {
-		                    //	•½sŒõŒ¹—pƒVƒƒƒhƒEƒ}ƒbƒv
+		                    //	å¹³è¡Œå…‰æºç”¨ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—
                             float depth = shadow_map[i].Sample(sampler_states[SHADOWMAP], shadow_texcoord.xy).r;
-		                    //	[“x’l‚ğ”äŠr‚µ‚Ä‰e‚©‚Ç‚¤‚©‚ğ”»’è‚·‚é
+		                    //	æ·±åº¦å€¤ã‚’æ¯”è¼ƒã—ã¦å½±ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹
                             if (shadow_texcoord.z - depth > shadow_bias)
                             {
                                 attenuation = shadow_attenuation;
@@ -135,20 +135,20 @@ float4 main(VS_OUT pin) : SV_TARGET
                     attenuation *= saturate(1.0f - (innerCorn - angle) / area);
                   //  if (use_shadow)
                   //  {
-	                 //   //  ƒVƒƒƒhƒEƒ}ƒbƒv—p‚Ìƒpƒ‰ƒ[ƒ^[ŒvZ
+	                 //   //  ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ç”¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼è¨ˆç®—
                   //      float3 shadow_texcoord;
 	                 //   {
-		                //    // ƒ‰ƒCƒg‚©‚çŒ©‚½NDCÀ•W‚ğZo
+		                //    // ãƒ©ã‚¤ãƒˆã‹ã‚‰è¦‹ãŸNDCåº§æ¨™ã‚’ç®—å‡º
                   //          float4 wvpPos = mul(float4(data.w_position.xyz, 1.0f), light_view_projection);
-		                //    // NDCÀ•W‚©‚çUVÀ•W‚ğZo‚·‚é
+		                //    // NDCåº§æ¨™ã‹ã‚‰UVåº§æ¨™ã‚’ç®—å‡ºã™ã‚‹
                   //          wvpPos /= wvpPos.w;
                   //          wvpPos.y = -wvpPos.y;
                   //          wvpPos.xy = 0.5f * wvpPos.xy + 0.5f;
                   //          shadow_texcoord = wvpPos.xyz;
                   //      }
-		                ////	ƒVƒƒƒhƒEƒ}ƒbƒv
+		                ////	ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—
                   //      float depth = shadow_map.Sample(shadow_sampler_state, shadow_texcoord.xy).r;
-		                ////	[“x’l‚ğ”äŠr‚µ‚Ä‰e‚©‚Ç‚¤‚©‚ğ”»’è‚·‚é
+		                ////	æ·±åº¦å€¤ã‚’æ¯”è¼ƒã—ã¦å½±ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹
                   //      if (shadow_texcoord.z - depth > shadow_bias)
                   //      {
                   //          attenuation *= shadow_attenuation;
@@ -166,11 +166,13 @@ float4 main(VS_OUT pin) : SV_TARGET
                 }
             }
             break;
+        
+
 
     }
     
 
-    float3 color = diffuse + specular;
+    float3 color = (diffuse + specular);
     float alpha = (color.r + color.g + color.b) / 3.0f;
     if (color.r == 0.f && color.g == 0.f && color.b == 0.f)
     {

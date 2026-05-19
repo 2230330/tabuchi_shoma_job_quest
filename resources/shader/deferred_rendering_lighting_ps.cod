@@ -1626,20 +1626,20 @@ switch r1.w
 #line 168
   break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r7.w <- data.shading_model; r8.x <- data.w_position.x; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r8.w <- data.w_normal.z; r10.x <- data.roughness; r10.y <- data.metalness; r10.z <- data.w_position.y; r10.w <- data.w_position.z; r9.x <- data.occlusion_factor; r9.y <- data.occlusion_strength; r0.x <- PI
 
-#line 170
+#line 172
   default 
   break 
 endswitch 
 
-#line 173
+#line 175
 add r0.xyz, r0.yzwy, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 174
+#line 176
 add r0.w, r0.y, r0.x
 add r0.w, r0.z, r0.w
 div r0.w, r0.w, l(3.000000)  // r0.w <- alpha
 
-#line 175
+#line 177
 eq r1.x, r0.x, l(0.000000)
 eq r1.y, r0.y, l(0.000000)
 and r1.x, r1.y, r1.x
@@ -1647,13 +1647,13 @@ eq r1.y, r0.z, l(0.000000)
 and r1.x, r1.y, r1.x
 if_nz r1.x
 
-#line 177
+#line 179
   itof r0.w, l(0)
 
-#line 178
+#line 180
 endif 
 
-#line 180
+#line 182
 mov o0.xyz, r0.xyzx
 mov o0.w, r0.w
 ret 

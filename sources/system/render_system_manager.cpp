@@ -113,8 +113,6 @@ void RenderSystemManager::RenderAll()
     bool sky_flag = sky_render_system_->GetSkyFlag();
     bool cloud_flag = cloud_render_system_->HasRenderableCloud();
 
-
-
     if (back_sample_count_ < back_sample_rimit_) {
         back_sample_count_++;
     }
@@ -142,22 +140,29 @@ void RenderSystemManager::RenderAll()
             ID3D11ShaderResourceView* srv[] = { sky_framebuffer_->GetShaderResourceView(0).Get() };
             bit_block_transfer_->blit(ctx, srv, 0, 1);
         }
-        
-    }
+
         // 天体光描画
-    if (sky_flag)
-    {
-        ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
-        if(cloud_flag)
+        if (sky_flag)
         {
-            cloud_shadow_srv[0] = {
-                cloud_render_system_->GetCloudShadowSRV(),
-            };
+
+            ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
+            if (cloud_flag)
+            {
+                cloud_shadow_srv[0] = {
+                    cloud_render_system_->GetCloudShadowSRV(),
+                };
+            }
+            bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
+
+
         }
-        bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
+
+        back_framebuffer_->Deactivate(ctx);
+
     }
 
-    back_framebuffer_->Deactivate(ctx);
+
+
 
     //スカイキューブ作成
             // IBL 入力更新（背景SRV→SkyCube化を内包）
