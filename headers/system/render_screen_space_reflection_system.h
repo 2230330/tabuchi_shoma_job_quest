@@ -56,8 +56,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>hiz_depth_srv_ = nullptr;
     std::vector<Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>>hiz_uavs_;
     std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>hiz_srvs_;
-    Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView>hiz_process_uavs_[2];
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>hiz_process_srvs_[2];
     Microsoft::WRL::ComPtr<ID3D11ComputeShader>hiz_cs_ = nullptr;
 
 

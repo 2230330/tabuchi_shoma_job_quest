@@ -2,6 +2,9 @@
 #include "camera_buffer.hlsli"
 #include "scene_constant_buffer.hlsli"
 
+//ScreenSpaceRelfectionのピクセルシェーダー
+//現在は粗い探索と二分探索により高精度化しています。
+
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
 #define LINEAR_WRAP 2
@@ -38,6 +41,7 @@ float3 GetNormalVS(float2 uv)
     return normalize(n);
 }
 //線形深度を入れる
+//ComputeShaderで近い位置を取る様にmip化しています
 float GetSceneDepth(float2 uv, int mip)
 {
     return depth_texture.SampleLevel(
@@ -95,8 +99,8 @@ bool OutOfBounds(float2 uv)
     return uv.x <= 0 || uv.x >= 1 || uv.y <= 0 || uv.y >= 1;
 }
 
-//hi-zでのループ時の制御用
-//int ComputeMip(float2 delta,float2 dims)
+////hi-zでのループ時の制御用
+//int ComputeMip(float2 delta, float2 dims)
 //{
 //    float2 texel_size = abs(delta) / dims;
 //    float max_component = max(texel_size.x, texel_size.y);
@@ -104,6 +108,8 @@ bool OutOfBounds(float2 uv)
 //    float mip = log2(max_component * max(dims.x, dims.y));
 //    return clamp((int) mip, 0, max_mip);
 //}
+
+static const int MAX_STEPS = 64;
 
 float4 main(VS_OUT pin) : SV_TARGET
 {
@@ -133,7 +139,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     //スクリーンスペースに
     uint2 dimensions;
-    uint mip = 0, levels;
+    uint mip =0, levels;
     normal_texture.GetDimensions(mip, dimensions.x, dimensions.y, levels);
     float2 start_frag = ViewToScreen(view_pos , dimensions);
     float2 end_frag = ViewToScreen(view_end, dimensions);
@@ -149,10 +155,10 @@ float4 main(VS_OUT pin) : SV_TARGET
         return (float4) 0;
     
     //最大ステップ数を制限
-    if (steps > 64)
-        steps = 64;
+    if (steps > MAX_STEPS)
+        steps = MAX_STEPS;
     
-    
+    //mip0で作られている
     float2 increment = delta / steps;
     float2 frag = start_frag;
     float2 uv =frag/dimensions;
@@ -168,28 +174,28 @@ float4 main(VS_OUT pin) : SV_TARGET
     float depth_delta = 0.0f;
     
     //前のステップの深度マップ-現在の深度
+    //荒いステップ時の深度判定で使用
+    //確実に深度が超えた位置を算出するために実装
     float prev_delta = 0;
     
+    float t = 0.0f;
+
     //荒いレイマーチング
     [loop]
     for (int i = 0; i < (int) steps; ++i)
     {
-    
-        frag += increment;
-        
+        frag += increment ;
         uv = frag / dimensions;
-        
         if (OutOfBounds(uv))
         {
             return (float4)0;
         }
-        
-        float scene_linear_depth = GetSceneDepth(uv, 0);
+                
+        float scene_linear_depth = GetSceneDepth(uv, mip);
         scene_linear_depth *= camera_clip_distance.y;
         float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
         
         //compute interpolation parameter along ray
-        float t = 0.0f;
         if (use_x)
             t = (frag.x - start_frag.x) / delta.x;
         else
@@ -198,45 +204,41 @@ float4 main(VS_OUT pin) : SV_TARGET
         t = saturate(t);
         
         float view_z = perspectiveCorrectZ(view_pos.z, view_end.z, t);
-        
+                
         depth_delta = view_z - scene_pos.z;
         
-        if (depth_delta > 0 && prev_delta < 0)
+        if (depth_delta > 0&&prev_delta<0)
         {
-            
             {
                 hit = true;
                 t_max = t;
                 break;
             }
+            
         }
-        
-        
+
         prev_delta = depth_delta;
         
         t_min = t;
     }
-    
-    //uv = lerp(start_frag, end_frag, t_max) / dimensions;
-    //return float4(GetColor(uv), 1.f);
     
     //もし当たっていなかったらここで終了
         if (!hit)
         return (float4) 0;
     
     //Binary refinement
-    float t = 0.5f * (t_min + t_max);
+    t = 0.5f * (t_min + t_max);
     
     [loop]
-    for (int i = 0; i < num_steps;i++)
+    for (int i = 0; i < num_steps; i++)
     {
         float2 frag_refined = lerp(start_frag, end_frag, t);
         float2 uv = frag_refined / dimensions;
         
-        if(OutOfBounds(uv))
+        if (OutOfBounds(uv))
             return (float4) 0;
         
-        float scene_linear_depth = GetSceneDepth(uv, mip);
+        float scene_linear_depth = GetSceneDepth(uv, 0);
         scene_linear_depth *= camera_clip_distance.y;
         float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
         

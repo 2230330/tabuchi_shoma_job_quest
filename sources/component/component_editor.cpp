@@ -534,7 +534,7 @@ void ComponentEditor::DrawImgui()
 
                     ImGui::DragFloat("Distance", &ssr.distance, 0.1f, 0.1f, 100.0f);
                     ImGui::DragInt("Num Steps", &ssr.num_steps, 1, 1, 128);
-                    ImGui::DragInt("Max Mip", &ssr.max_mip, 1, 1, 10);
+                    ImGui::DragInt("Max Mip", &ssr.max_mip, 1, 1, 6);
                     ImGui::DragFloat("Thickness", &ssr.thickness, 0.01f, 0.01f, 1.0f);
                     ImGui::DragFloat("Resolution", &ssr.resolution, 0.01f, 0.01f, 1.0f);
                     ImGui::SliderFloat("Intensity", &ssr.intensity, 0.0f, 10.0f);

@@ -98,19 +98,6 @@ RenderScreenSpaceReflectionSystem::RenderScreenSpaceReflectionSystem(ComponentMa
             device,
             L".\\resources\\shader\\ssr_hiz_cs.cso");
 
-
-
-        for (int i = 0; i < 2; i++)
-        {
-            Microsoft::WRL::ComPtr<ID3D11Texture2D>texture2d;
-            hr = device->CreateTexture2D(&texture_desc, nullptr, texture2d.ReleaseAndGetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-            hr = device->CreateShaderResourceView(texture2d.Get(), nullptr, hiz_process_srvs_[i].GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-            hr = device->CreateUnorderedAccessView(texture2d.Get(), nullptr, hiz_process_uavs_[i].GetAddressOf());
-            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-        }
-
     }
 
     ssr_ps_ =
