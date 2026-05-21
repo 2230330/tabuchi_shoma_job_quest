@@ -1,4 +1,4 @@
-//ƒSƒbƒhƒŒƒC‚Ég‚¤AŠÈˆÕ“I‚È‰_‚Ì‘¶İƒ}ƒbƒv
+//ã‚´ãƒƒãƒ‰ãƒ¬ã‚¤ã«ä½¿ã†ã€ç°¡æ˜“çš„ãªé›²ã®å­˜åœ¨ãƒãƒƒãƒ—
 #include"volumetric_cloud.hlsli"
 #include"fullscreen_quad.hlsli"
 #include "scene_constant_buffer.hlsli"
@@ -13,10 +13,30 @@
 #define LINEAR_MIRROR 5
 SamplerState sampler_states[6] : register(s0);
 
+/*
+	low_frequency_perlin_worley_texture
+	r channel is perln-worley noise, gba channels are worley noise at increasing frequencies 
+*/
 Texture3D<float4> low_frequency_perlin_worley_texture : register(t0);
+/*
+	low_frequency_perlin_worley_texture
+	rgb channels are worley noise at increasing frequencies 
+*/
+
 Texture3D<float3> high_frequency_worley_texture : register(t1);
+/*
+    weather_texture
+    - cloud coverageï¼ˆR ãƒãƒ£ãƒ³ãƒãƒ«ï¼‰ï¼šç©ºã®é›²é‡ã®å‰²åˆ
+    - precipitationï¼ˆG ãƒãƒ£ãƒ³ãƒãƒ«ï¼‰ï¼šé ­ä¸Šã®é›²ãŒé›¨ã‚’é™ã‚‰ã›ã‚‹å¯èƒ½æ€§
+    - cloud typeï¼ˆB ãƒãƒ£ãƒ³ãƒãƒ«ï¼‰ï¼š0.0 ã¯å±¤é›²ï¼ˆstratusï¼‰ã€0.5 ã¯å±¤ç©é›²ï¼ˆstratocumulusï¼‰ã€1.0 ã¯ç©é›²ï¼ˆcumulusï¼‰ã‚’ç¤ºã™
+*/
 Texture2D<float3> weather_texture : register(t2);
 Texture2D<float3> curl_noise_texture : register(t3);
+Texture2D<float3> sky_color_texture : register(t4);
+Texture2D<float> gradient_cumulonimbus_texture : register(t5);
+Texture2D<float> gradient_cumulus_texture : register(t6);
+Texture2D<float> gradient_stratus_texture : register(t7);
+Texture2D<float> object_depth_texture : register(t8);
 
 static const float PI = 3.14159265359f;
 
@@ -38,7 +58,34 @@ float3 SampleWeatherData(float2 sample_point)
 
 }
 
+float SampleObjectDepth(float2 sample_point)
+{
+    //ç‰©ä½“æ·±åº¦ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‹ã‚‰æ·±åº¦ã‚’ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã™ã‚‹é–¢æ•°
+    //ç‰©ä½“ã‚’æç”»ã™ã‚‹éš›ã«ã€é›²ãŒç‰©ä½“ã®å‰ã«ã‚ã‚‹ã‹å¾Œã‚ã«ã‚ã‚‹ã‹ã‚’åˆ¤æ–­ã™ã‚‹ãŸã‚ã«ä½¿ç”¨ã•ã‚Œã‚‹
+    //ãã®ã¾ã¾ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã—ãŸå ´åˆã€ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®è§£åƒåº¦ã®é•ã„ã«ã‚ˆã‚Šã‚¸ãƒ£ã‚®ãƒ¼ãŒç™ºç”Ÿã™ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ç‚ºã€
+    //å‘¨å›²ã®ã‚µãƒ³ãƒ—ãƒ«ã‚’å–ã£ã¦æœ€å¤§å€¤ã‚’è¿”ã™ã“ã¨ã§ã€å®Ÿéš›ã®ç‰©ä½“ã‚ˆã‚Šã‚‚ä¸€å›ã‚Šå°ã•ã„è¼ªéƒ­ã‚’ä½œã‚‹ã‚ˆã†ã«ã—ã¦ã„ã‚‹
+    float d = 0.0f;
+    float2 texel = 1.0f / object_resolution;
+    [unroll]
+    for (int x = -1; x <= 1; x++)
+    {
+        [unroll]
+        for (int y = -1; y <= 1; y++)
+        {
+            float2 offset = float2(x, y) * texel;
+            float sample = object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + offset);
+            
+            //å‘¨å›²ã®ã‚µãƒ³ãƒ—ãƒ«ã®æœ€å¤§å€¤ã‚’å–ã‚‹ã“ã¨ã§ã€ç‰©ä½“ã®è¼ªéƒ­ã‚’å°‘ã—å‰Šã‚‹
+            d = max(d, sample);
+            if (d >= 1.0f) //å®Œå…¨ã«ç©ºãªã‚‰ã“ã‚Œä»¥ä¸Šã‚µãƒ³ãƒ—ãƒ«ã™ã‚‹å¿…è¦ã¯ãªã„
+            {
+                break;
+            }
+        }
+    }
 
+    return d;
+}
 
 // from: https://www.shadertoy.com/view/4sfgzs credit to iq
 float Hash(float3 p)
@@ -56,33 +103,66 @@ float Remap(float original_value, float original_min, float original_max, float 
     return new_min + (((original_value - original_min) / denom) * (new_max - new_min));
 }
 
-// ‰_ƒŒƒCƒ„[“à‚É‚¨‚¯‚éƒTƒ“ƒvƒ‹ˆÊ’u‚Ì‚‚³”ä—¦‚ğ‹‚ß‚é
+// é›²ãƒ¬ã‚¤ãƒ¤ãƒ¼å†…ã«ãŠã‘ã‚‹ã‚µãƒ³ãƒ—ãƒ«ä½ç½®ã®é«˜ã•æ¯”ç‡ã‚’æ±‚ã‚ã‚‹
 float GetHeightFractionForPoint(float position)
 {
     float height_fraction = (position - cloud_altitudes_min_max.x) / (cloud_altitudes_min_max.y - cloud_altitudes_min_max.x);
     return clamp(height_fraction, 0.0, 1.0);
 }
-// ‰_ƒ^ƒCƒv‚É‰‚¶‚½‚‚³•ûŒü‚Ì–§“xŒù”z‚ğæ“¾
+// é›²ã‚¿ã‚¤ãƒ—ã«å¿œã˜ãŸé«˜ã•æ–¹å‘ã®å¯†åº¦å‹¾é…ã‚’å–å¾—
 float GetDensityHeightGradient(float height_fraction, float cloud_type)
 {
     float density_gradient = 0.0;
 
+#if 0
+    // height_fraction ã«åŸºã¥ã„ã¦ã€stratusã€stratocumulusã€cumulus ã®å„é›²ã‚¿ã‚¤ãƒ—ã®å¯†åº¦å‹¾é…ã‚’ãƒ–ãƒ¬ãƒ³ãƒ‰ã™ã‚‹
     const float4 stratus_gradient = float4(0.02f, 0.05f, 0.09f, 0.11f);
     const float4 stratocumulus_gradient = float4(0.02f, 0.2f, 0.48f, 0.625f);
     const float4 cumulus_gradient = float4(0.01f, 0.0625f, 0.78f, 1.0f);
-
+	
     float stratus = 1.0f - clamp(cloud_type * 2.0f, 0.0, 1.0);
     float stratocumulus = 1.0f - abs(cloud_type - 0.5f) * 2.0f;
     float cumulus = clamp(cloud_type - 0.5f, 0.0, 1.0) * 2.0f;
 
     float4 cloud_gradient = stratus_gradient * stratus + stratocumulus_gradient * stratocumulus + cumulus_gradient * cumulus;
     density_gradient = smoothstep(cloud_gradient.x, cloud_gradient.y, height_fraction) - smoothstep(cloud_gradient.z, cloud_gradient.w, height_fraction);
+#else
+    const float stratus_threshold = 0.1;
+    const float stratocumulus_threshold = 0.9;
+	//const float cumulus_threshold = 1.0;
+
+    int type = 2;
+    // cloud type: {0: stratus, 1: cumulus, 2: cumulonimbus}
+    if (cloud_type < stratus_threshold)
+    {
+        type = 0;
+    }
+    else if (cloud_type < stratocumulus_threshold)
+    {
+        type = 1;
+    }
+	
+	
+	// sample from gradient texture
+    if (type == 0) // stratus clouds
+    {
+        density_gradient = gradient_stratus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    else if (type == 1) // cumulus clouds
+    {
+        density_gradient = gradient_cumulus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    else if (type == 2)// cumulunimbusclouds
+    {
+        density_gradient = gradient_cumulonimbus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+#endif
     return density_gradient;
 }
 
 #define ENABLE_CLOUD_ANIMATION 
 
-// w’è‚³‚ê‚½ˆÊ’u‚É‚¨‚¯‚é‰_‚Ì–§“x‚ğ•Ô‚·
+// æŒ‡å®šã•ã‚ŒãŸä½ç½®ã«ãŠã‘ã‚‹é›²ã®å¯†åº¦ã‚’è¿”ã™
 float SampleCloudDensity
 (float3 sample_point,
 float3 weather_data,
@@ -90,28 +170,28 @@ float mip_level,
 bool cheap_sample = false,
 float horizon_soft = 0)
 {
-	// ‚‚³‚É‰‚¶‚ÄƒmƒCƒY‚ğƒuƒŒƒ“ƒh‚·‚é‚½‚ßAˆÊ’u‚©‚ç‚‚³”ä—¦‚ğZo
+	// é«˜ã•ã«å¿œã˜ã¦ãƒã‚¤ã‚ºã‚’ãƒ–ãƒ¬ãƒ³ãƒ‰ã™ã‚‹ãŸã‚ã€ä½ç½®ã‹ã‚‰é«˜ã•æ¯”ç‡ã‚’ç®—å‡º
     float height_fraction = GetHeightFractionForPoint(length(sample_point));
 	
-	// ‰_‚Ì”í•¢—¦(ƒJƒoƒŒƒbƒW)‚Íweather_data‚ÌRƒ`ƒƒƒ“ƒlƒ‹‚ÉŠi”[‚³‚ê‚Ä‚¢‚é
+	// é›²ã®è¢«è¦†ç‡(ã‚«ãƒãƒ¬ãƒƒã‚¸)ã¯weather_dataã®Rãƒãƒ£ãƒ³ãƒãƒ«ã«æ ¼ç´ã•ã‚Œã¦ã„ã‚‹
     float cloud_coverage = weather_data.r * cloud_coverage_scale;
     
 #ifdef ENABLE_CLOUD_ANIMATION
-        // •—Œü‚«‚Æ•—‘¬‚ÉŠî‚Ã‚¢‚Ä‰_‚ğˆÚ“®‚³‚¹‚éi’áü”gŒ`ó—pj
+        // é¢¨å‘ãã¨é¢¨é€Ÿã«åŸºã¥ã„ã¦é›²ã‚’ç§»å‹•ã•ã›ã‚‹ï¼ˆä½å‘¨æ³¢å½¢çŠ¶ç”¨ï¼‰
     sample_point.xz += (options.z + time_offset) * 20.0 * normalize(-wind_direction) * wind_speed * 0.6;
 #endif
-	// ’áü”g‚ÌPerlin-WorleyƒmƒCƒY‚ÆWorleyƒmƒCƒY‚ğæ“¾
+	// ä½å‘¨æ³¢ã®Perlin-Worleyãƒã‚¤ã‚ºã¨Worleyãƒã‚¤ã‚ºã‚’å–å¾—
     float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, max(mip_level - 2.0, 0.0f));
 
-	// ’áü”g Worley ƒmƒCƒY‚ğ—p‚¢‚Ä fbmiƒtƒ‰ƒNƒ^ƒ‹ƒuƒ‰ƒEƒ“‰^“®j‚ğ\’z‚µA
-    // ’áü”g Perlin-Worley ƒmƒCƒY‚ÉƒfƒBƒe[ƒ‹‚ğ’Ç‰Á‚·‚é
+	// ä½å‘¨æ³¢ Worley ãƒã‚¤ã‚ºã‚’ç”¨ã„ã¦ fbmï¼ˆãƒ•ãƒ©ã‚¯ã‚¿ãƒ«ãƒ–ãƒ©ã‚¦ãƒ³é‹å‹•ï¼‰ã‚’æ§‹ç¯‰ã—ã€
+    // ä½å‘¨æ³¢ Perlin-Worley ãƒã‚¤ã‚ºã«ãƒ‡ã‚£ãƒ†ãƒ¼ãƒ«ã‚’è¿½åŠ ã™ã‚‹
     float low_frequency_fbm =
     low_frequency_noises.g * 0.625 +
     low_frequency_noises.b * 0.25 +
     low_frequency_noises.a * 0.125;
     
-	// ’áü”g fbm ‚É‚æ‚Á‚Ä Perlin-Worley ƒmƒCƒY‚ğ–c’£‚³‚¹A
-	// ‰_‚Ìƒx[ƒXŒ`ó‚ğ’è‹`‚·‚é
+	// ä½å‘¨æ³¢ fbm ã«ã‚ˆã£ã¦ Perlin-Worley ãƒã‚¤ã‚ºã‚’è†¨å¼µã•ã›ã€
+	// é›²ã®ãƒ™ãƒ¼ã‚¹å½¢çŠ¶ã‚’å®šç¾©ã™ã‚‹
     float base_cloud =
     Remap(low_frequency_noises.r,
     -(1.0 - low_frequency_fbm),
@@ -119,25 +199,25 @@ float horizon_soft = 0)
     0.0,
     1.0);
 	
-	// ‰_ƒ^ƒCƒv‚É‰‚¶‚½A‚‚³•ûŒü‚Ì–§“xŒù”z‚ğæ“¾
+	// é›²ã‚¿ã‚¤ãƒ—ã«å¿œã˜ãŸã€é«˜ã•æ–¹å‘ã®å¯†åº¦å‹¾é…ã‚’å–å¾—
     float cloud_type = clamp(weather_data.b * cloud_type_scale, 0.0, 1.0);
     float density_height_gradient = GetDensityHeightGradient(height_fraction, cloud_type);
 	
-	// ‚‚³•ûŒü‚Ì–§“xŠÖ”‚ğƒx[ƒX‰_Œ`ó‚É“K—p
+	// é«˜ã•æ–¹å‘ã®å¯†åº¦é–¢æ•°ã‚’ãƒ™ãƒ¼ã‚¹é›²å½¢çŠ¶ã«é©ç”¨
     base_cloud *= density_height_gradient;
 	
 	
-	// remap‚ğ—p‚¢‚Ä‰_‚Ì”í•¢—¦‚ğ”½‰f‚³‚¹‚é
+	// remapã‚’ç”¨ã„ã¦é›²ã®è¢«è¦†ç‡ã‚’åæ˜ ã•ã›ã‚‹
     float base_cloud_with_coverage = Remap(base_cloud, 1.0 - cloud_coverage, 1.0, 0.0, 1.0);
     base_cloud_with_coverage *= cloud_coverage;
 
     float final_cloud = base_cloud_with_coverage;
     if (!cheap_sample && base_cloud_with_coverage > 0.0)
     {
-		// ‰_‚Ìã•”‚ğWorleyƒmƒCƒY‚Åí‚èA‚à‚­‚à‚­‚µ‚½—§‘ÌŠ´‚ğì‚é
+		// é›²ã®ä¸Šéƒ¨ã‚’Worleyãƒã‚¤ã‚ºã§å‰Šã‚Šã€ã‚‚ãã‚‚ãã—ãŸç«‹ä½“æ„Ÿã‚’ä½œã‚‹
 	
 #ifdef ENABLE_CLOUD_ANIMATION
-        // ‚ü”gƒfƒBƒe[ƒ‹—p‚Ì’Ç‰ÁƒAƒjƒ[ƒVƒ‡ƒ“
+        // é«˜å‘¨æ³¢ãƒ‡ã‚£ãƒ†ãƒ¼ãƒ«ç”¨ã®è¿½åŠ ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
         if (wind_speed != 0.0)
         {
             sample_point.xz -= (options.z + time_offset) * normalize(-wind_direction) * 40.0;
@@ -146,16 +226,16 @@ float horizon_soft = 0)
 #endif
 		
 		
-		// ‚ü”gƒmƒCƒY‚ğƒTƒ“ƒvƒŠƒ“ƒO
+		// é«˜å‘¨æ³¢ãƒã‚¤ã‚ºã‚’ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
         float3 high_frequency_noises = SampleHighFrequencyNoises(sample_point, mip_level);
 	
-		// ‚ü”g Worley ƒmƒCƒY‚É‚æ‚é fbm ‚ğ\’z
+		// é«˜å‘¨æ³¢ Worley ãƒã‚¤ã‚ºã«ã‚ˆã‚‹ fbm ã‚’æ§‹ç¯‰
         float high_frequency_fbm =
         high_frequency_noises.r * 0.625 +
         high_frequency_noises.g * 0.25 +
         high_frequency_noises.b * 0.125;
 	
-		// ‚‚³‚É‰‚¶‚ÄA‘@×‚È‰_Œ`ó‚©‚ç–c‚ç‚ñ‚¾Œ`ó‚Ö‘JˆÚ‚³‚¹‚é
+		// é«˜ã•ã«å¿œã˜ã¦ã€ç¹Šç´°ãªé›²å½¢çŠ¶ã‹ã‚‰è†¨ã‚‰ã‚“ã å½¢çŠ¶ã¸é·ç§»ã•ã›ã‚‹
 #if 1
         float high_frequency_noise_modifier =
         lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 10.0, 0.0, 1.0));
@@ -163,7 +243,7 @@ float horizon_soft = 0)
         float high_frequency_noise_modifier = lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 4.0, 0.0, 1.0));
 #endif
 	
-		// ˜c‚Ü‚¹‚½‚ü”gWorleyƒmƒCƒY‚Åƒx[ƒX‰_Œ`ó‚ğNH‚·‚é
+		// æ­ªã¾ã›ãŸé«˜å‘¨æ³¢Worleyãƒã‚¤ã‚ºã§ãƒ™ãƒ¼ã‚¹é›²å½¢çŠ¶ã‚’ä¾µé£Ÿã™ã‚‹
 #if 1
         final_cloud = Remap(base_cloud_with_coverage, high_frequency_noise_modifier * 0.2, 1.0, 0.0, 1.0);
 #else	
@@ -179,20 +259,20 @@ float horizon_soft = 0)
 }
 
 
-//[“xî•ñ‚Å‚Í‚È‚­A“§‰ß—¦‚Å‰_‚Ì‘¶İ‚ğ•Ô‚·Œy—Ê‰»”ÅRayMarch
+//æ·±åº¦æƒ…å ±ã§ã¯ãªãã€é€éç‡ã§é›²ã®å­˜åœ¨ã‚’è¿”ã™è»½é‡åŒ–ç‰ˆRayMarch
 float RayMarch(
 float3 ray_origin,
 float3 ray_step,
 int steps,
 float3 coarse_weather)
 {
-    // ƒŒƒC‚Ì1ƒXƒeƒbƒv‚Ì’·‚³
+    // ãƒ¬ã‚¤ã®1ã‚¹ãƒ†ãƒƒãƒ—ã®é•·ã•
     float step_size = length(ray_step);
     
-    //ƒŒƒC‚Ì•ûŒü
+    //ãƒ¬ã‚¤ã®æ–¹å‘
     const float3 ray_direction = normalize(ray_step);
 	
-	// ƒŒƒCŠJnˆÊ’u‚ğ­‚µƒ‰ƒ“ƒ_ƒ€‚É‚µ‚Ä‰¡‹Ø‚ğ–Ú—§‚½‚È‚­‚·‚éiƒfƒBƒUƒŠƒ“ƒOj
+	// ãƒ¬ã‚¤é–‹å§‹ä½ç½®ã‚’å°‘ã—ãƒ©ãƒ³ãƒ€ãƒ ã«ã—ã¦æ¨ªç­‹ã‚’ç›®ç«‹ãŸãªãã™ã‚‹ï¼ˆãƒ‡ã‚£ã‚¶ãƒªãƒ³ã‚°ï¼‰
     float3 sample_point = ray_origin + ray_step * Hash(ray_origin * 6.0);
 
     float view_up = saturate(dot(normalize(ray_step), float3(0, 1, 0)));
@@ -205,7 +285,7 @@ float3 coarse_weather)
 
     float transmittence = 1.0;
     
-    //‹——£§ŒÀ
+    //è·é›¢åˆ¶é™
     float dist = 0;
     const float limit_dist = length(ray_step) * steps;
     
@@ -246,7 +326,7 @@ float3 coarse_weather)
             float step_scale = 1.0f;
             if (cloud_test <= 0.0)
             {
-                //’n•½ü‚Ír‚­Aã‹ó‚Í×‚©‚­ƒXƒeƒbƒv‚ği‚ß‚é
+                //åœ°å¹³ç·šã¯è’ãã€ä¸Šç©ºã¯ç´°ã‹ãã‚¹ãƒ†ãƒƒãƒ—ã‚’é€²ã‚ã‚‹
                 //step_scale = lerp(2.0f, 6.0f, horizon);
             }
             sample_point += ray_step * step_scale;
@@ -260,7 +340,7 @@ float3 coarse_weather)
 
 }
 
-// ƒŒƒC‚Æ‹…‚ÌŒğ·”»’è
+// ãƒ¬ã‚¤ã¨çƒã®äº¤å·®åˆ¤å®š
 float IntersectSphere(float3 pos, float3 dir, float r)
 {
     float a = dot(dir, dir);
@@ -285,6 +365,13 @@ float4 main(VS_OUT pin) : SV_TARGET
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
     
+    float object_depth = SampleObjectDepth(pin.texcoord.xy);
+    if (object_depth < 1.0f)
+    {
+        //ç‰©ä½“ãŒé›²ã®å‰ã«ã‚ã‚‹å ´åˆã€é›²ã‚’æç”»ã—ãªã„
+        return float4(sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb, 1.0f);
+    }
+    
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
 
     if (ray_dir.y < 0.0)
@@ -295,7 +382,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     float t0 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.x);
     float t1 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.y);
 
-    // ‰_ƒŒƒCƒ„[‚ÉŒğ·‚µ‚È‚¢ê‡‚ÍƒXƒLƒbƒv
+    // é›²ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«äº¤å·®ã—ãªã„å ´åˆã¯ã‚¹ã‚­ãƒƒãƒ—
     if (t0 < 0.0 || t1 < 0.0)
         return float4(0, 0, 0, 0);
 
@@ -305,17 +392,17 @@ float4 main(VS_OUT pin) : SV_TARGET
 
     int base_steps = ray_marching_steps;
 
-    // ƒ‹[ƒv“àƒTƒ“ƒvƒŠƒ“ƒO‚ğ”ğ‚¯‚é‚½‚ßA’†ŠÔ“_‚Å“VŒó‚ğ1‰ñ‚¾‚¯ƒTƒ“ƒvƒŠƒ“ƒO
+    // ãƒ«ãƒ¼ãƒ—å†…ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã‚’é¿ã‘ã‚‹ãŸã‚ã€ä¸­é–“ç‚¹ã§å¤©å€™ã‚’1å›ã ã‘ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
     float3 mid_point = (ray_origin + ray_endpoint) * 0.5;
     float3 coarse_weather = SampleWeatherData(mid_point.xz);
     float coarse_coverage = coarse_weather.r * cloud_coverage_scale;
 
-    // ¬‚³‚¢”í•¢—¦‚È‚çŠ®‘S‚ÉƒXƒLƒbƒviƒ‰ƒCƒgƒVƒƒƒtƒg–Ú“I‚È‚ç¬‚³‚¢‰_‚Í–³‹j
+    // å°ã•ã„è¢«è¦†ç‡ãªã‚‰å®Œå…¨ã«ã‚¹ã‚­ãƒƒãƒ—ï¼ˆãƒ©ã‚¤ãƒˆã‚·ãƒ£ãƒ•ãƒˆç›®çš„ãªã‚‰å°ã•ã„é›²ã¯ç„¡è¦–ï¼‰
     const float SKIP_COVERAGE_THRESHOLD = 0.03f;
     if (coarse_coverage < SKIP_COVERAGE_THRESHOLD)
         return float4(0, 0, 0, 1);
 
-    // ”í•¢—¦‚É‰‚¶‚ÄƒXƒeƒbƒv”‚ğk¬i’áƒRƒXƒgj
+    // è¢«è¦†ç‡ã«å¿œã˜ã¦ã‚¹ãƒ†ãƒƒãƒ—æ•°ã‚’ç¸®å°ï¼ˆä½ã‚³ã‚¹ãƒˆï¼‰
     int steps = max(1, (int) (base_steps * lerp(0.1, 1.0f, saturate(1.0 - coarse_coverage))));
     float3 ray_step = ray_dir * (shell_dist / steps);
 
@@ -323,12 +410,12 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     cloud_presence = saturate(cloud_presence);
     
-    //[“xî•ñ
+    //æ·±åº¦æƒ…å ±
     float depth_norm = saturate(t0 / t1);
-    //‰_‚ª‚È‚¢ƒsƒNƒZƒ‹‚ÍÅ‰“‚Éİ’è
+    //é›²ãŒãªã„ãƒ”ã‚¯ã‚»ãƒ«ã¯æœ€é ã«è¨­å®š
     if(cloud_presence<=0.001f)
         depth_norm = 1.0f;
      
-    // ‰_‚Ì‘¶İ‚ğÔƒ`ƒƒƒ“ƒlƒ‹‚ÉŠi”[A[“xî•ñ‚ğgƒ`ƒƒƒ“ƒlƒ‹‚ÉŠi”[
+    // é›²ã®å­˜åœ¨ã‚’èµ¤ãƒãƒ£ãƒ³ãƒãƒ«ã«æ ¼ç´ã€æ·±åº¦æƒ…å ±ã‚’gãƒãƒ£ãƒ³ãƒãƒ«ã«æ ¼ç´
     return float4(cloud_presence, depth_norm, 0, 1);
 }
