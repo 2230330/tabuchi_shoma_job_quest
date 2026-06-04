@@ -130,7 +130,7 @@ private:
     struct DiffuseCB {
         UINT  faceIndex;
         UINT frameIndex;
-        float alpha{0.05};
+        float alpha{0.05f};
         float mip_lod{ 1.f };
         };
     Microsoft::WRL::ComPtr<ID3D11Buffer> cb_diffuse_; // b0: roughness/face

@@ -32,7 +32,7 @@ public:
 
     void Render()override;
 
-    bool HasRenderableCloud();
+    const bool HasRenderableCloud();
 
 private:
     //enable cloud

@@ -183,7 +183,7 @@ void RenderCloudSystem::Render()
             //一つ見つかればそれで終わり
         });
 }
-bool RenderCloudSystem::HasRenderableCloud()
+const bool RenderCloudSystem::HasRenderableCloud()
 {
     return enable_cloud_;
 }

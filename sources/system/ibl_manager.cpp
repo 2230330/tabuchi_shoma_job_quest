@@ -296,7 +296,6 @@ void IBLManager::Initialize(ID3D11Device* dev)
 
     //雲用ノイズテクスチャ
     {
-        HRESULT hr{ S_OK };
 
         const wchar_t* low_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley.dds";
         _ASSERT_EXPR(std::filesystem::exists(low_freq_noise_tex_path), "ファイルが存在しません");
@@ -348,9 +347,6 @@ void IBLManager::BuildSkyCubeFromEnvSource()
     SkyCubeCB cb{};
     cb.faceIndex = sky_cube_next_face_;
     ctx_->UpdateSubresource(cb_sky_cube_.Get(), 0, nullptr, &cb, 0, 0);
-
-    //入力SRV
-    ID3D11SamplerState* sampls[] = { samp_linear_clamp_.Get() };
 
     ctx_->PSSetConstantBuffers(0, 1, cb_sky_cube_.GetAddressOf());
 

@@ -103,8 +103,6 @@ void SceneTest::UpdateCore(float elapsed_time)
 
 void SceneTest::RenderCore(float elapsed_time)
 {
-    HRESULT hr{ S_OK };
-
     FLOAT color[]{ .0f,.0f,.0f,0.f };
 
     ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
