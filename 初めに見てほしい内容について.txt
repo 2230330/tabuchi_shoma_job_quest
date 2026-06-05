@@ -9,6 +9,8 @@ https://sites.google.com/view/tabuchishomaportfolio/%E5%80%8B%E4%BA%BA%E8%A3%BD%
 
 制作人数  ：1人
 
+レンダリングパイプライン
+sources/system/render_system_manager.cpp
 
 実装した技術
 ・大気散乱
