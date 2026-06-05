@@ -12,7 +12,7 @@ https://sites.google.com/view/tabuchishomaportfolio/%E5%80%8B%E4%BA%BA%E8%A3%BD%
 レンダリングパイプライン
 ソースコード：sources/system/render_system_manager.cpp
 
-実装した技術
+実装した技術・見てほしい個所について
 ・大気散乱
 ソースコード：shaderes/sky_atmosphere_ps.hlsl
 
