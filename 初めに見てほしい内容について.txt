@@ -10,23 +10,23 @@ https://sites.google.com/view/tabuchishomaportfolio/%E5%80%8B%E4%BA%BA%E8%A3%BD%
 制作人数  ：1人
 
 レンダリングパイプライン
-sources/system/render_system_manager.cpp
+ソースコード：sources/system/render_system_manager.cpp
 
 実装した技術
 ・大気散乱
-shaderes/sky_atmosphere_ps.hlsl
+ソースコード：shaderes/sky_atmosphere_ps.hlsl
 
 ・ボリューメトリッククラウド
-shaderes/volumetric_cloud_ps.hlsl
+ソースコード：shaderes/volumetric_cloud_ps.hlsl
 
 ・リアルタイムキューブマップ
-sources/system/ibl_manager.cpp
+ソースコード：sources/system/ibl_manager.cpp
 
 ・ディファードレンダリング
-sources/system/deferred_render_system.cpp
+ソースコード：sources/system/deferred_render_system.cpp
 
 ・カスケードシャドウマップ
-sources/system/deferred_render_system.cpp
+ソースコード：sources/system/deferred_render_system.cpp
 
 ・SSR
-shaderes/screen_space_reflection_ps.hlsl
+ソースコード：shaderes/screen_space_reflection_ps.hlsl
