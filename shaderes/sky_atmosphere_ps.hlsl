@@ -214,9 +214,8 @@ float4 main(VS_OUT pin):SV_TARGET
     float3 position =  float3(0.f, height+earth_height, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
     float3 sun_pos = light_dir * sun_distance; //太陽の位置()
-    float3 sun_dir = normalize(sun_pos.xyz-pos.xyz);//頂点ー＞太陽
-    //カメラから天球の各頂点への方向
-    float3 view_dir = normalize(pos.xyz - camera_position.xyz); //camera->頂点まで方向
+    float3 sun_dir = normalize(sun_pos.xyz);
+    float3 view_dir = normalize(pos.xyz - camera_position.xyz); 
     
     //疑似多重散乱の事前計算
     float3 multi_scattering = PrecomputeMultiScattering(position, view_dir, sun_dir);

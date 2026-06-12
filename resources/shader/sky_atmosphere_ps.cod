@@ -163,20 +163,18 @@ mul r4.xyz, r1.wwww, r4.xyzx  // r4.x <- light_dir.x; r4.y <- light_dir.y; r4.z 
 mul r5.xyz, r4.xyzx, cb11[1].yyyy  // r5.x <- sun_pos.x; r5.y <- sun_pos.y; r5.z <- sun_pos.z
 
 #line 217
-mov r6.xyz, -r2.xyzx
-add r5.xyz, r5.xyzx, r6.xyzx
 dp3 r1.w, r5.xyzx, r5.xyzx
 rsq r1.w, r1.w
 mul r5.xyz, r1.wwww, r5.xyzx  // r5.x <- sun_dir.x; r5.y <- sun_dir.y; r5.z <- sun_dir.z
 
-#line 219
+#line 218
 mov r6.xyz, -cb7[0].xyzx
 add r2.xyz, r2.xyzx, r6.xyzx
 dp3 r1.w, r2.xyzx, r2.xyzx
 rsq r1.w, r1.w
 mul r2.xyz, r1.wwww, r2.xyzx  // r2.x <- view_dir.x; r2.y <- view_dir.y; r2.z <- view_dir.z
 
-#line 222
+#line 221
 nop 
 mov r3.xyz, r3.xyzx
 mov r2.xyz, r2.xyzx
@@ -514,10 +512,10 @@ if_z r2.w
   mov r7.xyz, r7.xyzx  // r7.x <- <PrecomputeMultiScattering return value>.x; r7.y <- <PrecomputeMultiScattering return value>.y; r7.z <- <PrecomputeMultiScattering return value>.z
 endif 
 
-#line 222
+#line 221
 mov r7.xyz, r7.xyzx  // r7.x <- multi_scattering.x; r7.y <- multi_scattering.y; r7.z <- multi_scattering.z
 
-#line 225
+#line 224
 nop 
 mov r3.xyz, r3.xyzx
 mov r2.xyz, r2.xyzx
@@ -921,20 +919,20 @@ endloop
 #line 198
 mov r8.xyz, r8.xyzx  // r8.x <- <ComputeSkyColor return value>.x; r8.y <- <ComputeSkyColor return value>.y; r8.z <- <ComputeSkyColor return value>.z
 
-#line 225
+#line 224
 mov r8.xyz, r8.xyzx  // r8.x <- single_scattering.x; r8.y <- single_scattering.y; r8.z <- single_scattering.z
 
-#line 230
+#line 229
 add r0.xyz, r7.xyzx, r8.xyzx
 add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- sky_color.x; r0.y <- sky_color.y; r0.z <- sky_color.z
 
-#line 234
+#line 233
 itof r1.xyz, l(0, 1, 0, 0)
 dp3 r0.w, r4.xyzx, r1.xyzx
 max r0.w, r0.w, l(0.000000)
 min r0.w, r0.w, l(1.000000)  // r0.w <- sun_elevation
 
-#line 236
+#line 235
 itof r1.xyz, l(0, 0, 0, 0)
 mov r2.xyz, l(-0.100000,-0.100000,-0.200000,-0.000000)
 add r1.xyz, r1.xyzx, r2.xyzx
@@ -942,8 +940,8 @@ mul r1.xyz, r0.wwww, r1.xyzx
 add r1.xyz, r1.xyzx, l(0.100000, 0.100000, 0.200000, 0.000000)
 add r0.xyz, r0.xyzx, r1.xyzx
 
-#line 238
+#line 237
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 
-// Approximately 530 instruction slots used
+// Approximately 528 instruction slots used

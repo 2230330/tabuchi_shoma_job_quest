@@ -3,6 +3,7 @@
 #include<tchar.h>
 #include<iostream>
 #include<filesystem>
+#include<random>
 
 #include"../../headers/graphics.h"
 #include"../../headers/misc.h"
@@ -14,6 +15,7 @@
 #include"../../headers/system/update_system_manager.h"
 #include"../../headers/system/render_system_manager.h"
 #include"../../headers/world/world.h"
+#include"../../headers/entity/entity_manager.h"
 #include"../../headers/render_state.h"
 #include"../../external/imgui/imgui.h"
 
@@ -23,6 +25,7 @@ SceneTest::SceneTest(const HWND hwnd)
 {
 
 }
+
 
 bool SceneTest::InitializeCore()
 {
@@ -61,11 +64,12 @@ bool SceneTest::InitializeCore()
     {
         comp_edit->Load("progress.json");
         
-        //for (int i = 0; i < 100; i++)
+        //const int size = 100;
+        //for (int i = 0; i < size; i++)
         //{
         //    uint32_t entity = world->GetEntityManager()->Add();
         //    ComponentPosition pos;
-        //    pos.value = { 3.f * static_cast<float>( i % 10), 1,3.f * static_cast<float>( i / 10) };
+        //    pos.value = { 3.f * static_cast<float>(i % 10), 1,3.f * static_cast<float>(i / 10) };
         //    comp_mng->Add(entity, pos);
         //    ComponentRotation rot;
         //    rot.value = { 0, 0, 0 };
@@ -78,7 +82,7 @@ bool SceneTest::InitializeCore()
         //    ComponentAdjastPbrParamter ajust_pbr_paramter;
         //    comp_mng->Add(entity, ajust_pbr_paramter);
         //    ComponentGltf gltf;
-        //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
+        //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
         //    comp_mng->Add(entity, gltf);
         //    ComponentInstanced instanced;
         //    comp_mng->Add(entity, instanced);

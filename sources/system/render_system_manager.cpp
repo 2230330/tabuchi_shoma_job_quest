@@ -120,7 +120,7 @@ void RenderSystemManager::RenderAll()
     bool sky_flag = sky_render_system_->GetSkyFlag();
     bool cloud_flag = cloud_render_system_->HasRenderableCloud();
 
-    if (back_sample_count_ < back_sample_rimit_) {
+    if (back_sample_count_ < back_sample_limit_) {
         back_sample_count_++;
     }
     else {
