@@ -138,7 +138,7 @@ void RenderSystemManager::RenderAll()
         cloud_render_system_->SetSkyColorSRV(sky_framebuffer_->GetShaderResourceView(0).Get());
         //オブジェクトの深度情報を渡すことで、オブジェクトがある位置は雲が描画されないようにする(早期処理)
         cloud_render_system_->SetObjectDepthSRV(deferred_framebuffer_->GetSRV(Target::Depth));
-        cloud_render_system_->SetObjectResolution(Graphics::Instance().GetScreenWidth()*obj_scale, Graphics::Instance().GetScreenHeight()*obj_scale);
+        cloud_render_system_->SetObjectResolution(Graphics::Instance().GetScreenWidth()*obj_scale_, Graphics::Instance().GetScreenHeight()*obj_scale_);
         cloud_render_system_->Render();
 
         

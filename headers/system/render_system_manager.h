@@ -75,8 +75,8 @@ private:
     //スカイキューブの分割
     int ibl_steps_per_frame_ = 1;
 
-    const float back_scale_ = 4.0f;
-    const float obj_scale = 1.0f;
+    static constexpr float back_scale_ = 4.0f;
+    static constexpr float obj_scale_ = 1.0f;
     //背景のサンプリング間隔
     //マイフレーム呼び出す必要はないと感じました
     int back_sample_count_ = 0;
