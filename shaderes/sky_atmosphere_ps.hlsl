@@ -31,7 +31,7 @@ float3 SigmaMie(float h)
 float3 SigmaOzone(float h)
 {
     float3 coeff = float3(0.650e-6, 1.881e-6, 0.085e-6);
-    float ozoneFactor = max(0.0, 1.0 - (abs(h-ozone_center_height)/ozone_scale_half_width));
+    float ozoneFactor = max(0.0, 1.0 - (abs(h - ozone_center_height) / ozone_scale_half_width));
     return coeff * ozoneFactor;
 }
 //フェーズ関数(レイリー散乱)
@@ -43,7 +43,7 @@ float RayleighPhase(float cos_theta)
     //return (3.0 / (16.0 * PI)) * (1.0 + pow(cos_theta * 0.5 + 0.5, 2.0));//福井先生のコードより
 }
 //フェーズ関数(ミー散乱)
-float MiePhase(float cos_theta,float g)
+float MiePhase(float cos_theta, float g)
 {
     //ヘニエイ・グリーンスタイン関数
     float g2 = g * g;
@@ -53,10 +53,10 @@ float MiePhase(float cos_theta,float g)
 //距離×平均係数で指数減衰を近似
 float3 TransmittanceApprox(float3 startPos, float3 endPos)
 {
-    float distance = max(50e3f,length(endPos - startPos));
+    float distance = max(50e3f, length(endPos - startPos));
     // 高度に依存した sigma_t_avg を評価するのが理想だが、まずは sample midpoint を使う
     float3 midPos = (startPos + endPos) * 0.5f;
-    float h = max(0.0f,length(midPos) - earth_height);
+    float h = max(0.0f, length(midPos) - earth_height);
     float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
     return exp(-sigma_t * distance); // component-wise exp
 }
@@ -73,7 +73,7 @@ static const float3 INV_WAVELENGTH4 = (float3(
 float3 ComputeSunIrradiance(float air_mass)
 {
     // 光学的厚さ τ(λ)
-    float3 tau = INV_WAVELENGTH4 * air_mass *3e9f /*スキャッタリングスケール*/;
+    float3 tau = INV_WAVELENGTH4 * air_mass * 3e9f /*スキャッタリングスケール*/;
 
     // Beer-Lambert減衰
     float3 Ei = exp(-tau);
@@ -162,7 +162,7 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
     //夕焼けを作る際、夕焼けは太陽の傾きによるミー散乱の強化が主な要因の為、
     //太陽の傾きで強くする
     float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0)));
-    float mie_boost =horizon_factor * (0.01f + air_mass * 0.05f);
+    float mie_boost = horizon_factor * (0.01f + air_mass * 0.05f);
     float phase_mie = MiePhase(cos_theta, 0.8f) * mie_boost;
     
     //青空の時は変化が少ないのでサンプル数を減らし、
@@ -199,9 +199,10 @@ float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
 }
 
 //大気散乱
-float4 main(VS_OUT pin):SV_TARGET
-{    
-    float4 color = sky_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord);
+float4 main(VS_OUT pin) : SV_TARGET
+{
+    //夜の画像などを実装したい場合に使用
+    //float4 color = sky_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord);
   
     //大気散乱    
     float3 sky_color = float3(0, 0, 0);
@@ -211,11 +212,12 @@ float4 main(VS_OUT pin):SV_TARGET
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
 
-    float3 position =  float3(0.f, height+earth_height, 0.f);
+    float3 position = float3(0.f, height + earth_height, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
     float3 sun_pos = light_dir * sun_distance; //太陽の位置()
-    float3 sun_dir = normalize(sun_pos.xyz);
-    float3 view_dir = normalize(pos.xyz - camera_position.xyz); 
+    float3 sun_dir = normalize(sun_pos.xyz - pos.xyz); //頂点ー＞太陽
+    //カメラから天球の各頂点への方向
+    float3 view_dir = normalize(pos.xyz - camera_position.xyz); //camera->頂点まで方向
     
     //疑似多重散乱の事前計算
     float3 multi_scattering = PrecomputeMultiScattering(position, view_dir, sun_dir);
@@ -226,7 +228,7 @@ float4 main(VS_OUT pin):SV_TARGET
     view_dir,
     sun_dir);
     
-    sky_color += single_scattering + (multi_scattering) ; //環境光的に少し足す
+    sky_color += single_scattering + (multi_scattering); //環境光的に少し足す
     
     //夜の簡易実装
     float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //視線と太陽の角度

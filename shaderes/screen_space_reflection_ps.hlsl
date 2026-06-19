@@ -109,7 +109,7 @@ bool OutOfBounds(float2 uv)
 //    return clamp((int) mip, 0, max_mip);
 //}
 
-static const int MAX_STEPS = 64;
+static const int MAX_STEPS = 256;
 
 float4 main(VS_OUT pin) : SV_TARGET
 {

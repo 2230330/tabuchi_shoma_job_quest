@@ -213,6 +213,7 @@
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
     <ClInclude Include="headers\component\component_camera.h" />
     <ClInclude Include="headers\component\component_cascade_shadow.h" />
+    <ClInclude Include="headers\component\component_deferred_render.h" />
     <ClInclude Include="headers\component\component_screen_space_reflection.h" />
     <ClInclude Include="headers\component\component_name.h" />
     <ClInclude Include="headers\component\component_volumetric_cloud.h" />

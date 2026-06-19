@@ -31,6 +31,7 @@ private:
     int32_t has_cloud_ = -1;
     int32_t has_cascade_shadow_ = -1;
     int32_t has_ssr_ = -1;
+    int32_t has_deferred_ = -1;
 
 
     //リネーム中のEntity

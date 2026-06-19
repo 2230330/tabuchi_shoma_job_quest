@@ -17,13 +17,14 @@
 #include "component_material.h"
 #include "component_texture.h"
 #include "component_instanced.h"
-#include "component_sky_atmosphere.h"
 #include "component_volumetric_cloud.h"
+#include "component_sky_atmosphere.h"
 #include"component_ajast_pbr_paramter_.h"
 #include "component_camera.h"
 #include "component_screen_space_reflection.h"
 #include"component_name.h"
 #include"component_cascade_shadow.h"
+#include"component_deferred_render.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
 class ComponentManager 
@@ -49,6 +50,7 @@ public:
         registerContainer<ComponentSsr>(ssrs_);
         registerContainer<ComponentName>(names_);
         registerContainer<ComponentCascadeShadow>(cas_shadows_);
+        registerContainer<ComponentDeferredRender>(deferred_renders_);
     }
 
     template<typename T>
@@ -218,4 +220,5 @@ private:
     std::vector<ComponentSsr>ssrs_;
     std::vector<ComponentName>names_;
     std::vector<ComponentCascadeShadow>cas_shadows_;
+    std::vector<ComponentDeferredRender>deferred_renders_;
 };

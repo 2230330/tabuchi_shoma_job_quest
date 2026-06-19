@@ -125,10 +125,10 @@ mov r0.x, l(3.141593)  // r0.x <- PI
 #line 67
 mov r0.yzw, l(0,0.000000,0.000000,0.000000)  // r0.y <- INV_WAVELENGTH4.x; r0.z <- INV_WAVELENGTH4.y; r0.w <- INV_WAVELENGTH4.z
 
-#line 207
+#line 208
 itof r1.xyz, l(0, 0, 0, 0)  // r1.x <- sky_color.x; r1.y <- sky_color.y; r1.z <- sky_color.z
 
-#line 210
+#line 211
 mul r1.w, v1.x, l(2.000000)
 mov r2.x, l(-1.000000)
 add r1.w, r1.w, r2.x  // r1.w <- ndc.x
@@ -137,7 +137,7 @@ mov r2.x, -r2.x
 add r2.x, r2.x, l(1.000000)  // r2.x <- ndc.y
 mov r2.yz, l(0,0,1.000000,0)  // r2.y <- ndc.z; r2.z <- ndc.w
 
-#line 211
+#line 212
 mul r3.xyzw, r1.wwww, cb7[23].xyzw
 mul r4.xyzw, r2.xxxx, cb7[24].xyzw
 add r3.xyzw, r3.xyzw, r4.xyzw
@@ -146,35 +146,37 @@ add r3.xyzw, r3.xyzw, r4.xyzw
 mul r2.xyzw, r2.zzzz, cb7[26].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw  // r2.x <- pos.x; r2.y <- pos.y; r2.z <- pos.z; r2.w <- pos.w
 
-#line 212
+#line 213
 div r2.xyz, r2.xyzx, r2.wwww
 
-#line 214
+#line 215
 add r3.y, cb11[1].x, cb11[2].x  // r3.y <- position.y
 mov r3.xz, l(0,0,0,0)  // r3.x <- position.x; r3.z <- position.z
 
-#line 215
+#line 216
 mov r4.xyz, -cb3[11].xyzx
 dp3 r1.w, r4.xyzx, r4.xyzx
 rsq r1.w, r1.w
 mul r4.xyz, r1.wwww, r4.xyzx  // r4.x <- light_dir.x; r4.y <- light_dir.y; r4.z <- light_dir.z
 
-#line 216
+#line 217
 mul r5.xyz, r4.xyzx, cb11[1].yyyy  // r5.x <- sun_pos.x; r5.y <- sun_pos.y; r5.z <- sun_pos.z
 
-#line 217
+#line 218
+mov r6.xyz, -r2.xyzx
+add r5.xyz, r5.xyzx, r6.xyzx
 dp3 r1.w, r5.xyzx, r5.xyzx
 rsq r1.w, r1.w
 mul r5.xyz, r1.wwww, r5.xyzx  // r5.x <- sun_dir.x; r5.y <- sun_dir.y; r5.z <- sun_dir.z
 
-#line 218
+#line 220
 mov r6.xyz, -cb7[0].xyzx
 add r2.xyz, r2.xyzx, r6.xyzx
 dp3 r1.w, r2.xyzx, r2.xyzx
 rsq r1.w, r1.w
 mul r2.xyz, r1.wwww, r2.xyzx  // r2.x <- view_dir.x; r2.y <- view_dir.y; r2.z <- view_dir.z
 
-#line 221
+#line 223
 nop 
 mov r3.xyz, r3.xyzx
 mov r2.xyz, r2.xyzx
@@ -512,10 +514,10 @@ if_z r2.w
   mov r7.xyz, r7.xyzx  // r7.x <- <PrecomputeMultiScattering return value>.x; r7.y <- <PrecomputeMultiScattering return value>.y; r7.z <- <PrecomputeMultiScattering return value>.z
 endif 
 
-#line 221
+#line 223
 mov r7.xyz, r7.xyzx  // r7.x <- multi_scattering.x; r7.y <- multi_scattering.y; r7.z <- multi_scattering.z
 
-#line 224
+#line 226
 nop 
 mov r3.xyz, r3.xyzx
 mov r2.xyz, r2.xyzx
@@ -919,20 +921,20 @@ endloop
 #line 198
 mov r8.xyz, r8.xyzx  // r8.x <- <ComputeSkyColor return value>.x; r8.y <- <ComputeSkyColor return value>.y; r8.z <- <ComputeSkyColor return value>.z
 
-#line 224
+#line 226
 mov r8.xyz, r8.xyzx  // r8.x <- single_scattering.x; r8.y <- single_scattering.y; r8.z <- single_scattering.z
 
-#line 229
+#line 231
 add r0.xyz, r7.xyzx, r8.xyzx
 add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- sky_color.x; r0.y <- sky_color.y; r0.z <- sky_color.z
 
-#line 233
+#line 235
 itof r1.xyz, l(0, 1, 0, 0)
 dp3 r0.w, r4.xyzx, r1.xyzx
 max r0.w, r0.w, l(0.000000)
 min r0.w, r0.w, l(1.000000)  // r0.w <- sun_elevation
 
-#line 235
+#line 237
 itof r1.xyz, l(0, 0, 0, 0)
 mov r2.xyz, l(-0.100000,-0.100000,-0.200000,-0.000000)
 add r1.xyz, r1.xyzx, r2.xyzx
@@ -940,8 +942,8 @@ mul r1.xyz, r0.wwww, r1.xyzx
 add r1.xyz, r1.xyzx, l(0.100000, 0.100000, 0.200000, 0.000000)
 add r0.xyz, r0.xyzx, r1.xyzx
 
-#line 237
+#line 239
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 
-// Approximately 528 instruction slots used
+// Approximately 530 instruction slots used

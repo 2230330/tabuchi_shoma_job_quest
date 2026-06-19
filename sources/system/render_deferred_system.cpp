@@ -104,6 +104,22 @@ RenderDeferredSystem::~RenderDeferredSystem() = default;
 void RenderDeferredSystem::Render()
 {
     ID3D11DeviceContext* ctx = Graphics::Instance().GetDeviceContext();
+    
+    //IMGUIの情報に画像情報を送る。
+    //これは、就職作品としてのアピールの為であり、別に必要ではありません
+    comp_mng_.ForEach<ComponentDeferredRender>([&](uint32_t entity_id, ComponentDeferredRender& deferred)
+        {
+            int size = _countof(srvs_);
+            if (deferred.srvs_.size() <= 0)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    deferred.srvs_.emplace_back(srvs_[i].Get());
+                }
+            }
+        });
+
+
 
     //間接光
     {
@@ -274,7 +290,7 @@ void RenderDeferredSystem::directional_shadow_rendering()
 
         DirectX::XMMATRIX VP = V * P;
 
-        float aspect_ratio = shadowmap_width_ / shadowmap_height_;
+        float aspect_ratio = Graphics::Instance().GetScreenWidth() / Graphics::Instance().GetScreenHeight();
         DirectX::XMFLOAT4X4 light_view_projection;
         DirectX::XMFLOAT4X4 inverse_light_view_projection;
         //カスケードシャドウ

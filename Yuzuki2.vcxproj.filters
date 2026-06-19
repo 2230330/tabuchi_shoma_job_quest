@@ -275,6 +275,9 @@
     <ClInclude Include="headers\component\component_cascade_shadow.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_deferred_render.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">

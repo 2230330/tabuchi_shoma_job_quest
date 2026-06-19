@@ -145,7 +145,6 @@ void ComponentEditor::DrawImgui()
                 has_cascade_shadow_ = -1;
             }
         }
-
         //スクリーンスペースリフレクションの追加
         if (ImGui::Button("ssr"))
         {
@@ -164,6 +163,24 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.RemoveAllComponents(has_ssr_); // すべてのコンポーネントを削除
 
                 has_ssr_ = -1;
+            }
+        }
+        //ディファードレンダリング確認用
+        if (ImGui::Button("check Deferred Texture"))
+        {
+            if (has_deferred_ < 0)
+            {
+                uint32_t entity = enti_mng_.Add();
+                ComponentDeferredRender def;
+                comp_mng_.Add(entity, def);
+                
+                has_deferred_ = entity;
+            }
+            else
+            {
+                enti_mng_.Remove(has_deferred_);
+                comp_mng_.RemoveAllComponents(has_deferred_);
+                has_deferred_ = -1;
             }
         }
 
@@ -547,6 +564,22 @@ void ComponentEditor::DrawImgui()
                     ImGui::Separator();
                 }
 
+                //DeferredRenderの画像を表示
+                if (comp_mng_.Has<ComponentDeferredRender>(entity.entity))
+                {
+                    auto& srvs = comp_mng_.GetByEntity<ComponentDeferredRender>(entity.entity);
+                    if (!srvs.srvs_.empty())
+                    {
+                        auto* data = srvs.srvs_.data();
+                        int size = static_cast<int>(srvs.srvs_.size());
+                        for (int i=0;i<size;i++)
+                        {
+                            ImGui::Image(data[i], { 256.f,256.f }, { 0,0 });
+                        }
+                    }
+
+                }
+
                 //コンポーネントの追加
                 if (has_sky_!=entity.entity|| !has_cloud_!=entity.entity)
                 {
@@ -601,6 +634,7 @@ void ComponentEditor::DrawImgui()
                                 }
 
                             }
+
 
                         }
 
@@ -828,6 +862,12 @@ void ComponentEditor::Save(const std::string& filename)
 
         }
 
+        //Deferred確認用
+        if (comp_mng_.Has<ComponentDeferredRender>(entity.entity))
+        {
+            comp_json["Deferred Render"] = true;
+        }
+
         if (comp_mng_.Has<ComponentName>(entity.entity))
         {
             auto& n = comp_mng_.GetByEntity<ComponentName>(entity.entity);
@@ -1053,6 +1093,13 @@ void ComponentEditor::Load(const std::string& filename)
             ssr.intensity = j["intensity"];
             comp_mng_.Add(entity, ssr);
             has_ssr_ = entity;
+        }
+        //Deferred Render
+        if (comp_json.contains("Deferred Render"))
+        {
+            ComponentDeferredRender def;
+            comp_mng_.Add(entity, def);
+            has_deferred_ = entity;
         }
         // Name
         if (comp_json.contains("Name"))
