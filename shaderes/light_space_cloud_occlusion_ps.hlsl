@@ -1,6 +1,6 @@
 // ライトシャフト用：R値のみの雲存在マップ
 #include "fullscreen_quad.hlsli"
-#include "scene_constant_buffer.hlsli"
+#include "camera_buffer.hlsli"
 #include "forward_light.hlsli"
 
 #define LINEAR_CLAMP 3

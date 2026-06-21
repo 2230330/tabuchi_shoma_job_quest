@@ -4,14 +4,12 @@
 #include <wrl.h>
 #include <vector>
 
-#include "../framebuffer.h"
+//å‰æ–¹å®£è¨€
+class FrameBuffer;
 
-// IBLiImage Based Lightingj{ SkyCubei–¢ƒtƒBƒ‹ƒ^j‚ÌŒy—Êƒ}ƒl[ƒWƒƒ
-// - ‹N“®: BRDF LUT ‚ğ CS ‚Å¶¬
-// - ”wŒiƒ\[ƒXXV: FrameBuffer ‚Ì SRV ‚ğó‚¯æ‚è ¨ LatLong->Cube •ÏŠ·‚Å SkyCube ‚ğÄ¶¬
-// - Diffuse: SH(9ŒW”) ‚Í dirty ‚¾‚¯ÄŒvZi‚Ü‚¸‚ÍŠÈˆÕ‚Å‚à‰Âj
-// - Specular: PS‚ÅƒLƒ…[ƒumip‚Ö•ªŠ„XVidirty ‚¾‚¯j
-// - Object•`‰æ‘O: PrefEnv+BRDF LUT+SH ‚ğƒoƒCƒ“ƒh
+//IBLãƒãƒãƒ¼ã‚¸ãƒ£
+//ç”Ÿæˆã€€diffuse,specular,lut,sky_cube
+//ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆæç”»å‰ã«ã€IBLãƒªã‚½ãƒ¼ã‚¹ã‚’ãƒã‚¤ãƒ³ãƒ‰ã™ã‚‹é–¢æ•°
 class IBLManager {
 public:
     void Initialize(ID3D11Device* dev);
@@ -20,22 +18,20 @@ public:
     bool IsDirty() const { return dirty_; }
     void ClearDirty() { dirty_ = false; }
 
-    // ”wŒiƒ\[ƒXiback_fb ‚Ì SRVj‚ğó‚¯æ‚èA“à•”‚Ì env_source_srv_ ‚ğXV
-    void UpdateEnvironmentCapture(const FrameBuffer& back_fb);
 
-    // ƒLƒ…[ƒuƒ}ƒbƒv‚Ìì»
+    // èƒŒæ™¯ã‚½ãƒ¼ã‚¹
     void BuildSkyCubeFromEnvSource();
 
-    // DiffuseiSH 9ŒW”jXViŒy—Ê”Åj
+    // Diffuse
     void UpdateDiffuseSH();
 
-    // Specular PrefilteriGGXjXVF•ªŠ„XViface~mipj‚É‘Î‰
+    // Specular Prefilterï¼ˆGGXï¼‰æ›´æ–°
     void UpdateSpecularPrefilter();
 
-    // ƒIƒuƒWƒFƒNƒg•`‰æ‘O‚É IBL ƒŠƒ\[ƒX‚ğƒoƒCƒ“ƒh
+    // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆæç”»å‰ã« IBL ãƒªã‚½ãƒ¼ã‚¹ã‚’ãƒã‚¤ãƒ³ãƒ‰
     void BindForObjectPass(ID3D11DeviceContext* ctx);
 
-    // ”wŒi•`‰æ—pFSkyRenderSystem ‚Ö“n‚· SkyCube ‚Ì SRV
+    // èƒŒæ™¯æç”»ç”¨ï¼šSkyRenderSystem ã¸æ¸¡ã™ SkyCube ã® SRV
     ID3D11ShaderResourceView* GetSkyCubeSRV() const 
     { 
         if (cloud_flag_)
@@ -48,115 +44,135 @@ public:
         }
     }
     
-    //”wŒi‚É‰_‚ª‚ ‚é‚Ì‚©‚Ç‚¤‚©‚ğ’m‚é‚½‚ß‚ÌŠÖ”
+    //èƒŒæ™¯ã«é›²ãŒã‚ã‚‹ã®ã‹ã©ã†ã‹ã‚’çŸ¥ã‚‹ãŸã‚ã®é–¢æ•°
     void SetCloudFlag(bool cloud_flag) { cloud_flag_ = cloud_flag; }
-    //‹ó‚ª‚ ‚é‚©‚Ç‚¤‚©‚ğ’m‚é‚½‚ß‚ÌŠÖ”
+    //ç©ºãŒã‚ã‚‹ã‹ã©ã†ã‹ã‚’çŸ¥ã‚‹ãŸã‚ã®é–¢æ•°
     void SetSkyFlag(bool sky_flag) { sky_flag_ = sky_flag; }
 
 private:
-    // ƒpƒ‰ƒ[ƒ^
+    // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
     static constexpr UINT kCubeFaces = 6;
-    static constexpr UINT kPrefilterSize = 256; // Specular ƒLƒ…[ƒu
-    static constexpr UINT kBrdfLutSize = 256; // BRDF LUT
-    static constexpr UINT kSkyCubeSize = 512; // SkyCube ‰ğ‘œ“xi”wŒi•\¦/IBL“ü—Í‚É\•ªj
+    static constexpr UINT kPrefilterSize = 256; // Specular ã‚­ãƒ¥ãƒ¼ãƒ–
+    static constexpr UINT kBrdfLutSize = 1024; // BRDF LUT
+    static constexpr UINT kSkyCubeSize = 256; // SkyCube è§£åƒåº¦ï¼ˆèƒŒæ™¯è¡¨ç¤º/IBLå…¥åŠ›ã«ååˆ†ï¼‰
 
-    // ƒwƒ‹ƒp
+    // ãƒ˜ãƒ«ãƒ‘
     static UINT  CalcMipCount(UINT size);
-    static HRESULT LoadCSO(const wchar_t* path, Microsoft::WRL::ComPtr<ID3DBlob>& blob);
 
-    //DDS‚ÉƒZ[ƒu
+
+    //DDSã«ã‚»ãƒ¼ãƒ–
     void SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,bool force_srgb=false);
 
+    //SH9ç”¨ãƒãƒƒãƒ•ã‚¡ç”Ÿæˆ
+    //void CreateSHResources(ID3D11Device* device);
+
+    //ã‚¹ãƒšã‚­ãƒ¥ãƒ©ãƒ¼æƒ…å ±ã®æ›´æ–°
+    void BeginPmpemBaking()
+    {
+        if (pmrem_baking_)return;//æ—¢ã«ãƒ•ãƒ©ã‚°ãŒç«‹ã£ã¦ã„ã‚‹æ™‚ã¯ä½•ã‚‚ã—ãªã„
+
+        pmrem_baking_ = true;
+        prefilter_next_face_ = 0; prefilter_next_mip_ = 0;
+        pmrem_mip_count_ = CalcMipCount(kPrefilterSize);
+    }
 private:
-    // ƒtƒ‰ƒO
-    bool dirty_ = true;  // Specular/SH ‚ÌÄ¶¬‚ª•K—v‚È‚Æ‚« true
-    bool want_save_dds_ = false;//DDS•Û‘¶ƒtƒ‰ƒO
-    bool sky_flag_ = false;//‹ó‚ª‚ ‚é‚©‚Ç‚¤‚©
-    bool cloud_flag_ = false;//‰_‚ª‚ ‚é‚©‚Ç‚¤‚©
+    // ãƒ•ãƒ©ã‚°
+    bool dirty_ = true;  // Specular/SH ã®å†ç”ŸæˆãŒå¿…è¦ãªã¨ã true
+    bool want_save_dds_ = false;//DDSä¿å­˜ãƒ•ãƒ©ã‚°
+    bool sky_flag_ = false;//ç©ºãŒã‚ã‚‹ã‹ã©ã†ã‹
+    bool cloud_flag_ = false;//é›²ãŒã‚ã‚‹ã‹ã©ã†ã‹
 
-    // ƒfƒoƒCƒX/ƒRƒ“ƒeƒLƒXƒg
-    Microsoft::WRL::ComPtr<ID3D11Device>        dev_;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> ctx_;
+    // ãƒ‡ãƒã‚¤ã‚¹/ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
+    Microsoft::WRL::ComPtr<ID3D11Device>        dev_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext> ctx_=nullptr;
 
-    // ƒVƒF[ƒ_
-    Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_brdf_lut_;        // BRDF LUT ¶¬
-    Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_latlong_to_cube_; // LatLong -> Cube •ÏŠ·
-    Microsoft::WRL::ComPtr<ID3D11VertexShader>  ibl_screen_vs_;      // ‘S–Ê•`‰æ
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>   ps_prefilter_;       // Prefilter
+    // ã‚·ã‚§ãƒ¼ãƒ€
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader> cs_brdf_lut_=nullptr;        // BRDF LUT ç”Ÿæˆ
+    Microsoft::WRL::ComPtr<ID3D11VertexShader>  ibl_screen_vs_=nullptr;      // å…¨é¢æç”»
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>   ps_prefilter_=nullptr;       // Prefilter
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>   ps_diffuse_=nullptr;       // Diffuse
 
-    // ƒTƒ“ƒvƒ‰
-    Microsoft::WRL::ComPtr<ID3D11SamplerState>  samp_linear_clamp_;
+    // ã‚µãƒ³ãƒ—ãƒ©
+    Microsoft::WRL::ComPtr<ID3D11SamplerState>  samp_linear_clamp_=nullptr;
 
-    // ”wŒiƒ\[ƒXiLatLong/Equirect ‚È‚Ç‚Ì 2D SRVj
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> env_source_srv_;
-
-    // SkyCubei–¢ƒtƒBƒ‹ƒ^A”wŒi•`‰æ/IBL“ü—Í‚Åg—pj
-    Microsoft::WRL::ComPtr<ID3D11Texture2D>           sky_cube_tex_;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  sky_cube_srv_;
-    Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> sky_cube_uav_; // CS ‚Å‘‚­—p
-    std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> sky_cube_rtvs_; // face~mip
+    // SkyCubeï¼ˆæœªãƒ•ã‚£ãƒ«ã‚¿ã€èƒŒæ™¯æç”»/IBLå…¥åŠ›ã§ä½¿ç”¨ï¼‰
+    Microsoft::WRL::ComPtr<ID3D11Texture2D>           sky_cube_tex_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  sky_cube_srv_=nullptr;
+    std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> sky_cube_rtvs_; 
     struct SkyCubeCB {
         UINT  faceIndex;
-        float _pad[3]; // 16byte ƒAƒ‰ƒCƒƒ“ƒg
+        float _pad[3]; // 16byte ã‚¢ãƒ©ã‚¤ãƒ¡ãƒ³ãƒˆ
     };
-    Microsoft::WRL::ComPtr<ID3D11Buffer> cb_sky_cube_; // b0: face
+    Microsoft::WRL::ComPtr<ID3D11Buffer> cb_sky_cube_=nullptr; // b0: face
 
-    // Specular Prefilter o—ÍiƒLƒ…[ƒuj
-    Microsoft::WRL::ComPtr<ID3D11Texture2D>          prefilter_tex_;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> prefilter_srv_; // t1
-    std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> prefilter_rtvs_; // face~mip
+    // Specular Prefilter å‡ºåŠ›ï¼ˆã‚­ãƒ¥ãƒ¼ãƒ–ï¼‰
+    Microsoft::WRL::ComPtr<ID3D11Texture2D>          prefilter_tex_[2];
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> prefilter_srv_[2]; // è¡¨ç¤ºç”¨
+    std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> prefilter_rtvs_[2]; // faceÃ—mip
+    UINT pmrem_write_index_ = 0;
+    UINT pmrem_read_index_ = 1;
+
+    bool pmrem_baking_ = false;
+    UINT pmrem_mip_count_ = 0;
+
+    // Diffuse  å‡ºåŠ›ï¼ˆã‚­ãƒ¥ãƒ¼ãƒ–ï¼‰
+    //ping/pongã‚’æ¡ç”¨ã€ãƒ‡ã‚£ãƒ•ãƒ¥ãƒ¼ã‚ºã®è‡ªç„¶ãªè‰²ã®å¤‰åŒ–ã‚’ç›®çš„ã«å°å…¥
+    Microsoft::WRL::ComPtr<ID3D11Texture2D>          diffuse_tex_[2];
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> diffuse_srv_[2]; // t1
+    std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> diffuse_rtvs_[2]; // faceÃ—mip
+    UINT diffuse_write_index_ = 0;//æ›¸ãè¾¼ã¿å…ƒ
+    UINT diffuse_read_index_ = 1;//èª­ã¿è¾¼ã¿å…ƒ
 
     // BRDF LUT
-    Microsoft::WRL::ComPtr<ID3D11Texture2D>           brdf_lut_tex_; // RG16F
-    Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> brdf_lut_uav_;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  brdf_lut_srv_; // t2
+    Microsoft::WRL::ComPtr<ID3D11Texture2D>           brdf_lut_tex_=nullptr; // RG16F
+    Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> brdf_lut_uav_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  brdf_lut_srv_=nullptr; // t2
 
-    // ’è”ƒoƒbƒtƒ@
-    // PS—pCBiroughness / face indexj
+    // å®šæ•°ãƒãƒƒãƒ•ã‚¡
+    // PSç”¨CBï¼ˆroughness / face indexï¼‰
     struct PrefilterCB {
         UINT  faceIndex;
         float roughness;
         float mip_count;
-        float _pad; // 16byte ƒAƒ‰ƒCƒƒ“ƒg
+        float env_resolution;
     };
     Microsoft::WRL::ComPtr<ID3D11Buffer> cb_prefilter_; // b0: roughness/face
+    struct DiffuseCB {
+        UINT  faceIndex;
+        UINT frameIndex;
+        float alpha{0.05f};
+        float mip_lod{ 1.f };
+        };
+    Microsoft::WRL::ComPtr<ID3D11Buffer> cb_diffuse_; // b0: roughness/face
+    UINT frame_index_ = 0;
 
 private:
-    // ŒöŠJ SRV / CBiƒIƒuƒWƒFƒNƒgƒpƒX‚Åg—pj
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv_pref_env_; // t1: Specular Prefiltered Env
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv_brdf_lut_; // t2: BRDF LUT
-    // SH ŒW”ifloat3 ~ 9j
-    struct SH9Constants {
-        DirectX::XMFLOAT3 c[9];
-        float _pad; // 16byte ƒAƒ‰ƒCƒƒ“ƒg
-    };
-    Microsoft::WRL::ComPtr<ID3D11Buffer>             cb_sh_;        // b2: SH(9ŒW”)
+    // å…¬é–‹ SRV / CBï¼ˆã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãƒ‘ã‚¹ã§ä½¿ç”¨ï¼‰
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv_pref_env_=nullptr; // t1: Specular Prefiltered Env
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv_brdf_lut_=nullptr; // t2: BRDF LUT
 
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView>cube_rtv_all_;//‘SƒXƒ‰ƒCƒXˆêŠ‡
-    Microsoft::WRL::ComPtr<ID3D11GeometryShader>latlong_to_cube_gs_;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>latlong_to_cube_ps_;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>sky_cube_ps_;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_cube_ps_;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>sky_cube_ps_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_cube_ps_=nullptr;
 
 private:
-    // •ªŠ„XVƒCƒ“ƒfƒbƒNƒXiSpecular Prefilter —pj
+    // åˆ†å‰²æ›´æ–°ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ï¼ˆSpecular Prefilter ç”¨ï¼‰
     UINT prefilter_next_face_ = 0;
     UINT prefilter_next_mip_ = 0;
 
-    //•ªŠ„XVƒCƒ“ƒfƒbƒNƒXiSkyCube—pj
+    //åˆ†å‰²æ›´æ–°ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ï¼ˆSkyCubeç”¨ï¼‰
     UINT sky_cube_next_face_ = 0;
 
 private:
-        //‰_—pƒmƒCƒYƒeƒNƒXƒ`ƒƒ
+        //é›²ç”¨ãƒã‚¤ã‚ºãƒ†ã‚¯ã‚¹ãƒãƒ£
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>low_freq_perlin_worley_srv_ = nullptr;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>mid_freq_worley_srv_ = nullptr;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>high_freq_worley_srv_ = nullptr;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>weather_map_srv_ = nullptr;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>curl_noise_srv_ = nullptr;
 
-        //‰_ƒ{ƒbƒNƒX
-        Microsoft::WRL::ComPtr<ID3D11Texture2D>           cloud_cube_tex_;
-        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  cloud_cube_srv_;
-        std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> cloud_cube_rtvs_; // face~mip
+        //é›²ãƒœãƒƒã‚¯ã‚¹
+        Microsoft::WRL::ComPtr<ID3D11Texture2D>           cloud_cube_tex_=nullptr;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  cloud_cube_srv_=nullptr;
+        std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> cloud_cube_rtvs_; // faceÃ—mip
 
 };

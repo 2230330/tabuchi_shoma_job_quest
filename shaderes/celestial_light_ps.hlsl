@@ -1,6 +1,7 @@
 #include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
 #include"fullscreen_quad.hlsli"
+#include"camera_buffer.hlsli"
 
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
@@ -128,7 +129,7 @@ float4 main(VS_OUT pin) : SV_Target
     float outAlpha = saturate(colorAlpha * (1.0 - erosion )); 
 
     // 非プリマルチ出力にする（レンダラーで通常アルファ合成を想定）
-    float3 outColor = eroded_color*light_scale;
+    float3 outColor =saturate( eroded_color*light_scale);
 
     return float4(outColor, outAlpha);
 }

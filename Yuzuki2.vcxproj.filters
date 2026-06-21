@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Shaders">
@@ -36,20 +36,8 @@
     <Filter Include="sources\system">
       <UniqueIdentifier>{13f7a2e9-de57-44f9-bb95-3d216872c9b0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="headers\archetype">
-      <UniqueIdentifier>{b28aada2-aba1-4ff8-b565-fdf65b0be3ff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\archetype">
-      <UniqueIdentifier>{49c7d7cc-5d78-45ae-8990-ce7f69f7e44b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="headers\world">
       <UniqueIdentifier>{d26189f7-d26c-409f-af8d-699f178fdd97}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="headers\importer">
-      <UniqueIdentifier>{7bd56912-3e5f-400f-a7ff-0d7b1468f26f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\importer">
-      <UniqueIdentifier>{95523fd2-6d91-4743-a442-8d2f33d258c3}</UniqueIdentifier>
     </Filter>
     <Filter Include="headers\post_process">
       <UniqueIdentifier>{d00e35c1-ff1d-41a3-91cc-32f47bf06ffc}</UniqueIdentifier>
@@ -72,6 +60,9 @@
     <Filter Include="Shaders\GeometryShader">
       <UniqueIdentifier>{b409e5cc-bc7e-41a2-a3df-3db4c62abc5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sources\world">
+      <UniqueIdentifier>{ebfdf93f-67d0-4122-bcc2-ef648fabe2c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\geometric_primitive.h">
@@ -92,9 +83,6 @@
     <ClInclude Include="headers\sprite_batch.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="headers\texture.h">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="headers\framework.h">
       <Filter>headers</Filter>
     </ClInclude>
@@ -107,9 +95,6 @@
     <ClInclude Include="headers\light_manager.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="headers\camera.h">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="headers\scene\scene.h">
       <Filter>headers\scenes</Filter>
     </ClInclude>
@@ -120,9 +105,6 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="headers\model.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\skinned_mesh.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="external\imgui\imconfig.h">
@@ -200,7 +182,7 @@
     <ClInclude Include="headers\system\render_system_manager.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\transform_system.h">
+    <ClInclude Include="headers\system\update_transform_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
     <ClInclude Include="headers\system\render_gltf_system.h">
@@ -211,12 +193,6 @@
     </ClInclude>
     <ClInclude Include="headers\system\i_render_system.h">
       <Filter>headers\system</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\archetype\archetype.h">
-      <Filter>headers\archetype</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\archetype\archetype_manager.h">
-      <Filter>headers\archetype</Filter>
     </ClInclude>
     <ClInclude Include="headers\entity\entity_record.h">
       <Filter>headers\entity</Filter>
@@ -233,12 +209,6 @@
     <ClInclude Include="headers\component\component_texture.h">
       <Filter>headers\component</Filter>
     </ClInclude>
-    <ClInclude Include="headers\importer\gltf_importer.h">
-      <Filter>headers\importer</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\importer\i_importer.h">
-      <Filter>headers\importer</Filter>
-    </ClInclude>
     <ClInclude Include="headers\component\component_primitive.h">
       <Filter>headers\component</Filter>
     </ClInclude>
@@ -248,7 +218,7 @@
     <ClInclude Include="headers\post_process\post_process_manager.h">
       <Filter>headers\post_process</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\instancing_render_system.h">
+    <ClInclude Include="headers\system\render_instancing_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
     <ClInclude Include="headers\component\component_instanced.h">
@@ -260,22 +230,19 @@
     <ClInclude Include="headers\component\component_sky_atmosphere.h">
       <Filter>headers\component</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\sprite_render_system.h">
+    <ClInclude Include="headers\system\render_sprite_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\sky_render_system.h">
+    <ClInclude Include="headers\system\render_sky_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\follow_camera_update_system.h">
+    <ClInclude Include="headers\system\update_camera_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
-    <ClInclude Include="headers\system\cloud_render_system.h">
+    <ClInclude Include="headers\system\render_cloud_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
     <ClInclude Include="headers\component\component_volumetric_cloud.h">
-      <Filter>headers\component</Filter>
-    </ClInclude>
-    <ClInclude Include="headers\component\component_intensity.h">
       <Filter>headers\component</Filter>
     </ClInclude>
     <ClInclude Include="headers\system\ibl_manager.h">
@@ -285,6 +252,30 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\render_deferred_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_camera.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\camera_set_constants.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\render_screen_space_reflection_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_screen_space_reflection.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_name.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_cascade_shadow.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_deferred_render.h">
       <Filter>headers\component</Filter>
     </ClInclude>
   </ItemGroup>
@@ -316,16 +307,10 @@
     <ClCompile Include="sources\render_state.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="sources\camera.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="sources\scenes\scene_test.cpp">
       <Filter>sources\scenes</Filter>
     </ClCompile>
     <ClCompile Include="sources\static_mesh.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\skinned_mesh.cpp">
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="external\imgui\imgui.cpp">
@@ -367,7 +352,7 @@
     <ClCompile Include="sources\system\update_system_manager.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
-    <ClCompile Include="sources\system\transform_system.cpp">
+    <ClCompile Include="sources\system\update_transform_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\render_gltf_system.cpp">
@@ -375,15 +360,6 @@
     </ClCompile>
     <ClCompile Include="sources\system\render_system_manager.cpp">
       <Filter>sources\system</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\archetype\archetype.cpp">
-      <Filter>sources\archetype</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\archetype\archetype_manager.cpp">
-      <Filter>sources\archetype</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\importer\gltf_importer.cpp">
-      <Filter>sources\importer</Filter>
     </ClCompile>
     <ClCompile Include="sources\post_process\bloom.cpp">
       <Filter>sources\post_process</Filter>
@@ -397,19 +373,16 @@
     <ClCompile Include="sources\light_manager.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="sources\system\instancing_render_system.cpp">
+    <ClCompile Include="sources\system\render_instancing_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
-    <ClCompile Include="sources\system\sprite_render_system.cpp">
+    <ClCompile Include="sources\system\render_sprite_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
-    <ClCompile Include="sources\system\sky_render_system.cpp">
+    <ClCompile Include="sources\system\render_sky_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
-    <ClCompile Include="sources\system\follow_camera_update_system.cpp">
-      <Filter>sources\system</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\system\cloud_render_system.cpp">
+    <ClCompile Include="sources\system\render_cloud_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\ibl_manager.cpp">
@@ -417,6 +390,21 @@
     </ClCompile>
     <ClCompile Include="sources\deferred_g_buffer.cpp">
       <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\render_deferred_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\camera_set_constants.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\update_camera_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\render_screen_space_reflection_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\world\world.cpp">
+      <Filter>sources\world</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -489,6 +477,18 @@
     <None Include="shaderes\sky_atmosphere.hlsli">
       <Filter>Shaders\Header</Filter>
     </None>
+    <None Include="shaderes\shading_models.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\filter_functions.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\light_view_projection.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\camera_buffer.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl">
@@ -539,9 +539,6 @@
     <FxCompile Include="shaderes\skinned_mesh_vs.hlsl">
       <Filter>Shaders\VertexShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\sky_atmosphere_vs.hlsl">
-      <Filter>Shaders\VertexShader</Filter>
-    </FxCompile>
     <FxCompile Include="shaderes\sprite_batch_vs.hlsl">
       <Filter>Shaders\VertexShader</Filter>
     </FxCompile>
@@ -557,7 +554,7 @@
     <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\synthesis_ps.hlsl">
+    <FxCompile Include="shaderes\bloom_synthesis_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\static_mesh_ps.hlsl">
@@ -631,6 +628,42 @@
     </FxCompile>
     <FxCompile Include="shaderes\ibl_screen_gs.hlsl">
       <Filter>Shaders\GeometryShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_gbuffer_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\deferred_rendering_indirect_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\deferred_rendering_lighting_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\deferred_rendering_emissive_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\ibl_diffuse_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\fast_approximate_anti_aliasing_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_model_gbuffer_instancing_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_shadow_caster_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\gltf_instancing_shadow_caster_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\screen_space_reflection_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\ssr_hiz_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\screen_space_reflection_synthesis_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

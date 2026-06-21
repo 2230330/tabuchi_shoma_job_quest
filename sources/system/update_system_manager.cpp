@@ -1,15 +1,18 @@
 #include"../../headers/system/update_system_manager.h"
-#include"../../headers/system/transform_system.h"
+#include"../../headers/system/update_transform_system.h"
+#include"../../headers/system/update_camera_system.h"
+#include"../../headers/component/component_manager.h"
 
-//新しいシステムはここで登録する
+//譁ｰ縺励＞繧ｷ繧ｹ繝�繝縺ｯ縺薙％縺ｧ逋ｻ骭ｲ縺吶ｋ
 UpdateSystemManager::UpdateSystemManager(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)
 {
 
+    AddSystem(std::make_unique<CameraUpdateSystem>(comp_mng_));
     AddSystem(std::make_unique<TransformSystem>(comp_mng_));
 }
 
-//システム追加用関数
+//繧ｷ繧ｹ繝�繝霑ｽ蜉逕ｨ髢｢謨ｰ
 void UpdateSystemManager::AddSystem(std::unique_ptr<IUpdateSystem> system)
 {
     systems_.emplace_back(std::move(system));

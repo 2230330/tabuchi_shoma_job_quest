@@ -3,11 +3,13 @@
 
 #include"light.hlsli"
 
-#include "scene_constant_buffer.hlsli"
+#include"scene_constant_buffer.hlsli"
+
+#include "camera_buffer.hlsli"
 
 #include "gbuffer.hlsli"
 
-
+#include"shading_models.hlsli"
 
 static const int light_kind_directional = 0;
 static const int light_kind_point_light = 1;
@@ -16,51 +18,52 @@ static const int light_kind_ambient = 3;
 
 struct IntegrateLightData
 {
-    //‹¤—L‚Ìî•ñ
-    //work_data[3].w‚Í‹¤—L‚Ìƒ‰ƒCƒg‚Ìí•Ê”Ô†‚ğ“ü‚ê‚Ä‚¨‚­
+    //å…±æœ‰ã®æƒ…å ±
+    //work_data[3].wã¯å…±æœ‰ã®ãƒ©ã‚¤ãƒˆã®ç¨®åˆ¥ç•ªå·ã‚’å…¥ã‚Œã¦ãŠã
     
-    //•½sŒõŒ¹‚Ìê‡
+    //å¹³è¡Œå…‰æºã®å ´åˆ
     //work_data[0]=direction
     //work_data[1]=color
     //work_data[2]=dummy
-    //work_data[3]=xyz=dummy,w=ƒ‰ƒCƒg¯•Ê”Ô†
+    //work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
     
-    //“_ŒõŒ¹
+    //ç‚¹å…‰æº
     //work_data[0]=position
     //work_data[1]=color
     //work_data[2]=x=range,yzw=dummy
-    //work_data[3]=xyz=dummy,w=ƒ‰ƒCƒg¯•Ê”Ô†
+    //work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
     
-    //ƒXƒ|ƒbƒgƒ‰ƒCƒg‚Ìê‡
+    //ã‚¹ãƒãƒƒãƒˆãƒ©ã‚¤ãƒˆã®å ´åˆ
     //work_data[0]=position
     //work_data[1]=direction
     //work_data[2]=color
-    //work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ƒ‰ƒCƒg¯•Ê”Ô†
+    //work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
     
-    //ŠÂ‹«Œõ‚Ìê‡
+    //ç’°å¢ƒå…‰ã®å ´åˆ
     //work_data[0]=color
     //work_data[1]=dummy
     //work_data[2]=dummy
-    //work_data[3]=xyz=dummy,w=ƒ‰ƒCƒg¯•Ê”Ô†
+    //work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
     
     float4 work_data[4];
 };
 
 cbuffer LIGHT_CONSTANT_BUFFER : register(b4)
 {
-    //ƒ‰ƒCƒgî•ñ
+    //ãƒ©ã‚¤ãƒˆæƒ…å ±
     IntegrateLightData light_data;
     
-    //ƒVƒƒƒhƒEƒ}ƒbƒvŠÖŒW
-    int use_shadow; //@‰e‚ğg—p‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©
-    float shadow_attenuation; //‰eF
-    float shadow_bias; //[“xƒoƒCƒAƒX
-    uint shadow_dummy; //ƒ_ƒ~[
+    //ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—é–¢ä¿‚
+    int use_shadow; //ã€€å½±ã‚’ä½¿ç”¨ã—ã¦ã„ã‚‹ã‹ã©ã†ã‹
+    float shadow_attenuation; //å½±è‰²
+    float shadow_bias; //æ·±åº¦ãƒã‚¤ã‚¢ã‚¹
+    uint shadow_dummy; //ãƒ€ãƒŸãƒ¼
     
-    row_major float4x4 light_view_projection; //ƒ‰ƒCƒg‚ÌˆÊ’u‚©‚çŒ©‚½Ë‰es—ñ
+    row_major float4x4 light_view_projection; //ãƒ©ã‚¤ãƒˆã®ä½ç½®ã‹ã‚‰è¦‹ãŸå°„å½±è¡Œåˆ—
+    row_major float4x4 inverse_light_view_projection;
 };
 
-//ƒ‰ƒCƒg‚Ìí•Ê‚Ìæ“¾
+//ãƒ©ã‚¤ãƒˆã®ç¨®åˆ¥ã®å–å¾—
 int get_light_kinds()
 {
     return (int) (light_data.work_data[3].w + 0.5f);
@@ -87,7 +90,7 @@ spot_lights convert_spot_lights()
 {
     spot_lights data;
     data.position = light_data.work_data[0];
-    data.direction = normalize(light_data.work_data[1].xyz);
+    data.direction = normalize(light_data.work_data[1]);
     data.color = light_data.work_data[2];
     data.range = light_data.work_data[3].x;
     data.inner_corn = light_data.work_data[3].y;

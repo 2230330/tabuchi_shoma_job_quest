@@ -5,30 +5,17 @@
 #include<tchar.h>
 #include<d3d11.h>
 #include<wrl.h>
-
 #include<sstream>
+#include<stdint.h>
 #include<memory>
 
-#include"../headers/misc.h"
-#include"../headers/high_resolution_timer.h"
-#include"../headers/graphics.h"
-#include"../headers/scene_constants.h"
-#include"../headers/scene/scene.h"
-#include"../headers/sprite.h"
-#include"../headers/sprite_batch.h"
+//ÂâçÊñπÂÆ£Ë®Ä
+class HighResolutionTimer;
+class Scene;
 
-#ifdef USE_IMGUI
-#include "../external/imgui/imgui.h"
-#include "../external/imgui/imgui_internal.h"
-#include "../external/imgui/imgui_impl_dx11.h"
-#include "../external/imgui/imgui_impl_win32.h"
-extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-extern ImWchar glyphRangesJapanese[];
-#endif
-
-const long kScreenWidth{ 1280 };
-const long kScreenHeight{ 720 };
-const bool kFullScreen{ true };
+const long kScreenWidth{ 1980 };
+const long kScreenHeight{ 1080 };
+const bool kFullScreen{ false };
 const LPCWSTR kApplicationName{ L"ecc_tabuchi" };
 
 class Framework
@@ -50,7 +37,7 @@ public:
     LRESULT CALLBACK HandleMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 
-    //ÉtÉåÅ[ÉÄÉåÅ[ÉgåvéZ
+    //„Éï„É¨„Éº„É†„É¨„Éº„ÉàË®àÁÆó
     void CalculateFrameState();
 
 private:
@@ -60,14 +47,14 @@ private:
     bool Uninitialize();
 
 private:
-    HighResolutionTimer tictoc_;
+    std::unique_ptr<HighResolutionTimer> tictoc_=nullptr;
     uint32_t frames_{ 0 };
     float    accumulated_time_{ 0.0f };
 
 
 private:
-    std::unique_ptr<Scene>          scene_;
-    float wheel{ 0 }; //É}ÉEÉXÉzÉCÅ[Éã
+    std::unique_ptr<Scene>          scene_ = nullptr;
+    float wheel{ 0 }; //„Éû„Ç¶„Çπ„Éõ„Ç§„Éº„É´
 
 };
 

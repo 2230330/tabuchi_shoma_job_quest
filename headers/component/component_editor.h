@@ -1,22 +1,45 @@
 #pragma once
-#include"component_manager.h"
-#include"../entity/entity_manager.h"
-#include"../resource_manager.h"
+#include<cstdint>
+#include<string>
 
-//‚±‚ÌƒNƒ‰ƒX‚ÍAƒRƒ“ƒ|[ƒlƒ“ƒgƒ}ƒl[ƒWƒƒ[‚Ìî•ñ‚ğŒ³‚É
-//ƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌŠm”F‚Æ’Ç‰ÁAíœ“™‚ğs‚¤‚½‚ß‚Éì¬‚³‚ê‚½ƒNƒ‰ƒX‚Å‚ ‚éB
+#include"../../external/imgui/imgui.h"
+
+//å‰æ–¹å®£è¨€
+class ComponentManager;
+class EntityManager;
+
+
+
+//ï¿½ï¿½ï¿½ÌƒNï¿½ï¿½ï¿½Xï¿½ÍAï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½}ï¿½lï¿½[ï¿½Wï¿½ï¿½ï¿½[ï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ÌŠmï¿½Fï¿½Æ’Ç‰ï¿½ï¿½Aï¿½íœï¿½ï¿½ï¿½ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½ß‚Éì¬ï¿½ï¿½ï¿½ê‚½ï¿½Nï¿½ï¿½ï¿½Xï¿½Å‚ï¿½ï¿½ï¿½B
 class ComponentEditor
 {
 public:
     ComponentEditor(
         ComponentManager& component_manager,
         EntityManager&entity_manager);
-    //•ÒW—p
+    //ï¿½ÒWï¿½p
     void DrawImgui();
+
+    void Save(const std::string& filename);
+    void Load(const std::string& filename);
 private:
     ComponentManager& comp_mng_;
     EntityManager& enti_mng_;
 
     int32_t has_sky_ = -1;
     int32_t has_cloud_ = -1;
+    int32_t has_cascade_shadow_ = -1;
+    int32_t has_ssr_ = -1;
+    int32_t has_deferred_ = -1;
+
+
+    //ãƒªãƒãƒ¼ãƒ ä¸­ã®Entity
+    uint32_t rename_entity_ = UINT32_MAX;
+    char rename_buffer_[256]{};
+    bool is_renaming_ = false;
+    bool renaming_just_started_ = false;
+    bool renaming_ever_active_ = false;
+    ImVec2 rename_text_pos_;
+    float rename_text_width_ = 0.0f;
 };

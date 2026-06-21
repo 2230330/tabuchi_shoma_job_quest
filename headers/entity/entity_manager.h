@@ -1,25 +1,30 @@
 #pragma once
 #include<vector>
+#include<unordered_map>
 
 #include"entity.h"
 #include"entity_record.h"
 
 class EntityManager {
 public:
-    //ƒGƒ“ƒeƒBƒeƒB‚Ì’Ç‰ÁŠÖ”
-    //’Ç‰Á‚³‚ê‚½ƒGƒ“ƒeƒBƒeƒB‚ÍAƒtƒŠ[ƒŠƒXƒg‚ÉŠJ‚¢‚Ä‚¢‚é”Ô†‚ª‚ ‚éê‡A‚»‚±‚É“ü‚é
+    //ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ã®è¿½åŠ é–¢æ•°
+    //è¿½åŠ ã•ã‚ŒãŸã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ã¯ã€ãƒ•ãƒªãƒ¼ãƒªã‚¹ãƒˆã«é–‹ã„ã¦ã„ã‚‹ç•ªå·ãŒã‚ã‚‹å ´åˆã€ãã“ã«å…¥ã‚‹
     uint32_t Add();
 
-    //ƒGƒ“ƒeƒBƒeƒB‚ÌíœŠÖ”
-    //íœ‚³‚ê‚½ƒGƒ“ƒeƒBƒeƒB”Ô†‚ÍƒtƒŠ[ƒŠƒXƒg‚É“ü‚èAÄ—˜—p‚³‚ê‚é
+    //ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ã®å‰²ã‚Šè¾¼ã¿
+    //uint32_t AddWithID(uint32_t id);
+    bool AddWithID(uint32_t id);
+
+    //ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ã®å‰Šé™¤é–¢æ•°
+    //å‰Šé™¤ã•ã‚ŒãŸã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ç•ªå·ã¯ãƒ•ãƒªãƒ¼ãƒªã‚¹ãƒˆã«å…¥ã‚Šã€å†åˆ©ç”¨ã•ã‚Œã‚‹
     void Remove(uint32_t id);
 
-    //”z—ñ‚ÌŒÄ‚Ño‚µB
+    //é…åˆ—ã®å‘¼ã³å‡ºã—ã€‚
     const std::vector<Entity>& GetArray() const;
 
-    //EntityRecord‚Ö‚Ì“o˜^
-    void RegisterEntity(uint32_t entity_id, Archetype* archetype, uint32_t index_in_chunk);
-    //ƒGƒ“ƒeƒBƒeƒBƒŒƒR[ƒh‚ÌƒQƒbƒ^[
+    //EntityRecordã¸ã®ç™»éŒ²
+    void RegisterEntity(uint32_t entity_id, uint32_t index_in_chunk);
+    //ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ãƒ¬ã‚³ãƒ¼ãƒ‰ã®ã‚²ãƒƒã‚¿ãƒ¼
     EntityRecord GetRecord(uint32_t entity_id)const;
 
 
@@ -27,6 +32,6 @@ private:
     uint32_t count_ = 0;
     std::vector<Entity> entities_;
     std::vector<uint32_t> free_list_;
-    //ƒGƒ“ƒeƒBƒeƒB‚ª‚Ç‚ÌƒA[ƒLƒ^ƒCƒv‚É‘®‚µ‚Ä‚¢‚é‚©
+    //ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ãŒã©ã®ã‚¢ãƒ¼ã‚­ã‚¿ã‚¤ãƒ—ã«å±ã—ã¦ã„ã‚‹ã‹
     std::unordered_map<uint32_t, EntityRecord>entity_records_;
 };

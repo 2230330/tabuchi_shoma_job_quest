@@ -6,8 +6,8 @@
 #include <memory>
 #include <cstdint>
 
-#include"../headers/render_state.h"
-
+//前方宣言
+class RenderState;
 
 //'fullscreen_quad' dose not have pixel shader and sampler state. you have to make and set pixel shader and sampler state by yourself.
 class FullscreenQuad
@@ -17,9 +17,9 @@ public:
 	virtual ~FullscreenQuad() = default;
 
 private:
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> embedded_vertex_shader;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> embedded_pixel_shader;
-	std::unique_ptr<RenderState> render_state;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> embedded_vertex_shader=nullptr;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> embedded_pixel_shader=nullptr;
+	std::unique_ptr<RenderState> render_state=nullptr;
 
 public:
 	void blit(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* const* shader_resource_views, uint32_t start_slot, uint32_t num_views, ID3D11PixelShader* replaced_pixel_shader = nullptr);

@@ -1,0 +1,292 @@
+{
+    "entities": [
+        {
+            "components": {
+                "Name": {
+                    "value": "SkyAtmosphere"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                },
+                "SkyAtmosphere": {
+                    "atmosphere_height": 100000.0,
+                    "earth_height": 6360000.0,
+                    "max_sample": 64,
+                    "mie_scale_height": 1200.0,
+                    "ozone_center_height": 50000.0,
+                    "ozone_scale_half_width": 15000.0,
+                    "rayleigh_scale_height": 8000.0,
+                    "sun_distance": 149999992832.0
+                }
+            },
+            "entity_id": 0
+        },
+        {
+            "components": {
+                "Name": {
+                    "value": "Cloud"
+                },
+                "VolumetricCloud": {
+                    "alt_max": 6373000.0,
+                    "alt_min": 6371500.0,
+                    "auto_ray_march": 0,
+                    "cloud_type_scale": 1.0,
+                    "coverage_scale": 0.25,
+                    "density_scale": 0.05000000074505806,
+                    "earth_radius": 6370000.0,
+                    "high_freq_scale": 0.00039999998989515007,
+                    "horizon_scale": 1.0,
+                    "long_distance_density": 18.0,
+                    "low_freq_scale": 3.9999998989515007e-05,
+                    "powdered_sugar": 0,
+                    "rain_absorption": 0.5,
+                    "ray_march_steps": 128,
+                    "shadow_flag": false,
+                    "wind_speed": 1.0,
+                    "wind_x": 1.0,
+                    "wind_y": 0.75
+                }
+            },
+            "entity_id": 1
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.004000000189989805,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 1.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "entity_id": 2
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\plane.glb"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 3
+        },
+        {
+            "components": {
+                "Camera": {
+                    "dir_x": 0.6839672327041626,
+                    "dir_y": -0.11971195042133331,
+                    "dir_z": -0.7196235060691833,
+                    "far": 1000.0,
+                    "main": true,
+                    "near": 0.10000000149011612,
+                    "pos_x": -71.93646240234375,
+                    "pos_y": 17.045360565185547,
+                    "pos_z": 55.75768280029297
+                },
+                "Name": {
+                    "value": "Camera"
+                }
+            },
+            "entity_id": 5
+        },
+        {
+            "components": {
+                "Name": {
+                    "value": "ScreenSpaceReflection"
+                },
+                "ScreenSpaceReflection": {
+                    "distance": 100.0,
+                    "intensity": 0.996999979019165,
+                    "max_mip": 6,
+                    "num_steps": 10,
+                    "resolution": 0.5,
+                    "thickness": 0.20000000298023224
+                }
+            },
+            "entity_id": 6
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 2.0,
+                    "z": -6.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "entity_id": 7
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": 4.0,
+                    "y": 5.0,
+                    "z": -10.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 2.0,
+                    "y": 2.0,
+                    "z": 2.0
+                }
+            },
+            "entity_id": 8
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": -5.0,
+                    "y": 4.0,
+                    "z": -16.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                }
+            },
+            "entity_id": 9
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                },
+                "Position": {
+                    "x": 0.0,
+                    "y": 2.0,
+                    "z": -13.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "Scale": {
+                    "x": 3.0,
+                    "y": 3.0,
+                    "z": 3.0
+                }
+            },
+            "entity_id": 10
+        },
+        {
+            "components": {
+                "Cascade Shadow": true,
+                "Name": {
+                    "value": "Cascade Shadow"
+                }
+            },
+            "entity_id": 11
+        },
+        {
+            "components": {
+                "Deferred Render": true,
+                "Name": {
+                    "value": "Deferred Texture"
+                }
+            },
+            "entity_id": 12
+        }
+    ]
+}

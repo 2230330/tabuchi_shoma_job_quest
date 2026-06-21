@@ -1,6 +1,8 @@
 #include"../headers/framebuffer.h"
 
 #include"../headers/misc.h"
+#include"../headers/render_state.h"
+
 
 inline bool operator& (FrameBuffer::usage lhs, FrameBuffer::usage rhs)
 {
@@ -103,6 +105,8 @@ FrameBuffer::FrameBuffer(
 	viewport_.TopLeftX = 0.0f;
 	viewport_.TopLeftY = 0.0f;
 
+	render_state_ = std::make_unique<RenderState>(device);
+
 }
 
 void FrameBuffer::Clear(
@@ -123,7 +127,7 @@ void FrameBuffer::Clear(
 		if (HasFlag(flags, usage::depth))   clear_flags |= D3D11_CLEAR_DEPTH;
 		if (HasFlag(flags, usage::stencil)) clear_flags |= D3D11_CLEAR_STENCIL;
 
-		// depth_stencil �ŗ����� depth+stencil �̈Ӗ��Ȃ̂ŗ���
+		// depth_stencil で来たら depth+stencil の意味なので両方
 		if (flags == usage::depth_stencil) clear_flags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL;
 
 		ctx->ClearDepthStencilView(depth_stencil_view_.Get(), clear_flags, depth, stencil);
@@ -132,19 +136,30 @@ void FrameBuffer::Clear(
 
 void FrameBuffer::Activate(ID3D11DeviceContext* immediate_context, usage flags)
 {
-    // cache current viewport
+	// cache current viewport
 	viewport_count_ = D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
 	immediate_context->RSGetViewports(&viewport_count_, cached_viewports_);
 
-	// --- Cache OM render targets (�ő吔�Ŏ擾���Ă���) ---
+	// --- Cache OM render targets ---
 	ID3D11RenderTargetView* cached_rtvs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
 	immediate_context->OMGetRenderTargets(
 		D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT,
 		cached_rtvs,
 		cached_depth_stencil_view_.ReleaseAndGetAddressOf()
 	);
+
+
+	cached_num_rtvs_ = 0;
 	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
-		cached_render_target_views_[i].Attach(cached_rtvs[i]);
+	{
+		cached_render_target_views_[i].Reset();
+
+		if (cached_rtvs[i])
+		{
+			cached_render_target_views_[i].Attach(cached_rtvs[i]);
+			cached_num_rtvs_ = i + 1; // 連続して刺さっている前提
+		}
+	}
 
 	// --- Set viewport ---
 	immediate_context->RSSetViewports(1, &viewport_);
@@ -158,37 +173,42 @@ void FrameBuffer::Activate(ID3D11DeviceContext* immediate_context, usage flags)
 		rtvs[0] = render_target_view_.Get();
 		num_rtvs = 1;
 	}
-	else
-	{
-		// Depth only (RTV 0��)
-		num_rtvs = 0;
-	}
 
 	ID3D11DepthStencilView* dsv = nullptr;
 	if (HasFlag(flags, usage::depth_stencil) && depth_stencil_view_)
-	{
 		dsv = depth_stencil_view_.Get();
-	}
 
 	immediate_context->OMSetRenderTargets(num_rtvs, rtvs, dsv);
+	immediate_context->OMSetBlendState(render_state_->GetBlendState(BlendState::transparency), nullptr, 0xFFFFFFFF);
+    if (flags & usage::depth)
+	{
+		immediate_context->OMSetDepthStencilState(render_state_->GetDepthStencilState(DepthState::test_and_write), 0);
+	}
+	else
+	{
+		immediate_context->OMSetDepthStencilState(render_state_->GetDepthStencilState(DepthState::no_test_no_write), 0);
+	}
 }
+
 
 void FrameBuffer::Deactivate(ID3D11DeviceContext* immediate_context)
 {
 	immediate_context->RSSetViewports(viewport_count_, cached_viewports_);
 
 	ID3D11RenderTargetView* rtvs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
-	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+	for (UINT i = 0; i < cached_num_rtvs_; ++i)
 		rtvs[i] = cached_render_target_views_[i].Get();
 
 	immediate_context->OMSetRenderTargets(
-		D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT,
+		cached_num_rtvs_,
 		rtvs,
 		cached_depth_stencil_view_.Get()
 	);
 
-	// �L���b�V�����N���A���ē�d�ێ��������
+	// キャッシュをクリアして二重保持を避ける
 	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
 		cached_render_target_views_[i].Reset();
+
 	cached_depth_stencil_view_.Reset();
+	cached_num_rtvs_ = 0;
 }

@@ -6,19 +6,18 @@
 
 #include<memory>
 
-#include"../headers/render_state.h"
+//ÂâçÊñπÂÆ£Ë®Ä
+class RenderState;
 
+//ÁîªÂÉèÊèèÁîªÈñ¢‰øÇ„ÇíÁÆ°ÁêÜ„Åó„Å¶„ÅÑ„Çã„ÇØ„É©„Çπ„Åß„Åô„ÄÇ
 class Graphics
 {
 private:
     Graphics() = default;
-    ~Graphics() = default;
+    ~Graphics();
 
 public:
-    static Graphics& Instance() {
-        static Graphics instance_;
-        return instance_;
-    }
+    static Graphics& Instance();
 
     void Shutdown()
     {
@@ -35,59 +34,66 @@ public:
 
     }
 
-    //èâä˙âª
+    //ÂàùÊúüÂåñ
     void Initialize(HWND hwnd);
 
-    //âÊñ ÇÃÉNÉäÉA
+    void Finalize();
+
+    //ÁîªÈù¢„ÅÆ„ÇØ„É™„Ç¢
     void ViewClear(float r, float g, float b, float a);
 
-    //ÉåÉìÉ_Å[É^Å[ÉQÉbÉgê›íË
+    //„É¨„É≥„ÉÄ„Éº„Çø„Éº„Ç≤„ÉÉ„ÉàË®≠ÂÆö
     void SetRenderTargets();
 
-    //âÊñ ï\é¶
+    //ÁîªÈù¢Ë°®Á§∫
     void Present(UINT syncInterval);
 
-    //ÉEÉBÉìÉhÉEÉnÉìÉhÉãéÊìæ
+    //„Ç¶„Ç£„É≥„Éâ„Ç¶„Éè„É≥„Éâ„É´ÂèñÂæó
     HWND GetWindowHandle() { return this->hwnd_; }
-    //ÉfÉoÉCÉXéÊìæ
+    //„Éá„Éê„Ç§„ÇπÂèñÂæó
     ID3D11Device* GetDevice() { return this->device_.Get(); }
-    //ÉfÉoÉCÉXÉRÉìÉeÉLÉXÉgéÊìæ
+    //„Éá„Éê„Ç§„Çπ„Ç≥„É≥„ÉÜ„Ç≠„Çπ„ÉàÂèñÂæó
     ID3D11DeviceContext* GetDeviceContext() { return this->immediate_context_.Get(); }
-    //ÉXÉNÉäÅ[ÉìïùéÊìæ
+    //„Çπ„ÇØ„É™„Éº„É≥ÂπÖÂèñÂæó
     float GetScreenWidth()const { return this->screen_width_; }
-    //ÉXÉNÉäÅ[ÉìçÇÇ≥éÊìæ
+    //„Çπ„ÇØ„É™„Éº„É≥È´ò„ÅïÂèñÂæó
     float GetScreenHeight()const { return this->screen_height_; }
-    //ÉåÉìÉ_Å[ÉXÉeÅ[ÉgéÊìæ
-    RenderState* GetRenderState() { return this->render_state_.get(); }
+    //„É¨„É≥„ÉÄ„Éº„Çπ„ÉÜ„Éº„ÉàÂèñÂæó
+    RenderState* GetRenderState();
 
-    //ÉRÉìÉXÉ^ÉìÉgÉoÉbÉtÉ@ÉrÉÖÅ[ê›íË
+    //„Ç≥„É≥„Çπ„Çø„É≥„Éà„Éê„ÉÉ„Éï„Ç°„Éì„É•„ÉºË®≠ÂÆö
     void SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers);
-    //ÉVÉFÅ[É_Å[ÉäÉ\Å[ÉXÉrÉÖÅ[ê›íË
+    //„Ç∑„Çß„Éº„ÉÄ„Éº„É™„ÇΩ„Éº„Çπ„Éì„É•„ÉºË®≠ÂÆö
     void SetShaderResource(int start_slot, int num, ID3D11ShaderResourceView* const* shader_resources);
-    //ÉTÉìÉvÉâÅ[ÉXÉeÅ[Égê›íË
+    //„Çµ„É≥„Éó„É©„Éº„Çπ„ÉÜ„Éº„ÉàË®≠ÂÆö
     void SetSampler(int start_slot, int num, ID3D11SamplerState* const* sampler_state);
-    //ÉVÉFÅ[É_Å[âè˘
+    //„Ç∑„Çß„Éº„ÉÄ„ÉºËß£Èå†
     void ClearShaderSlots();
-    //ÉRÉìÉXÉ^ÉìÉgÉoÉbÉtÉ@ÉrÉÖÅ[ÇÃâèú
+    //„Ç≥„É≥„Çπ„Çø„É≥„Éà„Éê„ÉÉ„Éï„Ç°„Éì„É•„Éº„ÅÆËß£Èô§
     void ClearConstantBuffers(int start_slot = 0, int num = D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT);
-    //ÉVÉFÅ[É_Å[ÉäÉ\Å[ÉXÉrÉÖÅ[ÇÃâèú
+    //„Ç∑„Çß„Éº„ÉÄ„Éº„É™„ÇΩ„Éº„Çπ„Éì„É•„Éº„ÅÆËß£Èô§
     void ClearShaderResourceViews(int start_slot=0, int num = D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT);
-    //ÉTÉìÉvÉâÅ[ÉXÉeÅ[ÉgÇÃâèú
+    //„Çµ„É≥„Éó„É©„Éº„Çπ„ÉÜ„Éº„Éà„ÅÆËß£Èô§
     void ClearSampler(int start_slot = 0, int num = D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT);
 
+    //„Ç´„É°„É©Áî®„Éõ„Ç§„Éº„É´ÊÉÖÂ†±
+    void SetWheel(float wheel) { this->wheel_ = wheel; }
+    float GetWheel()const { return this->wheel_; }
+
 private:
-    //ÉÅÉìÉoïœêî
+    //„É°„É≥„ÉêÂ§âÊï∞
     HWND                                            hwnd_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11Device>            device_;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext>     immediate_context_;
-    Microsoft::WRL::ComPtr<IDXGISwapChain>          swap_chain_;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  render_target_view_;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  depth_stencil_view_;
-    D3D11_VIEWPORT                                  viewport_;
+    Microsoft::WRL::ComPtr<ID3D11Device>            device_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext>     immediate_context_=nullptr;
+    Microsoft::WRL::ComPtr<IDXGISwapChain>          swap_chain_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  render_target_view_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  depth_stencil_view_=nullptr;
+    D3D11_VIEWPORT                                  viewport_{};
 
     float screen_width_  = 0;
     float screen_height_ = 0;
+    float wheel_{ 0 };
 
-    std::unique_ptr<RenderState>                    render_state_;
+    std::unique_ptr<RenderState>                    render_state_=nullptr;
 };
 #endif // !PART2_GRAPHICS_H_

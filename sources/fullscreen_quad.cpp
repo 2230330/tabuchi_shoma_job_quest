@@ -1,5 +1,7 @@
 #include"../headers/fullscreen_quad.h"
+
 #include"../headers/shader.h"
+#include"../headers/render_state.h"
 #include"../headers/misc.h"
 
 FullscreenQuad::FullscreenQuad(ID3D11Device* device)

@@ -1,4 +1,4 @@
-﻿#include"../headers/resource_manager.h"
+#include"../headers/resource_manager.h"
 #include<d3dcompiler.h>
 #include<DDSTextureLoader.h>
 #include<WICTextureLoader.h>
@@ -7,7 +7,7 @@
 #include<iostream>
 #include<DirectXTex.h>
 
-#include"../headers/texture.h"
+#include"../headers/gltf_model.h"
 #include"../headers/misc.h"
 
 std::shared_ptr<GltfModel> ResourceManager::LoadGltfModel(ID3D11Device* device, const std::string& filename)
@@ -54,12 +54,21 @@ Microsoft::WRL::ComPtr<ID3D11VertexShader> ResourceManager::LoadVertexShader(ID3
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
 
+    if (FAILED(hr))
+    {
+        std::wstring message = L"Failed to load vertex shader: " + filename + L" Error: " + HRTrace(hr);
+        OutputDebugStringW(message.c_str());
+        return nullptr;
+    }
+
+
     if (input_layout)
     {
         hr = device->CreateInputLayout(input_element_desc, num_element,
             blob->GetBufferPointer(), blob->GetBufferSize(), input_layout);
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
+
 
 
     vertex_shaders_.emplace(filename, shader);
@@ -86,6 +95,8 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> ResourceManager::LoadPixelShader(ID3D1
 
     if (FAILED(hr))
     {
+        std::wstring message = L"Failed to load pixel shader: " + filename + L" Error: " + HRTrace(hr);
+        OutputDebugStringW(message.c_str());
         return nullptr;
     }
 
@@ -111,6 +122,8 @@ Microsoft::WRL::ComPtr<ID3D11ComputeShader> ResourceManager::LoadComputeShader(I
     }
     if (FAILED(hr))
     {
+        std::wstring message = L"Failed to load compute shader: " + filename + L" Error: " + HRTrace(hr);
+        OutputDebugStringW(message.c_str());
         return nullptr;
     }
     compute_shaders_.emplace(filename, shader);

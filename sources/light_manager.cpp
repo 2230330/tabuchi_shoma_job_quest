@@ -17,23 +17,31 @@ LightManager::LightManager()
 	buffer_desc.MiscFlags = 0;
 	buffer_desc.StructureByteStride = 0;
 
-	//ƒtƒHƒ[ƒhƒŒƒ“ƒ_ƒŠƒ“ƒO—p’è”ƒoƒbƒtƒ@
+	//ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‰ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ç”¨å®šæ•°ãƒãƒƒãƒ•ã‚¡
 	{
 		buffer_desc.ByteWidth = sizeof(ForwardLightConstants);
 		hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr,
 			forward_light_constant_buffer_.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-
-	//ƒtƒHƒ[ƒhƒŒƒ“ƒ_ƒŠƒ“ƒO—p
-	for (int i = 0; i < forward_light_max; i++)
+	//ãƒ‡ã‚£ãƒ•ã‚¡ãƒ¼ãƒ‰ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ç”¨å®šæ•°ãƒãƒƒãƒ•ã‚¡
 	{
-		PointLight point_light;
-		point_lights_.emplace_back(point_light);
-
-		SpotLight spot_light;
-		spot_lights_.emplace_back(spot_light);
+		buffer_desc.ByteWidth = sizeof(DeferredLightContstants);
+		hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr,
+			deferred_light_constant_buffer_.GetAddressOf());
+		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
+
+	////ãƒ•ã‚©ãƒ¯ãƒ¼ãƒ‰ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ç”¨
+	//for (int i = 0; i < forward_light_max; i++)
+	//{
+	//	PointLight point_light;
+	//	point_lights_.emplace_back(point_light);
+
+	//	SpotLight spot_light;
+	//	spot_lights_.emplace_back(spot_light);
+	//}
+
 }
 
 
@@ -69,38 +77,15 @@ void LightManager::SetForwardLightConstant(int start_slot)
 	Graphics::Instance().SetConstantBuffer(start_slot, 1, forward_light_constant_buffer_.GetAddressOf());
 }
 
-void LightManager::SetDeferredLightConstant(int start_slot)
+void LightManager::BindDeferredLightConstant(int start_slot, UINT index)
 {
-	DeferredLightContstants constant;
+	auto* ctx = Graphics::Instance().GetDeviceContext();
 
-	//ŠÂ‹«Œõ
-	{
-		constant.lights.work_data[0] = ambient_color_;
-        constant.lights.work_data[3].w = light_kind_ambient_light;
-		Graphics::Instance().GetDeviceContext()
-			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
-        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
-	}
-
-    //ƒfƒBƒŒƒNƒVƒ‡ƒ“ƒ‰ƒCƒg
-	{
-		constant.lights.work_data[0] = direction_light_.direction;
-		constant.lights.work_data[1] = direction_light_.color;
-		constant.lights.work_data[3].w = light_kind_derectional_light;
-
-        constant.use_shadow = 1;
-		constant.shadow_attenuation = 0.5f;
-        constant.shadow_bias = 0.001f;
-
-        constant.light_view_projection = light_view_projection_;
-
-        Graphics::Instance().GetDeviceContext()
-			->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &constant, 0, 0);
-        Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
-
-	}
+	ctx->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &deferred_lights_[index], 0, 0);
+	Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
 
 }
+
 
 void LightManager::DrawImgui()
 {
@@ -111,8 +96,9 @@ void LightManager::DrawImgui()
 			if (ImGui::ColorEdit4("ambient", &ambient_color_.x));
 			ImGui::TreePop();
 		}
-
-		//ƒfƒBƒŒƒNƒVƒ‡ƒ“ƒ‰ƒCƒg
+		//å½±å¼·åº¦
+		if(ImGui::SliderFloat("shadow intensity", &shadow_intensity_, 0.0f, 1.f))
+		//ãƒ‡ã‚£ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ãƒ©ã‚¤ãƒˆ
 		if (ImGui::TreeNode("directional light"))
 		{
 			if (ImGui::SliderAngle("azimuth", &azimuth_, -180.0f, 180.0f));
@@ -130,7 +116,7 @@ void LightManager::DrawImgui()
 			
 			ImGui::TreePop();
 		}
-		//ƒ|ƒCƒ“ƒgƒ‰ƒCƒg
+		//ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆ
 		if (ImGui::TreeNode("point_lights"))
 		{
 			int size = point_lights_.size();
@@ -140,7 +126,7 @@ void LightManager::DrawImgui()
 				std::string name = "point_light" + std::to_string(i);
 				if (ImGui::TreeNode(name.c_str()))
 				{
-					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::DragFloat4("position", &light.position.x));
 					if (ImGui::ColorEdit4("color", &light.color.x));
 					if (ImGui::SliderFloat("range", &light.range, 0.0f, 20.f));
 					if (ImGui::SliderFloat("intensity", &light.intensity, 0.0f, 10.f));
@@ -151,7 +137,7 @@ void LightManager::DrawImgui()
 			}
 			ImGui::TreePop();
 		}
-		//ƒXƒ|ƒbƒgƒ‰ƒCƒg
+		//ã‚¹ãƒãƒƒãƒˆãƒ©ã‚¤ãƒˆ
 		if (ImGui::TreeNode("spot light"))
 		{
 			int size = spot_lights_.size();
@@ -161,7 +147,7 @@ void LightManager::DrawImgui()
 				std::string name = "spot light" + std::to_string(i);
 				if (ImGui::TreeNode(name.c_str()))
 				{
-					if (ImGui::InputFloat4("position", &light.position.x));
+					if (ImGui::DragFloat4("position", &light.position.x));
 					if (ImGui::SliderFloat4("direction", &light.direction.x,-10.f,10.f));
 					if (ImGui::ColorEdit4("color", &light.color.x));
 					if (ImGui::SliderFloat("inner_corn", &light.inner_corn,
@@ -174,26 +160,27 @@ void LightManager::DrawImgui()
 			}
 			ImGui::TreePop();
 		}
-	ImGui::End();
+		
+		ImGui::End();
 	}
 }
 
 void LightManager::Update(float elapsed_time)
 {
 
-	const float kMinEl = -DirectX::XM_PIDIV2 + 0.001f; // ‚¿‚å‚¢—]—Ti^ã/^‰º‚Ì“ÁˆÙ“_‰ñ”ğj
+	const float kMinEl = -DirectX::XM_PIDIV2 + 0.001f; // ã¡ã‚‡ã„ä½™è£•ï¼ˆçœŸä¸Š/çœŸä¸‹ã®ç‰¹ç•°ç‚¹å›é¿ï¼‰
 	const float kMaxEl = DirectX::XM_PIDIV2 - 0.001f;
 	if (elevation_ < kMinEl) elevation_ = kMinEl;
 	if (elevation_ > kMaxEl) elevation_ = kMaxEl;
 
-	// azimuth_: [-180‹, +180‹] ‚Éƒ‰ƒbƒvi³‹K‰»j
+	// azimuth_: [-180Â°, +180Â°] ã«ãƒ©ãƒƒãƒ—ï¼ˆæ­£è¦åŒ–ï¼‰
 	// a = fmod(a + pi, 2pi) -> [0,2pi) -> [-pi,pi)
 	azimuth_ = std::fmod(azimuth_ + DirectX::XM_PI, DirectX::XM_2PI);
 	if (azimuth_ < 0.0f) azimuth_ += DirectX::XM_2PI;
 	azimuth_ -= DirectX::XM_PI;
 
 
-	//ƒfƒBƒŒƒNƒVƒ‡ƒ“ƒ‰ƒCƒg‚ğ‘¾—z‚Ì—l‚É“®‚©‚·
+	//ãƒ‡ã‚£ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ãƒ©ã‚¤ãƒˆã‚’å¤ªé™½ã®æ§˜ã«å‹•ã‹ã™
 	if (moove_light_)
 	{
 		if (day_length_seconds_ >= 0.01f||day_length_seconds_<=-0.01f)
@@ -205,10 +192,10 @@ void LightManager::Update(float elapsed_time)
 
 
 		float theta = time_of_day * DirectX::XM_2PI;
-		//‘¾—z‚Ì‹O“¹‰~‚ğì‚é
+		//å¤ªé™½ã®è»Œé“å††ã‚’ä½œã‚‹
 		DirectX::XMVECTOR pos = DirectX::XMVectorSet(cosf(theta), 0.0f, sinf(theta), 0.0f);
 
-		//‹O“¹‚ğŒX‚¯‚é,X²‰ñ“]‚Å‹O“¹–Ê‚ğŒX‚¯‚é
+		//è»Œé“ã‚’å‚¾ã‘ã‚‹,Xè»¸å›è»¢ã§è»Œé“é¢ã‚’å‚¾ã‘ã‚‹
 		DirectX::XMMATRIX tilt = DirectX::XMMatrixRotationX(sun_tilt_);
 		pos = DirectX::XMVector3TransformNormal(pos, tilt);
 
@@ -231,31 +218,108 @@ void LightManager::Update(float elapsed_time)
 	}
 
 	
-	//ƒ‰ƒCƒg•ûŒü‚©‚çŒ©‚½‹üs—ñ‚ğ¶¬
+	//ãƒ©ã‚¤ãƒˆæ–¹å‘ã‹ã‚‰è¦‹ãŸè¦–ç·šè¡Œåˆ—ã‚’ç”Ÿæˆ
 
 	DirectX::XMVECTOR light_dir = DirectX::XMVector3Normalize(DirectX::XMLoadFloat4(&direction_light_.direction));
+
+	// å½±ä¸­å¿ƒã‹ã‚‰ãƒ©ã‚¤ãƒˆæ–¹å‘ã«å¼•ã„ãŸä½ç½®ã«ãƒ©ã‚¤ãƒˆã‚’ç½®ã
+	DirectX::XMVECTOR light_pos = DirectX::XMVectorScale(light_dir, shadow_distance_);
+
+	// æ³¨è¦–ç‚¹ã¯ä¸­å¿ƒ
 	DirectX::XMVECTOR center = DirectX::XMVectorSet(0,0,0,0);
-
-	// ‰e’†S‚©‚çƒ‰ƒCƒg•ûŒü‚Éˆø‚¢‚½ˆÊ’u‚Éƒ‰ƒCƒg‚ğ’u‚­
-	DirectX::XMVECTOR light_pos = DirectX::XMVectorSubtract(center , DirectX::XMVectorScale(light_dir, shadow_distance_));
-
-	// ’‹“_‚Í’†S
 	DirectX::XMVECTOR target = center;
 
-	// up ‚ª light_dir ‚Æ•½s‚É‹ß‚¢ê‡‚Ì‘Îô
+	// up ãŒ light_dir ã¨å¹³è¡Œã«è¿‘ã„å ´åˆã®å¯¾ç­–
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f);
 	if (fabs(DirectX::XMVectorGetX(DirectX::XMVector3Dot(light_dir, up))) > 0.95f)
 		up = DirectX::XMVectorSet(0.f, 0.f, 1.f, 0.f);
 
 	DirectX::XMMATRIX V = DirectX::XMMatrixLookAtLH(light_pos, target, up);
+    DirectX::XMStoreFloat4x4(&light_view_, V);
 
-	// ³Ë‰ei”ÍˆÍ‚Í‰_‰e‚ğ—‚Æ‚µ‚½‚¢’n–ÊƒTƒCƒYj
+	// æ­£å°„å½±ï¼ˆç¯„å›²ã¯é›²å½±ã‚’è½ã¨ã—ãŸã„åœ°é¢ã‚µã‚¤ã‚ºï¼‰
 	float w = shadow_map_size_;
 	float h = shadow_map_size_;
 
 	DirectX::XMMATRIX P = DirectX::XMMatrixOrthographicLH(w, h, shadow_near_plane_, shadow_far_plane_);
+    DirectX::XMStoreFloat4x4(&light_projection_, P);
 
 	DirectX::XMMATRIX VP = V * P;
 	DirectX::XMStoreFloat4x4(&light_view_projection_, VP);
 	DirectX::XMStoreFloat4x4(&inverse_light_view_projection_, DirectX::XMMatrixInverse(nullptr, VP));
+
+	BuildDeferredLights();
+}
+void LightManager::BuildDeferredLights()
+{
+	deferred_lights_.clear();
+
+	// Ambient
+	{
+		//ç’°å¢ƒå…‰ã®å ´åˆ
+		//work_data[0]=color
+		//work_data[1]=dummy
+		//work_data[2]=dummy
+		//work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = ambient_color_;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_ambient_light);
+
+		deferred_lights_.emplace_back(l);
+
+	}
+
+	// Directional
+	{
+		//å¹³è¡Œå…‰æºã®å ´åˆ
+		//work_data[0]=direction
+		//work_data[1]=color
+		//work_data[2]=dummy
+		//work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = direction_light_.direction;
+		l.lights.work_data[1] = direction_light_.color;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_derectional_light);
+		l.use_shadow = 1;
+		l.light_view_projection = light_view_projection_;
+		l.inverse_light_view_projection = inverse_light_view_projection_;
+		l.shadow_attenuation = shadow_intensity_;
+
+		deferred_lights_.emplace_back(l);
+	}
+
+	// Point
+	for (auto& p : point_lights_)
+	{
+		//ç‚¹å…‰æº
+		//work_data[0]=position
+		//work_data[1]=color
+		//work_data[2]=x=range,yzw=dummy
+		//work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = p.position;
+		l.lights.work_data[1] = p.color;
+		l.lights.work_data[2].x = p.range;
+		l.lights.work_data[3].w = static_cast<float>(light_kind_point_light);
+
+		deferred_lights_.emplace_back(l);
+	}
+
+	// Spot
+	for (auto& s : spot_lights_)
+	{
+
+		//ã‚¹ãƒãƒƒãƒˆãƒ©ã‚¤ãƒˆã®å ´åˆ
+		//work_data[0]=position
+		//work_data[1]=direction
+		//work_data[2]=color
+		//work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
+		DeferredLightContstants l{};
+		l.lights.work_data[0] = s.position;
+		l.lights.work_data[1] = s.direction;
+		l.lights.work_data[2] = s.color;
+		l.lights.work_data[3] = { s.range,s.inner_corn,s.outer_corn,static_cast<float>(light_kind_spot_light) };
+
+		deferred_lights_.emplace_back(l);
+	}
 }

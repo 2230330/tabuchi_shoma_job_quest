@@ -5,8 +5,18 @@
 #include<d3d11.h>
 #include<wrl.h>
 
-#include"../graphics.h"
-#include"../light_manager.h"
+//å‰æ–¹å®£è¨€
+class Graphics;
+
+struct scene_constants
+{
+	DirectX::XMFLOAT4 options{0.f,0.f,0.f,0.f};	//	xy : ãƒã‚¦ã‚¹ã®åº§æ¨™å€¤, z : ã‚¿ã‚¤ãƒãƒ¼, w : ãƒ•ãƒ©ã‚°
+	DirectX::XMFLOAT4 z_buffer_parameteres{ 0.f,0.f,0.f,0.f };
+	DirectX::XMFLOAT4 viewport_size{ 0.f,0.f,0.f,0.f };
+	DirectX::XMFLOAT2 sun_uv{ 0.f,0.f }; //ç”»é¢ä¸Šã®å¤ªé™½ä½ç½®
+	float sun_visible{ 0 }; //ã‚«ãƒ¡ãƒ©å‰æ–¹ã«ã‚ã‚‹ã‹
+	float dummy;
+};
 
 class Scene
 {
@@ -19,15 +29,19 @@ public:
 
 	bool Initialize();
 	bool Uninitialize();
-    //XVˆ—
+    //æ›´æ–°å‡¦ç†
     void Update(float elapsed_time);
-    //•`‰æˆ—
+    //æç”»å‡¦ç†
     void Render(float elapsed_time);
-    //GUI•`‰æˆ—
+    //GUIæç”»å‡¦ç†
     void DrawGui();
 
 
 	void SetWheel(float wheel) { this->wheel = wheel; }
+
+    DirectX::XMFLOAT3 GetCameraPosition() const { return camera_position; }
+    POINT GetCursorPosition() const { return cursor_position; }
+
 
 protected:
 	virtual bool InitializeCore() { return true; }
@@ -36,11 +50,12 @@ protected:
 	virtual void RenderCore(float elapsed_time){}
 	virtual void DrawImguiCore(){}
 
+	//ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã‚µã‚¤ã‚ºã«ä½•ã‚‚å…¥ã£ã¦ã„ãªã„å ´åˆã€graphicsã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚’å…¥ã‚Œã¾ã™
 	void SetSceneConstant(
 		int start_slot = 1,
 		bool is_update_resource = true,
 		DirectX::XMFLOAT4 directional_light = { 0,0,0,1 },
-		DirectX::XMFLOAT2 viewport_size = DirectX::XMFLOAT2(Graphics::Instance().GetScreenWidth(), Graphics::Instance().GetScreenHeight()));
+		DirectX::XMFLOAT2 viewport_size = DirectX::XMFLOAT2(-1.0f, -1.0f));
 
 	//static constexpr DirectX::XMFLOAT4X4 coordinate_system_transforms[]
 	//{
@@ -49,27 +64,9 @@ protected:
 	//	{ -1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1 },	// 2:RHS Z-UP
 	//	{ 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1 },		// 3:LHS Z-UP
 	//};
-	//static constexpr float gltf_scale_factor = 1.0f;		//	’PˆÊ‚ğƒ[ƒgƒ‹‚É‚·‚éê‡‚Í0.01‚Éw’è‚·‚é–
+	//static constexpr float gltf_scale_factor = 1.0f;		//	å˜ä½ã‚’ãƒ¡ãƒ¼ãƒˆãƒ«ã«ã™ã‚‹å ´åˆã¯0.01ã«æŒ‡å®šã™ã‚‹äº‹
 
-	struct scene_constants
-	{
-		DirectX::XMFLOAT4 options;	//	xy : ƒ}ƒEƒX‚ÌÀ•W’l, z : ƒ^ƒCƒ}[, w : ƒtƒ‰ƒO
-		DirectX::XMFLOAT4 z_buffer_parameteres;
-		DirectX::XMFLOAT4 camera_position;
-		DirectX::XMFLOAT4 camera_direction;
-		DirectX::XMFLOAT4 camera_clip_distance;
-		DirectX::XMFLOAT4 viewport_size;
-		DirectX::XMFLOAT4X4 view_transform;
-		DirectX::XMFLOAT4X4 projection_transform;
-		DirectX::XMFLOAT4X4 view_projection_transform;
-		DirectX::XMFLOAT4X4 inverse_view_transform;
-		DirectX::XMFLOAT4X4 inverse_projection_transform;
-		DirectX::XMFLOAT4X4 inverse_view_projection_transform;
-		DirectX::XMFLOAT4X4 previous_view_projection_transform;
-        DirectX::XMFLOAT2 sun_uv; //‰æ–Êã‚Ì‘¾—zˆÊ’u
-        float sun_visible; //ƒJƒƒ‰‘O•û‚É‚ ‚é‚©
-        float dummy;
-	};
+
 
 
 private:
@@ -84,15 +81,15 @@ private:
 	float timer{ 0.0f };
 	bool flag{ false };
 	float near_clip_distance{ 0.1f };
-	float far_clip_distance{ 10000.0f };
+	float far_clip_distance{ 1000.0f };
 	float fov_y{ DirectX::XMConvertToRadians(30) };
 
-	DirectX::XMFLOAT3 camera_position{ 0.0f, 0.0f, -10.0f };
+	DirectX::XMFLOAT3 camera_position{};
 	DirectX::XMFLOAT3 camera_focus{ 0.0f, 0.0f, 0.0f };
-	DirectX::XMFLOAT4X4 view;
-	DirectX::XMFLOAT4X4 projection;
-	DirectX::XMFLOAT4X4 view_projection;
-	DirectX::XMFLOAT4X4 previous_view_projection;
+	DirectX::XMFLOAT4X4 view{};
+	DirectX::XMFLOAT4X4 projection{};
+	DirectX::XMFLOAT4X4 view_projection{};
+	DirectX::XMFLOAT4X4 previous_view_projection{};
 	float rotateX{ 0.0f };
 	float rotateY{ 0.0f };
 	float wheel{ 0 };
@@ -101,10 +98,10 @@ private:
 	float max_distance{ 100.f };
 
 	//sun_uv
-    DirectX::XMFLOAT2 sun_uv_{ 0.0f,0.0f };//‰æ–Êã‚Ì‘¾—zˆÊ’u
-	int sun_visible_{ 0 };//ƒJƒƒ‰‘O•û‚É‚ ‚é‚©
+    DirectX::XMFLOAT2 sun_uv_{ 0.0f,0.0f };//ç”»é¢ä¸Šã®å¤ªé™½ä½ç½®
+	int sun_visible_{ 0 };//ã‚«ãƒ¡ãƒ©å‰æ–¹ã«ã‚ã‚‹ã‹
 	
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> scene_constant_buffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> scene_constant_buffer=nullptr;
 };
 #endif // !PART2_SCENE_H

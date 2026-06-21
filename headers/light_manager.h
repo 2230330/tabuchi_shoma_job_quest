@@ -9,14 +9,14 @@
 struct DirectionLight
 {
     DirectX::XMFLOAT4    direction{ 0.f,-1.0f,0.f,1.f };
-    DirectX::XMFLOAT4    color{ 1.f,1.f,1.f,1.f };//color.w‚ª‹­“x
+    DirectX::XMFLOAT4    color{ 1.f,1.f,1.f,1.f };//color.wãŒå¼·åº¦
 
 };
 struct PointLight
 {
     DirectX::XMFLOAT4 position{ 0.f,0.f,0.f,0.f };
     DirectX::XMFLOAT4 color{ 1.f,1.f,1.f,1.f };
-    float range{ 0.f };
+    float range{ 1.f };
     float intensity{ 1.0f };
     DirectX::XMFLOAT2 dummy;
 };
@@ -25,7 +25,7 @@ struct SpotLight
     DirectX::XMFLOAT4 position{ 0.f,0.f,0.f,0.f };
     DirectX::XMFLOAT4 direction{ 0.f,0.f,-1.f,0.f };
     DirectX::XMFLOAT4 color{ 1.f,1.f,1.f,1.f };
-    float range{ 0.f };
+    float range{ 1.f };
     float inner_corn{ DirectX::XMConvertToRadians(30.f) };
     float outer_corn{ DirectX::XMConvertToRadians(45.f) };
     float dummy;
@@ -34,43 +34,56 @@ struct SpotLight
 class LightManager
 {
 public:
-    //ƒRƒ“ƒXƒ^ƒ“ƒg
+    //ã‚³ãƒ³ã‚¹ã‚¿ãƒ³ãƒˆ
     LightManager();
 
-    //ƒfƒBƒŒƒNƒVƒ‡ƒ“ƒ‰ƒCƒgİ’è
+    //ãƒ‡ã‚£ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ãƒ©ã‚¤ãƒˆè¨­å®š
     void SetDirectionLight(DirectionLight& light) { this->direction_light_ = light; }
 
-    //ƒfƒBƒŒƒNƒVƒ‡ƒ“ƒ‰ƒCƒgæ“¾
-    DirectionLight GetDirectionLight()const { return this->direction_light_; }
+    //ãƒ‡ã‚£ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ãƒ©ã‚¤ãƒˆå–å¾—
+    const DirectionLight& GetDirectionLight()const { return this->direction_light_; }
 
-    //ƒ‰ƒCƒgƒRƒ“ƒXƒ^ƒ“ƒg‚ğŠy‚É‘—‚èo‚¹‚é‚æ‚¤‚É
+    //ãƒ©ã‚¤ãƒˆã‚³ãƒ³ã‚¹ã‚¿ãƒ³ãƒˆã‚’æ¥½ã«é€ã‚Šå‡ºã›ã‚‹ã‚ˆã†ã«
     void SetForwardLightConstant(int start_slot);
 
-    //ƒfƒtƒ@[ƒh—pƒ‰ƒCƒgƒRƒ“ƒXƒ^ƒ“ƒg‚ğƒZƒbƒg
-    void SetDeferredLightConstant(int start_slot);
+    //ãƒ‡ãƒ•ã‚¡ãƒ¼ãƒ‰ç”¨ãƒ©ã‚¤ãƒˆã‚³ãƒ³ã‚¹ã‚¿ãƒ³ãƒˆã‚’ã‚»ãƒƒãƒˆ
+    void BindDeferredLightConstant(int start_slot,UINT index);
+    //Updateå†…ã§å‹•ãã€ãƒ‡ã‚£ãƒ•ã‚¡ãƒ¼ãƒ‰ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ç”¨ãƒ©ã‚¤ãƒˆã®çµ„ã¿ãªãŠã—
+    void BuildDeferredLights();
 
-    //ƒ‰ƒCƒg‚ÌIMGUIŠÇ—
+    size_t GetDeferredLightsSize() const{ return deferred_lights_.size(); }
+
+    //ãƒ©ã‚¤ãƒˆã®ä½ç½®ã‹ã‚‰è¦‹ãŸå°„å½±è¡Œåˆ—ã‚’å–å¾—
+    //ç¾åœ¨ã¯ãƒ‡ã‚£ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ãƒ©ã‚¤ãƒˆã®ã¿
+    const DirectX::XMFLOAT4X4& GetLightViewProjection() const { return light_view_projection_; }
+    const DirectX::XMFLOAT4X4& GetInverseLightViewProjection() const { return inverse_light_view_projection_; }
+
+    //ãƒ©ã‚¤ãƒˆã®IMGUIç®¡ç†
     void DrawImgui();
 
     void Update(float elampsed_time);
 
 private:
     bool moove_light_ = false;
-    float day_length_seconds_ = 120.0f;//ŠÔŒo‰ß‚ÌƒXƒP[ƒ‹
-    float sun_tilt_ = DirectX::XMConvertToRadians(23.5f);//‘¾—z‚ÌŒX‚«
-    float time_of_day = 0.5f;//0~1‚Å1“ú‚ğ•\Œ»
+    float day_length_seconds_ = 120.0f;//æ™‚é–“çµŒéã®ã‚¹ã‚±ãƒ¼ãƒ«
+    float sun_tilt_ = DirectX::XMConvertToRadians(23.5f);//å¤ªé™½ã®å‚¾ã
+    float time_of_day = 0.5f;//0~1ã§1æ—¥ã‚’è¡¨ç¾
 
     DirectionLight direction_light_;
-    float azimuth_ = 0.f;//ƒ‰ƒCƒg‚Ì…•½Šp“x
-    float elevation_ = DirectX::XMConvertToRadians(-90);//ƒ‰ƒCƒg‚Ì‹ÂŠp
-    DirectX::XMFLOAT4 ambient_color_ = { 0.2,0.2,0.2,1 };
-    //ƒ‰ƒCƒg‹óŠÔ—p
+    float azimuth_ = 0.f;//ãƒ©ã‚¤ãƒˆã®æ°´å¹³è§’åº¦
+    float elevation_ = DirectX::XMConvertToRadians(-25);//ãƒ©ã‚¤ãƒˆã®ä»°è§’
+    DirectX::XMFLOAT4 ambient_color_ = { 0.5,0.5,0.5,1 };
+    //ãƒ©ã‚¤ãƒˆç©ºé–“ç”¨
+    DirectX::XMFLOAT4X4 light_view_{};
+    DirectX::XMFLOAT4X4 light_projection_{};
     DirectX::XMFLOAT4X4 light_view_projection_{};
     DirectX::XMFLOAT4X4 inverse_light_view_projection_{};
-    const float shadow_distance_ = 50000;
-    const float shadow_near_plane_ = 1.0f;
-    const float shadow_far_plane_ = 200000;
+    const float shadow_distance_ = 50;
+    const float shadow_near_plane_ = 0.1f;
+    const float shadow_far_plane_ = 200;
     const float shadow_map_size_ = 1024.0f;
+    float shadow_intensity_ = 0.5f;
+
 
 
     std::vector<PointLight>point_lights_;
@@ -84,11 +97,11 @@ private:
     {
         DirectX::XMUINT4  light_count{ 0,0,0,0 };
         DirectX::XMFLOAT4 ambient_color;
-        //‚˜F‹ó‚«A‚™Fƒ|ƒCƒ“ƒgƒ‰ƒCƒg”A‚šFƒXƒ|ƒbƒgƒ‰ƒCƒg”A‚—F‹ó‚«
-        DirectX::XMFLOAT4X4 light_view_position;//ƒ‰ƒCƒgƒrƒ…[‹óŠÔ‚Å‚ÌƒJƒƒ‰ˆÊ’u
-        DirectX::XMFLOAT4X4 inverse_light_view_position;//‹ts—ñ
-        DirectX::XMFLOAT2 light_orthographic_size;//ƒ‰ƒCƒg‚Ì’¼Œğ“Š‰e‚ÌƒTƒCƒY(x:width,y:height)
-        DirectX::XMFLOAT2 light_depth_range;//ƒ‰ƒCƒg‚Ì’¼Œğ“Š‰e‚Ì[“x”ÍˆÍ(x:near,y:far)
+        //ï½˜ï¼šç©ºãã€ï½™ï¼šãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆæ•°ã€ï½šï¼šã‚¹ãƒãƒƒãƒˆãƒ©ã‚¤ãƒˆæ•°ã€ï½—ï¼šç©ºã
+        DirectX::XMFLOAT4X4 light_view_position;//ãƒ©ã‚¤ãƒˆãƒ“ãƒ¥ãƒ¼ç©ºé–“ã§ã®ã‚«ãƒ¡ãƒ©ä½ç½®
+        DirectX::XMFLOAT4X4 inverse_light_view_position;//é€†è¡Œåˆ—
+        DirectX::XMFLOAT2 light_orthographic_size;//ãƒ©ã‚¤ãƒˆã®ç›´äº¤æŠ•å½±ã®ã‚µã‚¤ã‚º(x:width,y:height)
+        DirectX::XMFLOAT2 light_depth_range;//ãƒ©ã‚¤ãƒˆã®ç›´äº¤æŠ•å½±ã®æ·±åº¦ç¯„å›²(x:near,y:far)
         DirectionLight directional_light;
         PointLight point_light[forward_light_max];
         SpotLight spot_light[forward_light_max];
@@ -102,45 +115,47 @@ private:
 
     struct IntegrateLight
     {
-        //‹¤—L‚Ìî•ñ
-        //work_data[3].w‚Í‹¤—L‚Ìƒ‰ƒCƒg‚Ìí•Ê”Ô†‚ğ“ü‚ê‚Ä‚¨‚­
+        //å…±æœ‰ã®æƒ…å ±
+        //work_data[3].wã¯å…±æœ‰ã®ãƒ©ã‚¤ãƒˆã®ç¨®åˆ¥ç•ªå·ã‚’å…¥ã‚Œã¦ãŠã
 
-        //•½sŒõŒ¹‚Ìê‡
+        //å¹³è¡Œå…‰æºã®å ´åˆ
         //work_data[0]=direction
         //work_data[1]=color
         //work_data[2]=dummy
-        //work_data[3]=xyz=dummy,w=ƒ‰ƒCƒg¯•Ê”Ô†
+        //work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
 
-        //“_ŒõŒ¹
+        //ç‚¹å…‰æº
         //work_data[0]=position
         //work_data[1]=color
         //work_data[2]=x=range,yzw=dummy
-        //work_data[3]=xyz=dummy,w=ƒ‰ƒCƒg¯•Ê”Ô†
+        //work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
 
-        //ƒXƒ|ƒbƒgƒ‰ƒCƒg‚Ìê‡
+        //ã‚¹ãƒãƒƒãƒˆãƒ©ã‚¤ãƒˆã®å ´åˆ
         //work_data[0]=position
         //work_data[1]=direction
         //work_data[2]=color
-        //work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ƒ‰ƒCƒg¯•Ê”Ô†
+        //work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
 
-        //ŠÂ‹«Œõ‚Ìê‡
+        //ç’°å¢ƒå…‰ã®å ´åˆ
         //work_data[0]=color
         //work_data[1]=dummy
         //work_data[2]=dummy
-        //work_data[3]=xyz=dummy,w=ƒ‰ƒCƒg¯•Ê”Ô†
+        //work_data[3]=xyz=dummy,w=ãƒ©ã‚¤ãƒˆè­˜åˆ¥ç•ªå·
         DirectX::XMFLOAT4 work_data[4];
     };
     struct DeferredLightContstants
     {
-        IntegrateLight lights;
+        IntegrateLight lights{};
 
-        //ƒVƒƒƒhƒEƒ}ƒbƒvŠÖŒW
-        int use_shadow{ 0 };//@‰e‚ğ—i‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©
-        float shadow_attenuation{ 0.5f };//‰eF
-        float shadow_bias{ 0.001f };//[“xƒoƒCƒAƒX
+        //ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—é–¢ä¿‚
+        int use_shadow{ 0 };//ã€€å½±ã‚’æ“ã—ã¦ã„ã‚‹ã‹ã©ã†ã‹
+        float shadow_attenuation{ 0.0f };//å½±è‰²
+        float shadow_bias{ 0.001f };//æ·±åº¦ãƒã‚¤ã‚¢ã‚¹
         UINT shadow_dummy{0};
-        DirectX::XMFLOAT4X4 light_view_projection{}; //ƒ‰ƒCƒg‚ÌˆÊ’u‚©‚çŒ©‚½Ë‰es—ñ
+        DirectX::XMFLOAT4X4 light_view_projection{}; //ãƒ©ã‚¤ãƒˆã®ä½ç½®ã‹ã‚‰è¦‹ãŸå°„å½±è¡Œåˆ—
+        DirectX::XMFLOAT4X4 inverse_light_view_projection{};
     };
+    std::vector<DeferredLightContstants>deferred_lights_;
 };
 
 #endif //!PART2_LIGHT_MANAGER_H

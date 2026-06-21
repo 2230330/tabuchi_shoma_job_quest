@@ -29,31 +29,29 @@ struct INSTANCING_VS_IN
 struct VS_OUT
 {
     float4 position : SV_POSITION;
-    float4 w_position : POSITION;
-    float4 w_normal : NORMAL;
-    float4 w_tangent : TANGENT;
-    float2 texcoord : TEXCOORD;
+    float4 w_position : TEXCOORD1;
+    float4 w_normal : TEXCOORD2;
+    float4 w_tangent : TEXCOORD3;
+    float2 texcoord : TEXCOORD4;
+    float4 current_clip_position : CLIP_POSITION0;
+    float4 previous_clip_position : CLIP_POSITION1;
 };
-#include"scene_constant_buffer.hlsli"
+#include"camera_buffer.hlsli"
 
 cbuffer PRIMITIVE_CONSTANT_BUFFER : register(b0)
 {
     row_major float4x4 world;
+    row_major float4x4 previous_world;
     int material;
-    bool has_tangent;
+    int has_tangent;
     int skin;
     int pad;
 };
 
-//cbuffer SCENE_CONSTANT_BUFFER : register(b1)
-//{
-//    row_major float4x4 view_projection;
-//    float4 light_direction;
-//    float4 camera_position;
-//    float4 light_color;
-//    float light_intensity;
-//    float3 dummy;
-//};
+#define HS_IN VS_OUT
+#define DS_IN VS_OUT
+#define DS_OUT VS_OUT
+#define PS_IN VS_OUT
 
 static const uint PRIMITIVE_MAX_JOINTS = 512;
 cbuffer PRIMITIVE_JOINT_CONSTANTS : register(b2)

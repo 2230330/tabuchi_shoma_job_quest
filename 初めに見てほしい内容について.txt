@@ -1,0 +1,32 @@
+このプロジェクトは技術デモになります。
+参照ライブラリ以外は基本的に全て自作になります。
+詳しい解説についてはこちらのポートフォリオサイトへ
+https://sites.google.com/view/tabuchishomaportfolio/%E5%80%8B%E4%BA%BA%E8%A3%BD%E4%BD%9C
+
+開発環境
+描画API　：DirectX11
+開発言語  ：C++,HLSL
+
+制作人数  ：1人
+
+レンダリングパイプライン
+ソースコード：sources/system/render_system_manager.cpp
+
+実装した技術・見てほしい個所について
+・大気散乱
+ソースコード：shaderes/sky_atmosphere_ps.hlsl
+
+・ボリューメトリッククラウド
+ソースコード：shaderes/volumetric_cloud_ps.hlsl
+
+・リアルタイムキューブマップ
+ソースコード：sources/system/ibl_manager.cpp
+
+・ディファードレンダリング
+ソースコード：sources/system/deferred_render_system.cpp
+
+・カスケードシャドウマップ
+ソースコード：sources/system/deferred_render_system.cpp
+
+・SSR
+ソースコード：shaderes/screen_space_reflection_ps.hlsl

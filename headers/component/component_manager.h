@@ -1,8 +1,10 @@
 #pragma once
 #include <vector>
+#include <cstdint>
 #include <unordered_map>
 #include <typeindex>
 #include <stdexcept>
+#include<functional>
 
 #include "component_position.h"
 #include "component_rotation.h"
@@ -15,17 +17,21 @@
 #include "component_material.h"
 #include "component_texture.h"
 #include "component_instanced.h"
-#include "component_sky_atmosphere.h"
 #include "component_volumetric_cloud.h"
-#include"component_intensity.h"
+#include "component_sky_atmosphere.h"
 #include"component_ajast_pbr_paramter_.h"
+#include "component_camera.h"
+#include "component_screen_space_reflection.h"
+#include"component_name.h"
+#include"component_cascade_shadow.h"
+#include"component_deferred_render.h"
 
-//ƒRƒ“ƒ|[ƒlƒ“ƒg‚ÌŠÇ—ÒB‚±‚ê‚©‚ç‚Ô‚­‚Ô‚­‘å‚«‚­‚È‚é‚Æl‚¦‚é‚Æ‚¿‚å‚Á‚Æ”Y‚İ•¨
+//ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®ç®¡ç†è€…ã€‚ã“ã‚Œã‹ã‚‰ã¶ãã¶ãå¤§ãããªã‚‹ã¨è€ƒãˆã‚‹ã¨ã¡ã‚‡ã£ã¨æ‚©ã¿ç‰©
 class ComponentManager 
 {
 public:
     ComponentManager() {
-        // ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚ÅŒ^‚²‚Æ‚ÌƒXƒgƒŒ[ƒW‚ğ“o˜^‚µ‚Ä‚¨‚­
+        // ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã§å‹ã”ã¨ã®ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸ã‚’ç™»éŒ²ã—ã¦ãŠã
         registerContainer<ComponentPosition>(positions_);
         registerContainer<ComponentRotation>(rotations_);
         registerContainer<ComponentScale>(scales_);
@@ -39,8 +45,12 @@ public:
         registerContainer<ComponentInstanced>(instanced_);
         registerContainer<ComponentSkyAtmosphere>(skys_);
         registerContainer<ComponentVolumetricCloud>(clouds_);
-        registerContainer<ComponentIntensity>(intensities_);
         registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
+        registerContainer<ComponentCamera>(cameras_);
+        registerContainer<ComponentSsr>(ssrs_);
+        registerContainer<ComponentName>(names_);
+        registerContainer<ComponentCascadeShadow>(cas_shadows_);
+        registerContainer<ComponentDeferredRender>(deferred_renders_);
     }
 
     template<typename T>
@@ -51,7 +61,7 @@ public:
     }
 
     template<typename T>
-    int Add(uint16_t entity_id, const T& component) {
+    int Add(uint32_t entity_id, const T& component) {
         auto& container = getContainer<T>();
         container.emplace_back(component);
         int id = static_cast<int>(container.size() - 1);
@@ -59,7 +69,7 @@ public:
         return id;
     }
 
-    //ƒRƒ“ƒ|[ƒlƒ“ƒg‚ğŠi”[‚µ‚Ä‚¢‚é”z—ñ‚Ì—v‘f‚Åæ‚èo‚·ƒQƒbƒ^[
+    //ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’æ ¼ç´ã—ã¦ã„ã‚‹é…åˆ—ã®è¦ç´ ã§å–ã‚Šå‡ºã™ã‚²ãƒƒã‚¿ãƒ¼
     template<typename T>
     T& Get(int id) {
         auto& container = getContainer<T>();
@@ -72,7 +82,7 @@ public:
         return container.at(id);
     }
 
-    //—v‘f‚ÌíœŠÖ”
+    //è¦ç´ ã®å‰Šé™¤é–¢æ•°
     template<typename T>
     void Remove(uint32_t entity_id) {
         auto type = std::type_index(typeid(T));
@@ -91,7 +101,7 @@ public:
             // swap with last
             std::swap(container[index_to_remove], container[last_index]);
 
-            // XV‘ÎÛ‚Ì entity ‚ğ’T‚·
+            // æ›´æ–°å¯¾è±¡ã® entity ã‚’æ¢ã™
             for (auto& [eid, idx] : mapping) {
                 if (idx == last_index) {
                     idx = index_to_remove;
@@ -104,7 +114,7 @@ public:
         mapping.erase(entity_id);
     }
 
-    //ˆê‚É“o˜^‚µ‚½ƒGƒ“ƒeƒBƒeƒB‚Å—v‘f‚ğæ‚èo‚·ƒQƒbƒ^[
+    //ä¸€ç·’ã«ç™»éŒ²ã—ãŸã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ã§è¦ç´ ã‚’å–ã‚Šå‡ºã™ã‚²ãƒƒã‚¿ãƒ¼
     template<typename T>
     T& GetByEntity(uint32_t entity_id) {
         auto& container = getContainer<T>();
@@ -112,7 +122,7 @@ public:
         return container.at(mapping.at(entity_id));
     }
 
-    //“o˜^‚µ‚½ƒRƒ“ƒ|[ƒlƒ“ƒg‚ª‚È‚¢ê‡‚È‚Ç‚ÌˆÀ‘S”ÅƒQƒbƒ^[
+    //ç™»éŒ²ã—ãŸã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãŒãªã„å ´åˆãªã©ã®å®‰å…¨ç‰ˆã‚²ãƒƒã‚¿ãƒ¼
     template<typename T>
     T* TryGetByEntity(uint32_t entity_id) {
         auto it = entity_to_component_.find(std::type_index(typeid(T)));
@@ -125,7 +135,7 @@ public:
         auto& container = getContainer<T>();
         return &container.at(mit->second);
     }
-    //ƒGƒ“ƒeƒBƒeƒB‚ª‚»‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğŠ—L‚µ‚Ä‚¢‚é‚©‚ÌŠm”F
+    //ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ãŒãã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’æ‰€æœ‰ã—ã¦ã„ã‚‹ã‹ã®ç¢ºèª
     template<typename T>
     inline bool Has(uint32_t entity_id) 
     {
@@ -134,7 +144,7 @@ public:
         return it->second.find(entity_id) != it->second.end();
     }
 
-    //“Á’è‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg‚ğ‚ÂƒGƒ“ƒeƒBƒeƒB‚É‘Î‚µ‚ÄˆêŠ‡ˆ—‚ğ‚·‚éˆ×‚Ì‘–¸ŠÖ”
+    //ç‰¹å®šã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’æŒã¤ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ã«å¯¾ã—ã¦ä¸€æ‹¬å‡¦ç†ã‚’ã™ã‚‹ç‚ºã®èµ°æŸ»é–¢æ•°
     template<typename T>
     void ForEach(std::function<void(uint32_t, T&)> func) {
         auto& container = getContainer<T>();
@@ -144,25 +154,34 @@ public:
         }
     }
 
-    //ƒRƒ“ƒ|[ƒlƒ“ƒg‚Ì‚¿å‚ÌƒGƒ“ƒeƒBƒeƒB‚ª€‚ñ‚¾‚Æ‚«A‘®‚·‚éƒRƒ“ƒ|[ƒlƒ“ƒg‚ğÁ‚·
+
+    //ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®æŒã¡ä¸»ã®ã‚¨ãƒ³ãƒ†ã‚£ãƒ†ã‚£ãŒæ­»ã‚“ã ã¨ãã€å±ã™ã‚‹ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’æ¶ˆã™
     void RemoveAllComponents(uint32_t entity_id) {
-        for (auto& [type, mapping] : entity_to_component_) {
-            mapping.erase(entity_id);
+        for (auto& [type, remove_fn] : removers_)
+        {
+            remove_fn(entity_id);
         }
+
     }
 
 private:
-    // Œ^‚²‚Æ‚ÌƒRƒ“ƒeƒi‚ğ”Ä—p“I‚Éˆµ‚¤‚½‚ß‚Ìd‘g‚İ
+    // å‹ã”ã¨ã®ã‚³ãƒ³ãƒ†ãƒŠã‚’æ±ç”¨çš„ã«æ‰±ã†ãŸã‚ã®ä»•çµ„ã¿
     template<typename T>
     void registerContainer(std::vector<T>& vec) {
         containers_[std::type_index(typeid(T))] = &vec;
+
+        //removerã‚‚ç™»éŒ²
+        removers_[std::type_index(typeid(T))] = [this](uint32_t eid)
+            {
+                this->Remove<T>(eid);
+            };
     }
 
     template<typename T>
     std::vector<T>& getContainer() {
         auto it = containers_.find(std::type_index(typeid(T)));
         if (it == containers_.end()) {
-            throw std::runtime_error("ƒRƒ“ƒ|[ƒlƒ“ƒg‚ª“o˜^‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+            throw std::runtime_error("ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½oï¿½^ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½");
         }
         return *static_cast<std::vector<T>*>(it->second);
     }
@@ -171,15 +190,17 @@ private:
     const std::vector<T>& getContainer() const {
         auto it = containers_.find(std::type_index(typeid(T)));
         if (it == containers_.end()) {
-            throw std::runtime_error("ƒRƒ“ƒ|[ƒlƒ“ƒg‚ª“o˜^‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ");
+            throw std::runtime_error("ï¿½Rï¿½ï¿½ï¿½|ï¿½[ï¿½lï¿½ï¿½ï¿½gï¿½ï¿½ï¿½oï¿½^ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½");
         }
         return *static_cast<const std::vector<T>*>(it->second);
     }
 
 private:
     std::unordered_map<std::type_index, void*> containers_;
-    //Œ^‚²‚Æ‚Ìƒ}ƒbƒsƒ“ƒO‹@”\
+    //å‹ã”ã¨ã®ãƒãƒƒãƒ”ãƒ³ã‚°æ©Ÿèƒ½
+
     std::unordered_map<std::type_index, std::unordered_map<uint32_t, int>> entity_to_component_;
+    std::unordered_map<std::type_index, std::function<void(uint32_t)>> removers_;
 
     std::vector<ComponentPosition> positions_;
     std::vector<ComponentRotation> rotations_;
@@ -194,6 +215,10 @@ private:
     std::vector<ComponentInstanced>instanced_;
     std::vector<ComponentSkyAtmosphere>skys_;
     std::vector<ComponentVolumetricCloud>clouds_;
-    std::vector<ComponentIntensity>intensities_;
     std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
+    std::vector<ComponentCamera>cameras_;
+    std::vector<ComponentSsr>ssrs_;
+    std::vector<ComponentName>names_;
+    std::vector<ComponentCascadeShadow>cas_shadows_;
+    std::vector<ComponentDeferredRender>deferred_renders_;
 };

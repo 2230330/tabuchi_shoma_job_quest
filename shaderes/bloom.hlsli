@@ -1,5 +1,5 @@
 //BLOOM
-cbuffer BLOOM_CONSTANT_BUFFER : register(b4)
+cbuffer BLOOM_CONSTANT_BUFFER : register(b5)
 {
     float bloom_extraction_threshold;
     float bloom_intensity;

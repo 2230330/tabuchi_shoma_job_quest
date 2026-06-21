@@ -1,8 +1,6 @@
 #ifndef PART2_SCENE_CONSTANTS_H
 #define PART2_SCENE_CONSTANTS_H
 
-#include"camera.h"
-
 #include<DirectXMath.h>
 
 struct SceneConstants

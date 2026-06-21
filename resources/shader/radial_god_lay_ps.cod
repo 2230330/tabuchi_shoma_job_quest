@@ -9,19 +9,9 @@
 //
 //   float4 options;                    // Offset:    0 Size:    16
 //   float4 z_buffer_parameteres;       // Offset:   16 Size:    16 [unused]
-//   float4 camera_position;            // Offset:   32 Size:    16 [unused]
-//   float4 camera_direction;           // Offset:   48 Size:    16 [unused]
-//   float4 camera_clip_distance;       // Offset:   64 Size:    16 [unused]
-//   float4 viewport_size;              // Offset:   80 Size:    16
-//   row_major float4x4 view_transform; // Offset:   96 Size:    64 [unused]
-//   row_major float4x4 projection_transform;// Offset:  160 Size:    64 [unused]
-//   row_major float4x4 view_projection_transform;// Offset:  224 Size:    64 [unused]
-//   row_major float4x4 inverse_view_transform;// Offset:  288 Size:    64 [unused]
-//   row_major float4x4 inverse_projection_transform;// Offset:  352 Size:    64 [unused]
-//   row_major float4x4 inverse_view_projection_transform;// Offset:  416 Size:    64 [unused]
-//   row_major float4x4 previous_view_projection_transform;// Offset:  480 Size:    64 [unused]
-//   float2 sun_uv;                     // Offset:  544 Size:     8
-//   float sun_visible;                 // Offset:  552 Size:     4
+//   float4 viewport_size;              // Offset:   32 Size:    16
+//   float2 sun_uv;                     // Offset:   48 Size:     8
+//   float2 padding0;                   // Offset:   56 Size:     8 [unused]
 //
 // }
 //
@@ -52,7 +42,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB1[35], immediateIndexed
+dcl_constantbuffer CB1[4], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v1.xy
@@ -67,17 +57,8 @@ dcl_temps 5
 #line 27 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\radial_god_lay_ps.hlsl"
 mov r0.xy, v1.xyxx  // r0.x <- uv0.x; r0.y <- uv0.y
 
-#line 30
-ge r0.z, l(0.001000), cb1[34].z
-if_nz r0.z
-
-#line 31
-  itof o0.xyzw, l(0, 0, 0, 0)
-  ret 
-endif 
-
 #line 33
-mov r0.zw, cb1[34].xxxy  // r0.z <- lightPos.x; r0.w <- lightPos.y
+mov r0.zw, cb1[3].xxxy  // r0.z <- lightPos.x; r0.w <- lightPos.y
 
 #line 37
 mov r0.zw, r0.zzzw  // r0.z <- lp.x; r0.w <- lp.y
@@ -97,7 +78,7 @@ lt r1.x, r1.x, l(0.500000)
 if_nz r1.x
 
 #line 41
-  itof o0.xyzw, l(0, 0, 0, 1)  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
+  itof o0.xyzw, l(0, 0, 0, 1)
   ret 
 endif 
 
@@ -133,7 +114,7 @@ mul r1.xy, r1.xxxx, r3.xyxx  // r1.x <- stepUV.x; r1.y <- stepUV.y
 
 #line 71
 nop 
-mul r3.xy, r0.xyxx, cb1[5].xyxx
+mul r3.xy, r0.xyxx, cb1[2].xyxx
 add r3.xy, r3.xyxx, cb1[0].zzzz
 
 #line 20
@@ -4133,13 +4114,10 @@ mov r0.x, -r0.x
 add r0.x, r0.x, l(1.000000)
 max r0.x, r0.x, l(0.000000)
 min r0.x, r0.x, l(1.000000)
-mul r0.x, r0.x, r1.x  // r0.x <- shafts
-
-#line 117
-mul r0.xyz, r0.xxxx, cb1[34].zzzz  // r0.z <- shafts
+mul r0.xyz, r0.xxxx, r1.xxxx  // r0.z <- shafts
 
 #line 119
 itof o0.w, l(1)  // o0.w <- <main return value>.w
 mov o0.xyz, r0.xyzx  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z
 ret 
-// Approximately 2573 instruction slots used
+// Approximately 2567 instruction slots used

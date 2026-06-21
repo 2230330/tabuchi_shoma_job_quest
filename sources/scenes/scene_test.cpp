@@ -3,12 +3,22 @@
 #include<tchar.h>
 #include<iostream>
 #include<filesystem>
+#include<random>
 
 #include"../../headers/graphics.h"
 #include"../../headers/misc.h"
+#include"../../headers/light_manager.h"
 #include"../../headers/constant_buffer_slot.h"
-#include"../../headers/shader.h"
+#include"../../headers/resource_manager.h"
+#include"../../headers/component/component_manager.h"
+#include"../../headers/component/component_editor.h"
+#include"../../headers/system/update_system_manager.h"
+#include"../../headers/system/render_system_manager.h"
+#include"../../headers/world/world.h"
+#include"../../headers/entity/entity_manager.h"
+#include"../../headers/render_state.h"
 #include"../../external/imgui/imgui.h"
+
 
 SceneTest::SceneTest(const HWND hwnd)
     :Scene(hwnd)
@@ -16,12 +26,12 @@ SceneTest::SceneTest(const HWND hwnd)
 
 }
 
+
 bool SceneTest::InitializeCore()
 {
 
-    //std::ifstream file("C:/Users/2230330/Desktop/JobQuest/part2/resources/model/fbx/nico/nico.fbx");
 
-    //Šeíƒ}ƒl[ƒWƒƒ‚Ìİ’è
+    //å„ç¨®ãƒãƒãƒ¼ã‚¸ãƒ£ã®è¨­å®š
     {
         comp_mng = std::make_unique<ComponentManager>();
         world = std::make_unique<World>();
@@ -29,63 +39,56 @@ bool SceneTest::InitializeCore()
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
         light_manager_ = std::make_unique<LightManager>();
-
-        uint32_t w = static_cast<uint32_t>(Graphics::Instance().GetScreenWidth());
-        uint32_t h = static_cast<uint32_t>(Graphics::Instance().GetScreenHeight());
-        post_pro_mng = std::make_unique<PostProcessManager>(
-            Graphics::Instance().GetDevice(),
-            w,h);
+        render_sys_mng->SetLightManager(light_manager_.get());
     }
 
-    //ƒŒƒ“ƒ_ƒŠƒ“ƒOƒIƒuƒWƒFƒNƒgéŒ¾
+    //ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆå®£è¨€
     {
         ID3D11Device* device = Graphics::Instance().GetDevice();
-        //2dƒXƒvƒ‰ƒCƒgéŒ¾
+        //2dã‚¹ãƒ—ãƒ©ã‚¤ãƒˆå®£è¨€
         {
 
         }
-        //3dƒIƒuƒWƒFƒNƒgéŒ¾
+        //3dã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆå®£è¨€
         {
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf");
             ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\blue_exagonal_tiles_with_extracted\\scene.gltf");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\cube.glb");
+            ResourceManager::Instance().LoadGltfModel(device, ".\\resources\\model\\gltf\\plane.glb");
 
         }
-        //shader
-        {
-            pixel_shaders_[0] = 
-                ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\luminance_extraction_ps.cso");
-            pixel_shaders_[1] =
-                ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\blur_ps.cso");
-        }
-        //ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚Ìì¬
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                framebuffers_[i] = std::make_unique<FrameBuffer>(
-                    device,
-                    Graphics::Instance().GetScreenWidth(),
-                    Graphics::Instance().GetScreenHeight()
-                );
-            }
-        }
-        //‘å‹CU—‚Æ‰_
-        {
-            int entity = world->GetEntityManager()->Add();
-            ComponentPosition position{};
-            comp_mng->Add<ComponentPosition>(entity, position);
-            ComponentRotation rotation{};
-            comp_mng->Add<ComponentRotation>(entity, rotation);
-            ComponentScale scale;
-            scale.value = { 1.f, 1.f, 1.f };
-            comp_mng->Add(entity, scale);
-            ComponentLocalToWorld l2w{};
-            comp_mng->Add(entity, l2w);
-            ComponentSkyAtmosphere sky;
-            comp_mng->Add(entity, sky);
-        }
+
+
     }
 
+    {
+        comp_edit->Load("progress.json");
+        
+        //const int size = 100;
+        //for (int i = 0; i < size; i++)
+        //{
+        //    uint32_t entity = world->GetEntityManager()->Add();
+        //    ComponentPosition pos;
+        //    pos.value = { 3.f * static_cast<float>(i % 10), 1,3.f * static_cast<float>(i / 10) };
+        //    comp_mng->Add(entity, pos);
+        //    ComponentRotation rot;
+        //    rot.value = { 0, 0, 0 };
+        //    comp_mng->Add(entity, rot);
+        //    ComponentScale scale;
+        //    scale.value = { 1, 1, 1 };
+        //    comp_mng->Add(entity, scale);
+        //    ComponentLocalToWorld l2w;
+        //    comp_mng->Add(entity, l2w);
+        //    ComponentAdjastPbrParamter ajust_pbr_paramter;
+        //    comp_mng->Add(entity, ajust_pbr_paramter);
+        //    ComponentGltf gltf;
+        //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
+        //    comp_mng->Add(entity, gltf);
+        //    ComponentInstanced instanced;
+        //    comp_mng->Add(entity, instanced);
+        //}
 
+    }
     return true;
 }
 
@@ -104,8 +107,6 @@ void SceneTest::UpdateCore(float elapsed_time)
 
 void SceneTest::RenderCore(float elapsed_time)
 {
-    HRESULT hr{ S_OK };
-
     FLOAT color[]{ .0f,.0f,.0f,0.f };
 
     ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
@@ -113,7 +114,7 @@ void SceneTest::RenderCore(float elapsed_time)
 
     Graphics::Instance().ViewClear(color[0], color[1], color[2], color[3]);
     Graphics::Instance().SetRenderTargets();
-    //ƒTƒ“ƒvƒ‰[ƒXƒe[ƒgİ’è
+    //ã‚µãƒ³ãƒ—ãƒ©ãƒ¼ã‚¹ãƒ†ãƒ¼ãƒˆè¨­å®š
     {
         Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_state;
         sampler_state = render_state->GetSamplerState(SamplerState::point_wrap);
@@ -128,16 +129,18 @@ void SceneTest::RenderCore(float elapsed_time)
         dc->PSSetSamplers(4, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::linear_mirror);
         dc->PSSetSamplers(5, 1, sampler_state.GetAddressOf());
+        sampler_state = render_state->GetSamplerState(SamplerState::shadowmap);
+        dc->PSSetSamplers(6, 1, sampler_state.GetAddressOf());
 
 
     }
-    //ƒŒƒ“ƒ_[ƒXƒe[ƒgİ’è
+    //ãƒ¬ãƒ³ãƒ€ãƒ¼ã‚¹ãƒ†ãƒ¼ãƒˆè¨­å®š
     {
         dc->OMSetBlendState(render_state->GetBlendState(BlendState::transparency), nullptr, 0xffffffff);
         dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);
-        dc->RSSetState(render_state->GetRasterizerState(RasterizerState::solid_cull_none));
+        dc->RSSetState(render_state->GetRasterizerState(RasterizerState::solid_cull_back));
     }
-    //ƒrƒ…[ƒvƒƒWƒFƒNƒVƒ‡ƒ“•ÏŠ·s—ñ‚ÌŒvZ‚Æ’è”ƒoƒbƒtƒ@‚ÉƒZƒbƒg
+    //ãƒ“ãƒ¥ãƒ¼ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³å¤‰æ›è¡Œåˆ—ã®è¨ˆç®—ã¨å®šæ•°ãƒãƒƒãƒ•ã‚¡ã«ã‚»ãƒƒãƒˆ
     {
         D3D11_VIEWPORT viewport;
         UINT num_viewports{ 1 };
@@ -146,48 +149,13 @@ void SceneTest::RenderCore(float elapsed_time)
         light_manager_->SetForwardLightConstant(static_cast<UINT>(ConstantBufferSlot::kForwardLight));
         SetSceneConstant(static_cast<UINT>(ConstantBufferSlot::kPerFrame),true,light_manager_->GetDirectionLight().direction);
     }
-    //ƒŒƒ“ƒ_ƒŠƒ“ƒOƒIƒuƒWƒFƒNƒg•`‰æ
+    //ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆæç”»
     {
-        //framebuffers_[0]->Clear(dc);
-        //framebuffers_[0]->Activate(dc);
-        //2DƒXƒvƒ‰ƒCƒg•`‰æ
-        {
-            dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_only), 0);
-
-
-            dc->OMSetDepthStencilState(render_state->GetDepthStencilState(DepthState::test_and_write), 0);
-
-        }
-        //3dƒIƒuƒWƒFƒNƒg•`‰æ
-        {
-
-            ////ƒAƒjƒ[ƒVƒ‡ƒ“ƒL[ƒtƒŒ[ƒ€‚ÌXV
-            //int clip_index = 0;
-            //int frame_index = 0;
-            //static float animation_tick = 0;
-            //auto& animation = model.skinned_mesh->GetAnimationClip(clip_index);
-            //{
-            //    frame_index = static_cast<int>(animation_tick * animation.sampling_rate);
-            //    if (frame_index > animation.sequence.size() - 1)
-            //    {
-            //        frame_index = 0;
-            //        animation_tick = 0;
-            //    }
-            //    else
-            //    {
-            //        animation_tick += elapsed_time;
-            //    }
-            //}
-            //Animation::KeyFrame& keyframe = animation.sequence.at(frame_index);
-
-            render_sys_mng->RenderAll();
-        }
-        //framebuffers_[0]->Deactivate(dc);
+        
+        render_sys_mng->RenderAll();
+        
     }
-    //ƒ|ƒXƒgƒGƒtƒFƒNƒg
-    {
-        //post_pro_mng->PostProcess(dc, framebuffers_[0]->GetShaderResourceView(0).Get());
-    }
+
 }
 
 void SceneTest::DrawImguiCore()
@@ -201,16 +169,12 @@ void SceneTest::DrawImguiCore()
     ImGui::SetNextWindowPos({ 0,0 }, ImGuiSetCond_Always);
     ImGui::SetNextWindowSize({ imgui_window_size_x*3.f,imgui_window_size_h*5.0f }, ImGuiSetCond_Always);
     ImGui::SetNextWindowBgAlpha(imgui_alpha);
-    //ƒ‰ƒCƒgƒ}ƒl[ƒWƒƒ[
+    //ãƒ©ã‚¤ãƒˆãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼
     light_manager_->DrawImgui();
 
-    //ƒ|ƒXƒgƒGƒtƒFƒN
-    ImGui::SetNextWindowPos({ 0,imgui_window_size_h*5.f }, ImGuiSetCond_Always);
-    ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h * 5.0f }, ImGuiSetCond_Always);
-    ImGui::SetNextWindowBgAlpha(imgui_alpha);
-    post_pro_mng->PostImgui();
 
-    //ƒRƒ“ƒ|[ƒlƒ“ƒgƒ}ƒl[ƒWƒƒ
+
+    //ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆãƒãƒãƒ¼ã‚¸ãƒ£
     ImGui::SetNextWindowPos({ imgui_window_size_x*7,0 }, ImGuiSetCond_Always);
     ImGui::SetNextWindowSize({ imgui_window_size_x * 3.f,imgui_window_size_h*10.0f }, ImGuiSetCond_Always);
     ImGui::SetNextWindowBgAlpha(imgui_alpha);

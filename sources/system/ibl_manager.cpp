@@ -9,31 +9,30 @@
 #include<filesystem>
 
 #include"../../headers/graphics.h"
+#include"../../headers/framebuffer.h"
 #include "../../headers/resource_manager.h"
 #include"../../headers/misc.h"
+#include"../../headers/constant_buffer_slot.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 
 
-// ---- ƒwƒ‹ƒp ----
+// ---- ãƒ˜ãƒ«ãƒ‘ ----
 UINT IBLManager::CalcMipCount(UINT size) {
     UINT mips = 1;
     while (size > 1) { size >>= 1; ++mips; }
     return mips;
 }
-HRESULT IBLManager::LoadCSO(const wchar_t* path, Microsoft::WRL::ComPtr<ID3DBlob>& blob) {
-    return D3DReadFileToBlob(path, blob.GetAddressOf());
-}
 
 // ============================
-// IBLManager À‘•
+// IBLManager å®Ÿè£…
 // ============================
 void IBLManager::Initialize(ID3D11Device* dev)
 {
     dev_ = dev;
     dev_->GetImmediateContext(ctx_.GetAddressOf());
 
-    // --- ƒTƒ“ƒvƒ‰ilinear clampj ---
+    // --- ã‚µãƒ³ãƒ—ãƒ©ï¼ˆlinear clampï¼‰ ---
     {
         D3D11_SAMPLER_DESC sd{};
         sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -42,7 +41,7 @@ void IBLManager::Initialize(ID3D11Device* dev)
         dev_->CreateSamplerState(&sd, samp_linear_clamp_.GetAddressOf());
     }
 
-    // --- BRDF LUTiRG16F 2Dj + UAV/SRV ---
+    // --- BRDF LUTï¼ˆRG16F 2Dï¼‰ + UAV/SRV ---
     {
         D3D11_TEXTURE2D_DESC td{};
         td.Width = kBrdfLutSize;
@@ -72,9 +71,10 @@ void IBLManager::Initialize(ID3D11Device* dev)
         srv_brdf_lut_ = brdf_lut_srv_;
     }
 
-    // --- BRDF LUT CS ‚ğƒ[ƒh•¶¬i‹N“®1‰ñj ---
+    // --- BRDF LUT CS ã‚’ãƒ­ãƒ¼ãƒ‰ï¼†ç”Ÿæˆï¼ˆèµ·å‹•æ™‚1å›ï¼‰ ---
     {
-        auto cs = ResourceManager::Instance().LoadComputeShader(dev_.Get(), L".\\resources\\shader\\ibl_brdf_lut_cs.cso");
+        auto cs = ResourceManager::Instance().
+            LoadComputeShader(dev_.Get(), L".\\resources\\shader\\ibl_brdf_lut_cs.cso");
         cs_brdf_lut_ = cs;
 
         ID3D11UnorderedAccessView* uavs[1] = { brdf_lut_uav_.Get() };
@@ -86,32 +86,18 @@ void IBLManager::Initialize(ID3D11Device* dev)
         ctx_->CSSetShader(nullptr, nullptr, 0);
     }
 
-    // --- LatLong¨Cube •ÏŠ· CSiƒ[ƒhj ---
+    // --- Prefilter ç”¨ VS/PS ã¨ b0 ---
     {
-        cs_latlong_to_cube_ = 
-            ResourceManager::Instance().LoadComputeShader(dev_.Get(), L".\\resources\\shader\\latlong_to_cubemap_cs.cso");
-    }
-
-    // --- Prefilter —p VS/PS ‚Æ b0 ---
-    {
-        // VS ‚Í FullscreenQuad —piSV_VertexIDA“ü—ÍƒŒƒCƒAƒEƒg–³‚µj
+        // VS ã¯ FullscreenQuad ç”¨ï¼ˆSV_VertexIDã€å…¥åŠ›ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆç„¡ã—ï¼‰
         ibl_screen_vs_ = 
             ResourceManager::Instance().LoadVertexShader(dev_.Get(), L".\\resources\\shader\\ibl_screen_vs.cso", nullptr, nullptr, 0);
 
         ps_prefilter_ = 
             ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\ibl_prefilter_ps.cso");
+        ps_diffuse_ =
+            ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\ibl_diffuse_ps.cso");
 
-        //geometry shader
-        // GeometryShader(.cso) ‚ğ“Ç‚İ‚İ
-        Microsoft::WRL::ComPtr<ID3DBlob> gsBlob;
-        if (SUCCEEDED(D3DReadFileToBlob(L".\\resources\\shader\\ibl_screen_gs.cso", gsBlob.GetAddressOf())))
-        {
-            dev_->CreateGeometryShader(gsBlob->GetBufferPointer(), gsBlob->GetBufferSize(), nullptr, latlong_to_cube_gs_.GetAddressOf());
-        }
-
-        // LatLong->Cubemap—pPS
-        latlong_to_cube_ps_ = 
-            ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\latlong_to_cubemap_ps.cso");
+        //èƒŒæ™¯ç”Ÿæˆç”¨
         sky_cube_ps_ = 
             ResourceManager::Instance().LoadPixelShader(dev_.Get(), L".\\resources\\shader\\ibl_sky_atmosphere_ps.cso");
         cloud_cube_ps_ =
@@ -123,81 +109,124 @@ void IBLManager::Initialize(ID3D11Device* dev)
         cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         dev_->CreateBuffer(&cbd, nullptr, cb_prefilter_.GetAddressOf());
 
-        //sky_cube —p b0
+        cbd.ByteWidth = sizeof(DiffuseCB);
+        cbd.Usage = D3D11_USAGE_DEFAULT;
+        cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        dev_->CreateBuffer(&cbd, nullptr, cb_diffuse_.GetAddressOf());
+
+        //sky_cube ç”¨ b0
         cbd.ByteWidth = sizeof(SkyCubeCB);
         cbd.Usage = D3D11_USAGE_DEFAULT;
         cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
         dev_->CreateBuffer(&cbd, nullptr, cb_sky_cube_.GetAddressOf());
     }
 
-    // --- SH ’è”ƒoƒbƒtƒ@ib2j ---
-    {
-        D3D11_BUFFER_DESC bd{};
-        bd.ByteWidth = sizeof(SH9Constants);
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        dev_->CreateBuffer(&bd, nullptr, cb_sh_.GetAddressOf());
-
-        SH9Constants init{};
-        for (int i = 0; i < 9; ++i) init.c[i] = DirectX::XMFLOAT3(0, 0, 0);
-        init.c[0] = DirectX::XMFLOAT3(0.03f, 0.03f, 0.03f);
-        ctx_->UpdateSubresource(cb_sh_.Get(), 0, nullptr, &init, 0, 0);
-    }
-
-    // --- Specular Prefilter o—ÍƒLƒ…[ƒuimip •t‚«j ---
+    // --- Specular Prefilter å‡ºåŠ›ã‚­ãƒ¥ãƒ¼ãƒ–ï¼ˆmip ä»˜ãï¼‰ ---
     {
         const UINT mipCount = CalcMipCount(kPrefilterSize);
+        for(int k=0;k<2;k++)
+        {
 
-        D3D11_TEXTURE2D_DESC td{};
-        td.Width = kPrefilterSize; td.Height = kPrefilterSize;
-        td.MipLevels = mipCount; td.ArraySize = kCubeFaces;
-        td.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-        td.SampleDesc.Count = 1;
-        td.Usage = D3D11_USAGE_DEFAULT;
-        td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-        td.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+            D3D11_TEXTURE2D_DESC td{};
+            td.Width = kPrefilterSize; td.Height = kPrefilterSize;
+            td.MipLevels = mipCount; td.ArraySize = kCubeFaces;
+            td.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+            td.SampleDesc.Count = 1;
+            td.Usage = D3D11_USAGE_DEFAULT;
+            td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+            td.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-        dev_->CreateTexture2D(&td, nullptr, prefilter_tex_.GetAddressOf());
+            dev_->CreateTexture2D(&td, nullptr, prefilter_tex_[k].GetAddressOf());
 
-        D3D11_SHADER_RESOURCE_VIEW_DESC sd{};
-        sd.Format = td.Format;
-        sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-        sd.TextureCube.MostDetailedMip = 0;
-        sd.TextureCube.MipLevels = mipCount;
-        dev_->CreateShaderResourceView(prefilter_tex_.Get(), &sd, prefilter_srv_.GetAddressOf());
+            D3D11_SHADER_RESOURCE_VIEW_DESC sd{};
+            sd.Format = td.Format;
+            sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+            sd.TextureCube.MostDetailedMip = 0;
+            sd.TextureCube.MipLevels = mipCount;
+            dev_->CreateShaderResourceView(prefilter_tex_[k].Get(), &sd, prefilter_srv_[k].GetAddressOf());
+            //srv_pref_env_ = prefilter_srv_;
 
-        srv_pref_env_ = prefilter_srv_;
-
-        prefilter_rtvs_.clear();
-        prefilter_rtvs_.reserve(kCubeFaces * mipCount);
-        for (UINT face = 0; face < kCubeFaces; ++face) {
-            for (UINT mip = 0; mip < mipCount; ++mip) {
-                D3D11_RENDER_TARGET_VIEW_DESC rd{};
-                rd.Format = td.Format;
-                rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-                rd.Texture2DArray.ArraySize = 1;
-                rd.Texture2DArray.FirstArraySlice = face;
-                rd.Texture2DArray.MipSlice = mip;
-                Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtv;
-                dev_->CreateRenderTargetView(prefilter_tex_.Get(), &rd, rtv.GetAddressOf());
-                prefilter_rtvs_.emplace_back(std::move(rtv));
+            prefilter_rtvs_[k].clear();
+            prefilter_rtvs_[k].reserve(kCubeFaces* mipCount);
+            for (UINT face = 0; face < kCubeFaces; ++face) {
+                for (UINT mip = 0; mip < mipCount; ++mip) {
+                    D3D11_RENDER_TARGET_VIEW_DESC rd{};
+                    rd.Format = td.Format;
+                    rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+                    rd.Texture2DArray.ArraySize = 1;
+                    rd.Texture2DArray.FirstArraySlice = face;
+                    rd.Texture2DArray.MipSlice = mip;
+                    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtv;
+                    dev_->CreateRenderTargetView(prefilter_tex_[k].Get(), &rd, rtv.GetAddressOf());
+                    prefilter_rtvs_[k].emplace_back(std::move(rtv));
+                }
             }
         }
     }
 
-    // --- SkyCubei–¢ƒtƒBƒ‹ƒ^F”wŒi•\¦/IBL“ü—Íj ---
+    // --- diffuse å‡ºåŠ›ã‚­ãƒ¥ãƒ¼ãƒ– ---
+    {
+        const UINT mipCount = CalcMipCount(kPrefilterSize);
+        for (int k = 0; k < 2; ++k)
+        {
+            D3D11_TEXTURE2D_DESC td{};
+            td.Width = kPrefilterSize; td.Height = kPrefilterSize;
+            td.MipLevels = mipCount; td.ArraySize = kCubeFaces;
+            td.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+            td.SampleDesc.Count = 1;
+            td.Usage = D3D11_USAGE_DEFAULT;
+            td.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+            td.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE | D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+            dev_->CreateTexture2D(&td, nullptr, diffuse_tex_[k].GetAddressOf());
+
+            D3D11_SHADER_RESOURCE_VIEW_DESC sd{};
+            sd.Format = td.Format;
+            sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+            sd.TextureCube.MostDetailedMip = 0;
+            sd.TextureCube.MipLevels = mipCount;
+            dev_->CreateShaderResourceView(diffuse_tex_[k].Get(), &sd, diffuse_srv_[k].GetAddressOf());
+
+
+            diffuse_rtvs_[k].clear();
+            diffuse_rtvs_[k].reserve(kCubeFaces);
+            for (UINT face = 0; face < kCubeFaces; ++face) {
+                    D3D11_RENDER_TARGET_VIEW_DESC rd{};
+                    rd.Format = td.Format;
+                    rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+                    rd.Texture2DArray.ArraySize = 1;
+                    rd.Texture2DArray.FirstArraySlice = face;
+                    rd.Texture2DArray.MipSlice = 0;
+                    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtv;
+                    dev_->CreateRenderTargetView(diffuse_tex_[k].Get(), &rd, rtv.GetAddressOf());
+                    diffuse_rtvs_[k].emplace_back(std::move(rtv));
+                
+            }
+
+            const float clear[4] = { 0,0,0,0 };
+            for (auto& rtv : diffuse_rtvs_[k])
+            {
+                ID3D11RenderTargetView* v = rtv.Get();
+                ctx_->OMSetRenderTargets(1, &v, nullptr);
+                ctx_->ClearRenderTargetView(v, clear);
+            }
+            ctx_->OMSetRenderTargets(0, nullptr, nullptr);
+        }
+    }
+
+    // --- SkyCube
     {
         const UINT mipCount = CalcMipCount(kSkyCubeSize);
 
         D3D11_TEXTURE2D_DESC td{};
         td.Width = kSkyCubeSize; td.Height = kSkyCubeSize;
-        td.MipLevels = 1; // ‚Ü‚¸‚Í mip0 ‚Ì‚İB•K—v‚È‚ç©‘O‚Å¶¬
+        td.MipLevels = mipCount; 
         td.ArraySize = kCubeFaces;
         td.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
         td.SampleDesc.Count = 1;
         td.Usage = D3D11_USAGE_DEFAULT;
         td.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS|D3D11_BIND_RENDER_TARGET;
-        td.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+        td.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE | D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
         dev_->CreateTexture2D(&td, nullptr, sky_cube_tex_.GetAddressOf());
 
@@ -205,24 +234,8 @@ void IBLManager::Initialize(ID3D11Device* dev)
         sd.Format = td.Format;
         sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
         sd.TextureCube.MostDetailedMip = 0;
-        sd.TextureCube.MipLevels = 1;
+        sd.TextureCube.MipLevels = mipCount;
         dev_->CreateShaderResourceView(sky_cube_tex_.Get(), &sd, sky_cube_srv_.GetAddressOf());
-
-        D3D11_UNORDERED_ACCESS_VIEW_DESC uavd{};
-        uavd.Format = td.Format;
-        uavd.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-        uavd.Texture2DArray.MipSlice = 0;
-        uavd.Texture2DArray.FirstArraySlice = 0;
-        uavd.Texture2DArray.ArraySize = kCubeFaces;
-        dev_->CreateUnorderedAccessView(sky_cube_tex_.Get(), &uavd, sky_cube_uav_.GetAddressOf());
-
-        //D3D11_RENDER_TARGET_VIEW_DESC rd{};
-        //rd.Format = td.Format;
-        //rd.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-        //rd.Texture2DArray.MipSlice = 0;
-        //rd.Texture2DArray.FirstArraySlice = 0;
-        //rd.Texture2DArray.ArraySize = kCubeFaces;
-        //dev_->CreateRenderTargetView(sky_cube_tex_.Get(), &rd, cube_rtv_all_.GetAddressOf());
 
         sky_cube_rtvs_.clear();
         sky_cube_rtvs_.reserve(kCubeFaces);
@@ -240,19 +253,19 @@ void IBLManager::Initialize(ID3D11Device* dev)
         }
 
     }
-    //‰_ƒ{ƒbƒNƒX
+    //é›²ãƒœãƒƒã‚¯ã‚¹
     {
         const UINT mipCount = CalcMipCount(kSkyCubeSize);
 
         D3D11_TEXTURE2D_DESC td{};
         td.Width = kSkyCubeSize; td.Height = kSkyCubeSize;
-        td.MipLevels = 1; // ‚Ü‚¸‚Í mip0 ‚Ì‚İB•K—v‚È‚ç©‘O‚Å¶¬
+        td.MipLevels = mipCount;
         td.ArraySize = kCubeFaces;
         td.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
         td.SampleDesc.Count = 1;
         td.Usage = D3D11_USAGE_DEFAULT;
         td.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_RENDER_TARGET;
-        td.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+        td.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE | D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
         dev_->CreateTexture2D(&td, nullptr, cloud_cube_tex_.GetAddressOf());
 
@@ -260,8 +273,10 @@ void IBLManager::Initialize(ID3D11Device* dev)
         sd.Format = td.Format;
         sd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
         sd.TextureCube.MostDetailedMip = 0;
-        sd.TextureCube.MipLevels = 1;
+        sd.TextureCube.MipLevels = mipCount;
         dev_->CreateShaderResourceView(cloud_cube_tex_.Get(), &sd, cloud_cube_srv_.GetAddressOf());
+
+
 
         cloud_cube_rtvs_.clear();
         cloud_cube_rtvs_.reserve(kCubeFaces);
@@ -279,17 +294,16 @@ void IBLManager::Initialize(ID3D11Device* dev)
         }
     }
 
-    //‰_—pƒmƒCƒYƒeƒNƒXƒ`ƒƒ
+    //é›²ç”¨ãƒã‚¤ã‚ºãƒ†ã‚¯ã‚¹ãƒãƒ£
     {
-        HRESULT hr{ S_OK };
 
         const wchar_t* low_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\low_freq_perlin_worley.dds";
-        _ASSERT_EXPR(std::filesystem::exists(low_freq_noise_tex_path), "ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñ");
+        _ASSERT_EXPR(std::filesystem::exists(low_freq_noise_tex_path), "ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“");
         {
             low_freq_perlin_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), low_freq_noise_tex_path);
         }
         const wchar_t* high_freq_noise_tex_path = L".\\resources\\sprite\\volumetric_cloud_noises\\high_freq_worley.dds";
-        _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñ");
+        _ASSERT_EXPR(std::filesystem::exists(high_freq_noise_tex_path), "ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“");
         {
             high_freq_worley_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), high_freq_noise_tex_path);
         }
@@ -300,30 +314,24 @@ void IBLManager::Initialize(ID3D11Device* dev)
         curl_noise_srv_ = ResourceManager::Instance().LoadTextureFromFile(dev_.Get(), curl_noise_tex_path);
     }
 
-    // isó‘Ô‰Šú‰»
+    // é€²è¡ŒçŠ¶æ…‹åˆæœŸåŒ–
     dirty_ = true;
     prefilter_next_face_ = 0;
     prefilter_next_mip_ = 0;
+    pmrem_baking_ = false;
+    pmrem_write_index_ = 1;
+    pmrem_read_index_ = 0;
+
 }
 
-// ”wŒiXV’¼Œã‚ÉŒÄ‚ÔF”wŒiƒXƒNƒŠ[ƒ“iback_fbj‚Ì SRV ‚ğó‚¯æ‚é
-void IBLManager::UpdateEnvironmentCapture(const FrameBuffer& back_fb)
-{
-    // ¦ FrameBuffer::GetShaderResourceView ‚É const ƒI[ƒo[ƒ[ƒh‚ª•K—v
-    env_source_srv_ = back_fb.GetShaderResourceView(0);
-
-    //”wŒiƒŠƒ\[ƒX‚ª•ÏX‚µ‚½‚Ì‚Å•Û‘¶ƒtƒ‰ƒO‚ğ—§‚Ä‚é
-    //want_save_dds_ = true;
-}
-
-// ”wŒiƒ\[ƒXiLatLong/Equirect 2Dj¨ SkyCubei–¢ƒtƒBƒ‹ƒ^j‚Ö•ÏŠ·imip0j
+//èƒŒæ™¯ã‚½ãƒ¼ã‚¹ã®ç”Ÿæˆ
 void IBLManager::BuildSkyCubeFromEnvSource()
 {
 
-    if(!env_source_srv_ ||!sky_cube_ps_ || !sky_cube_uav_)
+    if(!sky_cube_ps_ )
         return;
 
-    //viewportİ’è
+    //viewportè¨­å®š
     D3D11_VIEWPORT vp{};
     vp.Width = static_cast<float>(kSkyCubeSize);
     vp.Height = static_cast<float>(kSkyCubeSize);
@@ -335,20 +343,14 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
     ctx_->OMSetRenderTargets(1, &sky_rtv, nullptr);
 
-    const float clear[4] = { 0,0,0,0 };
-    ctx_->ClearRenderTargetView(sky_rtv, clear);
-
-    //’è”XV
+    //å®šæ•°æ›´æ–°
     SkyCubeCB cb{};
     cb.faceIndex = sky_cube_next_face_;
     ctx_->UpdateSubresource(cb_sky_cube_.Get(), 0, nullptr, &cb, 0, 0);
 
-    //“ü—ÍSRV
-    ID3D11SamplerState* sampls[] = { samp_linear_clamp_.Get() };
-
     ctx_->PSSetConstantBuffers(0, 1, cb_sky_cube_.GetAddressOf());
 
-    //ƒtƒ‹ƒXƒNƒŠ[ƒ“ƒNƒƒbƒh
+    //ãƒ•ãƒ«ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ã‚¯ãƒ¯ãƒƒãƒ‰
     ctx_->IASetInputLayout(nullptr);
     ctx_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -359,7 +361,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
     ctx_->Draw(3, 0);
 
-    //ƒAƒ“ƒoƒCƒ“ƒh
+    //ã‚¢ãƒ³ãƒã‚¤ãƒ³ãƒ‰
     //ID3D11ShaderResourceView* nullSRV[] = { nullptr };
     //ctx_->PSSetShaderResources(0, 1, nullSRV);
 
@@ -371,7 +373,7 @@ void IBLManager::BuildSkyCubeFromEnvSource()
     if (cloud_flag_||!cloud_cube_ps_)
     {
 
-        //viewportİ’è
+        //viewportè¨­å®š
         D3D11_VIEWPORT vp{};
         vp.Width = static_cast<float>(kSkyCubeSize);
         vp.Height = static_cast<float>(kSkyCubeSize);
@@ -383,10 +385,9 @@ void IBLManager::BuildSkyCubeFromEnvSource()
 
         ctx_->OMSetRenderTargets(1, &rtv, nullptr);
 
-        const float clear[4] = { 0,0,0,0 };
-        ctx_->ClearRenderTargetView(rtv, clear);
 
-        //’è”XV
+
+        //å®šæ•°æ›´æ–°
         SkyCubeCB cb{};
         cb.faceIndex = sky_cube_next_face_;
         ctx_->UpdateSubresource(cb_sky_cube_.Get(), 0, nullptr, &cb, 0, 0);
@@ -398,7 +399,6 @@ void IBLManager::BuildSkyCubeFromEnvSource()
                 curl_noise_srv_.Get(),
                 sky_cube_srv_.Get()
         };
-        Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
         ctx_->PSSetShaderResources(0, _countof(srvs), srvs);
 
         ctx_->IASetInputLayout(nullptr);
@@ -410,105 +410,179 @@ void IBLManager::BuildSkyCubeFromEnvSource()
         ctx_->Draw(3, 0);
 
         Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
-        ctx_->PSSetShader(nullptr, nullptr, 0);
-        ctx_->VSSetShader(nullptr, nullptr, 0);
 
-        ctx_->OMSetRenderTargets(0, nullptr, nullptr);
+        //ctx_->OMSetRenderTargets(0, nullptr, nullptr);
 
     }
-
-    if (cloud_flag_)
-    {
-        ctx_->PSSetShaderResources(100, 1, cloud_cube_srv_.GetAddressOf());
-    }
-    else if (sky_flag_)
-    {
-        ctx_->PSSetShaderResources(100, 1, sky_cube_srv_.GetAddressOf());
-    }
-
-    //ÅŒã
-    dirty_ = true;
 
     sky_cube_next_face_++;
     if (sky_cube_next_face_ >= kCubeFaces)
     {
+        if (cloud_flag_)
+        {
+            ctx_->GenerateMips(cloud_cube_srv_.Get());
+        }
+        else
+        {
+            ctx_->GenerateMips(sky_cube_srv_.Get());
+        }
         sky_cube_next_face_ = 0;
+        //æœ€å¾Œ
+        dirty_ = true;
         want_save_dds_ = true;
 
+        BeginPmpemBaking();
     }
 }
 
 void IBLManager::UpdateDiffuseSH()
 {
-    // ‚Ü‚¸‚ÍŠÈˆÕFL0 ‚Ì‚İiŒã‚Å SH Ï•ª‚É’uŠ·‰Âj
-    SH9Constants sh{};
-    for (int i = 0; i < 9; ++i) sh.c[i] = DirectX::XMFLOAT3(0, 0, 0);
-    sh.c[0] = DirectX::XMFLOAT3(0.03f, 0.03f, 0.03f);
-    ctx_->UpdateSubresource(cb_sh_.Get(), 0, nullptr, &sh, 0, 0);
+    if (diffuse_srv_ || diffuse_tex_ || ps_diffuse_)
+    {
+
+
+        // å…¥åŠ›ï¼ˆç’°å¢ƒã‚­ãƒ¥ãƒ¼ãƒ–ï¼‰
+        ID3D11ShaderResourceView* envSrv = (cloud_flag_) ? cloud_cube_srv_.Get() : sky_cube_srv_.Get();
+        if (!envSrv) return;
+
+        // ä»Šå›æ›¸ãé¢
+        static UINT next_face = 0;
+        UINT face = next_face;
+
+        // æ›¸ãå…ˆ RTVï¼ˆwriteå´ï¼‰
+        ID3D11RenderTargetView* rtv = diffuse_rtvs_[diffuse_write_index_][face].Get();
+
+        // èª­ã¿å…ƒ SRVï¼ˆprevï¼‰
+        ID3D11ShaderResourceView* prevIrradianceSRV = diffuse_srv_[diffuse_read_index_].Get();
+
+        // VP
+        D3D11_TEXTURE2D_DESC td{}; diffuse_tex_[diffuse_write_index_]->GetDesc(&td);
+        D3D11_VIEWPORT vp{}; vp.Width = (float)td.Width; vp.Height = (float)td.Height; vp.MinDepth = 0; vp.MaxDepth = 1;
+        ctx_->RSSetViewports(1, &vp);
+
+        // RTV ã‚»ãƒƒãƒˆ & ã‚¯ãƒªã‚¢ï¼ˆä¸Šæ›¸ããªã®ã§ã‚¯ãƒªã‚¢ã¯ä»»æ„ï¼‰
+        const float clear[4] = { 0,0,0,0 };
+        ctx_->OMSetRenderTargets(1, &rtv, nullptr);
+
+        // å®šæ•°ãƒãƒƒãƒ•ã‚¡
+        
+        DiffuseCB cb{  };
+        cb.faceIndex = face;
+        cb.frameIndex = frame_index_;
+        cb.alpha = 0.05f;  // æ¨å¥¨ç¯„å›² 0.05ï½0.2
+        cb.mip_lod = 1.f;   // 1.0ï½2.5
+        ctx_->UpdateSubresource(cb_diffuse_.Get(), 0, nullptr,&cb, 0, 0);
+
+        // ãƒã‚¤ãƒ³ãƒ‰
+        ID3D11SamplerState* samp = samp_linear_clamp_.Get();
+        ctx_->PSSetSamplers(0, 1, &samp);
+
+        // t0=EnvCube, t1=PrevIrradiance
+        ID3D11ShaderResourceView* srvs[2] = { envSrv, prevIrradianceSRV };
+        ctx_->PSSetShaderResources(0, 2, srvs);
+
+        ID3D11Buffer* cbuf = cb_diffuse_.Get();
+        ctx_->PSSetConstantBuffers(0, 1, &cbuf);
+
+        // FS Triangle
+        ctx_->IASetInputLayout(nullptr);
+        ctx_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        ctx_->VSSetShader(ibl_screen_vs_.Get(), nullptr, 0);
+        ctx_->PSSetShader(ps_diffuse_.Get(), nullptr, 0);
+        ctx_->Draw(3, 0);
+
+        // ã‚¢ãƒ³ãƒã‚¤ãƒ³ãƒ‰
+        ID3D11ShaderResourceView* nullSRV[2] = { nullptr, nullptr };
+        ctx_->PSSetShaderResources(0, 2, nullSRV);
+
+
+        // æ¬¡ã®é¢ã¸
+        next_face = (next_face + 1) % 6;
+
+        // 6é¢ç„¼ãçµ‚ã‚ã£ãŸã‚¿ã‚¤ãƒŸãƒ³ã‚°ã§ Ping-Pong ã‚’å…¥ã‚Œæ›¿ãˆã‚‹ã¨ç®¡ç†ãŒæ¥½
+        if (next_face == 0) {
+            ctx_->GenerateMips(diffuse_srv_[diffuse_write_index_].Get());
+            std::swap(diffuse_write_index_, diffuse_read_index_);
+            frame_index_++; // ã‚µãƒ³ãƒ—ãƒ«å›è»¢
+        }
+
+    }
 }
 
-// 1ƒtƒŒ[ƒ€‚É 1 face~1 mip ‚ğÄ‚­iŒy—Ê•ªŠ„j
+// 1ãƒ•ãƒ¬ãƒ¼ãƒ ã« 1 face ã‚’ç„¼ãï¼ˆè»½é‡åˆ†å‰²ï¼‰
 void IBLManager::UpdateSpecularPrefilter()
 {
-    if (!sky_cube_srv_ || !ps_prefilter_ || !ibl_screen_vs_ || prefilter_rtvs_.empty())
+    if (!sky_cube_srv_ || !ps_prefilter_ || !ibl_screen_vs_ || prefilter_rtvs_[pmrem_write_index_].empty())
         return;
 
-    const UINT mipCount = CalcMipCount(kPrefilterSize);
-    const UINT face = prefilter_next_face_;
-    const UINT mip = prefilter_next_mip_;
+    if (!pmrem_baking_)return;
 
-    const UINT w = (std::max)(1u, kPrefilterSize >> mip);
-    D3D11_VIEWPORT vp{};
-    vp.Width = static_cast<float>(w);
-    vp.Height = static_cast<float>(w);
-    vp.MinDepth = 0.0f; vp.MaxDepth = 1.0f;
-    vp.TopLeftX = 0.0f; vp.TopLeftY = 0.0f;
-    ctx_->RSSetViewports(1, &vp);
+    pmrem_mip_count_ = CalcMipCount(kPrefilterSize);
+    for(prefilter_next_mip_=0;prefilter_next_mip_ < pmrem_mip_count_;prefilter_next_mip_++)
+    {
 
-    const UINT flatIndex = face * mipCount + mip;
-    ID3D11RenderTargetView* rtv = prefilter_rtvs_[flatIndex].Get();
-    const float clear[4] = { 0,0,0,0 };
-    ctx_->OMSetRenderTargets(1, &rtv, nullptr);
-    ctx_->ClearRenderTargetView(rtv, clear);
+        const UINT face = prefilter_next_face_;
+        const UINT mip = prefilter_next_mip_;
 
-    const float roughness = (mipCount > 1) ? (float)mip / (float)(mipCount - 1) : 0.0f;
-    PrefilterCB cb{};
-    cb.roughness = roughness;
-    cb.faceIndex = face; 
-    cb.mip_count = (float)mipCount;
-    ctx_->UpdateSubresource(cb_prefilter_.Get(), 0, nullptr, &cb, 0, 0);
+        const UINT w = (std::max)(1u, kPrefilterSize >> mip);
+        D3D11_VIEWPORT vp{};
+        vp.Width = static_cast<float>(w);
+        vp.Height = static_cast<float>(w);
+        vp.MinDepth = 0.0f; vp.MaxDepth = 1.0f;
+        vp.TopLeftX = 0.0f; vp.TopLeftY = 0.0f;
+        ctx_->RSSetViewports(1, &vp);
 
-    // “ü—Í‚Í SkyCubeiTextureCubej
-    ID3D11ShaderResourceView* srvs[1] = { sky_cube_srv_.Get() };
-    ID3D11SamplerState* samps[1] = { samp_linear_clamp_.Get() };
-    ctx_->PSSetShaderResources(0, 1, srvs);
-    ctx_->PSSetSamplers(0, 1, samps);
-    ctx_->PSSetConstantBuffers(0, 1, cb_prefilter_.GetAddressOf());
+        const UINT flatIndex = face * pmrem_mip_count_ + mip;
+        ID3D11RenderTargetView* rtv = prefilter_rtvs_[pmrem_write_index_][flatIndex].Get();
+        ctx_->OMSetRenderTargets(1, &rtv, nullptr);
 
-    ctx_->IASetInputLayout(nullptr);
-    ctx_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    ctx_->VSSetShader(ibl_screen_vs_.Get(), nullptr, 0);
-    ctx_->PSSetShader(ps_prefilter_.Get(), nullptr, 0);
+        const float roughness = (pmrem_mip_count_ > 1) ? (float)mip / (float)(pmrem_mip_count_ - 1) : 0.0f;
+        float env_resolution = static_cast<float>(kSkyCubeSize);
+        PrefilterCB cb{};
+        cb.roughness = roughness;
+        cb.faceIndex = face;
+        cb.mip_count = (float)pmrem_mip_count_;
+        cb.env_resolution = env_resolution;
+        ctx_->UpdateSubresource(cb_prefilter_.Get(), 0, nullptr, &cb, 0, 0);
 
-    ctx_->Draw(3, 0);
+        // å…¥åŠ›ã¯ SkyCubeï¼ˆTextureCubeï¼‰
+        ID3D11ShaderResourceView* srvs[1] = {
+            (cloud_flag_) ? cloud_cube_srv_.Get() : sky_cube_srv_.Get()
+        };
+        ID3D11SamplerState* samps[1] = { samp_linear_clamp_.Get() };
+        ctx_->PSSetShaderResources(0, 1, srvs);
+        ctx_->PSSetSamplers(0, 1, samps);
+        ctx_->PSSetConstantBuffers(0, 1, cb_prefilter_.GetAddressOf());
 
-    // ƒAƒ“ƒoƒCƒ“ƒh
+        ctx_->IASetInputLayout(nullptr);
+        ctx_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        ctx_->VSSetShader(ibl_screen_vs_.Get(), nullptr, 0);
+        ctx_->PSSetShader(ps_prefilter_.Get(), nullptr, 0);
+
+        ctx_->Draw(3, 0);
+
+        ctx_->OMSetRenderTargets(0, nullptr, nullptr);
+    }
+    // ã‚¢ãƒ³ãƒã‚¤ãƒ³ãƒ‰
     ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
     ctx_->PSSetShaderResources(0, 1, nullSRV);
-    ctx_->OMSetRenderTargets(0, nullptr, nullptr);
-    ctx_->VSSetShader(nullptr, nullptr, 0);
-    ctx_->PSSetShader(nullptr, nullptr, 0);
 
-    // is
+
+    // é€²è¡Œ
     prefilter_next_face_++;
     if (prefilter_next_face_ >= kCubeFaces) {
         prefilter_next_face_ = 0;
-        prefilter_next_mip_++;
-        if (prefilter_next_mip_ >= mipCount) {
+        //prefilter_next_mip_++;
+        //if (prefilter_next_mip_ >= pmrem_mip_count_) 
+        {
             prefilter_next_mip_ = 0;
-            dirty_ = false; // ‘S–Ê~mip Ä¬Š®—¹
+            dirty_ = false; // å…¨é¢Ã—mip ç„¼æˆå®Œäº†
 
-            //DDS•Û‘¶
+            //å…¥ã‚Œæ›¿ãˆ
+            std::swap(pmrem_read_index_,pmrem_write_index_);
+            pmrem_baking_ = false;
+
+            //DDSä¿å­˜
             if (want_save_dds_)
             {
                 //SaveTextureToDDS(
@@ -518,13 +592,12 @@ void IBLManager::UpdateSpecularPrefilter()
 
                 //if(cloud_flag_)
                 //{
-
                 //    SaveTextureToDDS(
                 //        cloud_cube_tex_.Get(),
                 //        L".\\resources\\sprite\\cube_maps\\sky_cube.dds", false
                 //    );
                 //}
-                //else if(sky_flag_)
+                //else if (sky_flag_)
                 //{
                 //    SaveTextureToDDS(
                 //        sky_cube_tex_.Get(),
@@ -540,13 +613,13 @@ void IBLManager::UpdateSpecularPrefilter()
 
 void IBLManager::BindForObjectPass(ID3D11DeviceContext* ctx)
 {
-    ID3D11ShaderResourceView* srvs[3] = {
-        nullptr,
-        srv_pref_env_.Get(),
-        srv_brdf_lut_.Get()
+    ID3D11ShaderResourceView* srvs[] = {
+        diffuse_srv_[diffuse_read_index_].Get(),
+        prefilter_srv_[pmrem_read_index_].Get(),
+        srv_brdf_lut_.Get(),
     };
-    ctx->PSSetShaderResources(0, 3, srvs);
-    ctx->PSSetConstantBuffers(2, 1, cb_sh_.GetAddressOf());
+    ctx->PSSetShaderResources(33, _countof(srvs), srvs);
+    //ctx->PSSetConstantBuffers(ConstantBufferSlot::kSH9, 1, cb_sh_.GetAddressOf());
 
     ID3D11SamplerState* s[1] = { samp_linear_clamp_.Get() };
     ctx->PSSetSamplers(0, 1, s);
@@ -561,7 +634,7 @@ void IBLManager::SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,
     HRESULT hr = CaptureTexture(dev_.Get(), ctx_.Get(), tex, image);
     if (FAILED(hr))
     {
-        HRTrace(hr); // ƒƒO‚¾‚¯o‚·
+        HRTrace(hr); // ãƒ­ã‚°ã ã‘å‡ºã™
         return;
     }
     //
@@ -571,7 +644,7 @@ void IBLManager::SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,
     tex->GetDesc(&desc);
     if (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE)
     {
-        //ƒLƒ…[ƒuƒ}ƒbƒv
+        //ã‚­ãƒ¥ãƒ¼ãƒ–ãƒãƒƒãƒ—
         meta.miscFlags |= DirectX::TEX_MISC_TEXTURECUBE;
         meta.arraySize =desc.ArraySize;//
         meta.dimension = DirectX::TEX_DIMENSION_TEXTURE2D;
@@ -580,12 +653,12 @@ void IBLManager::SaveTextureToDDS(ID3D11Texture2D* tex, const wchar_t* filepath,
     //_ASSERT(!(meta.miscFlags & DirectX::TEX_MISC_TEXTURECUBE) || meta.arraySize == 1);
 
 
-    //ƒZ[ƒu
+    //ã‚»ãƒ¼ãƒ–
     hr = DirectX::SaveToDDSFile(
         image.GetImages(), image.GetImageCount(), meta, DirectX::DDS_FLAGS_NONE, filepath);
     if (FAILED(hr))
     {
-        HRTrace(hr); // ƒƒO‚¾‚¯o‚·
+        HRTrace(hr); // ãƒ­ã‚°ã ã‘å‡ºã™
         return;
     }
 

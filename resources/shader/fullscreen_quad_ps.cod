@@ -33,7 +33,7 @@ dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
-dcl_temps 3
+dcl_temps 2
 //
 // Initial variable locations:
 //   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
@@ -47,13 +47,13 @@ mov r0.xyz, r0.xyzx  // r0.x <- back.x; r0.y <- back.y; r0.z <- back.z
 #line 20
 sample_indexable(texture2d)(float,float,float,float) r1.xyzw, v1.xyxx, t1.xyzw, s3  // r1.x <- obj.x; r1.y <- obj.y; r1.z <- obj.z; r1.w <- obj.w
 
-#line 23
-mov r2.xyz, -r0.xyzx
-add r1.xyz, r1.xyzx, r2.xyzx
-mul r1.xyz, r1.xyzx, r1.wwww
+#line 24
+mov r0.w, -r1.w
+add r0.w, r0.w, l(1.000000)
+mul r0.xyz, r0.wwww, r0.xyzx
 add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 25
+#line 26
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 

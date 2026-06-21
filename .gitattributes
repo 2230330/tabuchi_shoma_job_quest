@@ -3,6 +3,11 @@
 ###############################################################################
 * text=auto
 
+
+*.cpp text eol=crlf working-tree-encoding=UTF-8
+*.h   text eol=crlf working-tree-encoding=UTF-8
+*.hlsl text eol=crlf working-tree-encoding=UTF-8
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #

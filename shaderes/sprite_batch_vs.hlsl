@@ -1,5 +1,5 @@
 #include "sprite_batch.hlsli"
-#include "scene_constant_buffer.hlsli"
+#include "camera_buffer.hlsli"
 
 VS_OUT main(VS_IN vin)
 {

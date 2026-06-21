@@ -3,6 +3,15 @@
 #include "scene_constant_buffer.hlsli"
 //#include "noise_functions.hlsli"
 #include "fullscreen_quad.hlsli"
+#include"camera_buffer.hlsli"
+
+
+//ãƒ¬ã‚¤ãƒãƒ¼ãƒãƒ³ã‚°ã‚’ç”¨ã„ã¦é›²ã®ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ã‚’è¡Œã†ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã§ã™
+//é›²ã®å¯†åº¦ã¯ã€ä½å‘¨æ³¢ã®Perlin-Worleyãƒã‚¤ã‚ºã¨é«˜å‘¨æ³¢ã®Worleyãƒã‚¤ã‚ºã‚’çµ„ã¿åˆã‚ã›ã¦ç”Ÿæˆã•ã‚Œã¾ã™
+//é›²ã®è¢«è¦†ç‡ã‚„ã‚¿ã‚¤ãƒ—ãªã©ã®å¤©å€™ãƒ‡ãƒ¼ã‚¿ã¯ã€å°‚ç”¨ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‹ã‚‰ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã•ã‚Œã¾ã™
+//ãƒ¬ã‚¤ãƒãƒ¼ãƒãƒ³ã‚°ãƒ«ãƒ¼ãƒ—å†…ã§ã¯ã€é›²ã®å¯†åº¦ã«å¿œã˜ã¦å¤ªé™½å…‰ã®æ¸›è¡°ã‚„ä½ç›¸é–¢æ•°ã‚’è¨ˆç®—ã—ã€ãƒªã‚¢ãƒ«ãªãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ã‚’å®Ÿç¾ã—ã¦ã„ã¾ã™
+//ã¾ãŸã€é›²å†…éƒ¨ã§ã®ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã¯é«˜å“è³ªã«è¡Œã„ã€é›²ã®å¤–éƒ¨ã§ã¯è¨ˆç®—ã‚³ã‚¹ãƒˆã‚’æŠ‘ãˆã‚‹ãŸã‚ã®å·¥å¤«ã‚‚æ–½ã•ã‚Œã¦ã„ã¾ã™
+
 
 static const float PI = 3.14159265359f;
 
@@ -26,14 +35,18 @@ Texture3D<float4> low_frequency_perlin_worley_texture : register(t0);
 
 Texture3D<float3> high_frequency_worley_texture : register(t1);
 /*
-	weather_texture
-	- cloud coverage(r channel): the precentage of cloud coverage in the sky
-	- precipitation(g channel): the chance that the cloud overhead will produce rain
-	- cloud type(b channel): a value of 0.0 indicates stratus, 0.5 indicates stratocumulus, and 1.0 indicate cumulus cloud
+    weather_texture
+    - cloud coverageï¼ˆR ãƒãƒ£ãƒ³ãƒãƒ«ï¼‰ï¼šç©ºã®é›²é‡ã®å‰²åˆ
+    - precipitationï¼ˆG ãƒãƒ£ãƒ³ãƒãƒ«ï¼‰ï¼šé ­ä¸Šã®é›²ãŒé›¨ã‚’é™ã‚‰ã›ã‚‹å¯èƒ½æ€§
+    - cloud typeï¼ˆB ãƒãƒ£ãƒ³ãƒãƒ«ï¼‰ï¼š0.0 ã¯å±¤é›²ï¼ˆstratusï¼‰ã€0.5 ã¯å±¤ç©é›²ï¼ˆstratocumulusï¼‰ã€1.0 ã¯ç©é›²ï¼ˆcumulusï¼‰ã‚’ç¤ºã™
 */
 Texture2D<float3> weather_texture : register(t2);
 Texture2D<float3> curl_noise_texture : register(t3);
 Texture2D<float3> sky_color_texture : register(t4);
+Texture2D<float> gradient_cumulonimbus_texture : register(t5);
+Texture2D<float> gradient_cumulus_texture : register(t6);
+Texture2D<float> gradient_stratus_texture : register(t7);
+Texture2D<float> object_depth_texture : register(t8);
 
 static const float time_offset = 10000.0;
 float4 SampleLowFrequencyNoises(float3 sample_point, float mip_level)
@@ -49,10 +62,36 @@ float3 SampleWeatherData(float2 sample_point)
     float2 offset = ((options.z + time_offset) * 0.001) * normalize(-wind_direction) * wind_speed;
 
     float horizon_distance = sqrt(cloud_altitudes_min_max.x * cloud_altitudes_min_max.x - earth_radius * earth_radius) * horizon_distance_scale;
-    return weather_texture.Sample(sampler_states[LINEAR_WRAP], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
-
+    return weather_texture.Sample(sampler_states[LINEAR_MIRROR], float2(sample_point.x + horizon_distance, horizon_distance - sample_point.y) / (2.0 * horizon_distance) + offset);
 }
+float SampleObjectDepth(float2 sample_point)
+{
+    //ç‰©ä½“æ·±åº¦ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‹ã‚‰æ·±åº¦ã‚’ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã™ã‚‹é–¢æ•°
+    //ç‰©ä½“ã‚’æç”»ã™ã‚‹éš›ã«ã€é›²ãŒç‰©ä½“ã®å‰ã«ã‚ã‚‹ã‹å¾Œã‚ã«ã‚ã‚‹ã‹ã‚’åˆ¤æ–­ã™ã‚‹ãŸã‚ã«ä½¿ç”¨ã•ã‚Œã‚‹
+    //ãã®ã¾ã¾ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã—ãŸå ´åˆã€ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®è§£åƒåº¦ã®é•ã„ã«ã‚ˆã‚Šã‚¸ãƒ£ã‚®ãƒ¼ãŒç™ºç”Ÿã™ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ç‚ºã€
+    //å‘¨å›²ã®ã‚µãƒ³ãƒ—ãƒ«ã‚’å–ã£ã¦æœ€å¤§å€¤ã‚’è¿”ã™ã“ã¨ã§ã€å®Ÿéš›ã®ç‰©ä½“ã‚ˆã‚Šã‚‚ä¸€å›ã‚Šå°ã•ã„è¼ªéƒ­ã‚’ä½œã‚‹ã‚ˆã†ã«ã—ã¦ã„ã‚‹
+    float d = 0.0f;
+    float2 texel = 1.0f/object_resolution;
+    [unroll]
+    for (int x = -1; x <= 1; x++)
+    {
+        [unroll]
+        for (int y = -1; y <= 1; y++)
+        {
+            float2 offset = float2(x, y) * texel;
+            float sample = object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + offset);
+            
+            //å‘¨å›²ã®ã‚µãƒ³ãƒ—ãƒ«ã®æœ€å¤§å€¤ã‚’å–ã‚‹ã“ã¨ã§ã€ç‰©ä½“ã®è¼ªéƒ­ã‚’å°‘ã—å‰Šã‚‹
+            d = max(d, sample); 
+            if(d >= 1.0f) //å®Œå…¨ã«ç©ºãªã‚‰ã“ã‚Œä»¥ä¸Šã‚µãƒ³ãƒ—ãƒ«ã™ã‚‹å¿…è¦ã¯ãªã„
+            {
+                break;
+            }
+        }
+    }
 
+    return d;
+}
 
 
 // from: https://www.shadertoy.com/view/4sfgzs credit to iq
@@ -73,13 +112,13 @@ float Remap(float original_value, float original_min, float original_max, float 
 }
 
 
-static const float EARTH_RADIUS = 6370000.0f; // ’n‹…”¼Œa [m]
-static const float SUN_DISTANCE = 150000000000.0f; // ‘¾—z‚Ü‚Å‚Ì‹——£ [m]
+static const float EARTH_RADIUS = 6370000.0f; // åœ°çƒåŠå¾„ [m]
+static const float SUN_DISTANCE = 150000000000.0f; // å¤ªé™½ã¾ã§ã®è·é›¢ [m]
 
-//ƒtƒF[ƒYŠÖ”(ƒ~[U—)
+//ãƒ•ã‚§ãƒ¼ã‚ºé–¢æ•°(ãƒŸãƒ¼æ•£ä¹±)
 float MiePhase(float cos_theta, float g)
 {
-    //ƒwƒjƒGƒCEƒOƒŠ[ƒ“ƒXƒ^ƒCƒ“ŠÖ”
+    //ãƒ˜ãƒ‹ã‚¨ã‚¤ãƒ»ã‚°ãƒªãƒ¼ãƒ³ã‚¹ã‚¿ã‚¤ãƒ³é–¢æ•°
     float g2 = g * g;
     
     return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
@@ -87,20 +126,21 @@ float MiePhase(float cos_theta, float g)
 
 
 
-// ‰_ƒŒƒCƒ„[“à‚É‚¨‚¯‚éƒTƒ“ƒvƒ‹ˆÊ’u‚Ì‚‚³”ä—¦‚ğ‹‚ß‚é
+// é›²ãƒ¬ã‚¤ãƒ¤ãƒ¼å†…ã«ãŠã‘ã‚‹ã‚µãƒ³ãƒ—ãƒ«ä½ç½®ã®é«˜ã•æ¯”ç‡ã‚’æ±‚ã‚ã‚‹
 float GetHeightFractionForPoint(float position)
 {
-	// ‰_‚ª‘¶İ‚·‚é‚“x”ÍˆÍ“à‚Å‚ÌƒOƒ[ƒoƒ‹‚È‘Š‘ÎˆÊ’ui0.0~1.0j‚ğŒvZ
+	// é›²ãŒå­˜åœ¨ã™ã‚‹é«˜åº¦ç¯„å›²å†…ã§ã®ã‚°ãƒ­ãƒ¼ãƒãƒ«ãªç›¸å¯¾ä½ç½®ï¼ˆ0.0~1.0ï¼‰ã‚’è¨ˆç®—
     float height_fraction = (position - cloud_altitudes_min_max.x) / (cloud_altitudes_min_max.y - cloud_altitudes_min_max.x);
     return clamp(height_fraction, 0.0, 1.0);
 }
 
-// ‰_ƒ^ƒCƒv‚É‰‚¶‚½‚‚³•ûŒü‚Ì–§“xŒù”z‚ğæ“¾
+// é›²ã‚¿ã‚¤ãƒ—ã«å¿œã˜ãŸé«˜ã•æ–¹å‘ã®å¯†åº¦å‹¾é…ã‚’å–å¾—
 float GetDensityHeightGradient(float height_fraction, float cloud_type)
 {
     float density_gradient = 0.0;
 
-    // height_fraction ‚ÉŠî‚Ã‚¢‚ÄAstratusAstratocumulusAcumulus ‚ÌŠe‰_ƒ^ƒCƒv‚Ì–§“xŒù”z‚ğƒuƒŒƒ“ƒh‚·‚é
+    #if 0
+    // height_fraction ã«åŸºã¥ã„ã¦ã€stratusã€stratocumulusã€cumulus ã®å„é›²ã‚¿ã‚¤ãƒ—ã®å¯†åº¦å‹¾é…ã‚’ãƒ–ãƒ¬ãƒ³ãƒ‰ã™ã‚‹
     const float4 stratus_gradient = float4(0.02f, 0.05f, 0.09f, 0.11f);
     const float4 stratocumulus_gradient = float4(0.02f, 0.2f, 0.48f, 0.625f);
     const float4 cumulus_gradient = float4(0.01f, 0.0625f, 0.78f, 1.0f);
@@ -111,10 +151,41 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 
     float4 cloud_gradient = stratus_gradient * stratus + stratocumulus_gradient * stratocumulus + cumulus_gradient * cumulus;
     density_gradient = smoothstep(cloud_gradient.x, cloud_gradient.y, height_fraction) - smoothstep(cloud_gradient.z, cloud_gradient.w, height_fraction);
+    #else
+    const float stratus_threshold = 0.1;
+    const float stratocumulus_threshold = 0.9;
+	//const float cumulus_threshold = 1.0;
+
+    int type = 2;
+    // cloud type: {0: stratus, 1: cumulus, 2: cumulonimbus}
+    if (cloud_type < stratus_threshold)
+    {
+        type = 0;
+    }
+    else if (cloud_type < stratocumulus_threshold)
+    {
+        type = 1;
+    }
+	
+	
+	// sample from gradient texture
+    if (type == 0) // stratus clouds
+    {
+        density_gradient = gradient_stratus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    else if (type == 1) // cumulus clouds
+    {
+        density_gradient = gradient_cumulus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    else if (type == 2)// cumulunimbusclouds
+    {
+        density_gradient = gradient_cumulonimbus_texture.SampleLevel(sampler_states[LINEAR_CLAMP], float2(0.5, 1.0 - height_fraction), 0);
+    }
+    #endif
     return density_gradient;
 
 }
-// ƒŒƒC‚Æ‹…‚ÌŒğ·”»’è‚ğs‚¢AŒğ·“_‚Ü‚Å‚Ì‹——£‚ğ•Ô‚·
+// ãƒ¬ã‚¤ã¨çƒã®äº¤å·®åˆ¤å®šã‚’è¡Œã„ã€äº¤å·®ç‚¹ã¾ã§ã®è·é›¢ã‚’è¿”ã™
 float IntersectSphere(float3 pos, float3 dir, float r)
 {
     float a = dot(dir, dir);
@@ -123,19 +194,19 @@ float IntersectSphere(float3 pos, float3 dir, float r)
     float disc = b * b - 4.0 * a * c;
     if (disc < 0.0f)
     {
-        return -1.0f; // Œğ·‚È‚µ‚ğ¦‚·iŒÄ‚Ño‚µ‘¤‚Åˆµ‚¤j
+        return -1.0f; // äº¤å·®ãªã—ã‚’ç¤ºã™ï¼ˆå‘¼ã³å‡ºã—å´ã§æ‰±ã†ï¼‰
     }
     float d = sqrt(disc);
     float t0 = (-b - d) / (2.0 * a);
     float t1 = (-b + d) / (2.0 * a);
-    // ¬‚³‚¢³‚Ì t ‚ğ•Ô‚·i“TŒ^“Ij
+    // å°ã•ã„æ­£ã® t ã‚’è¿”ã™ï¼ˆå…¸å‹çš„ï¼‰
     if (t0 > 0.0f)
         return t0;
     return t1;
 }
 
 #define ENABLE_CLOUD_ANIMATION 
-// w’è‚³‚ê‚½ˆÊ’u‚É‚¨‚¯‚é‰_‚Ì–§“x‚ğ•Ô‚·
+// æŒ‡å®šã•ã‚ŒãŸä½ç½®ã«ãŠã‘ã‚‹é›²ã®å¯†åº¦ã‚’è¿”ã™
 float SampleCloudDensity
 (float3 sample_point,
 float3 weather_data, 
@@ -144,28 +215,31 @@ bool cheap_sample = false,
 float horizon_soft=0)
 {
     
-	// ‚‚³‚É‰‚¶‚ÄƒmƒCƒY‚ğƒuƒŒƒ“ƒh‚·‚é‚½‚ßAˆÊ’u‚©‚ç‚‚³”ä—¦‚ğZo
+	// é«˜ã•ã«å¿œã˜ã¦ãƒã‚¤ã‚ºã‚’ãƒ–ãƒ¬ãƒ³ãƒ‰ã™ã‚‹ãŸã‚ã€ä½ç½®ã‹ã‚‰é«˜ã•æ¯”ç‡ã‚’ç®—å‡º
     float height_fraction = GetHeightFractionForPoint(length(sample_point));
 	
-	// ‰_‚Ì”í•¢—¦(ƒJƒoƒŒƒbƒW)‚Íweather_data‚ÌRƒ`ƒƒƒ“ƒlƒ‹‚ÉŠi”[‚³‚ê‚Ä‚¢‚é
+	// é›²ã®è¢«è¦†ç‡(ã‚«ãƒãƒ¬ãƒƒã‚¸)ã¯weather_dataã®Rãƒãƒ£ãƒ³ãƒãƒ«ã«æ ¼ç´ã•ã‚Œã¦ã„ã‚‹
     float cloud_coverage = weather_data.r * cloud_coverage_scale;
     
+    if (cloud_coverage <= 0.01f)
+        return float(0);
+    
 #ifdef ENABLE_CLOUD_ANIMATION
-        // •—Œü‚«‚Æ•—‘¬‚ÉŠî‚Ã‚¢‚Ä‰_‚ğˆÚ“®‚³‚¹‚éi’áü”gŒ`ó—pj
+        // é¢¨å‘ãã¨é¢¨é€Ÿã«åŸºã¥ã„ã¦é›²ã‚’ç§»å‹•ã•ã›ã‚‹ï¼ˆä½å‘¨æ³¢å½¢çŠ¶ç”¨ï¼‰
     sample_point.xz += (options.z + time_offset) * 20.0 * normalize(-wind_direction) * wind_speed * 0.6;
 #endif
-	// ’áü”g‚ÌPerlin-WorleyƒmƒCƒY‚ÆWorleyƒmƒCƒY‚ğæ“¾
+	// ä½å‘¨æ³¢ã®Perlin-Worleyãƒã‚¤ã‚ºã¨Worleyãƒã‚¤ã‚ºã‚’å–å¾—
     float4 low_frequency_noises = SampleLowFrequencyNoises(sample_point, max(mip_level - 2.0, 0.0f));
 
-	// ’áü”g Worley ƒmƒCƒY‚ğ—p‚¢‚Ä fbmiƒtƒ‰ƒNƒ^ƒ‹ƒuƒ‰ƒEƒ“‰^“®j‚ğ\’z‚µA
-    // ’áü”g Perlin-Worley ƒmƒCƒY‚ÉƒfƒBƒe[ƒ‹‚ğ’Ç‰Á‚·‚é
+	// ä½å‘¨æ³¢ Worley ãƒã‚¤ã‚ºã‚’ç”¨ã„ã¦ fbmï¼ˆãƒ•ãƒ©ã‚¯ã‚¿ãƒ«ãƒ–ãƒ©ã‚¦ãƒ³é‹å‹•ï¼‰ã‚’æ§‹ç¯‰ã—ã€
+    // ä½å‘¨æ³¢ Perlin-Worley ãƒã‚¤ã‚ºã«ãƒ‡ã‚£ãƒ†ãƒ¼ãƒ«ã‚’è¿½åŠ ã™ã‚‹
     float low_frequency_fbm = 
     low_frequency_noises.g * 0.625 +
     low_frequency_noises.b * 0.25 +
     low_frequency_noises.a * 0.125;
     
-	// ’áü”g fbm ‚É‚æ‚Á‚Ä Perlin-Worley ƒmƒCƒY‚ğ–c’£‚³‚¹A
-	// ‰_‚Ìƒx[ƒXŒ`ó‚ğ’è‹`‚·‚é
+	// ä½å‘¨æ³¢ fbm ã«ã‚ˆã£ã¦ Perlin-Worley ãƒã‚¤ã‚ºã‚’è†¨å¼µã•ã›ã€
+	// é›²ã®ãƒ™ãƒ¼ã‚¹å½¢çŠ¶ã‚’å®šç¾©ã™ã‚‹
     float base_cloud = 
     Remap(low_frequency_noises.r,
     -(1.0 - low_frequency_fbm),
@@ -173,25 +247,25 @@ float horizon_soft=0)
     0.0,
     1.0);
 	
-	// ‰_ƒ^ƒCƒv‚É‰‚¶‚½A‚‚³•ûŒü‚Ì–§“xŒù”z‚ğæ“¾
+	// é›²ã‚¿ã‚¤ãƒ—ã«å¿œã˜ãŸã€é«˜ã•æ–¹å‘ã®å¯†åº¦å‹¾é…ã‚’å–å¾—
     float cloud_type = clamp(weather_data.b * cloud_type_scale, 0.0, 1.0);
     float density_height_gradient = GetDensityHeightGradient(height_fraction, cloud_type);
 	
-	// ‚‚³•ûŒü‚Ì–§“xŠÖ”‚ğƒx[ƒX‰_Œ`ó‚É“K—p
+	// é«˜ã•æ–¹å‘ã®å¯†åº¦é–¢æ•°ã‚’ãƒ™ãƒ¼ã‚¹é›²å½¢çŠ¶ã«é©ç”¨
     base_cloud *= density_height_gradient;
 	
 	
-	// remap‚ğ—p‚¢‚Ä‰_‚Ì”í•¢—¦‚ğ”½‰f‚³‚¹‚é
+	// remapã‚’ç”¨ã„ã¦é›²ã®è¢«è¦†ç‡ã‚’åæ˜ ã•ã›ã‚‹
     float base_cloud_with_coverage = Remap(base_cloud, 1.0 - cloud_coverage, 1.0, 0.0, 1.0);
     base_cloud_with_coverage *= cloud_coverage;
 
     float final_cloud = base_cloud_with_coverage;
     if (!cheap_sample && base_cloud_with_coverage > 0.0)
     {
-		// ‰_‚Ìã•”‚ğWorleyƒmƒCƒY‚Åí‚èA‚à‚­‚à‚­‚µ‚½—§‘ÌŠ´‚ğì‚é
+		// é›²ã®ä¸Šéƒ¨ã‚’Worleyãƒã‚¤ã‚ºã§å‰Šã‚Šã€ã‚‚ãã‚‚ãã—ãŸç«‹ä½“æ„Ÿã‚’ä½œã‚‹
 	
 #ifdef ENABLE_CLOUD_ANIMATION
-        // ‚ü”gƒfƒBƒe[ƒ‹—p‚Ì’Ç‰ÁƒAƒjƒ[ƒVƒ‡ƒ“
+        // é«˜å‘¨æ³¢ãƒ‡ã‚£ãƒ†ãƒ¼ãƒ«ç”¨ã®è¿½åŠ ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
         if (wind_speed != 0.0)
         {
             sample_point.xz -= (options.z + time_offset) * normalize(-wind_direction) * 40.0;
@@ -200,22 +274,22 @@ float horizon_soft=0)
 #endif
 		
 #if 1
-		// ‰_‚Ì‰º•”‚É——¬iƒJ[ƒ‹ƒmƒCƒYj‚ğ‰Á‚¦‚Ä©‘R‚È—h‚ç‚¬‚ğì‚é
+		// é›²ã®ä¸‹éƒ¨ã«ä¹±æµï¼ˆã‚«ãƒ¼ãƒ«ãƒã‚¤ã‚ºï¼‰ã‚’åŠ ãˆã¦è‡ªç„¶ãªæºã‚‰ãã‚’ä½œã‚‹
         float3 curl_noise = curl_noise_texture.SampleLevel(sampler_states[LINEAR_MIRROR], sample_point.xy * 0.000008, 0);
         sample_point.xy = sample_point.xy + curl_noise.xy * (1.0 - height_fraction);
 
 #endif
 		
-		// ‚ü”gƒmƒCƒY‚ğƒTƒ“ƒvƒŠƒ“ƒO
+		// é«˜å‘¨æ³¢ãƒã‚¤ã‚ºã‚’ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
         float3 high_frequency_noises =SampleHighFrequencyNoises(sample_point, mip_level);
 	
-		// ‚ü”g Worley ƒmƒCƒY‚É‚æ‚é fbm ‚ğ\’z
+		// é«˜å‘¨æ³¢ Worley ãƒã‚¤ã‚ºã«ã‚ˆã‚‹ fbm ã‚’æ§‹ç¯‰
         float high_frequency_fbm = 
         high_frequency_noises.r * 0.625 +
         high_frequency_noises.g * 0.25 + 
         high_frequency_noises.b * 0.125;
 	
-		// ‚‚³‚É‰‚¶‚ÄA‘@×‚È‰_Œ`ó‚©‚ç–c‚ç‚ñ‚¾Œ`ó‚Ö‘JˆÚ‚³‚¹‚é
+		// é«˜ã•ã«å¿œã˜ã¦ã€ç¹Šç´°ãªé›²å½¢çŠ¶ã‹ã‚‰è†¨ã‚‰ã‚“ã å½¢çŠ¶ã¸é·ç§»ã•ã›ã‚‹
 #if 1
 		float high_frequency_noise_modifier =
         lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 10.0, 0.0, 1.0));
@@ -223,7 +297,7 @@ float horizon_soft=0)
         float high_frequency_noise_modifier = lerp(high_frequency_fbm, 1.0 - high_frequency_fbm, clamp(height_fraction * 4.0, 0.0, 1.0));
 #endif
 	
-		// ˜c‚Ü‚¹‚½‚ü”gWorleyƒmƒCƒY‚Åƒx[ƒX‰_Œ`ó‚ğNH‚·‚é
+		// æ­ªã¾ã›ãŸé«˜å‘¨æ³¢Worleyãƒã‚¤ã‚ºã§ãƒ™ãƒ¼ã‚¹é›²å½¢çŠ¶ã‚’ä¾µé£Ÿã™ã‚‹
 #if 1
         final_cloud = Remap(base_cloud_with_coverage, high_frequency_noise_modifier * 0.2, 1.0, 0.0, 1.0);
 #else	
@@ -238,7 +312,7 @@ float horizon_soft=0)
 #endif
 }
 
-// ‰~“à‚Å‚ÌƒTƒ“ƒvƒŠƒ“ƒO•ûŒü‚ğ‚Î‚ç‚¯‚³‚¹‚é‚½‚ß‚ÌƒIƒtƒZƒbƒgƒxƒNƒgƒ‹ŒQ
+// å††éŒå†…ã§ã®ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°æ–¹å‘ã‚’ã°ã‚‰ã‘ã•ã›ã‚‹ãŸã‚ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆãƒ™ã‚¯ãƒˆãƒ«ç¾¤
 static const float3 noise_kernel[6] =
 {
     float3(0.38051305f, 0.92453449f, -0.02111345f),
@@ -250,9 +324,9 @@ static const float3 noise_kernel[6] =
 };
 
 
-// ‰~“à‚Å‚ÌŒõŠw“IŒú‚İƒTƒ“ƒvƒŠƒ“ƒO
-//‰_“à•”‚Åû‘©‚·‚é‚æ‚¤‚É‰ü—Ç
-// ‰~“à‚Å‚ÌŒõŠw“IŒú‚İƒTƒ“ƒvƒŠƒ“ƒO
+// å††éŒå†…ã§ã®å…‰å­¦çš„åšã¿ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
+//é›²å†…éƒ¨ã§åæŸã™ã‚‹ã‚ˆã†ã«æ”¹è‰¯
+// å††éŒå†…ã§ã®å…‰å­¦çš„åšã¿ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
 float SampleCloudOpticalDepthAlongCone(
     float3 ray_origin,
     float3 ray_direction, // normalized
@@ -270,7 +344,7 @@ float SampleCloudOpticalDepthAlongCone(
     for (int i = 0; i < loop_samples; i++)
     {
         float distance_t = i / (float) (loop_samples - 1);
-        float base_cone_width = step_length * lerp(0.4, 1.2, distance_t);
+        float base_cone_width = step_length * lerp(0.8, 1.2, distance_t);
 
         float3 weather_data = SampleWeatherData(sample_point.xz);
 
@@ -282,15 +356,15 @@ float SampleCloudOpticalDepthAlongCone(
             false
         );
 
-        // ‰_“à•”‚Å cone ‚ğû‘©i‹[—‘½dU— proxyj
+        // é›²å†…éƒ¨ã§ cone ã‚’åæŸï¼ˆæ“¬ä¼¼å¤šé‡æ•£ä¹± proxyï¼‰
         float cone_attenuation = 1.0 - saturate(density * 2.0);
         float cone_width = base_cone_width * cone_attenuation;
 
-        // –§“x‚É‰‚¶‚½ƒ[ƒJƒ‹ƒXƒeƒbƒv
+        // å¯†åº¦ã«å¿œã˜ãŸãƒ­ãƒ¼ã‚«ãƒ«ã‚¹ãƒ†ãƒƒãƒ—
         float local_step =
             step_length * lerp(1.0, 0.4, saturate(density * 3.0));
 
-        // ƒTƒ“ƒvƒ‹ˆÊ’uXV
+        // ã‚µãƒ³ãƒ—ãƒ«ä½ç½®æ›´æ–°
         float3 up = abs(ray_direction.y) < 0.99 ? float3(0, 1, 0) : float3(1, 0, 0);
         float3 tangent = normalize(cross(up, ray_direction));
         float3 bitangent = cross(ray_direction, tangent);
@@ -303,10 +377,10 @@ float SampleCloudOpticalDepthAlongCone(
 
 
         // -----------------------------
-        // ”ñüŒ` optical depth ÏZ
+        // éç·šå½¢ optical depth ç©ç®—
         // -----------------------------
         float sigma = density * local_step;
-        optical_depth += 1.0f - exp(-sigma); // û‘©‚ª\•ª‚È‚ç‘Å‚¿Ø‚è
+        optical_depth += 1.0f - exp(-sigma); // åæŸãŒååˆ†ãªã‚‰æ‰“ã¡åˆ‡ã‚Š
         if (optical_depth > 5.0)
             break;
 
@@ -329,32 +403,32 @@ float SampleCloudDensityLongDistance(float3 ray_origin, float3 ray_direction /*n
     return pow(SampleCloudDensity(sample_point, weather_data, 5.0 /*mip_level*/, false /*cheap_sample*/), (1.0 - height_fraction) * 0.8 + 0.5);
 }
 
-//‘¾—zŒõ‚ÌF‚ğæ“¾
+//å¤ªé™½å…‰ã®è‰²ã‚’å–å¾—
 static const float RAYLEIGH_SCALE_HEIGHT = 8000.f;
 static const float MIE_SCALE_HEIGHT = 1200.f;
 static const float OZONE_SCALE_HALF_WIDTH = 15000.f;
 static const float OZONE_CENTER_HEIGHT = 50000.f;
-//ŠÈˆÕ“IƒŒƒCƒŠ[U—
+//ç°¡æ˜“çš„ãƒ¬ã‚¤ãƒªãƒ¼æ•£ä¹±
 float3 SigmaRayleigh(float h)
 {
     
     return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / RAYLEIGH_SCALE_HEIGHT);
 }
-//ŠÈˆÕ“Iƒ~[U—
+//ç°¡æ˜“çš„ãƒŸãƒ¼æ•£ä¹±
 float3 SigmaMie(float h)
 {
     return float3(3.996e-6, 3.31e-6, 1e-6f) * exp(-(h) / MIE_SCALE_HEIGHT);
 }
-//ƒIƒ]ƒ“‹zûŒW”
+//ã‚ªã‚¾ãƒ³å¸åä¿‚æ•°
 float3 SigmaOzone(float h)
 {
     float3 coeff = float3(0.650e-6, 1.881e-6, 0.085e-6);
     float ozoneFactor = max(0.0, 1.0 - (abs(h - OZONE_CENTER_HEIGHT) / OZONE_SCALE_HALF_WIDTH));
     return coeff * ozoneFactor;
 }
-// ”g’· (nm)
-static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f); // Ô, —Î, Â
-// ƒÉ^-4 ‚Ì‘Š‘Î”ä‚ğŒvZ
+// æ³¢é•· (nm)
+static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f); // èµ¤, ç·‘, é’
+// Î»^-4 ã®ç›¸å¯¾æ¯”ã‚’è¨ˆç®—
 static const float3 INV_WAVELENGTH4 = (float3(
     1.0f / pow(WAVELENGTHS.x, 4.0f),
     1.0f / pow(WAVELENGTHS.y, 4.0f),
@@ -362,83 +436,86 @@ static const float3 INV_WAVELENGTH4 = (float3(
 ));
 float3 ComputeSunIrradiance(float air_mass)
 {
-    // ŒõŠw“IŒú‚³ ƒÑ(ƒÉ)
-    float3 tau = INV_WAVELENGTH4 * air_mass * 3e9f /*ƒXƒLƒƒƒbƒ^ƒŠƒ“ƒOƒXƒP[ƒ‹*/;
+    // å…‰å­¦çš„åšã• Ï„(Î»)
+    float3 tau = INV_WAVELENGTH4 * air_mass * 3e9f /*ã‚¹ã‚­ãƒ£ãƒƒã‚¿ãƒªãƒ³ã‚°ã‚¹ã‚±ãƒ¼ãƒ«*/;
 
-    // Beer-LambertŒ¸Š
+    // Beer-Lambertæ¸›è¡°
     float3 Ei = exp(-tau);
 
-    return Ei; // Ô‚ªc‚èAÂ‚ª‹­‚­Œ¸Š
+    return Ei; // èµ¤ãŒæ®‹ã‚Šã€é’ãŒå¼·ãæ¸›è¡°
 }
 
 
-// ƒŒƒCƒ}[ƒ`ƒ“ƒO‚É‚æ‚é‘å‹CU—‚Æ‰_‚ÌƒŒƒ“ƒ_ƒŠƒ“ƒO
-float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*”wŒi‚Ì‹ó‚ÌF*/)
+
+// ãƒ¬ã‚¤ãƒãƒ¼ãƒãƒ³ã‚°ã«ã‚ˆã‚‹å¤§æ°—æ•£ä¹±ã¨é›²ã®ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°
+float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*èƒŒæ™¯ã®ç©ºã®è‰²*/)
 {
-    // ƒŒƒC‚Ì1ƒXƒeƒbƒv‚Ì’·‚³
+    const float TRANSMITTANCE_EPS = 1e-3f;  //ã“ã‚Œä»¥ä¸‹ã§ã»ã¼é®è”½
+    const int ZERO_INSIDE_EXIT_COUNT = 6;   //é›²å†…éƒ¨ã§å¯†åº¦ãŒé€£ç¶šã™ã‚‹å›æ•°ã®é–¾å€¤
+    const float MAX_DISTANCE = length(ray_step*steps);
+    
+    // ãƒ¬ã‚¤ã®1ã‚¹ãƒ†ãƒƒãƒ—ã®é•·ã•
     float step_size = length(ray_step);
     
-    //ƒŒƒC‚Ì•ûŒü
+    //ãƒ¬ã‚¤ã®æ–¹å‘
     const float3 ray_direction = normalize(ray_step);
 	
-	// ƒŒƒCŠJnˆÊ’u‚ğ­‚µƒ‰ƒ“ƒ_ƒ€‚É‚µ‚Ä‰¡‹Ø‚ğ–Ú—§‚½‚È‚­‚·‚éiƒfƒBƒUƒŠƒ“ƒOj
+	// ãƒ¬ã‚¤é–‹å§‹ä½ç½®ã‚’å°‘ã—ãƒ©ãƒ³ãƒ€ãƒ ã«ã—ã¦æ¨ªç­‹ã‚’ç›®ç«‹ãŸãªãã™ã‚‹
     float3 sample_point =ray_origin + ray_step * Hash(ray_origin * 6.0);
 	
-    //‘¾—z•ûŒü‚ÆˆÊ‘ŠŠÖ”
+    //å¤ªé™½æ–¹å‘ã¨ä½ç›¸é–¢æ•°
     float3 sun = -directional_light.direction.xyz;
     float3 sun_direction = normalize(sun);
-    float cos_theta = clamp(dot(ray_direction, sun_direction), -0.f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
+    float cos_theta = clamp(dot(ray_direction, sun_direction), -1.f, 1.0f); //è¦–ç·šã¨å¤ªé™½ã®è§’åº¦
     float g = 0.6f;
     //float henyey_greenstein_phase = max(max(MiePhase(cos_theta, 0.4f), MiePhase(cos_theta, (0.4 - 1.4 * sun_direction.y))), MiePhase(cos_theta, -0.2)); // TODO
     float henyey_greenstein_phase = MiePhase(cos_theta, g);
-    henyey_greenstein_phase = saturate(henyey_greenstein_phase); //0~1.0‚Ì”ÍˆÍ‚Éˆ³k
+    henyey_greenstein_phase = saturate(henyey_greenstein_phase); //0~1.0ã®ç¯„å›²ã«åœ§ç¸®
 
-    //‘¾—zŒõƒXƒyƒNƒgƒ‹‚ÌŒ¸Š(”g’·ˆË‘¶)
-    float sun_elevation = clamp(dot(sun_direction, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
-    float sun_theta = acos(sun_elevation) * (180.0f / PI); //“x‚É•ÏŠ·
-    //kasten-Young 1989‹ß—
-    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant‹ß—
-    air_mass = min(air_mass, 4.0f); // ‹É’[‚È’l‚ğ§ŒÀ
-     // ‘¾—z’¼ÚŒõ
+    //å¤ªé™½å…‰ã‚¹ãƒšã‚¯ãƒˆãƒ«ã®æ¸›è¡°(æ³¢é•·ä¾å­˜)
+    float sun_elevation = clamp(dot(sun_direction, float3(0, 1, 0)), 0.0f, 1.0f); // å¤ªé™½ã®é«˜ã•
+    float sun_theta = acos(sun_elevation) * (180.0f / PI); //åº¦ã«å¤‰æ›
+    //kasten-Young 1989è¿‘ä¼¼
+    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secantè¿‘ä¼¼
+    air_mass = min(air_mass, 4.0f); // æ¥µç«¯ãªå€¤ã‚’åˆ¶é™
+     // å¤ªé™½ç›´æ¥å…‰
     float3 Ei = ComputeSunIrradiance(air_mass);
     
-    Ei *= lerp(0.5f, 1.5f, sun_elevation); //‘¾—z‚“x‚Å‘Œ¸
+    Ei *= lerp(0.5f, 1.5f, sun_elevation); //å¤ªé™½é«˜åº¦ã§å¢—æ¸›
     
-    // ’n‹…’†SŠî€‚ÌƒJƒƒ‰ˆÊ’u
+    // åœ°çƒä¸­å¿ƒåŸºæº–ã®ã‚«ãƒ¡ãƒ©ä½ç½®
     float3 position = float3(0.f, earth_radius, 0.f);
     
-    //‘å‹CU—‚ÌF‚ğæ“¾
+    //å¤§æ°—æ•£ä¹±ã®è‰²ã‚’å–å¾—
     float3 atmosphere_color = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP],texcoord.xy);
 	
-    //‰_‚ÌŒõŠw“IŒú‚İŒvZ—p‚ÌŒW”
+    //é›²ã®å…‰å­¦çš„åšã¿è¨ˆç®—ç”¨ã®ä¿‚æ•°
     const float cone_spread_multplier = ((cloud_altitudes_min_max.y - cloud_altitudes_min_max.x) / 36.0); 
 	
-    //…•½•ûŒü‚ÌŒõ‚Ì§Œä
+    //æ°´å¹³æ–¹å‘ã®å…‰ã®åˆ¶å¾¡
     float view_up = saturate(dot(normalize(ray_step), float3(0, 1, 0)));
-    float horizon = 1.0 - view_up; // 0:ãŒü‚«, 1:’n•½ü
+    float horizon = 1.0 - view_up; // 0:ä¸Šå‘ã, 1:åœ°å¹³ç·š
     float horizon_soft = lerp(0.2, 0.8, horizon);
     
     float3 color = 0.0;
-    float density = 0;
     float transmittence = 1.0;
     float cloud_test = 0;
     int zero_density_sample_count = 0;
     
-    float dist = 0.0f;
-    const float limit_dist = length(ray_step) * steps;
-	
-    //ƒƒCƒ“‚ÌƒŒƒCƒ}[ƒ`ƒ“ƒOƒ‹[ƒv
+    float dist = 0.0f;	
+
+    //ãƒ¡ã‚¤ãƒ³ã®ãƒ¬ã‚¤ãƒãƒ¼ãƒãƒ³ã‚°ãƒ«ãƒ¼ãƒ—
 	[loop]
     for (int i = 0; i < steps; i++)
     {
-        //‰_“à•”‚È‚ç‚•i¿
+        //é›²å†…éƒ¨ãªã‚‰é«˜å“è³ª
         if (cloud_test > 0.0)
         {
-            //“VŒóƒf[ƒ^
+            //å¤©å€™ãƒ‡ãƒ¼ã‚¿
             float3 weather_data = SampleWeatherData(sample_point.xz);
-            //LOD’²®
-            float detail_lod = smoothstep(0.0, 10.0, horizon_soft);
-            //‰_–§“xƒTƒ“ƒvƒŠƒ“ƒO
+            //LODèª¿æ•´
+            float detail_lod = smoothstep(0.0, 1.0, horizon_soft);
+            //é›²å¯†åº¦ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
             float sampled_density = 
             SampleCloudDensity(
             sample_point,
@@ -446,27 +523,28 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             detail_lod,
             (detail_lod<=1.0f)?false:true /*cheap_sample*/,
             horizon);
-            // –§“xƒ[ƒ‚ª‘±‚¢‚½‰ñ”‚ğƒJƒEƒ“ƒg
-            if (sampled_density == 0.0)
+            // å¯†åº¦ã‚¼ãƒ­ãŒç¶šã„ãŸå›æ•°ã‚’ã‚«ã‚¦ãƒ³ãƒˆ
+            if (sampled_density <= 0.0)
             {
                 zero_density_sample_count++;
             }
-            //‰_“à•”‚Æ”»’f‚Å‚«‚éŠÔ‚ÍÏZ‚ğ‘±s
-            if (zero_density_sample_count != 6)
+            
+            //é›²å†…éƒ¨ã¨åˆ¤æ–­ã§ãã‚‹é–“ã¯ç©ç®—ã‚’ç¶šè¡Œ
+            if (zero_density_sample_count <= ZERO_INSIDE_EXIT_COUNT)
             {
-                float density_attenuation = lerp(1.0f, 0.3f, horizon_soft);
-                // ‰_–§“x‚ÌÏZA’n•½ü•ûŒü‚Å
-                density += sampled_density*density_attenuation;
-                // ‰_–§“x‚ªƒ[ƒ‚Å‚È‚¢ê‡AƒJƒEƒ“ƒg‚ğƒŠƒZƒbƒg
+
+                // é›²å¯†åº¦ãŒã‚¼ãƒ­ã§ãªã„å ´åˆã€ã‚«ã‚¦ãƒ³ãƒˆã‚’ãƒªã‚»ãƒƒãƒˆ
                 if (sampled_density != 0.0)
                 {
-                    //‘¾—z•ûŒü‚Ì–§“xŒvZ
+                    zero_density_sample_count = 0;
+                    
+                    //å¤ªé™½æ–¹å‘ã®å¯†åº¦è¨ˆç®—
                     float density_along_light_ray = 0.0;
                     
                     float optical_depth_along_light_ray = 0.0;
-                    //‘¾—z‚ªƒJƒƒ‰‘¤‚É‚ ‚éê‡A‰e‚ğì‚ç‚È‚¢
+                    //å¤ªé™½ãŒã‚«ãƒ¡ãƒ©å´ã«ã‚ã‚‹å ´åˆã€å½±ã‚’ä½œã‚‰ãªã„
 
-                    //‰_‚Ì‰eŒvZ
+                    //é›²ã®å½±è¨ˆç®—
                     {
                         optical_depth_along_light_ray += SampleCloudOpticalDepthAlongCone(
                         sample_point, sun_direction, step_size);
@@ -481,48 +559,49 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     //}
 
 
-                    //ŒõŠw“IŒú‚İ
-                    float shadow_strength = 10.0f; //ƒ‹[ƒv‚ğ6‰ñ‚ÅØ‚éˆ×A‰e‚ª”–‚­‚È‚é‚Ì‚Å‹­‚ß‚É‚·‚é
+                    //å…‰å­¦çš„åšã¿
+                    float shadow_strength = 7.0f; //å½±ãŒè–„ããªã‚‹ã®ã§å¼·ã‚ã«ã™ã‚‹
                     float light_density_scale = density_scale * shadow_strength;
-                    float optical_thickness = (light_density_scale * (optical_depth_along_light_ray+density_along_light_ray));
+                    float optical_thickness = (light_density_scale * 
+                    (optical_depth_along_light_ray+density_along_light_ray));
                     
                     float rain_cloud_absorption = exp(-weather_data.g) * rain_cloud_absorption_scale;
 
-                    //’n•½ü•ûŒü‚Å‚Í‹zû‚ğã‚ß‚é
-                    float horizon_optical_scale = lerp(1.0f, 0.4f, horizon_soft);
+                    //åœ°å¹³ç·šæ–¹å‘ã§ã¯å¸åã‚’å¼±ã‚ã‚‹
+                    float horizon_optical_scale = lerp(1.0f, 0.7f, horizon_soft);
                     float beers_law = exp(-optical_thickness * horizon_optical_scale * rain_cloud_absorption);
 
-					// ‰_“à•”‚ğ–¾‚é‚­‚·‚é‹ß—
+					// é›²å†…éƒ¨ã‚’æ˜ã‚‹ãã™ã‚‹è¿‘ä¼¼
                     float powdered_sugar = 
-                    enable_powdered_sugar_efffect ? 1.0 - exp(-optical_thickness)*2.0f : 0.5;
+                    enable_powdered_sugar_efffect ? 1.0 - (exp(-optical_thickness)) * 2.0f : 0.5;
                     powdered_sugar *= lerp(0.8f, 1.2f, horizon_soft);
 					
-                    //‚‚³
+                    //é«˜ã•
                     float height = saturate(
                     (sample_point.y - cloud_altitudes_min_max.x) /
                     (cloud_altitudes_min_max.y - cloud_altitudes_min_max.x));
-                    //’¼ËŒõƒu[ƒXƒg
+                    //ç›´å°„å…‰ãƒ–ãƒ¼ã‚¹ãƒˆ
                     float top_light = smoothstep(0.0f, 1.0f, height);
                     float up_light = saturate(dot(sun_direction, float3(0, 1, 0)));
                     
                    float3 direct_light =
-                    (1.0f
+                    (5.0f
                     * beers_law
                     * powdered_sugar
-                    * lerp(1.f, 30.0f, henyey_greenstein_phase) // ‘¾—zŒõˆÊ‘ŠŠÖ”
+                    * lerp(1.f, 2.0f, henyey_greenstein_phase) // å¤ªé™½å…‰ä½ç›¸é–¢æ•°
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
-                    + Ei;
+                    +Ei;
 
-                    // ‡Œvƒ‰ƒCƒg
+                    // åˆè¨ˆãƒ©ã‚¤ãƒˆ
                     float3 lighting=0.0f;
                     {
-                        float view_zenith = saturate(dot(ray_direction, float3(0, 1, 0))); // ‹ü‚Ìã‰º
+                        float view_zenith = saturate(dot(ray_direction, float3(0, 1, 0))); // è¦–ç·šã®ä¸Šä¸‹
 
-                        // ‰¡•ûŒü‚Ù‚Ç 1 ‚É‹ß‚Ã‚­
+                        // æ¨ªæ–¹å‘ã»ã© 1 ã«è¿‘ã¥ã
                         float lateral = 1.0 - view_zenith;
 
-                        // Beer ‚ğg•½•ûª‘¤h‚ÉŠñ‚¹‚é
+                        // Beer ã‚’â€œå¹³æ–¹æ ¹å´â€ã«å¯„ã›ã‚‹
                         float beer_lateral =  lerp(beers_law, sqrt(beers_law), lateral * 0.7);
 
                         //float shadow = pow(beer_lateral,1.2);
@@ -532,45 +611,38 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                         atmosphere_color * lerp(0.50f, shadow, 0.2f);
                     }
 
-                    // ‹ÇŠ“I‚ÈÁŒõŒW”iextinctionjG density_scale ‚ğŒõŠwŒW”‚Æ‚µ‚Ä—˜—p
+                    // å±€æ‰€çš„ãªæ¶ˆå…‰ä¿‚æ•°ï¼ˆextinctionï¼‰ï¼› density_scale ã‚’å…‰å­¦ä¿‚æ•°ã¨ã—ã¦åˆ©ç”¨
                     float sigma = density_scale * sampled_density;
 
-                    // ‚»‚ÌƒXƒeƒbƒv‚Å‚Ìƒgƒ‰ƒ“ƒXƒ~ƒbƒ^ƒ“ƒX•Ï‰»i‰ğÍÏ•ªj
-                    //float T_step = exp(-sigma * step_size);
-                    float T_step = exp2((-sigma * step_size)*1.44269504);
+                    // ãã®ã‚¹ãƒ†ãƒƒãƒ—ã§ã®ãƒˆãƒ©ãƒ³ã‚¹ãƒŸãƒƒã‚¿ãƒ³ã‚¹å¤‰åŒ–ï¼ˆè§£æç©åˆ†ï¼‰
+                    float T_step = exp(-sigma * step_size);
 
-                    // ƒXƒeƒbƒv“à‚ÅU—/‹zû‚³‚ê‚½Š„‡iƒtƒ‰ƒNƒVƒ‡ƒ“j
+                    // ã‚¹ãƒ†ãƒƒãƒ—å†…ã§æ•£ä¹±/å¸åã•ã‚ŒãŸå‰²åˆï¼ˆãƒ•ãƒ©ã‚¯ã‚·ãƒ§ãƒ³ï¼‰
                     float delta = transmittence * (1.0f - T_step);
 
-                    // ƒTƒ“ƒvƒ‹‚ÌŒõŠñ—^‚ğ’Ç‰Áiphase‚âpowdered_sugar‚È‚Ç‚ÌƒXƒP[ƒ‹‚Í lighting ‚ÉŠÜ‚ß‚Ä‚à‚æ‚¢j
+                    // ã‚µãƒ³ãƒ—ãƒ«ã®å…‰å¯„ä¸ã‚’è¿½åŠ ï¼ˆphaseã‚„powdered_sugarãªã©ã®ã‚¹ã‚±ãƒ¼ãƒ«ã¯ lighting ã«å«ã‚ã¦ã‚‚ã‚ˆã„ï¼‰
                     color += lighting * delta;
 
-                    // ƒgƒ‰ƒ“ƒXƒ~ƒbƒ^ƒ“ƒX‚ğXV
+                    // ãƒˆãƒ©ãƒ³ã‚¹ãƒŸãƒƒã‚¿ãƒ³ã‚¹ã‚’æ›´æ–°
                     transmittence = transmittence * T_step;
-                    //‹ü•ûŒü‚Ì“§‰ß—¦‚ğXV
-                    
-                    
-                    //‘ŠúI—¹”»’è
-                    if (transmittence <= 1e-2f)
-                    {
-                        break;
-                    }
+                    //è¦–ç·šæ–¹å‘ã®é€éç‡ã‚’æ›´æ–°
                     
                 }
                 
             }
-            //˜Z‰ñ˜A‘±‚O‚È‚ç‰_‚ğ”²‚¯‚½Œ³‚µ‚Ä”»’f‚·‚é
+            //å…­å›é€£ç¶šï¼ãªã‚‰é›²ã‚’æŠœã‘ãŸå…ƒã—ã¦åˆ¤æ–­ã™ã‚‹
             else
             {
                 cloud_test = 0.0;
                 zero_density_sample_count = 0;
             }
-                //ƒTƒ“ƒvƒ‹ˆÊ’u‚ği‚ß‚é
-                sample_point +=ray_step;
+            
+            //ã‚µãƒ³ãƒ—ãƒ«ä½ç½®ã‚’é€²ã‚ã‚‹
+            sample_point +=ray_step;
         }
         else
         {
-			//‰_‚ÌŠO”»’è’†‚Í’á•i¿ƒTƒ“ƒvƒŠƒ“ƒO
+			//é›²ã®å¤–åˆ¤å®šä¸­ã¯ä½å“è³ªã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
             float3 weather_data = SampleWeatherData(sample_point.xz);
             
             cloud_test = 
@@ -578,44 +650,63 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
             float step_scale = 1.0f;
             if (cloud_test <= 0.0)
             {
-                //’n•½ü‚Ír‚­Aã‹ó‚Í×‚©‚­ƒXƒeƒbƒv‚ği‚ß‚é
-                //step_scale = lerp(1.0f, 3.0f, horizon);
+                //åœ°å¹³ç·šã¯è’ãã€ä¸Šç©ºã¯ç´°ã‹ãã‚¹ãƒ†ãƒƒãƒ—ã‚’é€²ã‚ã‚‹
+                step_scale = lerp(1.0f, 2.0f, horizon);
+                zero_density_sample_count++;
+            }
+            else
+            {
+                //é›²ãŒè¦‹ã¤ã‹ã£ãŸã®ã§ãƒªã‚»ãƒƒãƒˆ
+                zero_density_sample_count = 0;
             }
             sample_point += ray_step * step_scale;
         }
         
         
+        //æ—©æœŸçµ‚äº†åˆ¤å®š
         dist = length(sample_point - ray_origin);
-        if(dist>=limit_dist)
+        if (dist >= MAX_DISTANCE)
         {
             break;
         }
+        if (transmittence <= TRANSMITTANCE_EPS)
+        {
+            break;
+        }
+        
 
     }    
         	    
-    float alpha = saturate(1.0 - transmittence);
+    float alpha = saturate(1.0f - transmittence);
     
     return max(0.0, float4(color, alpha));
 }
 
-// ƒsƒNƒZƒ‹ƒVƒF[ƒ_[ƒƒCƒ“ŠÖ”
+// ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ãƒ¡ã‚¤ãƒ³é–¢æ•°
 float4 main(VS_OUT pin) : SV_TARGET
 {
     float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
+    
+    float object_depth = SampleObjectDepth(pin.texcoord.xy);
+    if(object_depth <1.0f)
+    {
+        //ç‰©ä½“ãŒé›²ã®å‰ã«ã‚ã‚‹å ´åˆã€é›²ã‚’æç”»ã—ãªã„
+        return float4(sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb,1.0f);
+    }
 
-    // ’n‹…’†SŠî€‚ÌƒJƒƒ‰ˆÊ’u
+    // ã‚«ãƒ¡ãƒ©ä½ç½®ã‹ã‚‰ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ä¸Šã®ç‚¹ã¸ã®ãƒ¬ã‚¤ã®æ–¹å‘ã‚’è¨ˆç®—
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
 
     float3 color = 0.0;
-    //’n•½üã
+    //åœ°å¹³ç·šä¸Š
     float3 eye_pos = float3(0.0, earth_radius, 0.0) + camera_position.xyz;
     
     float t0 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.x);
     float t1 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.y);
     
-    //Œğ·‚µ‚È‚¢ê‡A‰_‚ğ•`‰æ‚³‚¹‚È‚¢
+    //äº¤å·®ã—ãªã„å ´åˆã€é›²ã‚’æç”»ã•ã›ãªã„
     if(t0<0.0f || t1<0.0f || t1<=t0)
     {
         clip(-1);
@@ -630,42 +721,42 @@ float4 main(VS_OUT pin) : SV_TARGET
 
         float steps = ray_marching_steps;
         
-        //©“®ƒXƒeƒbƒv’²®    
+        //è‡ªå‹•ã‚¹ãƒ†ãƒƒãƒ—èª¿æ•´    
         if (auto_ray_marching_steps)
         {
-            steps = lerp(
-            ray_marching_steps * 0.5625, 
-            ray_marching_steps,
-            clamp(dot(ray_dir, float3(0.0, 1.0, 0.0)), 0.0, 1.0)
-            );
+            //steps = lerp(
+            //ray_marching_steps * 0.5625, 
+            //ray_marching_steps,
+            //clamp(dot(ray_dir, float3(0.0, 1.0, 0.0)), 0.0, 1.0)
+            //);
             {
                 float viewUp = saturate(ray_dir.y);
                 float horizon = 1.0 - viewUp;
 
                 steps = lerp(
-                ray_marching_steps * 0.3,
-                ray_marching_steps,
-                smoothstep(0.0, 0.6, viewUp)
+                ray_marching_steps * 0.5,
+                ray_marching_steps * 2.0,
+                smoothstep(0.8, 1, horizon)
                 );
             }
         }
 
         float3 ray_step = ray_dir * shell_dist / steps;
-        // ƒƒCƒ“‚ÌƒŒƒCƒ}[ƒ`ƒ“ƒOŠÖ”‚ğŒÄ‚Ño‚·
+        // ãƒ¡ã‚¤ãƒ³ã®ãƒ¬ã‚¤ãƒãƒ¼ãƒãƒ³ã‚°é–¢æ•°ã‚’å‘¼ã³å‡ºã™
         float4 volume = RayMarch(ray_origin, ray_step, int(steps),pin.texcoord.xy);
-        //‹ó‚ÌF
+        //ç©ºã®è‰²
         float3 background = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb;
-        // ‰_‚Ìƒ{ƒŠƒ…[ƒ€ƒJƒ‰[‚Æ”wŒiF‚ğƒAƒ‹ƒtƒ@ƒuƒŒƒ“ƒh
+        // é›²ã®ãƒœãƒªãƒ¥ãƒ¼ãƒ ã‚«ãƒ©ãƒ¼ã¨èƒŒæ™¯è‰²ã‚’ã‚¢ãƒ«ãƒ•ã‚¡ãƒ–ãƒ¬ãƒ³ãƒ‰
         color = (background * (1.0 - volume.a)) + volume.xyz;
         
-        // ‰“‚­‚Ì‰_‚ğ‹ó‚ÉƒuƒŒƒ“ƒh
+        // é ãã®é›²ã‚’ç©ºã«ãƒ–ãƒ¬ãƒ³ãƒ‰
         {
-            // ’n•½ü•ûŒü‚ÅƒtƒF[ƒh‚ğ‹­‚ß‚éi”CˆÓ‚¾‚ª”ñí‚ÉŒø‚­j
+            ////åœ°å¹³ç·šæ–¹å‘ã§ãƒ•ã‚§ãƒ¼ãƒ‰ã‚’å¼·ã‚ã‚‹
             float view_up = saturate(dot(ray_dir, float3(0, 1, 0)));
             float horizon = 1.0 - view_up;
-            float horizon_fade = ((horizon * horizon) * (horizon * horizon));
+            float horizon_fade = ((horizon * horizon) * (horizon * horizon)) * ((horizon * horizon) * (horizon * horizon));
             
-            //‰_‚ÌF‚ğ‹ó‚É‹ß‚Ã‚¯‚é‚ªAÕ•Á‚ÍˆÓ’n
+            //é›²ã®è‰²ã‚’ç©ºã«è¿‘ã¥ã‘ã‚‹ãŒã€é®è”½ã¯æ„åœ°
             float3 cloud_color_only =
             lerp(volume.rgb, background * volume.a, horizon_fade);
             
@@ -676,7 +767,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     }
     else
     {
-        //’n•½ü‚æ‚è‰º‚Í‰_‚ğ•`‰æ‚µ‚È‚¢
+        //åœ°å¹³ç·šã‚ˆã‚Šä¸‹ã¯é›²ã‚’æç”»ã—ãªã„
         color = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb;
     }
 

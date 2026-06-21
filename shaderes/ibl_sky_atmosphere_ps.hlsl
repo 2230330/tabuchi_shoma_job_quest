@@ -1,5 +1,8 @@
+#include"sky_atmosphere.hlsli"
 #include"scene_constant_buffer.hlsli"
 #include"forward_light.hlsli"
+//å®‡å®™ãªã©ã€ç©ºã®å¾Œã‚ã«æ¬²ã—ã„ç”»åƒã‚’å…¥ã‚Œã‚‹
+Texture2D sky_texture : register(t0);
 
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
@@ -8,67 +11,55 @@
 #define ANISOTROPIC 4
 SamplerState sampler_states[5] : register(s0);
 
-
 static const float PI = 3.14159265358979323846f;
-
-static const float RAYLEIGH_SCALE_HEIGHT = 8000.f;
-static const float MIE_SCALE_HEIGHT = 1200.f;
-static const float OZONE_SCALE_HALF_WIDTH = 15000.f;
-static const float OZONE_CENTER_HEIGHT = 50000.f;
-static const float EARTH_RADIUS = 6360000.0f; // ’n‹…”¼Œa [m]
-static const float SUN_DISTANCE = 150000000000.0f; // ‘¾—z‚Ü‚Å‚Ì‹——£ [m]
-static const float ATMOSPHERE_HEIGHT = 100000.0f; // ‘å‹C‚Ì‚‚³ [m]
-static const int MAX_SAMPLES = 16;
-
-//ŠÈˆÕ“IƒŒƒCƒŠ[U—
+//ç°¡æ˜“çš„ãƒ¬ã‚¤ãƒªãƒ¼æ•£ä¹±
 float3 SigmaRayleigh(float h)
 {
     
-    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / RAYLEIGH_SCALE_HEIGHT);
+    return float3(5.802e-6, 13.558e-6, 33.1e-6) * exp(-(h) / rayleigh_scale_height);
 }
-//ŠÈˆÕ“Iƒ~[U—
+//ç°¡æ˜“çš„ãƒŸãƒ¼æ•£ä¹±
 float3 SigmaMie(float h)
 {
-    return float3(3.996e-6, 3.31e-6, 1e-6f) * exp(-(h) / MIE_SCALE_HEIGHT);
+    return float3(3.996e-6, 3.31e-6, 1e-6f) * exp(-(h) / mie_scale_height);
 }
-//ƒIƒ]ƒ“‹zûŒW”
+//ã‚ªã‚¾ãƒ³å¸åä¿‚æ•°
 float3 SigmaOzone(float h)
 {
     float3 coeff = float3(0.650e-6, 1.881e-6, 0.085e-6);
-    float ozoneFactor = max(0.0, 1.0 - (abs(h - OZONE_CENTER_HEIGHT) / OZONE_SCALE_HALF_WIDTH));
+    float ozoneFactor = max(0.0, 1.0 - (abs(h - ozone_center_height) / ozone_scale_half_width));
     return coeff * ozoneFactor;
 }
-//ƒtƒF[ƒYŠÖ”(ƒŒƒCƒŠ[U—)
+//ãƒ•ã‚§ãƒ¼ã‚ºé–¢æ•°(ãƒ¬ã‚¤ãƒªãƒ¼æ•£ä¹±)
 float RayleighPhase(float cos_theta)
 {
     return (3.0f * (1.0f + cos_theta * cos_theta))
             / (16.0 * PI);
     
-    //return (3.0 / (16.0 * PI)) * (1.0 + pow(cos_theta * 0.5 + 0.5, 2.0));//•Ÿˆäæ¶‚ÌƒR[ƒh‚æ‚è
+    //return (3.0 / (16.0 * PI)) * (1.0 + pow(cos_theta * 0.5 + 0.5, 2.0));//ç¦äº•å…ˆç”Ÿã®ã‚³ãƒ¼ãƒ‰ã‚ˆã‚Š
 }
-//ƒtƒF[ƒYŠÖ”(ƒ~[U—)
+//ãƒ•ã‚§ãƒ¼ã‚ºé–¢æ•°(ãƒŸãƒ¼æ•£ä¹±)
 float MiePhase(float cos_theta, float g)
 {
-    //ƒwƒjƒGƒCEƒOƒŠ[ƒ“ƒXƒ^ƒCƒ“ŠÖ”
+    //ãƒ˜ãƒ‹ã‚¨ã‚¤ãƒ»ã‚°ãƒªãƒ¼ãƒ³ã‚¹ã‚¿ã‚¤ãƒ³é–¢æ•°
     float g2 = g * g;
-    
     return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
 }
 
-//‹——£~•½‹ÏŒW”‚Åw”Œ¸Š‚ğ‹ß—
+//è·é›¢Ã—å¹³å‡ä¿‚æ•°ã§æŒ‡æ•°æ¸›è¡°ã‚’è¿‘ä¼¼
 float3 TransmittanceApprox(float3 startPos, float3 endPos)
 {
     float distance = max(50e3f, length(endPos - startPos));
-    // ‚“x‚ÉˆË‘¶‚µ‚½ sigma_t_avg ‚ğ•]‰¿‚·‚é‚Ì‚ª—‘z‚¾‚ªA‚Ü‚¸‚Í sample midpoint ‚ğg‚¤
+    // é«˜åº¦ã«ä¾å­˜ã—ãŸ sigma_t_avg ã‚’è©•ä¾¡ã™ã‚‹ã®ãŒç†æƒ³ã ãŒã€ã¾ãšã¯ sample midpoint ã‚’ä½¿ã†
     float3 midPos = (startPos + endPos) * 0.5f;
-    float h = max(0.0f, length(midPos) - EARTH_RADIUS);
+    float h = max(0.0f, length(midPos) - earth_height);
     float3 sigma_t = SigmaRayleigh(h) + SigmaMie(h) + SigmaOzone(h);
     return exp(-sigma_t * distance); // component-wise exp
 }
 
-// ”g’· (nm)
-static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f); // Ô, —Î, Â
-// ƒÉ^-4 ‚Ì‘Š‘Î”ä‚ğŒvZ
+// æ³¢é•· (nm)
+static const float3 WAVELENGTHS = float3(680.0f, 550.0f, 440.0f); // èµ¤, ç·‘, é’
+// Î»^-4 ã®ç›¸å¯¾æ¯”ã‚’è¨ˆç®—
 static const float3 INV_WAVELENGTH4 = (float3(
     1.0f / pow(WAVELENGTHS.x, 4.0f),
     1.0f / pow(WAVELENGTHS.y, 4.0f),
@@ -77,138 +68,136 @@ static const float3 INV_WAVELENGTH4 = (float3(
 
 float3 ComputeSunIrradiance(float air_mass)
 {
-    // ŒõŠw“IŒú‚³ ƒÑ(ƒÉ)
-    float3 tau = INV_WAVELENGTH4 * air_mass * 3e9f /*ƒXƒLƒƒƒbƒ^ƒŠƒ“ƒOƒXƒP[ƒ‹*/;
+    // å…‰å­¦çš„åšã• Ï„(Î»)
+    float3 tau = INV_WAVELENGTH4 * air_mass * 3e9f /*ã‚¹ã‚­ãƒ£ãƒƒã‚¿ãƒªãƒ³ã‚°ã‚¹ã‚±ãƒ¼ãƒ«*/;
 
-    // Beer-LambertŒ¸Š
+    // Beer-Lambertæ¸›è¡°
     float3 Ei = exp(-tau);
 
-    return Ei; // Ô‚ªc‚èAÂ‚ª‹­‚­Œ¸Š
+    return Ei; // èµ¤ãŒæ®‹ã‚Šã€é’ãŒå¼·ãæ¸›è¡°
 }
 
-//•¡”‰ñU—‚µ‚Ä“ü‚é“üU—‚ÌŒõ‚ğŒvZ‚·‚é
-float3 PrecomputeMultiScattering(float3 position /*’n‹…”¼Œa‰ÁZÏ‚İ*/, float3 view_dir, float3 light_dir)
+//è¤‡æ•°å›æ•£ä¹±ã—ã¦å…¥ã‚‹å…¥æ•£ä¹±ã®å…‰ã‚’è¨ˆç®—ã™ã‚‹
+float3 PrecomputeMultiScattering(float3 position /*åœ°çƒåŠå¾„åŠ ç®—æ¸ˆã¿*/, float3 view_dir, float3 light_dir)
 {
     float3 sample_pos = position;
-    //‚“xŒvZ
-    float h = length(sample_pos) - EARTH_RADIUS; //©g‚ÌˆÊ’u-’n‹…”¼Œa
-    //100ƒ[ƒgƒ‹’n‰º‚È‚ç‚ÎAŒvZ‚·‚é•K—v‚Í‚È‚¢
+    //é«˜åº¦è¨ˆç®—
+    float h = length(sample_pos) - earth_height; //è‡ªèº«ã®ä½ç½®-åœ°çƒåŠå¾„
+    //100ãƒ¡ãƒ¼ãƒˆãƒ«åœ°ä¸‹ãªã‚‰ã°ã€è¨ˆç®—ã™ã‚‹å¿…è¦ã¯ãªã„
     if (h < -100.f)
         return float3(0.f, 0.f, 0.f);
     
-    //U—ŒW”
+    //æ•£ä¹±ä¿‚æ•°
     float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
     float3 sigma_t = sigma_s + SigmaOzone(h);
     
-    //‘¾—zŒõƒXƒyƒNƒgƒ‹‚ÌŒ¸Š(”g’·ˆË‘¶)
-    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
-    float sun_theta = acos(sun_elevation) * (180.0f / PI); //“x‚É•ÏŠ·
-    //kasten-Young 1989‹ß—
-    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant‹ß—
-    //air_mass = min(air_mass, 20.0f); // ‹É’[‚È’l‚ğ§ŒÀ
+    //å¤ªé™½å…‰ã‚¹ãƒšã‚¯ãƒˆãƒ«ã®æ¸›è¡°(æ³¢é•·ä¾å­˜)
+    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // å¤ªé™½ã®é«˜ã•
+    float sun_theta = acos(sun_elevation) * (180.0f / PI); //åº¦ã«å¤‰æ›
+    //kasten-Young 1989è¿‘ä¼¼
+    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secantè¿‘ä¼¼
+    //air_mass = min(air_mass, 20.0f); // æ¥µç«¯ãªå€¤ã‚’åˆ¶é™
     float3 Ei = ComputeSunIrradiance(air_mass);
     
-    //ˆÊ‘ŠŠÖ”(U—Œõ‚Ì“à‚±‚¿‚ç‚ÉŒü‚­Š„‡)
-    float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0))); //‚O“V’¸A1’n
+    //ä½ç›¸é–¢æ•°(æ•£ä¹±å…‰ã®å†…ã“ã¡ã‚‰ã«å‘ãå‰²åˆ)
+    float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0))); //ï¼ï¼å¤©é ‚ã€1ï¼åœ°
     float mie_boost = 0.5f * horizon_factor * (0.01f + air_mass * 0.05f);
     
-    float cos_theta = lerp(dot(view_dir, light_dir), -0.4f, 1.0f);
-    float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10‚ğ0`1‚É³‹K‰»
+    float cos_theta = lerp(dot(view_dir, light_dir), -.4f, 1.0f);
+    float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10ã‚’0ï½1ã«æ­£è¦åŒ–
     float phase = ((RayleighPhase(cos_theta) * (lerp(10.0f, 2.f, sunset_factor))
     + MiePhase(cos_theta, 0.5) * mie_boost) / (4.0f * PI));
     
-    //‘¾—z•ûŒü
-    float3 T1 = TransmittanceApprox(sample_pos, sample_pos + light_dir * ATMOSPHERE_HEIGHT);
-    //’†Œp“_•ûŒü
+    //å¤ªé™½æ–¹å‘
+    float3 T1 = TransmittanceApprox(sample_pos, sample_pos + light_dir * atmosphere_height);
+    //ä¸­ç¶™ç‚¹æ–¹å‘
     float3 T2 = TransmittanceApprox(position, sample_pos);
     
-    //ŒõŠw“IŒú‚³ ƒÑ‚ğŠÈˆÕ“I‚É„’è
-    //Ï•ª‚ğ‚µ‚½‚­‚È‚¢‚Ì‚Åİ’è
-    float approx_sun_distance = ATMOSPHERE_HEIGHT; //‘å‹CŒ—Œú‚İ
-    float sigma_t_avg = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f; //ƒ`ƒƒƒ“ƒlƒ‹•½‹Ï
-    float tau_sun = min(sigma_t_avg * approx_sun_distance, 2.0f); //’Pƒ‹ß—‚ÌŒõŠw“I[‚³
+    //å…‰å­¦çš„åšã• Ï„ã‚’ç°¡æ˜“çš„ã«æ¨å®š
+    //ç©åˆ†ã‚’ã—ãŸããªã„ã®ã§è¨­å®š
+    float approx_sun_distance = atmosphere_height; //å¤§æ°—åœåšã¿
+    float sigma_t_avg = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f; //ãƒãƒ£ãƒ³ãƒãƒ«å¹³å‡
+    float tau_sun = min(sigma_t_avg * approx_sun_distance, 2.0f); //å˜ç´”è¿‘ä¼¼ã®å…‰å­¦çš„æ·±ã•
     
-    //’PˆêU—Šñ—^
-    //‚±‚±‚ÅƒTƒ“ƒvƒ‹“X‚ÌŠñ—^—Ê‚ğ’²®‚·‚é‚½‚ß‚ÉAstepLength  ‘|“¢‚ÌƒXƒP[ƒ‹‚ğ‚©‚¯‚é
+    //å˜ä¸€æ•£ä¹±å¯„ä¸
+    //ã“ã“ã§ã‚µãƒ³ãƒ—ãƒ«åº—ã®å¯„ä¸é‡ã‚’èª¿æ•´ã™ã‚‹ãŸã‚ã«ã€stepLength  æƒè¨ã®ã‚¹ã‚±ãƒ¼ãƒ«ã‚’ã‹ã‘ã‚‹
     float step_scale = approx_sun_distance * 0.5f;
     float3 L2 = T1 * sigma_s * phase * Ei * step_scale;
     
-    //‘½dU—ŒW”f_ms
-    //f_ms=omega_avg*(1-exp(-tau_sun))F ƒÑ ‚ª‘å‚«‚¢‚Ù‚Ç‘½dU—‚ª‘‚¦‚é
-    float3 omega = sigma_s / max(sigma_t, float3(1e-6, 1e-6, 1e-6)); // ƒAƒ‹ƒxƒhiU—/‘SŒW”j
+    //å¤šé‡æ•£ä¹±ä¿‚æ•°f_ms
+    //f_ms=omega_avg*(1-exp(-tau_sun))ï¼š Ï„ ãŒå¤§ãã„ã»ã©å¤šé‡æ•£ä¹±ãŒå¢—ãˆã‚‹
+    float3 omega = sigma_s / max(sigma_t, float3(1e-6, 1e-6, 1e-6)); // ã‚¢ãƒ«ãƒ™ãƒ‰ï¼ˆæ•£ä¹±/å…¨ä¿‚æ•°ï¼‰
     float omega_avg = (omega.x + omega.y + omega.z) / 3.0;
     float f_ms = saturate(omega_avg * (1.0f - exp(-tau_sun)));
-    //F_msF‘Q‚©®‹ß—1/(1-f_ms)
+    //F_msï¼šæ¼¸ã‹å¼è¿‘ä¼¼1/(1-f_ms)
     float F_ms = 1.0 / max(1.0 - f_ms, 1e-3f);
 
-    //ÅIpsi‚É‘Î‚µ‚ÄT2‚ğ‚©‚¯‚Ä‹üã‚ÌŒ¸Š‚ğl—¶
+    //æœ€çµ‚psiã«å¯¾ã—ã¦T2ã‚’ã‹ã‘ã¦è¦–ç·šä¸Šã®æ¸›è¡°ã‚’è€ƒæ…®
     float3 psi_ms = L2 * F_ms;
     return psi_ms;
 }
 
 
-//U—Œõ‚ÌŒvZ(ƒVƒ“ƒOƒ‹ƒXƒLƒƒƒbƒ^ƒŠƒ“ƒO{‚»‚Ì’n“_‚Ü‚Å‚ÌU—Œõ)
+//æ•£ä¹±å…‰ã®è¨ˆç®—(ã‚·ãƒ³ã‚°ãƒ«ã‚¹ã‚­ãƒ£ãƒƒã‚¿ãƒªãƒ³ã‚°ï¼‹ãã®åœ°ç‚¹ã¾ã§ã®æ•£ä¹±å…‰)
 float3 ComputeSkyColor(float3 camera_pos, float3 view_dir, float3 light_dir)
 {
     
-    float cos_theta = clamp(dot(view_dir, light_dir), -0.f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
-    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
-    float sun_theta = acos(sun_elevation) * (180.0f / PI); //“x‚É•ÏŠ·
-    //kasten-Young 1989‹ß—
-    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secant‹ß—
-    //air_mass = min(air_mass, 50.0f); // ‹É’[‚È’l‚ğ§ŒÀ
+    float cos_theta = clamp(dot(view_dir, light_dir), -0.4f, 1.0f); //è¦–ç·šã¨å¤ªé™½ã®è§’åº¦
+    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // å¤ªé™½ã®é«˜ã•
+    float sun_theta = acos(sun_elevation) * (180.0f / PI); //åº¦ã«å¤‰æ›
+    //kasten-Young 1989è¿‘ä¼¼
+    float air_mass = 1.0f / (sun_elevation + (0.50572f * pow(96.07995 - sun_theta, -1.6364))); // secantè¿‘ä¼¼
+    //air_mass = min(air_mass, 50.0f); // æ¥µç«¯ãªå€¤ã‚’åˆ¶é™
 
-    float sunset_factor = saturate((air_mass - 1.0f) / 20.0f); //1~10‚ğ0`1‚É³‹K‰»
+    float sunset_factor = saturate((air_mass - 1.0f) / 10.0f); //1~10ã‚’0ï½1ã«æ­£è¦åŒ–
     float3 Ei = ComputeSunIrradiance(air_mass);
     
-    
-    //‘¾—z‚É‹ß‚¢‚Ù‚Ç1.0
+    //å¤ªé™½ã«è¿‘ã„ã»ã©1.0
     float angle_factor = pow(saturate(cos_theta), 2.0f);
-    float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(30.0f, 10.f, sunset_factor));
-    //—[Ä‚¯‚ğì‚éÛA—[Ä‚¯‚Í‘¾—z‚ÌŒX‚«‚É‚æ‚éƒ~[U—‚Ì‹­‰»‚ªå‚È—vˆö‚Ìˆ×A
-    //‘¾—z‚ÌŒX‚«‚Å‹­‚­‚·‚é
+    float phase_rayliegh = RayleighPhase(cos_theta) * (lerp(20.0f, 10.f, sunset_factor));
+    //å¤•ç„¼ã‘ã‚’ä½œã‚‹éš›ã€å¤•ç„¼ã‘ã¯å¤ªé™½ã®å‚¾ãã«ã‚ˆã‚‹ãƒŸãƒ¼æ•£ä¹±ã®å¼·åŒ–ãŒä¸»ãªè¦å› ã®ç‚ºã€
+    //å¤ªé™½ã®å‚¾ãã§å¼·ãã™ã‚‹
     float horizon_factor = saturate(1.0f - dot(view_dir, float3(0, 1, 0)));
-    float mie_boost = 0.001f + horizon_factor * (0.01f + air_mass * 0.05f);
+    float mie_boost = horizon_factor * (0.01f + air_mass * 0.05f);
     float phase_mie = MiePhase(cos_theta, 0.8f) * mie_boost;
     
-    //Â‹ó‚Ì‚Í•Ï‰»‚ª­‚È‚¢‚Ì‚ÅƒTƒ“ƒvƒ‹”‚ğŒ¸‚ç‚µA
-    //•Ï‰»‚Ì‘½‚¢’n•½ü•t‹ß‚¾‚¯‘½‚ß‚É‚·‚é
-    float samples_f = lerp(MAX_SAMPLES / 2, (float) MAX_SAMPLES, horizon_factor);
+    //é’ç©ºã®æ™‚ã¯å¤‰åŒ–ãŒå°‘ãªã„ã®ã§ã‚µãƒ³ãƒ—ãƒ«æ•°ã‚’æ¸›ã‚‰ã—ã€
+    //å¤‰åŒ–ã®å¤šã„åœ°å¹³ç·šä»˜è¿‘ã ã‘å¤šã‚ã«ã™ã‚‹
+    float samples_f = lerp(max_sample / 2, (float) max_sample, horizon_factor);
     int adaptive_samples = max(1, (int) round(samples_f)); // round() -> float, cast -> int
 
-    float step_size = ATMOSPHERE_HEIGHT / adaptive_samples;
+    float step_size = atmosphere_height / adaptive_samples;
     float3 result = float3(0.0, 0.0, 0.0);
     for (int i = 0; i < adaptive_samples; ++i)
     {
         float u = (i + 0.5f) / adaptive_samples;
-        float t = ATMOSPHERE_HEIGHT * (1.0f - pow(1.0f - u, 2.0f)); // ‰º‘w‚É‘½‚­
+        float t = atmosphere_height * (1.0f - pow(1.0f - u, 2.0f)); // ä¸‹å±¤ã«å¤šã
         //float t = i * step_size;
 
         float3 sample_pos = camera_pos + view_dir * t;
-        float h = length(sample_pos) - EARTH_RADIUS;
+        float h = length(sample_pos) - earth_height;
 
-        //100ƒ[ƒgƒ‹’n‰º‚È‚ç‚ÎAl—¶‚É“ü‚ê‚È‚­‚Ä‚à—Ç‚¢
-        if (h < 0.0f)
+        //100ãƒ¡ãƒ¼ãƒˆãƒ«åœ°ä¸‹ãªã‚‰ã°ã€è€ƒæ…®ã«å…¥ã‚Œãªãã¦ã‚‚è‰¯ã„
+        if (h < -100.0f)
         {
             continue;
         }
         
         float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
         float3 T1 = TransmittanceApprox(camera_pos, sample_pos);
-        float3 T2 = TransmittanceApprox(sample_pos, sample_pos + light_dir * ATMOSPHERE_HEIGHT);
+        float3 T2 = TransmittanceApprox(sample_pos, sample_pos + light_dir * atmosphere_height);
         
         result += T1 * sigma_s * ((phase_rayliegh + phase_mie)) * T2 * Ei * step_size;
     }
     
-    result /= result + 1.0f; 
     
     return result;
 }
 
-//ƒLƒ…[ƒuƒ}ƒbƒv‚Ìface‚Æuv‚©‚ç•ûŒüƒxƒNƒgƒ‹‚ğæ“¾
+//ã‚­ãƒ¥ãƒ¼ãƒ–ãƒãƒƒãƒ—ã®faceã¨uvã‹ã‚‰æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã‚’å–å¾—
 float3 DirectionFromCubeUV(uint face, float2 uv)
 {
-    float2 p = uv * 2.0 - 1.0; // 0..1 ¨ -1..1
+    float2 p = uv * 2.0 - 1.0; // 0..1 â†’ -1..1
     if (face == 0)
         return normalize(float3(+1, -p.y, -p.x));
     if (face == 1)
@@ -234,43 +223,37 @@ struct PSIn
 
 };
 float4 main(PSIn pin) : SV_TARGET
-//‘å‹CU—
+//å¤§æ°—æ•£ä¹±
 {
     float4 color = float4(0.1, 0.1, 0.2, 1);
   
-    //‘å‹CU—    
+    //å¤§æ°—æ•£ä¹±    
     float3 sky_color = float3(0, 0, 0);
 
-    float3 position = float3(0.f,  EARTH_RADIUS, 0.f);
+    float3 position = float3(0.f,  earth_height, 0.f);
     float3 light_dir = normalize(-directional_light.direction.xyz);
-    float3 sun_pos = light_dir * SUN_DISTANCE; //‘¾—z‚ÌˆÊ’u()
-    float3 sun_dir = normalize(sun_pos.xyz - pin.pos.xyz); //’¸“_[„‘¾—z
-    //ƒJƒƒ‰‚©‚ç“V‹…‚ÌŠe’¸“_‚Ö‚Ì•ûŒü
+    float3 sun_pos = light_dir * sun_distance; //å¤ªé™½ã®ä½ç½®()
+    float3 sun_dir = normalize(sun_pos.xyz - pin.pos.xyz); //é ‚ç‚¹ãƒ¼ï¼å¤ªé™½
+    //ã‚«ãƒ¡ãƒ©ã‹ã‚‰å¤©çƒã®å„é ‚ç‚¹ã¸ã®æ–¹å‘
     float3 view_dir = DirectionFromCubeUV(FaceIndex, pin.uv);
     
     
-    //’n•½üˆÈ‰º
-    if (view_dir.y < 0.0f)
-    {
-        //return float4(0, 0, 0, 1);
-    }
-    
-    //‹^—‘½dU—‚Ì–‘OŒvZ
+    //ç–‘ä¼¼å¤šé‡æ•£ä¹±ã®äº‹å‰è¨ˆç®—
     float3 multi_scattering = PrecomputeMultiScattering(position, view_dir, sun_dir);
     
-    ////ƒVƒ“ƒOƒ‹ƒXƒLƒƒƒbƒ^ƒŠƒ“ƒO
+    ////ã‚·ãƒ³ã‚°ãƒ«ã‚¹ã‚­ãƒ£ãƒƒã‚¿ãƒªãƒ³ã‚°
     float3 single_scattering = ComputeSkyColor(
     position,
     view_dir,
     sun_dir);
     
-    sky_color += single_scattering + (multi_scattering);
+    sky_color += single_scattering + (multi_scattering); //ç’°å¢ƒå…‰çš„ã«å°‘ã—è¶³ã™
     
-    //–é‚ÌŠÈˆÕÀ‘•
-    float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //‹ü‚Æ‘¾—z‚ÌŠp“x
-    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // ‘¾—z‚Ì‚‚³
+    //å¤œã®ç°¡æ˜“å®Ÿè£…
+    float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //è¦–ç·šã¨å¤ªé™½ã®è§’åº¦
+    float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f); // å¤ªé™½ã®é«˜ã•
 
     sky_color += lerp(float3(0.1f, 0.1f, 0.2f), 0, sun_elevation);
-    
+
     return float4(sky_color.xyz, 1.0f);
 }

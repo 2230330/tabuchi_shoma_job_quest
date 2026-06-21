@@ -5,8 +5,12 @@
 #include<cstdint>
 #include<wrl.h>
 #include<DirectXMath.h>
+#include<memory>
 
-//ƒIƒtƒXƒNƒŠ[ƒ“ƒŒƒ“ƒ_ƒŠƒ“ƒO—pƒNƒ‰ƒX
+//å‰æ–¹å®£è¨€
+class RenderState;
+
+//ã‚ªãƒ•ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°ç”¨ã‚¯ãƒ©ã‚¹
 class FrameBuffer
 {
 public:
@@ -32,11 +36,11 @@ public:
     );
     ~FrameBuffer() = default;
 
-    //‰æ–Ê‚ÌƒNƒŠƒA
+    //ç”»é¢ã®ã‚¯ãƒªã‚¢
     void Clear(ID3D11DeviceContext* immediate_context, usage flags = usage::color_depth_stencil, DirectX::XMFLOAT4 color = { 0.0f, 0.0f, 0.0f, 0.f }, float depth = 1, uint8_t stencil = 0);
-    //ƒŒƒ“ƒ_ƒŠƒ“ƒOŠJn
+    //ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°é–‹å§‹
     void Activate(ID3D11DeviceContext* immediate_context, usage flags = usage::color_depth_stencil);
-    //ƒŒƒ“ƒ_ƒŠƒ“ƒOI—¹
+    //ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°çµ‚äº†
     void Deactivate(ID3D11DeviceContext* immediate_context);
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetShaderResourceView(int num) { return shader_resource_views_[num]; }
@@ -54,15 +58,20 @@ private:
     }
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> render_target_texture_2d_;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view_;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depth_stencil_view_;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_views_[2];
-    D3D11_VIEWPORT viewport_;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> render_target_texture_2d_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> render_target_view_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depth_stencil_view_=nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shader_resource_views_[2] = { nullptr,nullptr };
+    std::unique_ptr<RenderState>render_state_=nullptr;
+    D3D11_VIEWPORT viewport_{};
     UINT viewport_count_{ D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE };
     D3D11_VIEWPORT cached_viewports_[D3D11_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE];
-    //cached_render_target_view‚Í”z—ñ‚É•ÏX
+    //cached_render_target_viewã¯é…åˆ—ã«å¤‰æ›´
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> cached_render_target_views_[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT];
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> cached_depth_stencil_view_;
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> cached_depth_stencil_view_=nullptr;
+
+    //ã‚¢ã‚¯ãƒ†ã‚£ãƒ–å‰ã«å…¥ã£ã¦ã„ãŸRTVã®æ•°
+    UINT cached_num_rtvs_ = 0;
+
 };
 #endif // !PART2_FRAMEBUFFER_H

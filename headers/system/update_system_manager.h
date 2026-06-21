@@ -3,17 +3,22 @@
 #include<vector>
 #include<memory>
 #include"i_update_system.h"
-#include"../component/component_manager.h"
-//�R���|�[�l���g���񂷂��߂̃N���X
+
+//前方宣言
+class ComponentManager;
+
+//コンポーネントを回すためのクラス
+//更新システムは、カメラの更新や物理演算など、ゲームのロジックを担当する複数のシステムで構成されます。
+//このクラスは、これらのシステムを管理し、必要に応じて更新を行います。
 class UpdateSystemManager {
 public:
     UpdateSystemManager(ComponentManager& comp_mng);
-    virtual ~UpdateSystemManager() = default;
+    ~UpdateSystemManager() = default;
 
     void AddSystem(std::unique_ptr<IUpdateSystem> system);
 
-    //Update���ꊇ�ŉ񂷊֐��B
-    //���̓��}���`�^�X�N�ɂ������Ȃ�
+    //Updateを一括で回す関数。
+    //その内マルチタスクにしたいなぁ
     void UpdateAll(float elapsed_time);
 
 private:

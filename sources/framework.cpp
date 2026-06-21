@@ -1,8 +1,19 @@
-﻿#include"../headers/framework.h"
+#include"../headers/framework.h"
 
+#include"../headers/misc.h"
+#include"../headers/high_resolution_timer.h"
+#include"../headers/scene/scene.h"
 #include"../headers/graphics.h"
 #include"../headers/scene/scene_test.h"
 
+#ifdef USE_IMGUI
+#include "../external/imgui/imgui.h"
+#include "../external/imgui/imgui_internal.h"
+#include "../external/imgui/imgui_impl_dx11.h"
+#include "../external/imgui/imgui_impl_win32.h"
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern ImWchar glyphRangesJapanese[];
+#endif
 
 Framework::Framework(HWND hwnd):hwnd_(hwnd)
 {
@@ -14,6 +25,7 @@ bool Framework::Initialize()
     Graphics::Instance().Initialize(hwnd_);
 
     this->scene_ = std::make_unique<SceneTest>(hwnd_);
+    this->tictoc_ = std::make_unique<HighResolutionTimer>();
 
     if (scene_)return scene_->Initialize();
     return true;
@@ -28,7 +40,7 @@ void Framework::Update(float elapsed_time)
 #endif
     
     //シーン更新処理
-    scene_->SetWheel(wheel);
+    Graphics::Instance().SetWheel(wheel);
     wheel = 0;
     scene_->Update(elapsed_time);
 
@@ -39,12 +51,9 @@ void Framework::Update(float elapsed_time)
 
 void Framework::Render(float elapsed_time)
 {
-    ID3D11DeviceContext* dc = Graphics::Instance().GetDeviceContext();
-    ID3D11RenderTargetView* null_render_target_views[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
-    dc->OMSetRenderTargets(_countof(null_render_target_views), null_render_target_views, 0);
-    ID3D11ShaderResourceView* null_shader_resource_views[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
-    dc->VSSetShaderResources(0, _countof(null_shader_resource_views), null_shader_resource_views);
-    dc->PSSetShaderResources(0, _countof(null_shader_resource_views), null_shader_resource_views);
+    Graphics::Instance().SetRenderTargets();
+    Graphics::Instance().ViewClear(0, 0, 0, 0);
+    Graphics::Instance().ClearShaderResourceViews();
 
     //シーン描画処理
     {
@@ -81,7 +90,7 @@ Framework::~Framework()
 
 void Framework::CalculateFrameState()
 {
-    float dt = tictoc_.TimeInterval();
+    float dt = tictoc_->TimeInterval();
     accumulated_time_ += dt;
     frames_++;
 
@@ -128,10 +137,10 @@ int Framework::Run()
         }
         else
         {
-            tictoc_.Tick();
+            tictoc_->Tick();
             CalculateFrameState();
-            Update(tictoc_.TimeInterval());
-            Render(tictoc_.TimeInterval());
+            Update(tictoc_->TimeInterval());
+            Render(tictoc_->TimeInterval());
 
         }
     }
@@ -181,10 +190,10 @@ LRESULT CALLBACK Framework::HandleMessage(HWND hwnd,UINT msg,WPARAM wParam,LPARA
         }
         break;
     case WM_ENTERSIZEMOVE:
-        tictoc_.Stop();
+        tictoc_->Stop();
         break;
     case WM_EXITSIZEMOVE:
-        tictoc_.Start();
+        tictoc_->Start();
         break;
     case WM_MOUSEWHEEL:
         //マウスホイールの動きを捉えるよう

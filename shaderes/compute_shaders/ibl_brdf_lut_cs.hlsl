@@ -29,35 +29,37 @@ float2 Hammersley(uint i, uint N)
 // ------------------------------------------------------------
 // GGX importance sampling
 // ------------------------------------------------------------
-float3 ImportanceSampleGGX(float2 Xi, float roughness, float3 N)
+float3 ImportanceSampleGGX(float2 Xi, float Roughness, float3 N)
 {
-    float a = roughness * roughness;
-    float a2 = a * a;
-
-    float phi = 2.0 * PI * Xi.x;
-    float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a2 - 1.0) * Xi.y));
-    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
-
+    float a = Roughness * Roughness;
+    float Phi = 2 * PI * Xi.x;
+    float CosTheta = sqrt((1 - Xi.y) / (1 + (a * a - 1) * Xi.y));
+    float SinTheta = sqrt(1 - CosTheta * CosTheta);
     float3 H;
-    H.x = cos(phi) * sinTheta;
-    H.y = sin(phi) * sinTheta;
-    H.z = cosTheta;
-
-    // Tangent space Å® world space
-    float3 up = abs(N.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
-    float3 tangent = normalize(cross(up, N));
-    float3 bitangent = cross(N, tangent);
-
-    return normalize(tangent * H.x + bitangent * H.y + N * H.z);
+    H.x = SinTheta * cos(Phi);
+    H.y = SinTheta * sin(Phi);
+    H.z = CosTheta;
+    
+    float3 UpVector = abs(N.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 TangentX = normalize(cross(UpVector, N));
+    float3 TangentY = cross(N, TangentX);
+    // Tangent to world space
+    return TangentX * H.x + TangentY * H.y + N * H.z;
 }
 
 // ------------------------------------------------------------
 // Geometry term (Smith GGX)
 // ------------------------------------------------------------
+//float GeometrySchlickGGX(float NdotV, float roughness)
+//{
+//    float r = roughness + 1.0;
+//    float k = (r * r) / 8.0;
+//    return NdotV / (NdotV * (1.0 - k) + k);
+//}
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
-    float r = roughness + 1.0;
-    float k = (r * r) / 8.0;
+    float r = roughness*roughness;
+    float k = (r * r) * 0.5f;
     return NdotV / (NdotV * (1.0 - k) + k);
 }
 
@@ -94,7 +96,6 @@ float2 IntegrateBRDF(float NdotV, float roughness)
         {
             float G = GeometrySmith(NdotV, NdotL, roughness);
             float G_Vis = (G * VdotH) / max(NdotH * NdotV, 1e-4);
-
             float Fc = pow(1.0 - VdotH, 5.0);
 
             A += (1.0 - Fc) * G_Vis;

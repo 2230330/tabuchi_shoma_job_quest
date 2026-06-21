@@ -1,11 +1,14 @@
 #pragma once
 #include"i_render_system.h"
-#include"../component/component_manager.h"
-#include"../gltf_model.h"
-#include"../world/world.h"
 
-//•`‰æ—pƒVƒXƒeƒ€
-//Œ»İ‚ÍAŒ³X—pˆÓ‚µ‚Ä‚¢‚½GlTFƒ‚ƒfƒ‹‚Ì•`‰æ‚ğg‚Á‚Ä‚¢‚Ü‚·‚ªA‚»‚Ì‚¤‚¿‚¿‚á‚ñ‚Æì‚è‚½‚¢
+#include<d3d11.h>
+#include<wrl.h>
+
+//å‰æ–¹å®£è¨€
+class ComponentManager;
+
+//æç”»ç”¨ã‚·ã‚¹ãƒ†ãƒ 
+//ç¾åœ¨ã¯GlTFãƒ¢ãƒ‡ãƒ«ã®æç”»ã‚’ä½¿ã£ã¦ã„ã¾ã™ãŒã€ãã®ã†ã¡ã¡ã‚ƒã‚“ã¨ä½œã‚ŠãŸã„
 class GltfRenderSystem :public IRenderSystem
 {
 public:
@@ -17,7 +20,7 @@ public:
     
     void Render()override;
 private:
-    //Šô‚Â‚©•`‰æ•û–@‚ğì‚é‚Â‚à‚è‚Å‚·
+    //å¹¾ã¤ã‹æç”»æ–¹æ³•ã‚’ä½œã‚‹ã¤ã‚‚ã‚Šã§ã™
     //void DrawPrimitive(ID3D11DeviceContext* context, const GltfModel::Mesh::primitive& primitive, const GltfModel& model);
 
     ComponentManager& comp_mng_;

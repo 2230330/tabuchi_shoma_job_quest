@@ -1,11 +1,21 @@
 #include"../headers/graphics.h"
+
+#include"../headers/render_state.h"
 #include"../headers/misc.h"
+
+Graphics::~Graphics() = default;
+
+Graphics& Graphics::Instance()
+{
+    static Graphics instance_;
+    return instance_;
+}
 
 void Graphics::Initialize(HWND hwnd)
 {
     this->hwnd_ = hwnd;
 
-    //‰æ–ÊƒTƒCƒY‚Ìæ“¾
+    //ç”»é¢ã‚µã‚¤ã‚ºã®å–å¾—
     RECT rect;
     GetClientRect(this->hwnd_, &rect);
     UINT screen_width = rect.right - rect.left;
@@ -16,7 +26,7 @@ void Graphics::Initialize(HWND hwnd)
 
     HRESULT hr{ S_OK };
 
-    //ƒfƒoƒCƒX•ƒXƒƒbƒvƒ`ƒF[ƒ“¶¬
+    //ãƒ‡ãƒã‚¤ã‚¹ï¼†ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ãƒ¼ãƒ³ç”Ÿæˆ
     {
         UINT create_device_flags = 0;
 #if defined(_DEBUG)||defined(DEBUG)
@@ -32,8 +42,8 @@ void Graphics::Initialize(HWND hwnd)
             //D3D_FEATURE_LEVEL_9_1,
         };
 
-        //ƒXƒƒbƒvƒ`ƒF[ƒ“‚ğì¬‚·‚é‚½‚ß‚Ìİ’èƒIƒvƒVƒ‡ƒ“
-        DXGI_SWAP_CHAIN_DESC swap_chain_desc;
+        //ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ãƒ¼ãƒ³ã‚’ä½œæˆã™ã‚‹ãŸã‚ã®è¨­å®šã‚ªãƒ—ã‚·ãƒ§ãƒ³
+        DXGI_SWAP_CHAIN_DESC swap_chain_desc{};
         {
 
             swap_chain_desc.BufferCount = 1;
@@ -49,12 +59,12 @@ void Graphics::Initialize(HWND hwnd)
             swap_chain_desc.Windowed = true;
 
             swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-            swap_chain_desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+            swap_chain_desc.Flags = 0;
 
         }
-        D3D_FEATURE_LEVEL feature_level;
+        D3D_FEATURE_LEVEL feature_level{};
 
-        //ƒfƒoƒCƒX•ƒXƒƒbƒvƒ`ƒF[ƒ“‚Ì¶¬
+        //ãƒ‡ãƒã‚¤ã‚¹ï¼†ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ãƒ¼ãƒ³ã®ç”Ÿæˆ
         hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, create_device_flags,
             feature_levels, ARRAYSIZE(feature_levels), D3D11_SDK_VERSION, &swap_chain_desc,
             swap_chain_.GetAddressOf(), device_.GetAddressOf(), NULL, immediate_context_.GetAddressOf());
@@ -63,11 +73,11 @@ void Graphics::Initialize(HWND hwnd)
 
     }
 
-    //ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒgƒrƒ…[‚Ì¶¬
+    //ãƒ¬ãƒ³ãƒ€ãƒ¼ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ“ãƒ¥ãƒ¼ã®ç”Ÿæˆ
     {
-        //ƒXƒƒbƒvƒ`ƒF[ƒ“‚©‚çƒoƒbƒNƒoƒbƒtƒ@ƒeƒNƒXƒ`ƒƒ‚ğæ“¾‚·‚é
-        //ƒXƒƒbƒvƒ`ƒF[ƒ“‚É“à•ï‚³‚ê‚Ä‚¢‚éƒoƒbƒNƒoƒbƒtƒ@ƒeƒNƒXƒ`ƒƒ‚ÍF‚ğ‘‚«‚ŞƒeƒNƒXƒ`ƒƒ
-        Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer;
+        //ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ãƒ¼ãƒ³ã‹ã‚‰ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’å–å¾—ã™ã‚‹
+        //ã‚¹ãƒ¯ãƒƒãƒ—ãƒã‚§ãƒ¼ãƒ³ã«å†…åŒ…ã•ã‚Œã¦ã„ã‚‹ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡ãƒ†ã‚¯ã‚¹ãƒãƒ£ã¯è‰²ã‚’æ›¸ãè¾¼ã‚€ãƒ†ã‚¯ã‚¹ãƒãƒ£
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> back_buffer{};
         hr = swap_chain_->GetBuffer(
             0,
             __uuidof(ID3D11Texture2D),
@@ -75,7 +85,7 @@ void Graphics::Initialize(HWND hwnd)
         );
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-        //ƒoƒbƒNƒoƒbƒtƒ@ƒeƒNƒXƒ`ƒƒ‚Ö‚Ì‘‚«‚İ‚Ì‘‹Œû‚Æ‚È‚éƒŒƒ“ƒ_[ƒ^[ƒQƒbƒgƒrƒ…[‚ğ¶¬‚·‚é
+        //ãƒãƒƒã‚¯ãƒãƒƒãƒ•ã‚¡ãƒ†ã‚¯ã‚¹ãƒãƒ£ã¸ã®æ›¸ãè¾¼ã¿ã®çª“å£ã¨ãªã‚‹ãƒ¬ãƒ³ãƒ€ãƒ¼ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ“ãƒ¥ãƒ¼ã‚’ç”Ÿæˆã™ã‚‹
         hr = device_->CreateRenderTargetView(
             back_buffer.Get(),
             nullptr,
@@ -84,11 +94,11 @@ void Graphics::Initialize(HWND hwnd)
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
     }
 
-    //[“xƒXƒeƒ“ƒVƒ‹ƒrƒ…[‚Ì¶¬
+    //æ·±åº¦ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ“ãƒ¥ãƒ¼ã®ç”Ÿæˆ
     {
-        //[“xƒXƒeƒ“ƒVƒ‹î•ñ‚ğ‘‚«‚Ş‚½‚ß‚ÌƒeƒNƒXƒ`ƒƒ‚ğì¬
+        //æ·±åº¦ã‚¹ãƒ†ãƒ³ã‚·ãƒ«æƒ…å ±ã‚’æ›¸ãè¾¼ã‚€ãŸã‚ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’ä½œæˆ
         ID3D11Texture2D* depth_stencil_buffer{};
-        D3D11_TEXTURE2D_DESC texture2d_desc;
+        D3D11_TEXTURE2D_DESC texture2d_desc{};
         texture2d_desc.Width = screen_width;
         texture2d_desc.Height = screen_height;
         texture2d_desc.MipLevels = 1;
@@ -103,7 +113,7 @@ void Graphics::Initialize(HWND hwnd)
         hr = device_.Get()->CreateTexture2D(&texture2d_desc, NULL, &depth_stencil_buffer);
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
-        //[“xƒXƒeƒ“ƒVƒ‹ƒeƒNƒXƒ`ƒƒ‚Ö‚Ì‘‚«‚İ‚É‘‹Œû‚É‚È‚é[“xƒXƒeƒ“ƒVƒ‹ƒrƒ…[‚ğì¬‚·‚é
+        //æ·±åº¦ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ†ã‚¯ã‚¹ãƒãƒ£ã¸ã®æ›¸ãè¾¼ã¿ã«çª“å£ã«ãªã‚‹æ·±åº¦ã‚¹ãƒ†ãƒ³ã‚·ãƒ«ãƒ“ãƒ¥ãƒ¼ã‚’ä½œæˆã™ã‚‹
         D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_view_desc{};
         depth_stencil_view_desc.Format = texture2d_desc.Format;
         depth_stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
@@ -113,7 +123,7 @@ void Graphics::Initialize(HWND hwnd)
         depth_stencil_buffer->Release();
     }
 
-    //ƒrƒ…[ƒ|[ƒg
+    //ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆ
     {
         viewport_.Width = static_cast<float>(screen_width);
         viewport_.Height = static_cast<float>(screen_height);
@@ -123,12 +133,19 @@ void Graphics::Initialize(HWND hwnd)
         viewport_.TopLeftY = 0.f;
     }
 
-    //ƒŒƒ“ƒ_[ƒXƒe[ƒg¶¬
+    //ãƒ¬ãƒ³ãƒ€ãƒ¼ã‚¹ãƒ†ãƒ¼ãƒˆç”Ÿæˆ
     render_state_ = std::make_unique<RenderState>(this->device_.Get());
 
 }
 
-//‰æ–Ê‚ÌƒNƒŠƒA
+void Graphics::Finalize()
+{ 
+    this->ClearShaderResourceViews(0, 128);
+    immediate_context_->ClearState();
+    immediate_context_->Flush();
+}
+
+//ç”»é¢ã®ã‚¯ãƒªã‚¢
 void Graphics::ViewClear(float r, float g, float b, float a)
 {
     float color[4]{ r,g,b,a };
@@ -136,26 +153,25 @@ void Graphics::ViewClear(float r, float g, float b, float a)
     immediate_context_->ClearDepthStencilView(depth_stencil_view_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
-//ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒgİ’è
+//ãƒ¬ãƒ³ãƒ€ãƒ¼ã‚¿ãƒ¼ã‚²ãƒƒãƒˆè¨­å®š
 void Graphics::SetRenderTargets()
 {
     immediate_context_->RSSetViewports(1, &viewport_);
     immediate_context_->OMSetRenderTargets(1, render_target_view_.GetAddressOf(), depth_stencil_view_.Get());
 }
 
-//‰æ–Ê•\¦
+//ç”»é¢è¡¨ç¤º
 void Graphics::Present(UINT sync_interval)
 {
     HRESULT hr{ S_OK };
-    if (sync_interval==0)
-    {
-        hr = swap_chain_->Present(sync_interval, 0);
-    }
-    else
-    {
-        hr = swap_chain_->Present(sync_interval, 0);
-    }
+    hr = swap_chain_->Present(sync_interval, 0);
+    
     _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+}
+
+RenderState* Graphics::GetRenderState()
+{
+    return this->render_state_.get();
 }
 
 void Graphics::SetConstantBuffer(int start_slot, int num, ID3D11Buffer* const* constant_buffers)
@@ -197,9 +213,9 @@ void Graphics::ClearShaderSlots()
     immediate_context_->PSSetShader(nullptr, nullptr, 0);
     immediate_context_->CSSetShader(nullptr, nullptr, 0);
 }
-//ƒRƒ“ƒXƒ^ƒ“ƒgƒoƒbƒtƒ@‚ğÁ‚·‚½‚ß‚ÌŠÖ”
-//ƒXƒƒbƒg‚É—v‘f‚ğ“ü‚ê‚é‚Æ‚«‚ÍA•K‚¸ƒiƒ“ƒo[‚Ü‚Å‹LÚ‚·‚é–
-//‚Å‚È‚¯‚ê‚ÎA”ÍˆÍŠO‚É‚È‚Á‚Ä‚µ‚Ü‚¤ê‡‚ª‚ ‚é
+//ã‚³ãƒ³ã‚¹ã‚¿ãƒ³ãƒˆãƒãƒƒãƒ•ã‚¡ã‚’æ¶ˆã™ãŸã‚ã®é–¢æ•°
+//ã‚¹ãƒ­ãƒƒãƒˆã«è¦ç´ ã‚’å…¥ã‚Œã‚‹ã¨ãã¯ã€å¿…ãšãƒŠãƒ³ãƒãƒ¼ã¾ã§è¨˜è¼‰ã™ã‚‹äº‹
+//ã§ãªã‘ã‚Œã°ã€ç¯„å›²å¤–ã«ãªã£ã¦ã—ã¾ã†å ´åˆãŒã‚ã‚‹
 void Graphics::ClearConstantBuffers(int start_slot, int num)
 {
     ID3D11Buffer* clear_constant_bufferes[D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT]{};

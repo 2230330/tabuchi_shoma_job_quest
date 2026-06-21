@@ -20,4 +20,6 @@ cbuffer CLOUD_RAY_MARCHING_CONSTNAT_BUFFER : register(b12)
 	
     uint ray_marching_steps;
     bool auto_ray_marching_steps;
+
+    float2 object_resolution; //オブジェクトの解像度
 };
