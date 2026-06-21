@@ -96,7 +96,8 @@ void LightManager::DrawImgui()
 			if (ImGui::ColorEdit4("ambient", &ambient_color_.x));
 			ImGui::TreePop();
 		}
-
+		//影強度
+		if(ImGui::SliderFloat("shadow intensity", &shadow_intensity_, 0.0f, 1.f))
 		//ディレクションライト
 		if (ImGui::TreeNode("directional light"))
 		{
@@ -159,7 +160,8 @@ void LightManager::DrawImgui()
 			}
 			ImGui::TreePop();
 		}
-	ImGui::End();
+		
+		ImGui::End();
 	}
 }
 
@@ -281,6 +283,7 @@ void LightManager::BuildDeferredLights()
 		l.use_shadow = 1;
 		l.light_view_projection = light_view_projection_;
 		l.inverse_light_view_projection = inverse_light_view_projection_;
+		l.shadow_attenuation = shadow_intensity_;
 
 		deferred_lights_.emplace_back(l);
 	}

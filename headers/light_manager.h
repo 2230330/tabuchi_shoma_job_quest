@@ -82,6 +82,8 @@ private:
     const float shadow_near_plane_ = 0.1f;
     const float shadow_far_plane_ = 200;
     const float shadow_map_size_ = 1024.0f;
+    float shadow_intensity_ = 0.5f;
+
 
 
     std::vector<PointLight>point_lights_;
@@ -147,7 +149,7 @@ private:
 
         //シャドウマップ関係
         int use_shadow{ 0 };//　影を擁しているかどうか
-        float shadow_attenuation{ 0.5f };//影色
+        float shadow_attenuation{ 0.0f };//影色
         float shadow_bias{ 0.001f };//深度バイアス
         UINT shadow_dummy{0};
         DirectX::XMFLOAT4X4 light_view_projection{}; //ライトの位置から見た射影行列

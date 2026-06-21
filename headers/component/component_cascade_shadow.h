@@ -9,4 +9,5 @@
 struct ComponentCascadeShadow :public IComponent
 {
     std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, 3>srvs_;
+    float intensity = 0.5f;
 };
