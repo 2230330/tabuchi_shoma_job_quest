@@ -51,7 +51,7 @@ float GetSceneDepth(float2 uv, int mip)
 float3 GetColor(float2 uv)
 {
     return color_texture.Sample(
-    sampler_states[POINT_CLAMP], uv
+    sampler_states[LINEAR_CLAMP], uv
     ).xyz;
 
 }
@@ -136,12 +136,13 @@ float4 main(VS_OUT pin) : SV_TARGET
     }
     
     float3 view_end = view_pos + (r * distance);
+    float3 view_start = view_pos + (r * 0.05f);
     
     //スクリーンスペースに
     uint2 dimensions;
     uint mip =0, levels;
     normal_texture.GetDimensions(mip, dimensions.x, dimensions.y, levels);
-    float2 start_frag = ViewToScreen(view_pos , dimensions);
+    float2 start_frag = ViewToScreen(view_start , dimensions);
     float2 end_frag = ViewToScreen(view_end, dimensions);
     
     float2 delta = end_frag - start_frag;
@@ -169,6 +170,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     float t_min = 0.0f;
     float t_max = 0.0f;
+    float2 t = 0.0f;
     
     bool hit = false;
     float depth_delta = 0.0f;
@@ -176,54 +178,63 @@ float4 main(VS_OUT pin) : SV_TARGET
     //前のステップの深度マップ-現在の深度
     //荒いステップ時の深度判定で使用
     //確実に深度が超えた位置を算出するために実装
-    float prev_delta = 0;
-    
-    float t = 0.0f;
+    bool has_prev = false;
+    float prev_delta = 0.0f;
+    float prev_t = 0.0f;
 
-    //荒いレイマーチング
+    //粗いループ
     [loop]
     for (int i = 0; i < (int) steps; ++i)
     {
-        frag += increment ;
+        frag += increment;
         uv = frag / dimensions;
+
         if (OutOfBounds(uv))
-        {
-            return (float4)0;
-        }
-                
-        float scene_linear_depth = GetSceneDepth(uv, mip);
-        scene_linear_depth *= camera_clip_distance.y;
-        float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
-        
-        //compute interpolation parameter along ray
+            return float4(0, 0, 0, 0);
+
         if (use_x)
             t = (frag.x - start_frag.x) / delta.x;
         else
             t = (frag.y - start_frag.y) / delta.y;
-        
+
         t = saturate(t);
-        
-        float view_z = perspectiveCorrectZ(view_pos.z, view_end.z, t);
-                
-        depth_delta = view_z - scene_pos.z;
-        
-        if (depth_delta > 0&&prev_delta<0)
+
+        float raw_depth = GetSceneDepth(uv, 0);
+
+        if (raw_depth <= 0.0f || raw_depth >= 1.0f)
         {
-            {
-                hit = true;
-                t_max = t;
-                break;
-            }
-            
+            // 無効 depth をまたいだ bracket は使わない
+            has_prev = false;
+            continue;
         }
 
-        prev_delta = depth_delta;
-        
-        t_min = t;
+        float scene_linear_depth = raw_depth * camera_clip_distance.y;
+        float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
+
+        float ray_z = perspectiveCorrectZ(view_pos.z, view_end.z, t);
+        float d = ray_z - scene_pos.z;
+
+        if (has_prev)
+        {
+            if (prev_delta < 0.0f && d >= 0.0f)
+            {
+                hit = true;
+
+                //直前の有効サンプルを t_min にする
+                t_min = prev_t;
+                t_max = t;
+
+                break;
+            }
+        }
+
+        prev_delta = d;
+        prev_t = t;
+        has_prev = true;
     }
     
     //もし当たっていなかったらここで終了
-        if (!hit)
+    if (!hit)
         return (float4) 0;
     
     //Binary refinement
@@ -239,28 +250,51 @@ float4 main(VS_OUT pin) : SV_TARGET
             return (float4) 0;
         
         float scene_linear_depth = GetSceneDepth(uv, 0);
+        if(scene_linear_depth<=0.0f||scene_linear_depth>=1.0f)
+        {
+            return float4(0.0f, 0.0f, 0.0f, 0.0f);
+        }
+        
         scene_linear_depth *= camera_clip_distance.y;
         float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
         
         float view_z = perspectiveCorrectZ(view_pos.z, view_end.z, t);
         depth_delta = view_z - scene_pos.z;
 
-        if (depth_delta > 0 && depth_delta < thickness)
+        if (depth_delta > 0 )
             t_max = t;
         else
             t_min = t;
 
         t = 0.5 * (t_min + t_max);
     }
+    float t_hit = t_max;
     
     //final hit information
-    float2 hit_uv = lerp(start_frag, end_frag, t) / dimensions;
+    float2 hit_uv = lerp(start_frag, end_frag, t_max) / dimensions;
     if(OutOfBounds(hit_uv))
     {
         return (float4) 0;
     }
-    float hit_depth = GetSceneDepth(hit_uv, 0) * camera_clip_distance.y;
-    float3 hit_pos = ReconstructViewPosition(hit_uv, hit_depth, projection_scale);
+
+    float hit_scene_depth = GetSceneDepth(hit_uv, 0);
+    if(hit_scene_depth<=0.0f||hit_scene_depth>=1.0f)
+    {
+        return float4(0.f, 0.f, 0.f, 0.f);
+    }
+    
+    hit_scene_depth  *= camera_clip_distance.y;
+    float3 hit_pos = ReconstructViewPosition(hit_uv, hit_scene_depth, projection_scale);
+    
+    //最後に厚みチェックを行う
+    float view_z = perspectiveCorrectZ(view_pos.z, view_end.z, t_max);
+    float final_depth_delta = view_z - hit_pos.z;
+    float adaptive_thickness = thickness + hit_pos.z * 0.001f;
+    if(final_depth_delta<0.0f||final_depth_delta>adaptive_thickness)
+    {
+        return float4(0.f, 0.f, 0.f, 0.f);
+    }
+    
 
     //現在、同オブジェクトのヒット判定を取っている事がありました。
     //本来なら深度チェックの精度を上げるなどで対処したいところでしたが、何故か無理だったので、
@@ -279,7 +313,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     //SSRは画面上のピクセルを参照する為、背面を描画しない為
     visibility *= (1.0f - max(dot(-v, r), 0));
     //深度さ分が縮まらないときに透過
-    visibility *= (1.0f - saturate(depth_delta / thickness));
+    visibility *= (1.0f - saturate(final_depth_delta / adaptive_thickness));
     //反射レイが遠くに行くほどフェードで消えていく
     visibility *= (1.0f - saturate(length(hit_pos - view_pos) / distance));
     

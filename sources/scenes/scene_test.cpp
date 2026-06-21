@@ -18,6 +18,7 @@
 #include"../../headers/entity/entity_manager.h"
 #include"../../headers/render_state.h"
 #include"../../external/imgui/imgui.h"
+#include"../../headers/random_helper.h"
 
 
 SceneTest::SceneTest(const HWND hwnd)
@@ -64,29 +65,29 @@ bool SceneTest::InitializeCore()
     {
         comp_edit->Load("progress.json");
         
-        //const int size = 100;
-        //for (int i = 0; i < size; i++)
-        //{
-        //    uint32_t entity = world->GetEntityManager()->Add();
-        //    ComponentPosition pos;
-        //    pos.value = { 3.f * static_cast<float>(i % 10), 1,3.f * static_cast<float>(i / 10) };
-        //    comp_mng->Add(entity, pos);
-        //    ComponentRotation rot;
-        //    rot.value = { 0, 0, 0 };
-        //    comp_mng->Add(entity, rot);
-        //    ComponentScale scale;
-        //    scale.value = { 1, 1, 1 };
-        //    comp_mng->Add(entity, scale);
-        //    ComponentLocalToWorld l2w;
-        //    comp_mng->Add(entity, l2w);
-        //    ComponentAdjastPbrParamter ajust_pbr_paramter;
-        //    comp_mng->Add(entity, ajust_pbr_paramter);
-        //    ComponentGltf gltf;
-        //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
-        //    comp_mng->Add(entity, gltf);
-        //    ComponentInstanced instanced;
-        //    comp_mng->Add(entity, instanced);
-        //}
+        const int size = 100;
+        for (int i = 0; i < size; i++)
+        {
+            uint32_t entity = world->GetEntityManager()->Add();
+            ComponentPosition pos;
+            pos.value = { 3.f * (random::Random() % 100), 1,3.f * (random::Random() % 100) };
+            comp_mng->Add(entity, pos);
+            ComponentRotation rot;
+            rot.value = { 0, 0, 0 };
+            comp_mng->Add(entity, rot);
+            ComponentScale scale;
+            scale.value = { 1, 1, 1 };
+            comp_mng->Add(entity, scale);
+            ComponentLocalToWorld l2w;
+            comp_mng->Add(entity, l2w);
+            ComponentAdjastPbrParamter ajust_pbr_paramter;
+            comp_mng->Add(entity, ajust_pbr_paramter);
+            ComponentGltf gltf;
+            gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
+            comp_mng->Add(entity, gltf);
+            ComponentInstanced instanced;
+            comp_mng->Add(entity, instanced);
+        }
 
     }
     return true;

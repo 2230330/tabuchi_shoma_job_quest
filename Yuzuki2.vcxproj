@@ -249,6 +249,7 @@
     <ClInclude Include="headers\model.h" />
     <ClInclude Include="headers\post_process\bloom.h" />
     <ClInclude Include="headers\post_process\post_process_manager.h" />
+    <ClInclude Include="headers\random_helper.h" />
     <ClInclude Include="headers\render_state.h" />
     <ClInclude Include="headers\resource_manager.h" />
     <ClInclude Include="headers\scene\scene.h" />
@@ -294,6 +295,7 @@
     <ClCompile Include="sources\main.cpp" />
     <ClCompile Include="sources\post_process\bloom.cpp" />
     <ClCompile Include="sources\post_process\post_process_manager.cpp" />
+    <ClCompile Include="sources\random_helper.cpp" />
     <ClCompile Include="sources\render_state.cpp" />
     <ClCompile Include="sources\resource_manager.cpp" />
     <ClCompile Include="sources\scenes\scene.cpp" />

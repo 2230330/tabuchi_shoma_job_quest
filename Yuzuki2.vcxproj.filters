@@ -278,6 +278,9 @@
     <ClInclude Include="headers\component\component_deferred_render.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\random_helper.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -405,6 +408,9 @@
     </ClCompile>
     <ClCompile Include="sources\world\world.cpp">
       <Filter>sources\world</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\random_helper.cpp">
+      <Filter>sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
