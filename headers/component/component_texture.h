@@ -3,13 +3,13 @@
 #include<d3d11.h>
 #include<wrl.h>
 #include<string>
-#include<memory>
+
 struct ComponentTexture :public IComponent
 {
-    //�e�N�X�`�����̂�ێ�����̂ł͂Ȃ��A
-    //�e�N�X�`���z��̃C���f�b�N�X��ێ�����
-    //�����_�ł̓|�C���^
+    //テクスチャ自体を保持するのではなく、
+    //テクスチャ配列のインデックスを保持する
+    //現時点ではポインタ
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> texture;
-    //������Ǝד��ȋC�����܂����A���ʗp�ɖ��O���������܂��B
+    //ちょっと邪道な気もしますが、識別用に名前を持たせます。
     std::string name;
 };

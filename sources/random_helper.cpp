@@ -5,7 +5,7 @@
 #include<chrono>
 #include<random>
 
-int random::Random(int max)
+int random_helper::Random(int max)
 {
     //現在時刻をシードとして使用
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();

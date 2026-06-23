@@ -97,7 +97,7 @@ void LightManager::DrawImgui()
 			ImGui::TreePop();
 		}
 		//影強度
-		if(ImGui::SliderFloat("shadow intensity", &shadow_intensity_, 0.0f, 1.f))
+		if (ImGui::SliderFloat("shadow intensity", &shadow_intensity_, 0.0f, 1.f));
 		//ディレクションライト
 		if (ImGui::TreeNode("directional light"))
 		{

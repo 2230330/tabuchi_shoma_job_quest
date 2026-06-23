@@ -1,6 +1,6 @@
 #pragma once
 
-namespace random
+namespace random_helper
 {
     //簡易的なランダム関数
     //マックスに入れた値を上限に0~maxでランダム作成
