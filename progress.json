@@ -2,8 +2,27 @@
     "entities": [
         {
             "components": {
+                "Camera": {
+                    "dir_x": 0.312665194272995,
+                    "dir_y": -0.1097782552242279,
+                    "dir_z": -0.9434983730316162,
+                    "far": 1000.0,
+                    "main": true,
+                    "near": 0.10000000149011612,
+                    "pos_x": -12.869529724121094,
+                    "pos_y": 4.231352806091309,
+                    "pos_z": 29.480836868286133
+                },
                 "Name": {
-                    "value": "SkyAtmosphere"
+                    "value": "Camera"
+                }
+            },
+            "entity_id": 0
+        },
+        {
+            "components": {
+                "Name": {
+                    "value": "Atmosphere"
                 },
                 "Position": {
                     "x": 0.0,
@@ -31,7 +50,7 @@
                     "sun_distance": 149999992832.0
                 }
             },
-            "entity_id": 0
+            "entity_id": 1
         },
         {
             "components": {
@@ -59,36 +78,41 @@
                     "wind_y": 0.75
                 }
             },
-            "entity_id": 1
+            "entity_id": 2
         },
         {
             "components": {
-                "AdjustPBR": {
-                    "metalness": 0.004000000189989805,
-                    "roughness": 0.0
-                },
-                "Gltf": {
-                    "animation_index": 0,
-                    "animation_time": 0.0,
-                    "filename": ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
-                },
-                "Position": {
-                    "x": 0.0,
-                    "y": 1.0,
-                    "z": 0.0
-                },
-                "Rotation": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "Scale": {
-                    "x": 1.0,
-                    "y": 1.0,
-                    "z": 1.0
+                "Cascade Shadow": true,
+                "Name": {
+                    "value": "Cascade Shadow"
                 }
             },
-            "entity_id": 2
+            "entity_id": 3
+        },
+        {
+            "components": {
+                "Name": {
+                    "value": "Screen Space Reflection"
+                },
+                "ScreenSpaceReflection": {
+                    "distance": 100.0,
+                    "intensity": 1.0,
+                    "max_mip": 6,
+                    "num_steps": 10,
+                    "resolution": 1.0,
+                    "thickness": 0.009999999776482582
+                }
+            },
+            "entity_id": 4
+        },
+        {
+            "components": {
+                "Deferred Render": true,
+                "Name": {
+                    "value": "Deferred Texture"
+                }
+            },
+            "entity_id": 5
         },
         {
             "components": {
@@ -101,6 +125,7 @@
                     "animation_time": 0.0,
                     "filename": ".\\resources\\model\\gltf\\plane.glb"
                 },
+                "Instanced": true,
                 "Position": {
                     "x": 0.0,
                     "y": 0.0,
@@ -117,41 +142,6 @@
                     "z": 1000.0
                 }
             },
-            "entity_id": 3
-        },
-        {
-            "components": {
-                "Camera": {
-                    "dir_x": 0.6839672327041626,
-                    "dir_y": -0.11971195042133331,
-                    "dir_z": -0.7196235060691833,
-                    "far": 1000.0,
-                    "main": true,
-                    "near": 0.10000000149011612,
-                    "pos_x": -71.93646240234375,
-                    "pos_y": 17.045360565185547,
-                    "pos_z": 55.75768280029297
-                },
-                "Name": {
-                    "value": "Camera"
-                }
-            },
-            "entity_id": 5
-        },
-        {
-            "components": {
-                "Name": {
-                    "value": "ScreenSpaceReflection"
-                },
-                "ScreenSpaceReflection": {
-                    "distance": 100.0,
-                    "intensity": 0.996999979019165,
-                    "max_mip": 6,
-                    "num_steps": 10,
-                    "resolution": 0.5,
-                    "thickness": 0.20000000298023224
-                }
-            },
             "entity_id": 6
         },
         {
@@ -163,12 +153,15 @@
                 "Gltf": {
                     "animation_index": 0,
                     "animation_time": 0.0,
-                    "filename": ".\\resources\\model\\gltf\\cube.glb"
+                    "filename": ".\\resources\\model\\gltf\\DamagedHelmet\\DamagedHelmet.gltf"
+                },
+                "Name": {
+                    "value": "Damage Helmet"
                 },
                 "Position": {
                     "x": 0.0,
-                    "y": 2.0,
-                    "z": -6.0
+                    "y": 1.0,
+                    "z": 0.0
                 },
                 "Rotation": {
                     "x": 0.0,
@@ -195,67 +188,9 @@
                     "filename": ".\\resources\\model\\gltf\\cube.glb"
                 },
                 "Position": {
-                    "x": 4.0,
-                    "y": 5.0,
+                    "x": 0.0,
+                    "y": 3.0,
                     "z": -10.0
-                },
-                "Rotation": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "Scale": {
-                    "x": 2.0,
-                    "y": 2.0,
-                    "z": 2.0
-                }
-            },
-            "entity_id": 8
-        },
-        {
-            "components": {
-                "AdjustPBR": {
-                    "metalness": 0.0,
-                    "roughness": 0.0
-                },
-                "Gltf": {
-                    "animation_index": 0,
-                    "animation_time": 0.0,
-                    "filename": ".\\resources\\model\\gltf\\cube.glb"
-                },
-                "Position": {
-                    "x": -5.0,
-                    "y": 4.0,
-                    "z": -16.0
-                },
-                "Rotation": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "z": 0.0
-                },
-                "Scale": {
-                    "x": 1.0,
-                    "y": 1.0,
-                    "z": 1.0
-                }
-            },
-            "entity_id": 9
-        },
-        {
-            "components": {
-                "AdjustPBR": {
-                    "metalness": 0.0,
-                    "roughness": 0.0
-                },
-                "Gltf": {
-                    "animation_index": 0,
-                    "animation_time": 0.0,
-                    "filename": ".\\resources\\model\\gltf\\cube.glb"
-                },
-                "Position": {
-                    "x": 0.0,
-                    "y": 2.0,
-                    "z": -13.0
                 },
                 "Rotation": {
                     "x": 0.0,
@@ -268,25 +203,7 @@
                     "z": 3.0
                 }
             },
-            "entity_id": 10
-        },
-        {
-            "components": {
-                "Cascade Shadow": true,
-                "Name": {
-                    "value": "Cascade Shadow"
-                }
-            },
-            "entity_id": 11
-        },
-        {
-            "components": {
-                "Deferred Render": true,
-                "Name": {
-                    "value": "Deferred Texture"
-                }
-            },
-            "entity_id": 12
+            "entity_id": 8
         }
     ]
 }

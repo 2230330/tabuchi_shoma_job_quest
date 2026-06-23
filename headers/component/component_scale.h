@@ -4,5 +4,5 @@
 
 struct ComponentScale :public IComponent
 {
-    DirectX::XMFLOAT3 value;
+    DirectX::XMFLOAT3 value{1.f,1.f,1.f};
 };

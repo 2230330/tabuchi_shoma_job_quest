@@ -10,8 +10,9 @@ class EntityManager;
 
 
 
-//���̃N���X�́A�R���|�[�l���g�}�l�[�W���[�̏������
-//�R���|�[�l���g�̊m�F�ƒǉ��A�폜����s�����߂ɍ쐬���ꂽ�N���X�ł���B
+//ECSを参考に、コンポーネントとエンティティを使ってデータを管理しています。
+//コンポーネントマネージャに収録されているデータを閲覧します。
+//ある程度操作もできるようにしています。
 class ComponentEditor
 {
 public:
@@ -32,6 +33,7 @@ private:
     int32_t has_cascade_shadow_ = -1;
     int32_t has_ssr_ = -1;
     int32_t has_deferred_ = -1;
+    int32_t has_camera_ = -1;
 
 
     //リネーム中のEntity

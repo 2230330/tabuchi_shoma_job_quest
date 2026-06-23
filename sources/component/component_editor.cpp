@@ -91,7 +91,7 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.Add(entity, scale);
                 ComponentLocalToWorld l2w{};
                 comp_mng_.Add(entity, l2w);
-                ComponentSkyAtmosphere sky;
+                ComponentSkyAtmosphere sky{};
                 comp_mng_.Add(entity, sky);
 
                 has_sky_ = entity;
@@ -181,6 +181,22 @@ void ComponentEditor::DrawImgui()
                 enti_mng_.Remove(has_deferred_);
                 comp_mng_.RemoveAllComponents(has_deferred_);
                 has_deferred_ = -1;
+            }
+        }
+        //カメラ追加
+        if (ImGui::Button("Add Camera"))
+        {
+            if (has_camera_ < 0)
+            {
+                uint32_t entity = enti_mng_.Add();
+                ComponentCamera camera;
+                comp_mng_.Add(entity, camera);
+            }
+            else
+            {
+                enti_mng_.Remove(has_camera_);
+                comp_mng_.RemoveAllComponents(has_camera_);
+                has_camera_ = -1;
             }
         }
 
@@ -336,7 +352,7 @@ void ComponentEditor::DrawImgui()
                     ImGui::Text("Sky Atmosphere Component");
                     has_sky_ = entity.entity;
 
-                    auto& sky = comp_mng_.Get<ComponentSkyAtmosphere>(entity.entity);
+                    auto& sky = comp_mng_.GetByEntity<ComponentSkyAtmosphere>(entity.entity);
 
                     ImGui::Separator();
                     ImGui::Text("Scattering Scale Heights");
@@ -485,8 +501,6 @@ void ComponentEditor::DrawImgui()
                     auto& texture = comp_mng_.GetByEntity<ComponentTexture>(entity.entity);
                     if (ImGui::TreeNode("Texture Model"))
                     {
-
-
                         if (texture.texture != nullptr)
                         {
                             ImGui::Text("Filename: %s", texture.name.c_str());
@@ -506,7 +520,25 @@ void ComponentEditor::DrawImgui()
                 // Camera
                 if (comp_mng_.Has<ComponentCamera>(entity.entity))
                 {
-                    auto& cam = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
+                    ComponentCamera& cam = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
+
+                    //メインカメラを変更する際、他のカメラのフラグをオフにする
+                    if (ImGui::Button("Main Camera"))
+                    {
+                        for (const Entity& ather_entity : entities)
+                        {
+                            if (ather_entity.entity == entity.entity)
+                                continue;
+
+                            if(comp_mng_.Has<ComponentCamera>(ather_entity.entity))
+                            {
+                                ComponentCamera& ather_cam = comp_mng_.GetByEntity<ComponentCamera>(ather_entity.entity);                                
+                                ather_cam.main_camera_flag_ = false;
+
+                            }
+                        }
+                        cam.main_camera_flag_ = true;
+                    }
 
                     if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
                     {
@@ -528,6 +560,7 @@ void ComponentEditor::DrawImgui()
                         ImGui::Text("Projection Matrix");
                         ImGui::TextDisabled("Auto calculated");
                     }
+                    
 
                     ImGui::Separator();
                 }
@@ -960,7 +993,7 @@ void ComponentEditor::Load(const std::string& filename)
         // Sky
         if (comp_json.contains("SkyAtmosphere"))
         {
-            ComponentSkyAtmosphere s;
+            ComponentSkyAtmosphere s{};
             auto& j = comp_json["SkyAtmosphere"];
 
             s.rayleigh_scale_height = j["rayleigh_scale_height"];
