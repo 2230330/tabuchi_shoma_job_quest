@@ -63,33 +63,34 @@ bool SceneTest::InitializeCore()
     }
 
     {
+        //JSONファイルに保存されている情報を取得
+        //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
-        
-        //const int size = 100;
-        //for (int i = 0; i < size; i++)
-        //{
-        //    uint32_t entity = world->GetEntityManager()->Add();
-        //    ComponentPosition pos;
-        //    pos.value = {static_cast<float>(random_helper::Random(500)-250 ), static_cast<float>(random_helper::Random(10)), static_cast<float>(random_helper::Random(500) - 250)};
-        //    comp_mng->Add(entity, pos);
-        //    ComponentRotation rot;
-        //    rot.value = { 0.f, 0.f, 0.f };
-        //    comp_mng->Add(entity, rot);
-        //    ComponentScale scale;
-        //    float scale_rand = static_cast<float>(random_helper::Random(5));
-        //    scale.value = { scale_rand, scale_rand, scale_rand };
-        //    comp_mng->Add(entity, scale);
-        //    ComponentLocalToWorld l2w;
-        //    comp_mng->Add(entity, l2w);
-        //    ComponentAdjastPbrParamter ajust_pbr_paramter;
-        //    comp_mng->Add(entity, ajust_pbr_paramter);
-        //    ComponentGltf gltf;
-        //    gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
-        //    comp_mng->Add(entity, gltf);
-        //    ComponentInstanced instanced;
-        //    comp_mng->Add(entity, instanced);
-        //}
 
+        const int size = 100;
+        for (int i = 0; i < size; i++)
+        {
+            uint32_t entity = world->GetEntityManager()->Add();
+            ComponentPosition pos;
+            pos.value = {static_cast<float>(random_helper::Random(500)-250 ), static_cast<float>(random_helper::Random(10)), static_cast<float>(random_helper::Random(500) - 250)};
+            comp_mng->Add(entity, pos);
+            ComponentRotation rot;
+            rot.value = { 0.f, 0.f, 0.f };
+            comp_mng->Add(entity, rot);
+            ComponentScale scale;
+            float scale_rand = static_cast<float>(random_helper::Random(7));
+            scale.value = { scale_rand, scale_rand, scale_rand };
+            comp_mng->Add(entity, scale);
+            ComponentLocalToWorld l2w;
+            comp_mng->Add(entity, l2w);
+            ComponentAdjastPbrParamter ajust_pbr_paramter;
+            comp_mng->Add(entity, ajust_pbr_paramter);
+            ComponentGltf gltf;
+            gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
+            comp_mng->Add(entity, gltf);
+            ComponentInstanced instanced;
+            comp_mng->Add(entity, instanced);
+        }
     }
     return true;
 }
