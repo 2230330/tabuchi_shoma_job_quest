@@ -48,7 +48,7 @@ void PostProcessManager::PostProcess(ID3D11DeviceContext* immediate_context, ID3
         bloom_->Make(immediate_context, color_map);
 
         //ポストエフェクトの合成
-        synthesiser_framebuffer_->Clear(immediate_context);
+        //synthesiser_framebuffer_->Clear(immediate_context);
         synthesiser_framebuffer_->Activate(immediate_context);
         {
             ID3D11ShaderResourceView* srv[]
@@ -62,7 +62,7 @@ void PostProcessManager::PostProcess(ID3D11DeviceContext* immediate_context, ID3
         synthesiser_framebuffer_->Deactivate(immediate_context);
 
         //FXAA処理
-        fxaa_framebuffer_->Clear(immediate_context);
+        //fxaa_framebuffer_->Clear(immediate_context);
         fxaa_framebuffer_->Activate(immediate_context);
         {
             ID3D11ShaderResourceView* fxaa_srvs[]

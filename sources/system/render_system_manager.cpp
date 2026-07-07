@@ -126,13 +126,13 @@ void RenderSystemManager::RenderAll()
     else {
         back_sample_count_ = 0;
 
-        sky_framebuffer_->Clear(ctx);
+        //sky_framebuffer_->Clear(ctx);
         sky_framebuffer_->Activate(ctx);
         // 空、雲と別に描画し、作成した画像を雲に渡す
         sky_render_system_->Render();
         sky_framebuffer_->Deactivate(ctx);
 
-        back_framebuffer_->Clear(ctx);
+        //back_framebuffer_->Clear(ctx);
         back_framebuffer_->Activate(ctx);
 
         cloud_render_system_->SetSkyColorSRV(sky_framebuffer_->GetShaderResourceView(0).Get());
@@ -204,7 +204,7 @@ void RenderSystemManager::RenderAll()
         ID3D11ShaderResourceView* srv = deferred_framebuffer_->GetSRV(i);
         deferred_render_system_->SetSRV(srv, i);
     }
-    object_framebuffer_->Clear(ctx);
+    //object_framebuffer_->Clear(ctx);
     object_framebuffer_->Activate(ctx);
     //オブジェクトのライティング
     deferred_render_system_->Render();
@@ -219,7 +219,7 @@ void RenderSystemManager::RenderAll()
     ssr_render_system_->Render();
 
     // === 合成
-    final_framebuffer_->Clear(ctx);
+    //final_framebuffer_->Clear(ctx);
     final_framebuffer_->Activate(ctx);
 
     ID3D11ShaderResourceView* srvs[] = {
