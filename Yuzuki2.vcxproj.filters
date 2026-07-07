@@ -623,12 +623,6 @@
     <FxCompile Include="shaderes\geometric_primitive_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\gaussian_blur_vertical_ps.hlsl">
-      <Filter>Shaders\PixelShader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\gaussian_blur_horizontal_ps.hlsl">
-      <Filter>Shaders\PixelShader</Filter>
-    </FxCompile>
     <FxCompile Include="shaderes\fullscreen_quad_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
@@ -642,9 +636,6 @@
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\blur_ps.hlsl">
-      <Filter>Shaders\PixelShader</Filter>
-    </FxCompile>
-    <FxCompile Include="shaderes\bloom_upsample_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\ibl_screen_gs.hlsl">
