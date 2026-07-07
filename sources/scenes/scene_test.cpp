@@ -67,7 +67,7 @@ bool SceneTest::InitializeCore()
         //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
 
-        const int size = 100;
+        const int size = 1000;
         for (int i = 0; i < size; i++)
         {
             uint32_t entity = world->GetEntityManager()->Add();
@@ -78,18 +78,39 @@ bool SceneTest::InitializeCore()
             rot.value = { 0.f, 0.f, 0.f };
             comp_mng->Add(entity, rot);
             ComponentScale scale;
-            float scale_rand = static_cast<float>(random_helper::Random(7));
+            float scale_rand = static_cast<float>(random_helper::Random(5));
             scale.value = { scale_rand, scale_rand, scale_rand };
             comp_mng->Add(entity, scale);
             ComponentLocalToWorld l2w;
+            DirectX::XMMATRIX s = DirectX::XMMatrixScaling(
+                scale.value.x,
+                scale.value.y,
+                scale.value.z
+            );
+            DirectX::XMMATRIX r = DirectX::XMMatrixRotationRollPitchYaw(
+                rot.value.x,
+                rot.value.y,
+                rot.value.z
+            );
+            DirectX::XMMATRIX t = DirectX::XMMatrixTranslation(
+                pos.value.x,
+                pos.value.y,
+                pos.value.z
+            );
+            DirectX::XMStoreFloat4x4(&l2w.value, s * r * t);
             comp_mng->Add(entity, l2w);
             ComponentAdjastPbrParamter ajust_pbr_paramter;
             comp_mng->Add(entity, ajust_pbr_paramter);
             ComponentGltf gltf;
             gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
+            gltf.dirty = true;
             comp_mng->Add(entity, gltf);
             ComponentInstanced instanced;
             comp_mng->Add(entity, instanced);
+            ComponentBoundingBox bounding_box;
+            bounding_box.local_min = gltf.model->GetBoundingBox().local_min;
+            bounding_box.local_max = gltf.model->GetBoundingBox().local_max;
+            comp_mng->Add(entity, bounding_box);
         }
     }
     return true;

@@ -1,16 +1,12 @@
 #pragma once
-#include<d3d11.h>
-#include<stdint.h>
-#include<wrl.h>
-#include<memory>
 
+#include <d3d11.h>
+#include <stdint.h>
+#include <wrl.h>
+#include <array>
 
-//前方宣言
-class FrameBuffer;
-class FullscreenQuad;
-
-//ブルーム処理を行うクラス。
-//現在は散乱方向を少なくした軽いものを使っています。
+// ブルーム処理を行うクラス。
+// Compute Shader版。
 class Bloom
 {
 public:
@@ -19,47 +15,93 @@ public:
     ~Bloom() = default;
     Bloom(const Bloom&) = delete;
     Bloom& operator=(const Bloom&) = delete;
-    Bloom(Bloom&&)noexcept = delete;
-    Bloom& operator=(Bloom&&)noexcept = delete;
+    Bloom(Bloom&&) noexcept = delete;
+    Bloom& operator=(Bloom&&) noexcept = delete;
 
-    void Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* color_map);
+    // ブルーム処理を行う関数。
+    void Make(
+        ID3D11DeviceContext* immediate_context,
+        ID3D11ShaderResourceView* color_map
+    );
 
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetShaderResourceView();
 
-
-    //エミッシブマップをセットする関数
-    void SetEmissiveMap(ID3D11ShaderResourceView* emissive_map) { emissive_map_ = emissive_map; }
+    void SetEmissiveMap(ID3D11ShaderResourceView* emissive_map)
+    {
+        emissive_map_ = emissive_map;
+    }
 
     void DrawImgui();
+
 private:
-    //リソースマネージャ
-
-    std::unique_ptr<FullscreenQuad>bit_block_transfer_=nullptr;
-    std::unique_ptr<FrameBuffer>glow_extraction_=nullptr;
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> emissive_map_ = nullptr;
-
     static const size_t downsampled_count = 6;
-    std::unique_ptr<FrameBuffer>gaussian_blur[downsampled_count][2];
-
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>glow_extraction_ps_=nullptr;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>gaussian_blur_downsampling_ps_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>gaussian_blur_horizontal_ps_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>gaussian_blur_vertical_ps_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>gaussian_blur_upsampling_ps_ = nullptr;
-
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilState>depth_stencil_state_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11RasterizerState>rasterizer_state_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11BlendState>blend_state_ = nullptr;
 
     struct BloomConstants
     {
-        float bloom_extraction_threshold{2.0f};//明るさの閾値
-        float bloom_intensity{1.5f};          //強度
-        float bloom_soft_knee{0.3f};          //閾値付近の滑らかさ
-        float bloom_radius{1.f}; //広がり
+        float bloom_extraction_threshold{ 2.0f };
+        float bloom_intensity{ 2.5f };
+        float bloom_soft_knee{ 0.3f };
+        float bloom_radius{ 1.5f };
     };
 
-    Microsoft::WRL::ComPtr<ID3D11Buffer>constant_buffer_ = nullptr;
+    struct BloomComputeConstants
+    {
+        float bloom_extraction_threshold;
+        float bloom_intensity;
+        float bloom_soft_knee;
+        float bloom_radius;
+
+        uint32_t input_width;
+        uint32_t input_height;
+        uint32_t output_width;
+        uint32_t output_height;
+    };
+
+    struct BloomTexture
+    {
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> texture;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> srv;
+        Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> uav;
+
+        uint32_t width = 0;
+        uint32_t height = 0;
+    };
+
+private:
+    void CreateBloomTexture(
+        ID3D11Device* device,
+        uint32_t width,
+        uint32_t height,
+        DXGI_FORMAT format,
+        BloomTexture& out_texture
+    );
+
+    void Dispatch2D(
+        ID3D11DeviceContext* context,
+        uint32_t width,
+        uint32_t height
+    );
+
+    void UnbindComputeResources(ID3D11DeviceContext* context);
+
+private:
+    // 入力 emissive map
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> emissive_map_ = nullptr;
+
+    // Bloom中間テクスチャ
+    std::array<BloomTexture, downsampled_count> bloom_mips_;
+    std::array<BloomTexture, downsampled_count> bloom_temp_;
+
+    // Compute shaders
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader> bloom_extract_cs_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader> bloom_downsample_cs_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11ComputeShader> bloom_upsample_cs_ = nullptr;
+
+    // Constant buffer
+    Microsoft::WRL::ComPtr<ID3D11Buffer> constant_buffer_ = nullptr;
+
     BloomConstants bloom_constant_{};
 
+    uint32_t base_width_ = 0;
+    uint32_t base_height_ = 0;
 };

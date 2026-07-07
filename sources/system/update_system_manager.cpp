@@ -1,6 +1,7 @@
 #include"../../headers/system/update_system_manager.h"
 #include"../../headers/system/update_transform_system.h"
 #include"../../headers/system/update_camera_system.h"
+#include"../../headers/system/update_bounding_box_system.h"
 #include"../../headers/component/component_manager.h"
 
 //新しいシステムはここで登録する
@@ -8,8 +9,9 @@ UpdateSystemManager::UpdateSystemManager(ComponentManager& comp_mng)
     :comp_mng_(comp_mng)
 {
 
+    AddSystem(std::make_unique<UpdateTransformSystem>(comp_mng_));
     AddSystem(std::make_unique<CameraUpdateSystem>(comp_mng_));
-    AddSystem(std::make_unique<TransformSystem>(comp_mng_));
+    AddSystem(std::make_unique<UpdateBoundingBoxSystem>(comp_mng_));
 }
 
 //システム追加用関数

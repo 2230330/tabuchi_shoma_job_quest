@@ -281,6 +281,18 @@
     <ClInclude Include="headers\random_helper.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_bounding_box.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_bound_box.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\update_bounding_box_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\render_frustum_helper.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -411,6 +423,9 @@
     </ClCompile>
     <ClCompile Include="sources\random_helper.cpp">
       <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\update_bounding_box_system.cpp">
+      <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -670,6 +685,15 @@
     </FxCompile>
     <FxCompile Include="shaderes\screen_space_reflection_synthesis_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\bloom_extract_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\bloom_downsample_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\compute_shaders\bloom_upsample_cs.hlsl">
+      <Filter>Shaders\ComputeShader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
 #include<stack>
 #include<iostream>
 #include<crtdbg.h>
+#include<algorithm>
 
 #define TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_NOEXCEPTION
@@ -46,7 +47,7 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 		scene.name = gltf_scene.name;
 		scene.nodes = gltf_scene.nodes;
 	}
-	//scene‚ª|1‚É‚È‚ç‚È‚¢‚æ‚¤‚ÉƒK[ƒh
+	//sceneãŒï¼1ã«ãªã‚‰ãªã„ã‚ˆã†ã«ã‚¬ãƒ¼ãƒ‰
 	default_scene_ = gltf_model.defaultScene >= 0 ? gltf_model.defaultScene : 0;
 
 	FetchNodes(gltf_model);
@@ -56,6 +57,18 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	FetchAnimations(gltf_model);
 
 	animated_nodes_ = nodes_;
+	if (nodes_.size() > 0)
+	{
+		for (Node& node : nodes_)
+		{
+			bounding_box_.local_min.x = (std::min)(bounding_box_.local_min.x, static_cast<float>(node.global_transform._41));
+			bounding_box_.local_min.y = (std::min)(bounding_box_.local_min.y, static_cast<float>(node.global_transform._42));
+			bounding_box_.local_min.z = (std::min)(bounding_box_.local_min.z, static_cast<float>(node.global_transform._43));
+			bounding_box_.local_max.x = (std::max)(bounding_box_.local_max.x, static_cast<float>(node.global_transform._41));
+			bounding_box_.local_max.y = (std::max)(bounding_box_.local_max.y, static_cast<float>(node.global_transform._42));
+			bounding_box_.local_max.z = (std::max)(bounding_box_.local_max.z, static_cast<float>(node.global_transform._43));
+		}
+	}
 
 	D3D11_INPUT_ELEMENT_DESC input_element_desc[]
 	{
@@ -69,11 +82,11 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_gbuffer_vs.cso", vertex_shader_.ReleaseAndGetAddressOf(), 
 		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 
-	//shadowmap—p
+	//shadowmapç”¨
 	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_shadow_caster_vs.cso", shadow_caster_vs_.ReleaseAndGetAddressOf(),
 		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 
-	//ƒCƒ“ƒXƒ^ƒ“ƒVƒ“ƒO•`‰æ‚ğ–„‚ß‚İ‚½‚¢
+	//ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚·ãƒ³ã‚°æç”»ã‚’åŸ‹ã‚è¾¼ã¿ãŸã„
 	D3D11_INPUT_ELEMENT_DESC instancing_input_element_desc[]
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -176,6 +189,7 @@ void GltfModel::FetchNodes(const tinygltf::Model& gltf_model)
 		}
 	}
 	CumulateTransforms(nodes_);
+
 }
 void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 {
@@ -291,7 +305,7 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 			primitive.material = gltf_primitive.material;
             if (primitive.material < 0)
 			{
-				primitive.material = 0;//ƒ}ƒeƒŠƒAƒ‹‚ªw’è‚³‚ê‚Ä‚¢‚È‚¢ê‡‚Í0”Ô‚ğg‚¤
+				primitive.material = 0;//ãƒãƒ†ãƒªã‚¢ãƒ«ãŒæŒ‡å®šã•ã‚Œã¦ã„ãªã„å ´åˆã¯0ç•ªã‚’ä½¿ã†
 			}
 
 			// Create index buffer view
@@ -299,12 +313,13 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 			{
 				const tinygltf::Accessor& gltf_accessor{ gltf_model.accessors.at(gltf_primitive.indices) };
 				const tinygltf::BufferView& gltf_buffer_view{ gltf_model.bufferViews.at(gltf_accessor.bufferView) };
-
+				
 				primitive.index_buffer_view.format = ConvertFormat(gltf_accessor);
 				primitive.index_buffer_view.buffer = gltf_buffer_view.buffer;
 				primitive.index_buffer_view.stride_in_bytes = gltf_accessor.ByteStride(gltf_buffer_view);
 				primitive.index_buffer_view.byte_offset = gltf_buffer_view.byteOffset + gltf_accessor.byteOffset;
 				primitive.index_buffer_view.count = gltf_accessor.count;
+
 			}
 			// Create vertex buffer views
 			for (std::map<std::string, int>::const_reference gltf_attribute : gltf_primitive.attributes)
@@ -313,6 +328,43 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 				const tinygltf::BufferView& gltf_buffer_view{ gltf_model.bufferViews.at(gltf_accessor.bufferView) };
 
 				BufferView vertex_buffer_view{};
+
+				//é ‚ç‚¹æƒ…å ±ã‚ˆã‚Šãƒã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒœãƒƒã‚¯ã‚¹ä½œæˆ
+				if (gltf_attribute.first == "POSITION")
+				{
+
+					const tinygltf::Buffer& buffer =
+						gltf_model.buffers.at(gltf_buffer_view.buffer);
+
+					const unsigned char* data =
+						buffer.data.data()
+						+ gltf_buffer_view.byteOffset
+						+ gltf_accessor.byteOffset;
+
+					size_t stride = gltf_accessor.ByteStride(gltf_buffer_view);
+					if (stride == 0)
+					{
+						stride = sizeof(float) * 3;
+					}
+
+					for (size_t i = 0; i < gltf_accessor.count; ++i)
+					{
+						const float* position =
+							reinterpret_cast<const float*>(data + stride * i);
+
+						float x = position[0];
+						float y = position[1];
+						float z = position[2];
+
+						bounding_box_.local_min.x = (std::min)(bounding_box_.local_min.x, x);
+						bounding_box_.local_min.y = (std::min)(bounding_box_.local_min.y, y);
+						bounding_box_.local_min.z = (std::min)(bounding_box_.local_min.z, z);
+
+						bounding_box_.local_max.x = (std::max)(bounding_box_.local_max.x, x);
+						bounding_box_.local_max.y = (std::max)(bounding_box_.local_max.y, y);
+						bounding_box_.local_max.z = (std::max)(bounding_box_.local_max.z, z);
+					}
+				}
 
 
 #if 1
@@ -431,7 +483,7 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	immediate_context->PSSetConstantBuffers(
 		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
 	
-    //ƒVƒƒƒhƒEƒŒƒ“ƒ_[ƒtƒ‰ƒO‚ª‚ ‚éê‡‚ÍƒVƒƒƒhƒEƒ}ƒbƒv—p‚ÌƒVƒF[ƒ_[‚ğƒZƒbƒg‚·‚é
+    //ã‚·ãƒ£ãƒ‰ã‚¦ãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ•ãƒ©ã‚°ãŒã‚ã‚‹å ´åˆã¯ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ç”¨ã®ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
 	if(!shadow_render_flag)
 	{
 		immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
@@ -576,7 +628,7 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 	immediate_context->PSSetConstantBuffers(
 		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
 
-    //ƒVƒƒƒhƒEƒŒƒ“ƒ_[ƒtƒ‰ƒO‚ª‚ ‚éê‡‚ÍƒVƒƒƒhƒEƒ}ƒbƒv—p‚ÌƒVƒF[ƒ_[‚ğƒZƒbƒg‚·‚é
+    //ã‚·ãƒ£ãƒ‰ã‚¦ãƒ¬ãƒ³ãƒ€ãƒ¼ãƒ•ãƒ©ã‚°ãŒã‚ã‚‹å ´åˆã¯ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ç”¨ã®ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
 	if (!shadow_render_flag)
 	{
 		immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
@@ -757,7 +809,7 @@ void GltfModel::FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf
 		material.data.emissive_texture.texcoord = gltf_material.emissiveTexture.texCoord;
 	}
 
-    //ƒ_ƒ~[ƒ}ƒeƒŠƒAƒ‹‚Ì’Ç‰ÁBƒ}ƒeƒŠƒAƒ‹‚ªˆê‚Â‚à‚È‚¢ê‡‚ÍAƒfƒtƒHƒ‹ƒgƒ}ƒeƒŠƒAƒ‹‚ğ’Ç‰Á‚·‚éB
+    //ãƒ€ãƒŸãƒ¼ãƒãƒ†ãƒªã‚¢ãƒ«ã®è¿½åŠ ã€‚ãƒãƒ†ãƒªã‚¢ãƒ«ãŒä¸€ã¤ã‚‚ãªã„å ´åˆã¯ã€ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆãƒãƒ†ãƒªã‚¢ãƒ«ã‚’è¿½åŠ ã™ã‚‹ã€‚
 	if (materials_.empty())
 	{
 		Material& material = materials_.emplace_back();

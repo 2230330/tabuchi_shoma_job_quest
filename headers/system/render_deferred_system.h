@@ -34,7 +34,6 @@ public:
 
     void SetSRV(ID3D11ShaderResourceView* srv, int num);
 
-    
     enum CASCADE : int
     {
         Near = 0,
@@ -101,4 +100,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>shadowmap_shader_resource_view_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11Buffer>shadow_scene_constant_buffer_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11Buffer>cascade_shadow_scene_constant_buffer_=nullptr;
+
+    //シャドウマップ用のモデルのワールド行列を保持するマップ
+    std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds_;
+
 };

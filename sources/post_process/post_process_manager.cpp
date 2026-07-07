@@ -88,7 +88,7 @@ void PostProcessManager::PostProcess(ID3D11DeviceContext* immediate_context, ID3
 void PostProcessManager::PostImgui()
 {
     ImGui::Begin("PostProcess");
-    bloom_->DrawImgui();
+    //bloom_->DrawImgui();
 
     ImGui::End();
 }

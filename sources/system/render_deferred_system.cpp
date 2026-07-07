@@ -13,7 +13,7 @@
 #include"../../headers/fullscreen_quad.h"
 #include"../../headers/framebuffer.h"
 #include"../../headers/misc.h"
-
+#include"../../headers/system/render_frustum_helper.h"
 
 RenderDeferredSystem::RenderDeferredSystem(ComponentManager&comp_mng,RenderPass render_pass)
     :comp_mng_(comp_mng)
@@ -412,7 +412,11 @@ void RenderDeferredSystem::directional_shadow_rendering()
                     cascade_shadow_scene_constant_.light_view_projection[i] = light_view_projection;
                     cascade_shadow_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
                     cascade_shadow_scene_constant_.current_index = i;
+
                 }
+                //フラスタムカリングを行う
+                std::array<DirectX::XMFLOAT4, 6> frustum_planes{};
+                FrustumHelper::CreateFrustumPlanesFromMatrix(light_view_projection, frustum_planes);
 
                 //定数バッファに送る
                 Graphics::Instance().GetDeviceContext()->UpdateSubresource(
@@ -420,18 +424,35 @@ void RenderDeferredSystem::directional_shadow_rendering()
                 Graphics::Instance().SetConstantBuffer(
                     ConstantBufferSlot::kCascadeShadow, 1, cascade_shadow_scene_constant_buffer_.GetAddressOf());
 
+                //モデルごとのインスタンス行列をクリア
+                for (auto& [model, worlds] : model_to_worlds_)
+                {
+                    worlds.clear();
+                }
+
                 //通常GLTFモデルのシャドウマップレンダリング
-                comp_mng_.ForEach<ComponentGltf>([this](uint32_t entity_id, ComponentGltf& gltf)
+                comp_mng_.ForEach<ComponentGltf>([&,this](uint32_t entity_id, ComponentGltf& gltf)
                     {
-                        if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id) &&
-                            !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
+                        if (!comp_mng_.TryGetByEntity<ComponentSkyAtmosphere>(entity_id) &&
+                            !comp_mng_.TryGetByEntity<ComponentVolumetricCloud>(entity_id))
                         {
+                            //バウンディングボックスがある場合はフラスタムカリングを行う
+                            auto* b_box = comp_mng_.TryGetByEntity<ComponentBoundingBox>(entity_id);
+                            if (b_box && FrustumHelper::IsValidWorldBoundingBox(*b_box))
+                            {
+                                if (!FrustumHelper::IsAABBVisibleFromFrustumPlanes(*b_box, frustum_planes))
+                                {
+                                    return;
+                                }
+                            }
+
                             auto* l2w = comp_mng_.TryGetByEntity < ComponentLocalToWorld>(entity_id);
                             auto* ins = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
 
                             //要求したものがあったら
                             if (l2w && !ins)
                             {
+
                                 auto* adjast = comp_mng_.TryGetByEntity<ComponentAdjastPbrParamter>(entity_id);
                                 if (adjast)
                                 {
@@ -444,41 +465,30 @@ void RenderDeferredSystem::directional_shadow_rendering()
                             }
 
 
+                            // インスタンシング対象のみ抽出
+                            if (l2w && ins)
+                            {
+
+                                model_to_worlds_[gltf.model.get()].push_back(l2w->value);
+                            }
+
+
                         }
 
                     });
-                // モデルごとにインスタンスをグループ化
                 {
-                    std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds;
 
-                    comp_mng_.ForEach<ComponentGltf>([&](uint32_t entity_id, ComponentGltf& gltf)
-                        {
-                            if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id) &&
-                                !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
-                            {
-
-                                auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
-                                auto* instanced = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
-
-                                // インスタンシング対象のみ抽出
-                                if (l2w && instanced)
-                                {
-                                    model_to_worlds[gltf.model.get()].push_back(l2w->value);
-                                }
-                            }
-                        });
-
+                    // モデルごとにインスタンスをグループ化
                     ID3D11Device* device = Graphics::Instance().GetDevice();
                     ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
                     HRESULT hr{ S_OK };
 
-                    for (auto& [model, world_matrices] : model_to_worlds)
+                    for (auto& [model, world_matrices] : model_to_worlds_)
                     {
                         if (world_matrices.empty()) continue;
 
 
-                        InstanceBufferInfo buf_info{};
-                        buf_info = instance_buffer_pool_[model];
+                        InstanceBufferInfo& buf_info= instance_buffer_pool_[model];
 
                         const UINT required_size = sizeof(DirectX::XMFLOAT4X4) * static_cast<UINT>(world_matrices.size());
 

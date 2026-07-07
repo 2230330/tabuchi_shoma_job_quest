@@ -4,13 +4,17 @@
 //
 // Buffer Definitions: 
 //
-// cbuffer BLOOM_CONSTANT_BUFFER
+// cbuffer BloomComputeConstants
 // {
 //
 //   float bloom_extraction_threshold;  // Offset:    0 Size:     4 [unused]
 //   float bloom_intensity;             // Offset:    4 Size:     4 [unused]
 //   float bloom_soft_knee;             // Offset:    8 Size:     4 [unused]
 //   float bloom_radius;                // Offset:   12 Size:     4
+//   uint input_width;                  // Offset:   16 Size:     4 [unused]
+//   uint input_height;                 // Offset:   20 Size:     4 [unused]
+//   uint output_width;                 // Offset:   24 Size:     4 [unused]
+//   uint output_height;                // Offset:   28 Size:     4 [unused]
 //
 // }
 //
@@ -21,7 +25,7 @@
 // ------------------------------ ---------- ------- ----------- -------------- ------
 // sampler_states[3]                 sampler      NA          NA             s3      1 
 // hdr_color_buffer_texture          texture  float4          2d             t0      1 
-// BLOOM_CONSTANT_BUFFER             cbuffer      NA          NA            cb5      1 
+// BloomComputeConstants             cbuffer      NA          NA            cb8      1 
 //
 //
 //
@@ -41,7 +45,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB5[1], immediateIndexed
+dcl_constantbuffer CB8[1], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_input_ps linear v1.xy
@@ -87,7 +91,7 @@ loop
 
 #line 27
   mov r0.w, x0[r0.z + 0].x
-  mul r0.w, r0.w, cb5[0].w  // r0.w <- scale_offset
+  mul r0.w, r0.w, cb8[0].w  // r0.w <- scale_offset
 
 #line 29
   utof r3.x, r0.x

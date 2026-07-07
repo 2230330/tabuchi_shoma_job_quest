@@ -1,183 +1,340 @@
-#include"../../headers/post_process/bloom.h"
+#include "../../headers/post_process/bloom.h"
 
-#include<vector>
+#include"../../external/imgui/imgui.h"
 
 #include"../../headers/misc.h"
-#include"../../headers/framebuffer.h"
-#include"../../headers/fullscreen_quad.h"
 #include"../../headers/resource_manager.h"
-#include"../../headers/render_state.h"
-#include"../../headers/constant_buffer_slot.h"
-#include"../../external/imgui/imgui.h"
+#include"../../headers/graphics.h"
 
 Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height)
 {
-    bit_block_transfer_ = std::make_unique<FullscreenQuad>(device);
+    base_width_ = width;
+    base_height_ = height;
 
-    glow_extraction_ = std::make_unique<FrameBuffer>(device, width, height);
-    for (size_t downsampled_index = 0; downsampled_index < downsampled_count; ++downsampled_index)
+    DXGI_FORMAT bloom_format = DXGI_FORMAT_R11G11B10_FLOAT;
+
+    for (size_t i = 0; i < downsampled_count; ++i)
     {
-        gaussian_blur[downsampled_index][0] = std::make_unique<FrameBuffer>(device, width >> downsampled_index, height >> downsampled_index);
-        gaussian_blur[downsampled_index][1] = std::make_unique<FrameBuffer>(device, width >> downsampled_index, height >> downsampled_index);
+        uint32_t mip_width = std::max<uint32_t>(1, width >> i);
+        uint32_t mip_height = std::max<uint32_t>(1, height >> i);
+
+        CreateBloomTexture(
+            device,
+            mip_width,
+            mip_height,
+            bloom_format,
+            bloom_mips_[i]
+        );
+
+        CreateBloomTexture(
+            device,
+            mip_width,
+            mip_height,
+            bloom_format,
+            bloom_temp_[i]
+        );
     }
-    glow_extraction_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//glow_extraction_ps.cso");
-    gaussian_blur_downsampling_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//downsample_ps.cso");
-    gaussian_blur_horizontal_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//gaussian_blur_horizontal_ps.cso");
-    gaussian_blur_vertical_ps_ = ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//gaussian_blur_vertical_ps.cso");
-    gaussian_blur_upsampling_ps_ =ResourceManager::Instance().LoadPixelShader(device, L".//resources//shader//bloom_upsample_ps.cso");
 
-	RenderState render_state(device);
-    rasterizer_state_ = render_state.GetRasterizerState(RasterizerState::solid_cull_back);
-    depth_stencil_state_ = render_state.GetDepthStencilState(DepthState::no_test_no_write);
-    blend_state_ = render_state.GetBlendState(BlendState::transparency);
+    bloom_extract_cs_ =
+        ResourceManager::Instance().LoadComputeShader(
+            device,
+            L".//resources//shader//bloom_extract_cs.cso"
+        );
 
-    HRESULT hr{ S_OK };
+    bloom_downsample_cs_ =
+        ResourceManager::Instance().LoadComputeShader(
+            device,
+            L".//resources//shader//bloom_downsample_cs.cso"
+        );
+
+    bloom_upsample_cs_ =
+        ResourceManager::Instance().LoadComputeShader(
+            device,
+            L".//resources//shader//bloom_upsample_cs.cso"
+        );
+
     D3D11_BUFFER_DESC buffer_desc{};
-    buffer_desc.ByteWidth = sizeof(BloomConstants);
+    buffer_desc.ByteWidth = sizeof(BloomComputeConstants);
     buffer_desc.Usage = D3D11_USAGE_DEFAULT;
     buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    buffer_desc.CPUAccessFlags = 0;
-    buffer_desc.MiscFlags = 0;
-    buffer_desc.StructureByteStride = 0;
-    hr = device->CreateBuffer(&buffer_desc, nullptr, constant_buffer_.GetAddressOf());
+
+    HRESULT hr = device->CreateBuffer(
+        &buffer_desc,
+        nullptr,
+        constant_buffer_.GetAddressOf()
+    );
+
     _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
-
-
 }
-
-void Bloom::Make(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* color_map)
+void Bloom::Make(
+    ID3D11DeviceContext* context,
+    ID3D11ShaderResourceView* color_map
+)
 {
-	// Store current states
-	ID3D11ShaderResourceView* null_shader_resource_view{};
-	ID3D11ShaderResourceView* cached_shader_resource_views[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};
-	immediate_context->PSGetShaderResources(0, downsampled_count, cached_shader_resource_views);
+    // 1. Bright extraction
+    {
+        BloomComputeConstants constants{};
+        constants.bloom_extraction_threshold = bloom_constant_.bloom_extraction_threshold;
+        constants.bloom_intensity = bloom_constant_.bloom_intensity;
+        constants.bloom_soft_knee = bloom_constant_.bloom_soft_knee;
+        constants.bloom_radius = bloom_constant_.bloom_radius;
+        constants.input_width = base_width_;
+        constants.input_height = base_height_;
+        constants.output_width = bloom_mips_[0].width;
+        constants.output_height = bloom_mips_[0].height;
 
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>  cached_depth_stencil_state;
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState>  cached_rasterizer_state;
-	Microsoft::WRL::ComPtr<ID3D11BlendState>  cached_blend_state;
-	FLOAT blend_factor[4];
-	UINT sample_mask;
-	immediate_context->OMGetDepthStencilState(cached_depth_stencil_state.GetAddressOf(), 0);
-	immediate_context->RSGetState(cached_rasterizer_state.GetAddressOf());
-	immediate_context->OMGetBlendState(cached_blend_state.GetAddressOf(), blend_factor, &sample_mask);
+        context->UpdateSubresource(
+            constant_buffer_.Get(),
+            0,
+            nullptr,
+            &constants,
+            0,
+            0
+        );
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer>  cached_constant_buffer;
-	immediate_context->PSGetConstantBuffers(8, 1, cached_constant_buffer.GetAddressOf());
+        ID3D11ShaderResourceView* srvs[] =
+        {
+            color_map,
+            emissive_map_.Get()
+        };
 
-	// Bind states
-	immediate_context->OMSetDepthStencilState(depth_stencil_state_.Get(), 0);
-	immediate_context->RSSetState(rasterizer_state_.Get());
-	immediate_context->OMSetBlendState(blend_state_.Get(), nullptr, 0xFFFFFFFF);
+        ID3D11UnorderedAccessView* uavs[] =
+        {
+            bloom_mips_[0].uav.Get()
+        };
 
-	BloomConstants data{};
-	data.bloom_extraction_threshold = bloom_constant_.bloom_extraction_threshold;
-	data.bloom_intensity = bloom_constant_.bloom_intensity;
-	immediate_context->UpdateSubresource(constant_buffer_.Get(), 0, 0, &bloom_constant_, 0, 0);
-	immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPostEffect),
-		1, constant_buffer_.GetAddressOf());
+        context->CSSetShader(bloom_extract_cs_.Get(), nullptr, 0);
+        Graphics::Instance().SetConstantBuffer(8, 1, constant_buffer_.GetAddressOf());
+        context->CSSetShaderResources(0, 2, srvs);
+        context->CSSetUnorderedAccessViews(0, 1, uavs, nullptr);
 
-	// Extracting bright color
-	glow_extraction_->Clear(immediate_context);
-	glow_extraction_->Activate(immediate_context);
-	ID3D11ShaderResourceView* glow_maps[] = {
-		color_map,
-		emissive_map_.Get(),
-    };
-	bit_block_transfer_->blit(immediate_context, glow_maps, 0, _countof(glow_maps), glow_extraction_ps_.Get());
-	glow_extraction_->Deactivate(immediate_context);
-	immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
+        Dispatch2D(context, bloom_mips_[0].width, bloom_mips_[0].height);
 
-	// Gaussian blur
-	// Efficient Gaussian blur with linear sampling
-	// http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
-	// Downsampling
-	gaussian_blur[0][0]->Clear(immediate_context);
-	gaussian_blur[0][0]->Activate(immediate_context);
-	bit_block_transfer_->blit(immediate_context, glow_extraction_->GetShaderResourceView(0).GetAddressOf(), 0, 1, gaussian_blur_downsampling_ps_.Get());
-	gaussian_blur[0][0]->Deactivate(immediate_context);
-	immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
+        UnbindComputeResources(context);
+    }
 
-	// Ping-pong gaussian blur
-	gaussian_blur[0][1]->Clear(immediate_context);
-	gaussian_blur[0][1]->Activate(immediate_context);
-	bit_block_transfer_->blit(immediate_context, gaussian_blur[0][0]->GetShaderResourceView(0).GetAddressOf(), 0, 1, gaussian_blur_horizontal_ps_.Get());
-	gaussian_blur[0][1]->Deactivate(immediate_context);
-	immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
+    // 2. Downsample chain
+    for (size_t i = 1; i < downsampled_count; ++i)
+    {
+        BloomComputeConstants constants{};
+        constants.bloom_extraction_threshold = bloom_constant_.bloom_extraction_threshold;
+        constants.bloom_intensity = bloom_constant_.bloom_intensity;
+        constants.bloom_soft_knee = bloom_constant_.bloom_soft_knee;
+        constants.bloom_radius = bloom_constant_.bloom_radius;
+        constants.input_width = bloom_mips_[i - 1].width;
+        constants.input_height = bloom_mips_[i - 1].height;
+        constants.output_width = bloom_mips_[i].width;
+        constants.output_height = bloom_mips_[i].height;
 
-	gaussian_blur[0][0]->Clear(immediate_context);
-	gaussian_blur[0][0]->Activate(immediate_context);
-	bit_block_transfer_->blit(immediate_context, gaussian_blur[0][1]->GetShaderResourceView(0).GetAddressOf(), 0, 1, gaussian_blur_vertical_ps_.Get());
-	gaussian_blur[0][0]->Deactivate(immediate_context);
-	immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
+        context->UpdateSubresource(
+            constant_buffer_.Get(),
+            0,
+            nullptr,
+            &constants,
+            0,
+            0
+        );
 
-	for (size_t downsampled_index = 1; downsampled_index < downsampled_count; ++downsampled_index)
-	{
-		// Downsampling
-		gaussian_blur[downsampled_index][0]->Clear(immediate_context);
-		gaussian_blur[downsampled_index][0]->Activate(immediate_context);
-		bit_block_transfer_->blit(immediate_context, gaussian_blur[downsampled_index - 1][0]->GetShaderResourceView(0).GetAddressOf(), 0, 1, gaussian_blur_downsampling_ps_.Get());
-		gaussian_blur[downsampled_index][0]->Deactivate(immediate_context);
-		immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
+        ID3D11ShaderResourceView* srv =
+            bloom_mips_[i - 1].srv.Get();
 
-		// Ping-pong gaussian blur
-		gaussian_blur[downsampled_index][1]->Clear(immediate_context);
-		gaussian_blur[downsampled_index][1]->Activate(immediate_context);
-		bit_block_transfer_->blit(immediate_context, gaussian_blur[downsampled_index][0]->GetShaderResourceView(0).GetAddressOf(), 0, 1, gaussian_blur_horizontal_ps_.Get());
-		gaussian_blur[downsampled_index][1]->Deactivate(immediate_context);
-		immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
+        ID3D11UnorderedAccessView* uav =
+            bloom_mips_[i].uav.Get();
 
-		gaussian_blur[downsampled_index][0]->Clear(immediate_context);
-		gaussian_blur[downsampled_index][0]->Activate(immediate_context);
-		bit_block_transfer_->blit(immediate_context, gaussian_blur[downsampled_index][1]->GetShaderResourceView(0).GetAddressOf(), 0, 1, gaussian_blur_vertical_ps_.Get());
-		gaussian_blur[downsampled_index][0]->Deactivate(immediate_context);
-		immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
-	}
+        context->CSSetShader(bloom_downsample_cs_.Get(), nullptr, 0);
+        //context->CSSetConstantBuffers(8, 1, constant_buffer_.GetAddressOf());
+        context->CSSetShaderResources(0, 1, &srv);
+        context->CSSetUnorderedAccessViews(0, 1, &uav, nullptr);
 
-	// Downsampling
-	glow_extraction_->Clear(immediate_context);
-	glow_extraction_->Activate(immediate_context);
-	std::vector<ID3D11ShaderResourceView*> shader_resource_views;
-	for (size_t downsampled_index = 0; downsampled_index < downsampled_count; ++downsampled_index)
-	{
-		shader_resource_views.push_back(gaussian_blur[downsampled_index][0]->GetShaderResourceView(0).Get());
-	}
-	bit_block_transfer_->blit(immediate_context, shader_resource_views.data(), 0, downsampled_count, gaussian_blur_upsampling_ps_.Get());
-	glow_extraction_->Deactivate(immediate_context);
-	immediate_context->PSSetShaderResources(0, 1, &null_shader_resource_view);
-	
+        Dispatch2D(context, bloom_mips_[i].width, bloom_mips_[i].height);
 
-	// Restore states
-	immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPostEffect), 1, cached_constant_buffer.GetAddressOf());
+        UnbindComputeResources(context);
+    }
 
-	immediate_context->OMSetDepthStencilState(cached_depth_stencil_state.Get(), 0);
-	immediate_context->RSSetState(cached_rasterizer_state.Get());
-	immediate_context->OMSetBlendState(cached_blend_state.Get(), blend_factor, sample_mask);
+    // 3. Upsample combine
+    for (int i = static_cast<int>(downsampled_count) - 2; i >= 0; --i)
+    {
+        BloomComputeConstants constants{};
+        constants.bloom_extraction_threshold = bloom_constant_.bloom_extraction_threshold;
+        constants.bloom_intensity = bloom_constant_.bloom_intensity;
+        constants.bloom_soft_knee = bloom_constant_.bloom_soft_knee;
+        constants.bloom_radius = bloom_constant_.bloom_radius;
+        constants.input_width = bloom_mips_[i + 1].width;
+        constants.input_height = bloom_mips_[i + 1].height;
+        constants.output_width = bloom_mips_[i].width;
+        constants.output_height = bloom_mips_[i].height;
 
-	immediate_context->PSSetShaderResources(0, downsampled_count, cached_shader_resource_views);
-	for (ID3D11ShaderResourceView* cached_shader_resource_view : cached_shader_resource_views)
-	{
-		if (cached_shader_resource_view) cached_shader_resource_view->Release();
-	}
+        context->UpdateSubresource(
+            constant_buffer_.Get(),
+            0,
+            nullptr,
+            &constants,
+            0,
+            0
+        );
+
+        ID3D11ShaderResourceView* srvs[] =
+        {
+            bloom_mips_[i].srv.Get(),
+            bloom_mips_[i + 1].srv.Get()
+        };
+
+        ID3D11UnorderedAccessView* uav =
+            bloom_temp_[i].uav.Get();
+
+        context->CSSetShader(bloom_upsample_cs_.Get(), nullptr, 0);
+        //context->CSSetConstantBuffers(8, 1, constant_buffer_.GetAddressOf());
+        
+        context->CSSetShaderResources(0, 2, srvs);
+        context->CSSetUnorderedAccessViews(0, 1, &uav, nullptr);
+
+        Dispatch2D(context, bloom_temp_[i].width, bloom_temp_[i].height);
+
+        UnbindComputeResources(context);
+
+        std::swap(bloom_mips_[i], bloom_temp_[i]);
+    }
 }
 
 Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Bloom::GetShaderResourceView()
 {
-	return glow_extraction_->GetShaderResourceView(0);
+    return bloom_mips_[0].srv;
 }
 
 void Bloom::DrawImgui()
 {
-	if (ImGui::TreeNode("bloom"))
-	{
+    if (ImGui::TreeNode("bloom"))
+    {
+        ImGui::SliderFloat(
+            "extraction_threshold",
+            &bloom_constant_.bloom_extraction_threshold,
+            0.f,
+            3.f
+        );
 
-		ImGui::SliderFloat("extraction_threshold", &bloom_constant_.bloom_extraction_threshold, 0.f, 3.f);
-		ImGui::SliderFloat("intensity", &bloom_constant_.bloom_intensity, 0.f, 10.f);
-		ImGui::SliderFloat("soft_knee", &bloom_constant_.bloom_soft_knee, 0.f, 1.f);
-		ImGui::SliderFloat("radius", &bloom_constant_.bloom_radius, 0.f, 2.f);
+        ImGui::SliderFloat(
+            "intensity",
+            &bloom_constant_.bloom_intensity,
+            0.f,
+            10.f
+        );
 
-        ImGui::Image(emissive_map_.Get(), ImVec2(256, 256));
-        ImGui::Image(glow_extraction_->GetShaderResourceView(0).Get(), ImVec2(256, 256));
+        ImGui::SliderFloat(
+            "soft_knee",
+            &bloom_constant_.bloom_soft_knee,
+            0.f,
+            1.f
+        );
 
-		ImGui::TreePop();
-	}
+        ImGui::SliderFloat(
+            "radius",
+            &bloom_constant_.bloom_radius,
+            0.f,
+            2.f
+        );
+
+        if (emissive_map_)
+        {
+            ImGui::Text("emissive");
+            ImGui::Image(emissive_map_.Get(), ImVec2(256, 256));
+        }
+
+        ImGui::Text("bloom result");
+        ImGui::Image(bloom_mips_[0].srv.Get(), ImVec2(256, 256));
+
+        for (size_t i = 0; i < downsampled_count; ++i)
+        { 
+            ImGui::Text("bloom mip %zu", i);
+            ImGui::Image(bloom_mips_[i].srv.Get(), ImVec2(128, 128));
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+void Bloom::CreateBloomTexture(
+    ID3D11Device* device,
+    uint32_t width,
+    uint32_t height,
+    DXGI_FORMAT format,
+    BloomTexture& out_texture
+)
+{
+    out_texture.width = width;
+    out_texture.height = height;
+
+    D3D11_TEXTURE2D_DESC texture_desc{};
+    texture_desc.Width = width;
+    texture_desc.Height = height;
+    texture_desc.MipLevels = 1;
+    texture_desc.ArraySize = 1;
+    texture_desc.Format = format;
+    texture_desc.SampleDesc.Count = 1;
+    texture_desc.SampleDesc.Quality = 0;
+    texture_desc.Usage = D3D11_USAGE_DEFAULT;
+    texture_desc.BindFlags =
+        D3D11_BIND_SHADER_RESOURCE |
+        D3D11_BIND_UNORDERED_ACCESS;
+    texture_desc.CPUAccessFlags = 0;
+    texture_desc.MiscFlags = 0;
+
+    HRESULT hr = device->CreateTexture2D(
+        &texture_desc,
+        nullptr,
+        out_texture.texture.GetAddressOf()
+    );
+
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+    srv_desc.Format = format;
+    srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srv_desc.Texture2D.MostDetailedMip = 0;
+    srv_desc.Texture2D.MipLevels = 1;
+
+    hr = device->CreateShaderResourceView(
+        out_texture.texture.Get(),
+        &srv_desc,
+        out_texture.srv.GetAddressOf()
+    );
+
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uav_desc{};
+    uav_desc.Format = format;
+    uav_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+    uav_desc.Texture2D.MipSlice = 0;
+
+    hr = device->CreateUnorderedAccessView(
+        out_texture.texture.Get(),
+        &uav_desc,
+        out_texture.uav.GetAddressOf()
+    );
+
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+}
+
+void Bloom::Dispatch2D(
+    ID3D11DeviceContext* context,
+    uint32_t width,
+    uint32_t height
+)
+{
+    constexpr uint32_t thread_count_x = 8;
+    constexpr uint32_t thread_count_y = 8;
+
+    uint32_t group_x = (width + thread_count_x - 1) / thread_count_x;
+    uint32_t group_y = (height + thread_count_y - 1) / thread_count_y;
+
+    context->Dispatch(group_x, group_y, 1);
+}
+
+void Bloom::UnbindComputeResources(ID3D11DeviceContext* context)
+{
+    ID3D11ShaderResourceView* null_srvs[8]{};
+    ID3D11UnorderedAccessView* null_uavs[8]{};
+
+    context->CSSetShaderResources(0, 8, null_srvs);
+    context->CSSetUnorderedAccessViews(0, 8, null_uavs, nullptr);
+    context->CSSetShader(nullptr, nullptr, 0);
 }

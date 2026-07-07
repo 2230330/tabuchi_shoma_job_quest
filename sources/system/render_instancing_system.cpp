@@ -3,11 +3,15 @@
 #include<cassert>
 #include<algorithm>
 #include<functional>
+#include<array>
+#include<cmath>
 
 #include"../../headers/graphics.h"
 #include"../../headers/gltf_model.h"
 #include"../../headers/misc.h"
 #include"../../headers/component/component_manager.h"
+#include"../../headers/system/render_frustum_helper.h"
+
 
 InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng, RenderPass render_pass )
     :comp_mng_(comp_mng)
@@ -17,24 +21,73 @@ InstancingRenderSystem::InstancingRenderSystem(ComponentManager& comp_mng, Rende
 
 void InstancingRenderSystem::Render()
 {
+    //メインのカメラ情報を取得
+    ComponentCamera* main_camera = nullptr;
+    comp_mng_.ForEach<ComponentCamera>([&](uint32_t entity_id, ComponentCamera& camera)
+        {
+            if (camera.main_camera_flag_)
+            {
+                main_camera = &camera;
+            }
+        });
+
+    // メインカメラが存在しない場合は描画をスキップ
+    if (!main_camera) {
+        return;
+    }
+
+    std::array<DirectX::XMFLOAT4, 6>frustum_planes{};
+    FrustumHelper::CreateFrustumPlanesFromMatrix(main_camera->view_projection_transform, frustum_planes);
+
 
     // モデルごとにインスタンスをグループ化
-    std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds;
 
-    comp_mng_.ForEach<ComponentGltf>([&](uint32_t entity_id, ComponentGltf& gltf)
-        {
-            if (!comp_mng_.Has<ComponentSkyAtmosphere>(entity_id)&&
-                !comp_mng_.Has<ComponentVolumetricCloud>(entity_id))
+    for (auto& [model, worlds] : model_to_worlds_)
+    {
+        worlds.clear();
+    }
+
+    comp_mng_.ForEach<
+        ComponentGltf,
+        ComponentLocalToWorld,
+        ComponentBoundingBox
+    >([&](
+        uint32_t entity_id,
+        ComponentGltf& gltf,
+        ComponentLocalToWorld&l2w,
+        ComponentBoundingBox& b_box
+        ) {
+            if (!comp_mng_.TryGetByEntity<ComponentSkyAtmosphere>(entity_id)&&
+                !comp_mng_.TryGetByEntity<ComponentVolumetricCloud>(entity_id))
             {
 
-                auto* l2w = comp_mng_.TryGetByEntity<ComponentLocalToWorld>(entity_id);
                 auto* instanced = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
 
                 // インスタンシング対象のみ抽出
-                if (l2w && instanced)
+                if ( !instanced)
                 {
-                    model_to_worlds[gltf.model.get()].push_back(l2w->value);
+                    return;
                 }
+
+                bool visible = true;
+
+                // バウンディングボックスを取得して、フラスタムカリングを行う
+                if (FrustumHelper::IsValidWorldBoundingBox(b_box))
+                {
+                    visible = FrustumHelper::IsAABBVisibleFromFrustumPlanes(b_box, frustum_planes);
+                }
+                else
+                {
+                    // バウンディングボックスが無効な場合は、常に描画する
+                    visible = true;
+                }
+
+                if (!visible)
+                {
+                    return;
+                }
+
+                model_to_worlds_[gltf.model.get()].push_back(l2w.value);
             }
         });
 
@@ -42,7 +95,7 @@ void InstancingRenderSystem::Render()
     ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
     HRESULT hr{ S_OK };
 
-    for (auto& [model, world_matrices] : model_to_worlds)
+    for (auto& [model, world_matrices] : model_to_worlds_)
     {
         if (world_matrices.empty()) continue;
 

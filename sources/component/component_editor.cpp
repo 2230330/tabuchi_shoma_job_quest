@@ -211,9 +211,9 @@ void ComponentEditor::DrawImgui()
 
             // 表示する名前
             std::string label;
-            if (comp_mng_.Has<ComponentName>(entity.entity))
+            if (const auto* name = comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
             {
-                label = comp_mng_.GetByEntity<ComponentName>(entity.entity).value;
+                label = name->value;
             }
             else
             {
@@ -243,12 +243,11 @@ void ComponentEditor::DrawImgui()
                     rename_entity_ = entity.entity;
                     renaming_just_started_ = true;
 
-                    if (comp_mng_.Has<ComponentName>(entity.entity))
+                    if (const auto* name = comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
                     {
                         strncpy_s(
                             rename_buffer_,
-                            comp_mng_.GetByEntity<ComponentName>(entity.entity)
-                            .value.c_str(),
+                            name->value.c_str(),
                             sizeof(rename_buffer_));
                     }
                     else
@@ -296,7 +295,7 @@ void ComponentEditor::DrawImgui()
                 if (renaming_ever_active_ &&
                     (commit || !ImGui::IsItemActive()))
                 {
-                    if (!comp_mng_.Has<ComponentName>(entity.entity))
+                    if (!comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
                     {
                         ComponentName cn{};
                         comp_mng_.Add(entity.entity, cn);
@@ -323,7 +322,7 @@ void ComponentEditor::DrawImgui()
                     auto& pos = comp_mng_.GetByEntity<ComponentPosition>(entity.entity);
                     ImGui::DragFloat3("Position", &pos.value.x);
                     ImGui::Separator();
-                }
+                }       
                 // 回転
                 if (comp_mng_.Has<ComponentRotation>(entity.entity))
                 {
@@ -647,6 +646,14 @@ void ComponentEditor::DrawImgui()
                                                     comp_mng_.Add(entity.entity, gltf);
                                                     ComponentAdjastPbrParamter ajast_pbr{};
                                                     comp_mng_.Add(entity.entity, ajast_pbr);
+                                                    ComponentBoundingBox bounding_box{};
+                                                    bounding_box.local_min.x = gltf.model->GetBoundingBox().local_min.x;
+                                                    bounding_box.local_min.y = gltf.model->GetBoundingBox().local_min.y;
+                                                    bounding_box.local_min.z = gltf.model->GetBoundingBox().local_min.z;
+                                                    bounding_box.local_max.x = gltf.model->GetBoundingBox().local_max.x;
+                                                    bounding_box.local_max.y = gltf.model->GetBoundingBox().local_max.y;
+                                                    bounding_box.local_max.z = gltf.model->GetBoundingBox().local_max.z;
+                                                    comp_mng_.Add(entity.entity, bounding_box);
                                                 }
 
                                             }
@@ -1058,8 +1065,14 @@ void ComponentEditor::Load(const std::string& filename)
                 g.animation_index = j["animation_index"];
                 comp_mng_.Add(entity, g);
 
-                ComponentAdjastPbrParamter p{};
-                comp_mng_.Add(entity, p);
+                ComponentBoundingBox b_box{};
+                b_box.local_min.x = model->GetBoundingBox().local_min.x;
+                b_box.local_min.y = model->GetBoundingBox().local_min.y;
+                b_box.local_min.z = model->GetBoundingBox().local_min.z;
+                b_box.local_max.x = model->GetBoundingBox().local_max.x;
+                b_box.local_max.y = model->GetBoundingBox().local_max.y;
+                b_box.local_max.z = model->GetBoundingBox().local_max.z;
+                comp_mng_.Add(entity, b_box);
             }
         }
 

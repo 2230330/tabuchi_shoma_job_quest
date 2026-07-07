@@ -16,7 +16,52 @@
 
 class GltfModel
 {
+private:
+	struct Node;
+	struct Mesh;
+	struct Material;
+	struct Animation;
+	struct ModelBoundingBox;
+
 public:
+
+	void SetAdjastParam(float metalness, float roughness)
+	{
+		adjast_param_constants_.adjust_metalness = metalness;
+		adjast_param_constants_.adjust_roughness = roughness;
+	}
+
+	GltfModel(ID3D11Device* device, const std::string& filename);
+	virtual ~GltfModel() = default;
+
+	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world, bool shadow_render_flag = false);
+	void InstancingRender(ID3D11DeviceContext* immediate_context,
+		UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location = 0,
+		bool shadow_render_flag = false);
+	void Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes);
+	void UpdateAnimation(float elapsed_time);
+	const std::vector<GltfModel::Node>& GetNodes()const;
+	const std::vector<GltfModel::Mesh>& GetMeshes()const;
+	const std::vector<GltfModel::Material>& GetMaterials()const;
+	const std::vector<GltfModel::Animation>& GetAnimations()const;
+	const std::string& GetFilename()const
+	{
+		return filename_;
+	}
+
+	//ã‚­ãƒ¥ãƒ¼ãƒ–ãƒãƒƒãƒ—æƒ…å ±ã®å–å¾—
+	void SetCubeMap(ID3D11ShaderResourceView* cube_map_srv)
+	{
+		cube_map_srv_ = cube_map_srv;
+	}
+
+	//ãƒã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒœãƒƒã‚¯ã‚¹ã®å–å¾—
+	const ModelBoundingBox& GetBoundingBox()const
+	{
+		return bounding_box_;
+	}
+
+private:
 	struct Node
 	{
 		std::string name;
@@ -128,37 +173,14 @@ public:
 		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT3>> translations;
 	};
 
-    void SetAdjastParam(float metalness, float roughness)
+	//ãƒã‚¦ãƒ³ãƒ‡ã‚£ãƒ³ã‚°ãƒœãƒƒã‚¯ã‚¹
+	struct ModelBoundingBox
 	{
-        adjast_param_constants_.adjust_metalness = metalness;
-        adjast_param_constants_.adjust_roughness = roughness;
-	}
+		DirectX::XMFLOAT3 local_min{ +FLT_MAX, +FLT_MAX, +FLT_MAX };
+		DirectX::XMFLOAT3 local_max{ -FLT_MAX, -FLT_MAX, -FLT_MAX };
+	};
+	ModelBoundingBox bounding_box_;
 
-	GltfModel(ID3D11Device* device, const std::string& filename);
-	virtual ~GltfModel() = default;
-
-	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world,bool shadow_render_flag=false);
-	void InstancingRender(ID3D11DeviceContext* immediate_context,
-		UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location = 0,
-		bool shadow_render_flag = false);
-	void Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes);
-	void UpdateAnimation(float elapsed_time);
-	const std::vector<GltfModel::Node>& GetNodes()const;
-	const std::vector<GltfModel::Mesh>& GetMeshes()const;
-	const std::vector<GltfModel::Material>& GetMaterials()const;
-	const std::vector<GltfModel::Animation>& GetAnimations()const;
-	const std::string& GetFilename()const
-	{
-		return filename_;
-	}
-
-	//ƒLƒ…[ƒuƒ}ƒbƒvî•ñ‚Ìæ“¾
-	void SetCubeMap(ID3D11ShaderResourceView* cube_map_srv)
-	{
-        cube_map_srv_ = cube_map_srv;
-	}
-
-private:
 	struct Scene
 	{
 		std::string name;
@@ -205,11 +227,13 @@ private:
 	};
 	struct AdjastParamConstants
 	{
-		float adjust_metalness{ 0.0f };//‹à‘®¿’²®
-		float adjust_roughness{ 0.0f };//‘e‚³’²®
+		float adjust_metalness{ 0.0f };//é‡‘å±è³ªèª¿æ•´
+		float adjust_roughness{ 0.0f };//ç²—ã•èª¿æ•´
         float pad[2];
 	};
 	AdjastParamConstants adjast_param_constants_;
+
+
 
 	void FetchNodes(const tinygltf::Model& gltf_model);
 	void FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_model);
@@ -224,7 +248,7 @@ private:
 	float animation_time_ = 0;
 
 	std::vector<Node> nodes_;
-	std::vector<Node> animated_nodes_;	//ƒAƒjƒ[ƒVƒ‡ƒ“‚Å•ÏX‚³‚ê‚½ƒm[ƒh
+	std::vector<Node> animated_nodes_;	//ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã§å¤‰æ›´ã•ã‚ŒãŸãƒãƒ¼ãƒ‰
 	std::vector<Scene> scenes;
 	std::vector<Mesh> meshes_;
 	std::vector<Material> materials_;
@@ -237,16 +261,17 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> material_resource_view_;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertex_shader_;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> shadow_caster_vs_;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> instancing_vertex_shader_;//ƒCƒ“ƒXƒ^ƒ“ƒVƒ“ƒO•`‰æ
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> instancing_vertex_shader_;//ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚·ãƒ³ã‚°æç”»
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> shadow_instancing_caster_vs_;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> input_layout;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> instancing_input_layout;//ƒCƒ“ƒXƒ^ƒ“ƒVƒ“ƒO•`‰æ
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> instancing_input_layout;//ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚·ãƒ³ã‚°æç”»
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_cbuffer_;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_joint_cbuffer_;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>adjast_param_cbuffer_;
 
-	//ƒLƒ…[ƒuƒ}ƒbƒv‚ÌÀ‘•
+	//ã‚­ãƒ¥ãƒ¼ãƒ–ãƒãƒƒãƒ—ã®å®Ÿè£…
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cube_map_srv_=nullptr;		
+
 };
 #endif // !PART2_GLTF_MODEL_H

@@ -5,6 +5,9 @@
 #include <typeindex>
 #include <stdexcept>
 #include<functional>
+#include<tuple>
+#include<cassert>
+#include<algorithm>
 
 #include "component_position.h"
 #include "component_rotation.h"
@@ -25,9 +28,10 @@
 #include"component_name.h"
 #include"component_cascade_shadow.h"
 #include"component_deferred_render.h"
+#include"component_bound_box.h"
 
 //コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
-class ComponentManager 
+class ComponentManager
 {
 public:
     ComponentManager() {
@@ -51,21 +55,34 @@ public:
         registerContainer<ComponentName>(names_);
         registerContainer<ComponentCascadeShadow>(cas_shadows_);
         registerContainer<ComponentDeferredRender>(deferred_renders_);
+        registerContainer<ComponentBoundingBox>(bounding_boxes_);
     }
 
     template<typename T>
-    int Add(const T& component) {
-        auto& container = getContainer<T>();
-        container.push_back(component);
-        return static_cast<int>(container.size() - 1);
+    static const std::type_index& TypeIndex() {
+        static const std::type_index type_index(typeid(T));
+        return type_index;
     }
 
+
     template<typename T>
-    int Add(uint32_t entity_id, const T& component) {
+    int Add(uint32_t entity_id, const T& component)
+    {
+        const auto& type = TypeIndex<T>();
+
+        auto& mapping = entity_to_component_[type];
+
+        // 同じEntityに同じComponentを二重追加しない
+        assert(mapping.find(entity_id) == mapping.end());
+
         auto& container = getContainer<T>();
         container.emplace_back(component);
+
         int id = static_cast<int>(container.size() - 1);
-        entity_to_component_[std::type_index(typeid(T))][entity_id] = id;
+
+        mapping[entity_id] = id;
+        component_to_entity_[type].emplace_back(entity_id);
+
         return id;
     }
 
@@ -85,32 +102,43 @@ public:
     //要素の削除関数
     template<typename T>
     void Remove(uint32_t entity_id) {
-        auto type = std::type_index(typeid(T));
+        const auto& type = TypeIndex<T>();
+
+        // entity_id からコンポーネントのインデックスを取得
         auto mit = entity_to_component_.find(type);
+        //なければ何もしない
         if (mit == entity_to_component_.end()) return;
 
         auto& mapping = mit->second;
+
         auto it = mapping.find(entity_id);
         if (it == mapping.end()) return;
 
-        int index_to_remove = it->second;
         auto& container = getContainer<T>();
-        int last_index = static_cast<int>(container.size() - 1);
+        auto entity_list_it = component_to_entity_.find(type);
+        if (entity_list_it == component_to_entity_.end()) return;
+
+        auto& entities = entity_list_it->second;
+
+        assert(container.size() == entities.size());
+
+        const int index_to_remove = it->second;
+        const int last_index = static_cast<int>(container.size() - 1);
 
         if (index_to_remove != last_index) {
-            // swap with last
+            //最後のコンポーネントを削除位置へ移動
             std::swap(container[index_to_remove], container[last_index]);
-
-            // 更新対象の entity を探す
-            for (auto& [eid, idx] : mapping) {
-                if (idx == last_index) {
-                    idx = index_to_remove;
-                    break;
-                }
-            }
+            //最後のコンポーネントを持っていてたエンティティを取得
+            const uint32_t moved_entity = entities[last_index];
+            //entityリスト側も同じ位置へ移動
+            entities[index_to_remove] = moved_entity;
+            //移動したentityのindex を更新
+            mapping[moved_entity] = index_to_remove; 
         }
 
         container.pop_back();
+        entities.pop_back();
+
         mapping.erase(entity_id);
     }
 
@@ -118,42 +146,122 @@ public:
     template<typename T>
     T& GetByEntity(uint32_t entity_id) {
         auto& container = getContainer<T>();
-        auto& mapping = entity_to_component_[std::type_index(typeid(T))];
+        const auto& mapping = entity_to_component_[TypeIndex<T>()];
         return container.at(mapping.at(entity_id));
     }
 
     //登録したコンポーネントがない場合などの安全版ゲッター
     template<typename T>
     T* TryGetByEntity(uint32_t entity_id) {
-        auto it = entity_to_component_.find(std::type_index(typeid(T)));
+        auto it = entity_to_component_.find(TypeIndex<T>());
         if (it == entity_to_component_.end()) return nullptr;
 
-        auto& mapping = it->second;
+        const auto& mapping = it->second;
         auto mit = mapping.find(entity_id);
         if (mit == mapping.end()) return nullptr;
 
         auto& container = getContainer<T>();
-        return &container.at(mit->second);
+        return &container[mit->second];
     }
     //エンティティがそのコンポーネントを所有しているかの確認
     template<typename T>
-    inline bool Has(uint32_t entity_id) 
+    inline bool Has(uint32_t entity_id)
     {
-        auto it = entity_to_component_.find(std::type_index(typeid(T)));
+        auto it = entity_to_component_.find(TypeIndex<T>());
         if (it == entity_to_component_.end()) return false;
         return it->second.find(entity_id) != it->second.end();
     }
 
     //特定のコンポーネントを持つエンティティに対して一括処理をする為の走査関数
-    template<typename T>
-    void ForEach(std::function<void(uint32_t, T&)> func) {
+    //単数用
+    template<typename T, typename Func>
+    void ForEach(Func&& func)
+    {
+
+        const auto& type = TypeIndex<T>();
+        auto entity_it = component_to_entity_.find(type);
+        //コンポーネントが存在しない場合は何もしない
+        if (  entity_it == component_to_entity_.end())
+        {
+            return;
+        }
+
         auto& container = getContainer<T>();
-        auto& mapping = entity_to_component_[std::type_index(typeid(T))];
-        for (const auto& [entity_id, index] : mapping) {
-            func(entity_id, container[index]);
+        auto& entities = entity_it->second;
+
+        const size_t count = container.size();
+
+        //念のため、動機ミスの検出を行う
+        assert(entities.size() == count);
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            func(entities[i], container[i]);
         }
     }
+    //複数コンポーネント用
+    template<typename First, typename Second, typename... Rest, typename Func>
+    void ForEach(Func&& func)
+    {
+        auto& first_container = getContainer<First>();
 
+        const auto& type = TypeIndex<First>();
+        auto entity_it = component_to_entity_.find(type);
+
+        if (entity_it == component_to_entity_.end())
+        {
+            return;
+        }
+
+        const auto& entities = entity_it->second;
+
+        //念のため、動機ミスの検出を行う
+        size_t count = entities.size();
+        assert(count == first_container.size());
+
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            auto* second = TryGetByEntity<Second>(entities[i]);
+
+            if (!second)
+            {
+                continue;
+            }
+
+            if constexpr (sizeof...(Rest) == 0)
+            {
+                func(entities[i], first_container[i], *second);
+            }
+            else
+            {
+                auto tuple = std::make_tuple(TryGetByEntity<Rest>(entities[i])...);
+
+                bool all_exists = true;
+
+                std::apply(
+                    [&](auto*... ptrs)
+                    {
+                        all_exists = ((ptrs != nullptr) && ...);
+                    },
+                    tuple
+                );
+
+                if (!all_exists)
+                {
+                    continue;
+                }
+
+                std::apply(
+                    [&](auto*... ptrs)
+                    {
+                        func(entities[i], first_container[i], *second, *ptrs...);
+                    },
+                    tuple
+                );
+            }
+        }
+    }
 
     //コンポーネントの持ち主のエンティティが死んだとき、属するコンポーネントを消す
     void RemoveAllComponents(uint32_t entity_id) {
@@ -168,10 +276,13 @@ private:
     // 型ごとのコンテナを汎用的に扱うための仕組み
     template<typename T>
     void registerContainer(std::vector<T>& vec) {
-        containers_[std::type_index(typeid(T))] = &vec;
+        const auto& type = TypeIndex<T>();
+
+        containers_[type] = &vec;
+        component_to_entity_[type] = {};
 
         //removerも登録
-        removers_[std::type_index(typeid(T))] = [this](uint32_t eid)
+        removers_[type] = [this](uint32_t eid)
             {
                 this->Remove<T>(eid);
             };
@@ -179,7 +290,8 @@ private:
 
     template<typename T>
     std::vector<T>& getContainer() {
-        auto it = containers_.find(std::type_index(typeid(T)));
+        const auto& type = TypeIndex<T>();
+        auto it = containers_.find(type);
         if (it == containers_.end()) {
             throw std::runtime_error("�R���|�[�l���g���o�^����Ă��܂���");
         }
@@ -188,7 +300,7 @@ private:
 
     template<typename T>
     const std::vector<T>& getContainer() const {
-        auto it = containers_.find(std::type_index(typeid(T)));
+        auto it = containers_.find(TypeIndex<T>());
         if (it == containers_.end()) {
             throw std::runtime_error("�R���|�[�l���g���o�^����Ă��܂���");
         }
@@ -199,6 +311,7 @@ private:
     std::unordered_map<std::type_index, void*> containers_;
     //型ごとのマッピング機能
 
+    std::unordered_map<std::type_index, std::vector<uint32_t>>component_to_entity_;
     std::unordered_map<std::type_index, std::unordered_map<uint32_t, int>> entity_to_component_;
     std::unordered_map<std::type_index, std::function<void(uint32_t)>> removers_;
 
@@ -221,4 +334,5 @@ private:
     std::vector<ComponentName>names_;
     std::vector<ComponentCascadeShadow>cas_shadows_;
     std::vector<ComponentDeferredRender>deferred_renders_;
+    std::vector<ComponentBoundingBox>bounding_boxes_;
 };

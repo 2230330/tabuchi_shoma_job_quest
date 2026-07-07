@@ -8,4 +8,7 @@ struct ComponentGltf :public IComponent
     std::shared_ptr<GltfModel>model;
     size_t animation_index = 0;
     float animation_time = 0.0f;
+
+    //静的オブジェクトか動的オブジェクトかのフラグ
+    bool dirty = false;
 };

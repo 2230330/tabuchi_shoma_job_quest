@@ -2,6 +2,7 @@
 #include"i_render_system.h"
 #include<d3d11.h>
 #include<wrl.h>
+#include<DirectXMath.h>
 #include<unordered_map>
 
 //前方宣言
@@ -26,5 +27,7 @@ private:
     };
 
     std::unordered_map<GltfModel*, InstanceBufferInfo>instance_buffer_pool_;
+    std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds_;
+
     ComponentManager& comp_mng_;
 };

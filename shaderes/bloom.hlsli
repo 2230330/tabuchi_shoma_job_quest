@@ -1,8 +1,14 @@
 //BLOOM
-cbuffer BLOOM_CONSTANT_BUFFER : register(b5)
+
+cbuffer BloomComputeConstants : register(b8)
 {
     float bloom_extraction_threshold;
     float bloom_intensity;
     float bloom_soft_knee;
     float bloom_radius;
-}
+
+    uint input_width;
+    uint input_height;
+    uint output_width;
+    uint output_height;
+};

@@ -4,5 +4,5 @@
 
 struct ComponentLocalToWorld:public IComponent
 {
-    DirectX::XMFLOAT4X4 value;
+    DirectX::XMFLOAT4X4 value{};
 };
