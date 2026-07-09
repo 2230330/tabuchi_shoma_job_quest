@@ -19,6 +19,7 @@
 #include"../../headers/render_state.h"
 #include"../../external/imgui/imgui.h"
 #include"../../headers/random_helper.h"
+#include"../../headers/job_system.h"
 
 
 SceneTest::SceneTest(const HWND hwnd)
@@ -37,6 +38,9 @@ bool SceneTest::InitializeCore()
         comp_mng = std::make_unique<ComponentManager>();
         world = std::make_unique<World>();
         comp_edit = std::make_unique<ComponentEditor>(*comp_mng, *world->GetEntityManager());
+
+        JobSystem::Instance().Initialize();
+
         update_sys_mng = std::make_unique<UpdateSystemManager>(*comp_mng);
         render_sys_mng = std::make_unique<RenderSystemManager>(*comp_mng);
         light_manager_ = std::make_unique<LightManager>();
@@ -72,7 +76,11 @@ bool SceneTest::InitializeCore()
         {
             uint32_t entity = world->GetEntityManager()->Add();
             ComponentPosition pos;
-            pos.value = {static_cast<float>(random_helper::Random(500)-250 ), static_cast<float>(random_helper::Random(10)), static_cast<float>(random_helper::Random(500) - 250)};
+            pos.value = {
+                static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4),
+                static_cast<float>(random_helper::Random(10)),
+                static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4)
+            };
             comp_mng->Add(entity, pos);
             ComponentRotation rot;
             rot.value = { 0.f, 0.f, 0.f };
@@ -102,7 +110,9 @@ bool SceneTest::InitializeCore()
             ComponentAdjastPbrParamter ajust_pbr_paramter;
             comp_mng->Add(entity, ajust_pbr_paramter);
             ComponentGltf gltf;
-            gltf.model= ResourceManager::Instance().LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
+            gltf.model= 
+                ResourceManager::Instance()
+                .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
             gltf.dirty = true;
             comp_mng->Add(entity, gltf);
             ComponentInstanced instanced;
@@ -142,19 +152,19 @@ void SceneTest::RenderCore(float elapsed_time)
     {
         Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler_state;
         sampler_state = render_state->GetSamplerState(SamplerState::point_wrap);
-        dc->PSSetSamplers(0, 1, sampler_state.GetAddressOf());
+        Graphics::Instance().SetSampler(0, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::point_clamp);
-        dc->PSSetSamplers(1, 1, sampler_state.GetAddressOf());
+        Graphics::Instance().SetSampler(1, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::linear_wrap);
-        dc->PSSetSamplers(2, 1, sampler_state.GetAddressOf());
+        Graphics::Instance().SetSampler(2, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::linear_clamp);
-        dc->PSSetSamplers(3, 1, sampler_state.GetAddressOf());
+        Graphics::Instance().SetSampler(3, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::anisotropic);
-        dc->PSSetSamplers(4, 1, sampler_state.GetAddressOf());
+        Graphics::Instance().SetSampler(4, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::linear_mirror);
-        dc->PSSetSamplers(5, 1, sampler_state.GetAddressOf());
+        Graphics::Instance().SetSampler(5, 1, sampler_state.GetAddressOf());
         sampler_state = render_state->GetSamplerState(SamplerState::shadowmap);
-        dc->PSSetSamplers(6, 1, sampler_state.GetAddressOf());
+        Graphics::Instance().SetSampler(6, 1, sampler_state.GetAddressOf());
 
 
     }

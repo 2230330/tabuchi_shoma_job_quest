@@ -26,7 +26,7 @@
 // sampler_states[3]                 sampler      NA          NA             s3      1 
 // scene_texture                     texture  float4          2d             t0      1 
 // bloom_texture                     texture  float4          2d             t1      1 
-// BloomComputeConstants             cbuffer      NA          NA            cb8      1 
+// BloomComputeConstants             cbuffer      NA          NA            cb5      1 
 //
 //
 //
@@ -46,7 +46,7 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB8[1], immediateIndexed
+dcl_constantbuffer CB5[1], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
@@ -67,7 +67,7 @@ sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t1.xyzw, s
 mov r1.xyz, r1.xyzx  // r1.x <- bloom.x; r1.y <- bloom.y; r1.z <- bloom.z
 
 #line 27
-mul r1.xyz, r1.xyzx, cb8[0].yyyy
+mul r1.xyz, r1.xyzx, cb5[0].yyyy
 add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- result.x; r0.y <- result.y; r0.z <- result.z
 
 #line 29

@@ -27,7 +27,7 @@
 // hdr_color_buffer_texture          texture  float4          2d             t0      1 
 // emissive_color_buffer_texture     texture  float4          2d             t1      1 
 // output_texture                        UAV  float4          2d             u0      1 
-// BloomComputeConstants             cbuffer      NA          NA            cb8      1 
+// BloomComputeConstants             cbuffer      NA          NA            cb5      1 
 //
 //
 //
@@ -44,7 +44,7 @@
 // no Output
 cs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB8[2], immediateIndexed
+dcl_constantbuffer CB5[2], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
@@ -60,8 +60,8 @@ dcl_thread_group 8, 8, 1
 mov r0.xyzw, vThreadID.xyyy  // r0.x <- pixel.x; r0.w <- pixel.y
 
 #line 22
-uge r1.x, r0.x, cb8[1].z
-uge r1.y, r0.w, cb8[1].w
+uge r1.x, r0.x, cb5[1].z
+uge r1.y, r0.w, cb5[1].w
 or r1.x, r1.y, r1.x
 if_nz r1.x
 
@@ -74,7 +74,7 @@ endif
 #line 27
 utof r1.xy, r0.xwxx
 add r1.xy, r1.xyxx, l(0.500000, 0.500000, 0.000000, 0.000000)
-utof r1.zw, cb8[1].zzzw
+utof r1.zw, cb5[1].zzzw
 div r1.xy, r1.xyxx, r1.zwzz  // r1.x <- uv.x; r1.y <- uv.y
 
 #line 29
@@ -93,13 +93,13 @@ add r1.xyz, r1.xyzx, r2.xyzx  // r1.x <- hdrColor.x; r1.y <- hdrColor.y; r1.z <-
 dp3 r1.w, r1.xyzx, l(0.212600, 0.715200, 0.072200, 0.000000)  // r1.w <- brightness
 
 #line 48
-mul r2.x, cb8[0].z, cb8[0].x
+mul r2.x, cb5[0].z, cb5[0].x
 add r2.x, r2.x, l(0.000100)  // r2.x <- knee
 
 #line 51
 mov r2.y, -r2.x
-add r2.y, r2.y, cb8[0].x
-add r2.z, r2.x, cb8[0].x
+add r2.y, r2.y, cb5[0].x
+add r2.z, r2.x, cb5[0].x
 mov r2.y, -r2.y
 add r2.z, r2.y, r2.z
 add r2.y, r1.w, r2.y
@@ -113,7 +113,7 @@ mul r2.y, r2.y, r2.y
 mul r2.y, r2.y, r2.z  // r2.y <- soft
 
 #line 58
-mov r2.z, -cb8[0].x
+mov r2.z, -cb5[0].x
 add r1.w, r1.w, r2.z
 div r1.w, r1.w, r2.x
 max r1.w, r1.w, l(0.000000)

@@ -1,6 +1,6 @@
 //BLOOM
 
-cbuffer BloomComputeConstants : register(b8)
+cbuffer BloomComputeConstants : register(b5)
 {
     float bloom_extraction_threshold;
     float bloom_intensity;

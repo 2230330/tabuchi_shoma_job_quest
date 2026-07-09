@@ -14,7 +14,8 @@ void UpdateTransformSystem::Update(float elapsed_time)
 {
     (void)elapsed_time;
 
-    comp_mng_.ForEach<
+    comp_mng_.ParallelForEach<
+        ComponentDynamic,
         ComponentLocalToWorld,
         ComponentPosition,
         ComponentRotation,
@@ -22,6 +23,7 @@ void UpdateTransformSystem::Update(float elapsed_time)
         ComponentGltf
     >(
         [](uint32_t entity_id,
+            ComponentDynamic,
             ComponentLocalToWorld& l2w,
             ComponentPosition& pos,
             ComponentRotation& rot,
@@ -54,5 +56,6 @@ void UpdateTransformSystem::Update(float elapsed_time)
                 scale_matrix * rotation_matrix * translation_matrix
             );
         }
+        ,1024
     );
 }

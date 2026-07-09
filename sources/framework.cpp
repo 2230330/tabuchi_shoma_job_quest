@@ -11,9 +11,9 @@
 #include "../external/imgui/imgui_internal.h"
 #include "../external/imgui/imgui_impl_dx11.h"
 #include "../external/imgui/imgui_impl_win32.h"
-extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 extern ImWchar glyphRangesJapanese[];
 #endif
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 Framework::Framework(HWND hwnd):hwnd_(hwnd)
 {
@@ -59,7 +59,6 @@ void Framework::Render(float elapsed_time)
     {
         scene_->Render(elapsed_time);
     }
-
 
 
 #ifdef USE_IMGUI

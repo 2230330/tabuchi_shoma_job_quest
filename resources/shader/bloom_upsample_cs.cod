@@ -27,7 +27,7 @@
 // current_texture                   texture  float4          2d             t0      1 
 // lower_texture                     texture  float4          2d             t1      1 
 // output_texture                        UAV  float4          2d             u0      1 
-// BloomComputeConstants             cbuffer      NA          NA            cb8      1 
+// BloomComputeConstants             cbuffer      NA          NA            cb5      1 
 //
 //
 //
@@ -44,7 +44,7 @@
 // no Output
 cs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB8[2], immediateIndexed
+dcl_constantbuffer CB5[2], immediateIndexed
 dcl_sampler s3, mode_default
 dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
@@ -60,8 +60,8 @@ dcl_thread_group 8, 8, 1
 mov r0.xyzw, vThreadID.xyyy  // r0.x <- pixel.x; r0.w <- pixel.y
 
 #line 22
-uge r1.x, r0.x, cb8[1].z
-uge r1.y, r0.w, cb8[1].w
+uge r1.x, r0.x, cb5[1].z
+uge r1.y, r0.w, cb5[1].w
 or r1.x, r1.y, r1.x
 if_nz r1.x
 
@@ -74,7 +74,7 @@ endif
 #line 27
 utof r1.xy, r0.xwxx
 add r1.xy, r1.xyxx, l(0.500000, 0.500000, 0.000000, 0.000000)
-utof r1.zw, cb8[1].zzzw
+utof r1.zw, cb5[1].zzzw
 div r1.xy, r1.xyxx, r1.zwzz  // r1.x <- uv.x; r1.y <- uv.y
 
 #line 29

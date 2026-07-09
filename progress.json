@@ -3,15 +3,15 @@
         {
             "components": {
                 "Camera": {
-                    "dir_x": 0.38939881324768066,
-                    "dir_y": -0.009999871253967285,
-                    "dir_z": -0.9210149645805359,
+                    "dir_x": 0.04991668090224266,
+                    "dir_y": -0.049979161471128464,
+                    "dir_z": -0.9975020885467529,
                     "far": 1000.0,
                     "main": true,
                     "near": 0.10000000149011612,
-                    "pos_x": -26.489076614379883,
-                    "pos_y": 2.6230576038360596,
-                    "pos_z": 27.78978157043457
+                    "pos_x": -1.4714486598968506,
+                    "pos_y": 2.0954318046569824,
+                    "pos_z": 15.695889472961426
                 },
                 "Name": {
                     "value": "Camera"
@@ -95,7 +95,7 @@
                     "value": "Screen Space Reflection"
                 },
                 "ScreenSpaceReflection": {
-                    "distance": 100.0,
+                    "distance": 1000.0,
                     "intensity": 1.0,
                     "max_mip": 6,
                     "num_steps": 10,
@@ -120,6 +120,7 @@
                     "metalness": 0.0,
                     "roughness": 0.0
                 },
+                "Dynamic": true,
                 "Gltf": {
                     "animation_index": 0,
                     "animation_time": 0.0,
@@ -153,6 +154,7 @@
                     "metalness": 0.0,
                     "roughness": 0.0
                 },
+                "Dynamic": true,
                 "Gltf": {
                     "animation_index": 0,
                     "animation_time": 0.0,
@@ -185,6 +187,7 @@
                     "metalness": 0.0,
                     "roughness": 0.0
                 },
+                "Dynamic": true,
                 "Gltf": {
                     "animation_index": 0,
                     "animation_time": 0.0,

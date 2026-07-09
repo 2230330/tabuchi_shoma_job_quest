@@ -11,7 +11,7 @@ UpdateBoundingBoxSystem::UpdateBoundingBoxSystem(ComponentManager& comp_mng)
 //境界ボックスの更新
 void UpdateBoundingBoxSystem::Update(float elapsed_time)
 {
-    comp_mng_.ForEach<
+    comp_mng_.ParallelForEach<
         ComponentBoundingBox,
         ComponentLocalToWorld,
         ComponentGltf
@@ -83,5 +83,6 @@ void UpdateBoundingBoxSystem::Update(float elapsed_time)
                 world_center.z + world_extents.z
             };
         }
+        ,1024
     );
 }

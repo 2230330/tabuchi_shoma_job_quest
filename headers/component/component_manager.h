@@ -1,13 +1,13 @@
 #pragma once
+
 #include <vector>
 #include <cstdint>
-#include <unordered_map>
-#include <typeindex>
-#include <stdexcept>
-#include<functional>
-#include<tuple>
-#include<cassert>
-#include<algorithm>
+#include <cassert>
+#include <tuple>
+#include <algorithm>
+#include <utility>
+
+#include"component_storage.h"
 
 #include "component_position.h"
 #include "component_rotation.h"
@@ -22,229 +22,154 @@
 #include "component_instanced.h"
 #include "component_volumetric_cloud.h"
 #include "component_sky_atmosphere.h"
-#include"component_ajast_pbr_paramter_.h"
+#include "component_ajast_pbr_paramter_.h"
 #include "component_camera.h"
 #include "component_screen_space_reflection.h"
-#include"component_name.h"
-#include"component_cascade_shadow.h"
-#include"component_deferred_render.h"
-#include"component_bound_box.h"
+#include "component_name.h"
+#include "component_cascade_shadow.h"
+#include "component_deferred_render.h"
+#include "component_bound_box.h"
+#include "component_dynamic.h"
 
-//コンポーネントの管理者。これからぶくぶく大きくなると考えるとちょっと悩み物
+#include "../job_system.h"
+
+
 class ComponentManager
 {
 public:
-    ComponentManager() {
-        // コンストラクタで型ごとのストレージを登録しておく
-        registerContainer<ComponentPosition>(positions_);
-        registerContainer<ComponentRotation>(rotations_);
-        registerContainer<ComponentScale>(scales_);
-        registerContainer<ComponentLocalToWorld>(l2ws_);
-        registerContainer<ComponentColor>(colors_);
-        registerContainer<ComponentGltf>(gltfs_);
-        registerContainer<ComponentMesh>(meshes_);
-        registerContainer<ComponentPrimitive>(primitives_);
-        registerContainer<ComponentMaterial>(materials_);
-        registerContainer<ComponentTexture>(textures_);
-        registerContainer<ComponentInstanced>(instanced_);
-        registerContainer<ComponentSkyAtmosphere>(skys_);
-        registerContainer<ComponentVolumetricCloud>(clouds_);
-        registerContainer<ComponentAdjastPbrParamter>(ajast_pbr_paramters_);
-        registerContainer<ComponentCamera>(cameras_);
-        registerContainer<ComponentSsr>(ssrs_);
-        registerContainer<ComponentName>(names_);
-        registerContainer<ComponentCascadeShadow>(cas_shadows_);
-        registerContainer<ComponentDeferredRender>(deferred_renders_);
-        registerContainer<ComponentBoundingBox>(bounding_boxes_);
-    }
+    ComponentManager() = default;
+
+    //型Tに対するComponentStorageを取得する
+    //もともと、std::type_indexとunordered_mapを使用してコンポーネントの配列を検索していましたが、
+    //膨大な数のコンポーネントをいちいちマップで検索していては、どうしても処理が重くなるので変更しました
+    // 
+    // この実装では、Component型ごとに専用のストレージメンバを持ち、
+    // Storage<T>によって、Tに対応するストレージを呼び出す
+    // これの実装により、ホットパスを軽くできました。
+    //
+    template<typename T>
+    ComponentStorage<T>& Storage();
 
     template<typename T>
-    static const std::type_index& TypeIndex() {
-        static const std::type_index type_index(typeid(T));
-        return type_index;
-    }
-
+    const ComponentStorage<T>& Storage() const;
 
     template<typename T>
     int Add(uint32_t entity_id, const T& component)
     {
-        const auto& type = TypeIndex<T>();
-
-        auto& mapping = entity_to_component_[type];
-
-        // 同じEntityに同じComponentを二重追加しない
-        assert(mapping.find(entity_id) == mapping.end());
-
-        auto& container = getContainer<T>();
-        container.emplace_back(component);
-
-        int id = static_cast<int>(container.size() - 1);
-
-        mapping[entity_id] = id;
-        component_to_entity_[type].emplace_back(entity_id);
-
-        return id;
+        return Storage<T>().Add(entity_id, component);
     }
 
-    //コンポーネントを格納している配列の要素で取り出すゲッター
-    template<typename T>
-    T& Get(int id) {
-        auto& container = getContainer<T>();
-        return container.at(id);
-    }
-
-    template<typename T>
-    const T& Get(int id) const {
-        const auto& container = getContainer<T>();
-        return container.at(id);
-    }
-
-    //要素の削除関数
-    template<typename T>
-    void Remove(uint32_t entity_id) {
-        const auto& type = TypeIndex<T>();
-
-        // entity_id からコンポーネントのインデックスを取得
-        auto mit = entity_to_component_.find(type);
-        //なければ何もしない
-        if (mit == entity_to_component_.end()) return;
-
-        auto& mapping = mit->second;
-
-        auto it = mapping.find(entity_id);
-        if (it == mapping.end()) return;
-
-        auto& container = getContainer<T>();
-        auto entity_list_it = component_to_entity_.find(type);
-        if (entity_list_it == component_to_entity_.end()) return;
-
-        auto& entities = entity_list_it->second;
-
-        assert(container.size() == entities.size());
-
-        const int index_to_remove = it->second;
-        const int last_index = static_cast<int>(container.size() - 1);
-
-        if (index_to_remove != last_index) {
-            //最後のコンポーネントを削除位置へ移動
-            std::swap(container[index_to_remove], container[last_index]);
-            //最後のコンポーネントを持っていてたエンティティを取得
-            const uint32_t moved_entity = entities[last_index];
-            //entityリスト側も同じ位置へ移動
-            entities[index_to_remove] = moved_entity;
-            //移動したentityのindex を更新
-            mapping[moved_entity] = index_to_remove; 
-        }
-
-        container.pop_back();
-        entities.pop_back();
-
-        mapping.erase(entity_id);
-    }
-
-    //一緒に登録したエンティティで要素を取り出すゲッター
-    template<typename T>
-    T& GetByEntity(uint32_t entity_id) {
-        auto& container = getContainer<T>();
-        const auto& mapping = entity_to_component_[TypeIndex<T>()];
-        return container.at(mapping.at(entity_id));
-    }
-
-    //登録したコンポーネントがない場合などの安全版ゲッター
-    template<typename T>
-    T* TryGetByEntity(uint32_t entity_id) {
-        auto it = entity_to_component_.find(TypeIndex<T>());
-        if (it == entity_to_component_.end()) return nullptr;
-
-        const auto& mapping = it->second;
-        auto mit = mapping.find(entity_id);
-        if (mit == mapping.end()) return nullptr;
-
-        auto& container = getContainer<T>();
-        return &container[mit->second];
-    }
-    //エンティティがそのコンポーネントを所有しているかの確認
-    template<typename T>
-    inline bool Has(uint32_t entity_id)
+    template<typename T, typename... Args>
+    int Emplace(uint32_t entity_id, Args&&... args)
     {
-        auto it = entity_to_component_.find(TypeIndex<T>());
-        if (it == entity_to_component_.end()) return false;
-        return it->second.find(entity_id) != it->second.end();
+        return Storage<T>().Emplace(entity_id, std::forward<Args>(args)...);
     }
 
-    //特定のコンポーネントを持つエンティティに対して一括処理をする為の走査関数
-    //単数用
+    template<typename T>
+    void Remove(uint32_t entity_id)
+    {
+        Storage<T>().Remove(entity_id);
+    }
+
+    template<typename T>
+    bool Has(uint32_t entity_id) const
+    {
+        return Storage<T>().Has(entity_id);
+    }
+
+    template<typename T>
+    T* TryGetByEntity(uint32_t entity_id)
+    {
+        return Storage<T>().TryGet(entity_id);
+    }
+
+    template<typename T>
+    const T* TryGetByEntity(uint32_t entity_id) const
+    {
+        return Storage<T>().TryGet(entity_id);
+    }
+
+    template<typename T>
+    T& GetByEntity(uint32_t entity_id)
+    {
+        return Storage<T>().GetByEntity(entity_id);
+    }
+
+    template<typename T>
+    const T& GetByEntity(uint32_t entity_id) const
+    {
+        return Storage<T>().GetByEntity(entity_id);
+    }
+
+    template<typename T>
+    T& Get(int id)
+    {
+        return Storage<T>().GetByIndex(id);
+    }
+
+    template<typename T>
+    const T& Get(int id) const
+    {
+        return Storage<T>().GetByIndex(id);
+    }
+
+    template<typename T>
+    void Reserve(size_t component_count, size_t entity_capacity)
+    {
+        Storage<T>().Reserve(component_count, entity_capacity);
+    }
+
     template<typename T, typename Func>
     void ForEach(Func&& func)
     {
+        auto& storage = Storage<T>();
 
-        const auto& type = TypeIndex<T>();
-        auto entity_it = component_to_entity_.find(type);
-        //コンポーネントが存在しない場合は何もしない
-        if (  entity_it == component_to_entity_.end())
-        {
-            return;
-        }
+        const size_t count = storage.components.size();
 
-        auto& container = getContainer<T>();
-        auto& entities = entity_it->second;
-
-        const size_t count = container.size();
-
-        //念のため、動機ミスの検出を行う
-        assert(entities.size() == count);
+        assert(storage.entities.size() == count);
 
         for (size_t i = 0; i < count; ++i)
         {
-            func(entities[i], container[i]);
+            func(storage.entities[i], storage.components[i]);
         }
     }
-    //複数コンポーネント用
+
     template<typename First, typename Second, typename... Rest, typename Func>
     void ForEach(Func&& func)
     {
-        auto& first_container = getContainer<First>();
+        auto& first_storage = Storage<First>();
 
-        const auto& type = TypeIndex<First>();
-        auto entity_it = component_to_entity_.find(type);
+        const size_t count = first_storage.components.size();
 
-        if (entity_it == component_to_entity_.end())
-        {
-            return;
-        }
-
-        const auto& entities = entity_it->second;
-
-        //念のため、動機ミスの検出を行う
-        size_t count = entities.size();
-        assert(count == first_container.size());
-
+        assert(first_storage.entities.size() == count);
 
         for (size_t i = 0; i < count; ++i)
         {
-            auto* second = TryGetByEntity<Second>(entities[i]);
+            const uint32_t entity_id = first_storage.entities[i];
 
-            if (!second)
+            auto second = TryGetByEntity<Second>(entity_id);
+
+            if (second == nullptr)
             {
                 continue;
             }
 
             if constexpr (sizeof...(Rest) == 0)
             {
-                func(entities[i], first_container[i], *second);
+                func(entity_id, first_storage.components[i], *second);
             }
             else
             {
-                auto tuple = std::make_tuple(TryGetByEntity<Rest>(entities[i])...);
+                auto rest_tuple = std::make_tuple(TryGetByEntity<Rest>(entity_id)...);
 
                 bool all_exists = true;
 
                 std::apply(
-                    [&](auto*... ptrs)
+                    [&](auto... ptrs)
                     {
                         all_exists = ((ptrs != nullptr) && ...);
                     },
-                    tuple
+                    rest_tuple
                 );
 
                 if (!all_exists)
@@ -253,86 +178,187 @@ public:
                 }
 
                 std::apply(
-                    [&](auto*... ptrs)
+                    [&](auto... ptrs)
                     {
-                        func(entities[i], first_container[i], *second, *ptrs...);
+                        func(entity_id, first_storage.components[i], *second, *ptrs...);
                     },
-                    tuple
+                    rest_tuple
                 );
             }
         }
     }
 
-    //コンポーネントの持ち主のエンティティが死んだとき、属するコンポーネントを消す
-    void RemoveAllComponents(uint32_t entity_id) {
-        for (auto& [type, remove_fn] : removers_)
-        {
-            remove_fn(entity_id);
-        }
+    template<typename First, typename Second, typename... Rest, typename Func>
+    void ParallelForEach(Func&& func, size_t batch_size = 128)
+    {
+        auto& first_storage = Storage<First>();
 
-    }
+        const size_t count = first_storage.components.size();
 
-private:
-    // 型ごとのコンテナを汎用的に扱うための仕組み
-    template<typename T>
-    void registerContainer(std::vector<T>& vec) {
-        const auto& type = TypeIndex<T>();
+        assert(first_storage.entities.size() == count);
 
-        containers_[type] = &vec;
-        component_to_entity_[type] = {};
-
-        //removerも登録
-        removers_[type] = [this](uint32_t eid)
+        JobSystem::Instance().ParallelFor(
+            count,
+            batch_size,
+            [&](size_t i)
             {
-                this->Remove<T>(eid);
-            };
+                const uint32_t entity_id = first_storage.entities[i];
+
+                auto second = TryGetByEntity<Second>(entity_id);
+
+                if (second == nullptr)
+                {
+                    return;
+                }
+
+                if constexpr (sizeof...(Rest) == 0)
+                {
+                    func(entity_id, first_storage.components[i], *second);
+                }
+                else
+                {
+                    auto rest_tuple = std::make_tuple(TryGetByEntity<Rest>(entity_id)...);
+
+                    bool all_exists = true;
+
+                    std::apply(
+                        [&](auto... ptrs)
+                        {
+                            all_exists = ((ptrs != nullptr) && ...);
+                        },
+                        rest_tuple
+                    );
+
+                    if (!all_exists)
+                    {
+                        return;
+                    }
+
+                    std::apply(
+                        [&](auto... ptrs)
+                        {
+                            func(entity_id, first_storage.components[i], *second, *ptrs...);
+                        },
+                        rest_tuple
+                    );
+                }
+            }
+        );
     }
 
-    template<typename T>
-    std::vector<T>& getContainer() {
-        const auto& type = TypeIndex<T>();
-        auto it = containers_.find(type);
-        if (it == containers_.end()) {
-            throw std::runtime_error("�R���|�[�l���g���o�^����Ă��܂���");
-        }
-        return *static_cast<std::vector<T>*>(it->second);
+    void RemoveAllComponents(uint32_t entity_id)
+    {
+        Remove<ComponentPosition>(entity_id);
+        Remove<ComponentRotation>(entity_id);
+        Remove<ComponentScale>(entity_id);
+        Remove<ComponentLocalToWorld>(entity_id);
+        Remove<ComponentColor>(entity_id);
+        Remove<ComponentGltf>(entity_id);
+        Remove<ComponentMesh>(entity_id);
+        Remove<ComponentPrimitive>(entity_id);
+        Remove<ComponentMaterial>(entity_id);
+        Remove<ComponentTexture>(entity_id);
+        Remove<ComponentInstanced>(entity_id);
+        Remove<ComponentSkyAtmosphere>(entity_id);
+        Remove<ComponentVolumetricCloud>(entity_id);
+        Remove<ComponentAdjastPbrParamter>(entity_id);
+        Remove<ComponentCamera>(entity_id);
+        Remove<ComponentSsr>(entity_id);
+        Remove<ComponentName>(entity_id);
+        Remove<ComponentCascadeShadow>(entity_id);
+        Remove<ComponentDeferredRender>(entity_id);
+        Remove<ComponentBoundingBox>(entity_id);
+        Remove<ComponentDynamic>(entity_id);
     }
 
-    template<typename T>
-    const std::vector<T>& getContainer() const {
-        auto it = containers_.find(TypeIndex<T>());
-        if (it == containers_.end()) {
-            throw std::runtime_error("�R���|�[�l���g���o�^����Ă��܂���");
-        }
-        return *static_cast<const std::vector<T>*>(it->second);
+    void ClearAll()
+    {
+        positions_.Clear();
+        rotations_.Clear();
+        scales_.Clear();
+        l2ws_.Clear();
+        colors_.Clear();
+        gltfs_.Clear();
+        meshes_.Clear();
+        primitives_.Clear();
+        materials_.Clear();
+        textures_.Clear();
+        instanced_.Clear();
+        skys_.Clear();
+        clouds_.Clear();
+        ajast_pbr_paramters_.Clear();
+        cameras_.Clear();
+        ssrs_.Clear();
+        names_.Clear();
+        cas_shadows_.Clear();
+        deferred_renders_.Clear();
+        bounding_boxes_.Clear();
+        dynamics_.Clear();
     }
 
 private:
-    std::unordered_map<std::type_index, void*> containers_;
-    //型ごとのマッピング機能
-
-    std::unordered_map<std::type_index, std::vector<uint32_t>>component_to_entity_;
-    std::unordered_map<std::type_index, std::unordered_map<uint32_t, int>> entity_to_component_;
-    std::unordered_map<std::type_index, std::function<void(uint32_t)>> removers_;
-
-    std::vector<ComponentPosition> positions_;
-    std::vector<ComponentRotation> rotations_;
-    std::vector<ComponentScale> scales_;
-    std::vector<ComponentLocalToWorld> l2ws_;
-    std::vector<ComponentColor> colors_;
-    std::vector<ComponentGltf> gltfs_;
-    std::vector<ComponentMesh>meshes_;
-    std::vector<ComponentPrimitive>primitives_;
-    std::vector<ComponentMaterial>materials_;
-    std::vector<ComponentTexture>textures_;
-    std::vector<ComponentInstanced>instanced_;
-    std::vector<ComponentSkyAtmosphere>skys_;
-    std::vector<ComponentVolumetricCloud>clouds_;
-    std::vector<ComponentAdjastPbrParamter>ajast_pbr_paramters_;
-    std::vector<ComponentCamera>cameras_;
-    std::vector<ComponentSsr>ssrs_;
-    std::vector<ComponentName>names_;
-    std::vector<ComponentCascadeShadow>cas_shadows_;
-    std::vector<ComponentDeferredRender>deferred_renders_;
-    std::vector<ComponentBoundingBox>bounding_boxes_;
+    ComponentStorage<ComponentPosition> positions_;
+    ComponentStorage<ComponentRotation> rotations_;
+    ComponentStorage<ComponentScale> scales_;
+    ComponentStorage<ComponentLocalToWorld> l2ws_;
+    ComponentStorage<ComponentColor> colors_;
+    ComponentStorage<ComponentGltf> gltfs_;
+    ComponentStorage<ComponentMesh> meshes_;
+    ComponentStorage<ComponentPrimitive> primitives_;
+    ComponentStorage<ComponentMaterial> materials_;
+    ComponentStorage<ComponentTexture> textures_;
+    ComponentStorage<ComponentInstanced> instanced_;
+    ComponentStorage<ComponentSkyAtmosphere> skys_;
+    ComponentStorage<ComponentVolumetricCloud> clouds_;
+    ComponentStorage<ComponentAdjastPbrParamter> ajast_pbr_paramters_;
+    ComponentStorage<ComponentCamera> cameras_;
+    ComponentStorage<ComponentSsr> ssrs_;
+    ComponentStorage<ComponentName> names_;
+    ComponentStorage<ComponentCascadeShadow> cas_shadows_;
+    ComponentStorage<ComponentDeferredRender> deferred_renders_;
+    ComponentStorage<ComponentBoundingBox> bounding_boxes_;
+    ComponentStorage<ComponentDynamic> dynamics_;
 };
+
+
+//コンポーネント型とその型を格納しているComponentStorageメンバの対応を定義します
+// 
+// 新しいコンポーネントを追加した場合は、
+// 対応する型のコンポーネントストレージと
+// 対応する型のマクロを生成する
+//
+#define DEFINE_COMPONENT_STORAGE(Type, Member)                                  \
+template<>                                                                      \
+inline ComponentStorage<Type>& ComponentManager::Storage<Type>()                 \
+{                                                                                \
+    return Member;                                                               \
+}                                                                                \
+template<>                                                                      \
+inline const ComponentStorage<Type>& ComponentManager::Storage<Type>() const      \
+{                                                                                \
+    return Member;                                                               \
+}
+
+DEFINE_COMPONENT_STORAGE(ComponentPosition, positions_)
+DEFINE_COMPONENT_STORAGE(ComponentRotation, rotations_)
+DEFINE_COMPONENT_STORAGE(ComponentScale, scales_)
+DEFINE_COMPONENT_STORAGE(ComponentLocalToWorld, l2ws_)
+DEFINE_COMPONENT_STORAGE(ComponentColor, colors_)
+DEFINE_COMPONENT_STORAGE(ComponentGltf, gltfs_)
+DEFINE_COMPONENT_STORAGE(ComponentMesh, meshes_)
+DEFINE_COMPONENT_STORAGE(ComponentPrimitive, primitives_)
+DEFINE_COMPONENT_STORAGE(ComponentMaterial, materials_)
+DEFINE_COMPONENT_STORAGE(ComponentTexture, textures_)
+DEFINE_COMPONENT_STORAGE(ComponentInstanced, instanced_)
+DEFINE_COMPONENT_STORAGE(ComponentSkyAtmosphere, skys_)
+DEFINE_COMPONENT_STORAGE(ComponentVolumetricCloud, clouds_)
+DEFINE_COMPONENT_STORAGE(ComponentAdjastPbrParamter, ajast_pbr_paramters_)
+DEFINE_COMPONENT_STORAGE(ComponentCamera, cameras_)
+DEFINE_COMPONENT_STORAGE(ComponentSsr, ssrs_)
+DEFINE_COMPONENT_STORAGE(ComponentName, names_)
+DEFINE_COMPONENT_STORAGE(ComponentCascadeShadow, cas_shadows_)
+DEFINE_COMPONENT_STORAGE(ComponentDeferredRender, deferred_renders_)
+DEFINE_COMPONENT_STORAGE(ComponentBoundingBox, bounding_boxes_)
+DEFINE_COMPONENT_STORAGE(ComponentDynamic, dynamics_)
+
+#undef DEFINE_COMPONENT_STORAGE

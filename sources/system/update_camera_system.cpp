@@ -12,7 +12,11 @@ CameraUpdateSystem::CameraUpdateSystem(ComponentManager& comp_mng)
 
 void CameraUpdateSystem::Update(float elapsed_time)
 {
-	comp_mng_.ForEach<ComponentCamera>([this,elapsed_time](uint32_t entity_id, ComponentCamera& camera)
+	comp_mng_.ForEach<
+		ComponentCamera
+	>([this,elapsed_time](
+		uint32_t entity_id,
+		ComponentCamera& camera)
 		{
 			if(camera.main_camera_flag_)
 			{ 

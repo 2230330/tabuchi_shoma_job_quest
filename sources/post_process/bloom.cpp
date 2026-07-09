@@ -5,6 +5,7 @@
 #include"../../headers/misc.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/graphics.h"
+#include"../../headers/constant_buffer_slot.h"
 
 Bloom::Bloom(ID3D11Device* device, uint32_t& width, uint32_t& height)
 {
@@ -104,7 +105,7 @@ void Bloom::Make(
         };
 
         context->CSSetShader(bloom_extract_cs_.Get(), nullptr, 0);
-        Graphics::Instance().SetConstantBuffer(8, 1, constant_buffer_.GetAddressOf());
+        Graphics::Instance().SetConstantBuffer(ConstantBufferSlot::kPostEffect, 1, constant_buffer_.GetAddressOf());
         context->CSSetShaderResources(0, 2, srvs);
         context->CSSetUnorderedAccessViews(0, 1, uavs, nullptr);
 
@@ -142,7 +143,6 @@ void Bloom::Make(
             bloom_mips_[i].uav.Get();
 
         context->CSSetShader(bloom_downsample_cs_.Get(), nullptr, 0);
-        //context->CSSetConstantBuffers(8, 1, constant_buffer_.GetAddressOf());
         context->CSSetShaderResources(0, 1, &srv);
         context->CSSetUnorderedAccessViews(0, 1, &uav, nullptr);
 
@@ -183,7 +183,6 @@ void Bloom::Make(
             bloom_temp_[i].uav.Get();
 
         context->CSSetShader(bloom_upsample_cs_.Get(), nullptr, 0);
-        //context->CSSetConstantBuffers(8, 1, constant_buffer_.GetAddressOf());
         
         context->CSSetShaderResources(0, 2, srvs);
         context->CSSetUnorderedAccessViews(0, 1, &uav, nullptr);

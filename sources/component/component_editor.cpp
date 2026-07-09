@@ -46,6 +46,7 @@ void ComponentEditor::DrawImgui()
     {
 
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::Text("Number of entities: %d",static_cast<int>(enti_mng_.GetArray().size()));
 
         if (ImGui::Button("save"))
         {
@@ -488,6 +489,28 @@ void ComponentEditor::DrawImgui()
                             comp_mng_.Remove<ComponentInstanced>(entity.entity);
                         }
                     }
+                    if (comp_mng_.Has<ComponentInstanced>(entity.entity))
+                    {
+                        ImGui::Text("Instancing Render");
+                    }
+                    ImGui::Separator();
+                    //位置更新する化しないか
+                    if (ImGui::Button("dynamic"))
+                    {
+                        if (!comp_mng_.Has<ComponentDynamic>(entity.entity))
+                        {
+                            ComponentDynamic dynamic;
+                            comp_mng_.Add(entity.entity, dynamic);
+                        }
+                        else
+                        {
+                            comp_mng_.Remove<ComponentDynamic>(entity.entity);
+                        }
+                    }
+                    if (comp_mng_.Has<ComponentDynamic>(entity.entity))
+                    {
+                        ImGui::Text("Dynamic Object");
+                    }
                     ImGui::Separator();
 
                     ImGui::Text("Filename: %s", gltf.model->GetFilename().c_str());
@@ -511,11 +534,7 @@ void ComponentEditor::DrawImgui()
                     }
                     ImGui::Separator();
                 }
-                if (comp_mng_.Has<ComponentInstanced>(entity.entity))
-                {
-                    ImGui::Text("Instancing Render");
-                    ImGui::Separator();
-                }
+
                 // Camera
                 if (comp_mng_.Has<ComponentCamera>(entity.entity))
                 {
@@ -581,7 +600,7 @@ void ComponentEditor::DrawImgui()
 
                     ImGui::Text("Screen Space Reflection");
 
-                    ImGui::DragFloat("Distance", &ssr.distance, 0.1f, 0.1f, 100.0f);
+                    ImGui::DragFloat("Distance", &ssr.distance, 0.1f, 0.1f, 1000.0f);
                     ImGui::DragInt("Num Steps", &ssr.num_steps, 1, 1, 128);
                     ImGui::DragInt("Max Mip", &ssr.max_mip, 1, 1, 6);
                     ImGui::DragFloat("Thickness", &ssr.thickness, 0.01f, 0.01f, 1.0f);
@@ -851,6 +870,14 @@ void ComponentEditor::Save(const std::string& filename)
         }
 
         // =========================
+        // Dynamic
+        // =========================
+        if (comp_mng_.Has<ComponentDynamic>(entity.entity))
+        {
+            comp_json["Dynamic"] = true;
+        }
+
+        // =========================
         // Camera
         // =========================
         if (comp_mng_.Has<ComponentCamera>(entity.entity))
@@ -1102,7 +1129,12 @@ void ComponentEditor::Load(const std::string& filename)
             ComponentInstanced i;
             comp_mng_.Add(entity, i);
         }
-
+        //Dynamic
+        if (comp_json.contains("Dynamic"))
+        {
+            ComponentDynamic d;
+            comp_mng_.Add(entity, d);
+        }
         // Camera
         if (comp_json.contains("Camera"))
         {

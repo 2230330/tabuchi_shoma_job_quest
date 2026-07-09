@@ -48,48 +48,42 @@ void InstancingRenderSystem::Render()
     }
 
     comp_mng_.ForEach<
+        ComponentInstanced,
         ComponentGltf,
         ComponentLocalToWorld,
         ComponentBoundingBox
     >([&](
         uint32_t entity_id,
+        ComponentInstanced& instanced,
         ComponentGltf& gltf,
-        ComponentLocalToWorld&l2w,
+        ComponentLocalToWorld& l2w,
         ComponentBoundingBox& b_box
         ) {
-            if (!comp_mng_.TryGetByEntity<ComponentSkyAtmosphere>(entity_id)&&
-                !comp_mng_.TryGetByEntity<ComponentVolumetricCloud>(entity_id))
+
+
+
+            bool visible = true;
+
+            // バウンディングボックスを取得して、フラスタムカリングを行う
+            if (FrustumHelper::IsValidWorldBoundingBox(b_box))
             {
-
-                auto* instanced = comp_mng_.TryGetByEntity<ComponentInstanced>(entity_id);
-
-                // インスタンシング対象のみ抽出
-                if ( !instanced)
-                {
-                    return;
-                }
-
-                bool visible = true;
-
-                // バウンディングボックスを取得して、フラスタムカリングを行う
-                if (FrustumHelper::IsValidWorldBoundingBox(b_box))
-                {
-                    visible = FrustumHelper::IsAABBVisibleFromFrustumPlanes(b_box, frustum_planes);
-                }
-                else
-                {
-                    // バウンディングボックスが無効な場合は、常に描画する
-                    visible = true;
-                }
-
-                if (!visible)
-                {
-                    return;
-                }
-
-                model_to_worlds_[gltf.model.get()].push_back(l2w.value);
+                visible = FrustumHelper::IsAABBVisibleFromFrustumPlanes(b_box, frustum_planes);
             }
-        });
+            else
+            {
+                // バウンディングボックスが無効な場合は、常に描画する
+                visible = true;
+            }
+
+            if (!visible)
+            {
+                return;
+            }
+
+            model_to_worlds_[gltf.model.get()].push_back(l2w.value);
+
+        }
+    );
 
     ID3D11Device* device = Graphics::Instance().GetDevice();
     ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();

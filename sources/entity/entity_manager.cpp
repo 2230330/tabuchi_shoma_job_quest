@@ -6,6 +6,8 @@ uint32_t EntityManager::Add() {
     if (!free_list_.empty()) {
         id = free_list_.back();
         free_list_.pop_back();
+
+        entities_[id].entity = id;
         entities_[id].alive = true;
     }
     else {
@@ -104,5 +106,4 @@ EntityRecord EntityManager::GetRecord(uint32_t entity_id) const
 
     //見つからなかった場合、デフォルト値(nullptr,無効インデックス)を返す
     return EntityRecord{ static_cast<uint32_t>(-1) };
-    return EntityRecord();
 }

@@ -293,6 +293,15 @@
     <ClInclude Include="headers\system\render_frustum_helper.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\job_system.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_dynamic.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\component\component_storage.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -426,6 +435,9 @@
     </ClCompile>
     <ClCompile Include="sources\system\update_bounding_box_system.cpp">
       <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\job_system.cpp">
+      <Filter>sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
