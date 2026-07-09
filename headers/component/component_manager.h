@@ -119,6 +119,7 @@ public:
         Storage<T>().Reserve(component_count, entity_capacity);
     }
 
+    //単数用
     template<typename T, typename Func>
     void ForEach(Func&& func)
     {
@@ -134,6 +135,7 @@ public:
         }
     }
 
+    //複数用
     template<typename First, typename Second, typename... Rest, typename Func>
     void ForEach(Func&& func)
     {

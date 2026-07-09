@@ -81,6 +81,9 @@ bool SceneTest::InitializeCore()
                 static_cast<float>(random_helper::Random(10)),
                 static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4)
             };
+            //カメラにかぶらないように
+            if (-10.f <= pos.value.x && pos.value.x <= 10)pos.value.x *= 10.f;
+            if (-10.f <= pos.value.z && pos.value.z <= 10)pos.value.z *= 10.f;
             comp_mng->Add(entity, pos);
             ComponentRotation rot;
             rot.value = { 0.f, 0.f, 0.f };
