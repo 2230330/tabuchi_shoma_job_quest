@@ -2,9 +2,14 @@
 
 #include<vector>
 #include <cstdint>
+#include<cassert>
+#include<cstddef>
+#include<algorithm>
+#include<utility>
 
 
 //一種類のコンポーネントを取り扱うためのストレージ
+//コンポーネントをEntityIDと対応付けながら高速に管理するための入れ物
 template<typename T>
 struct ComponentStorage
 {
@@ -18,6 +23,8 @@ struct ComponentStorage
     // entity_idがそのコンポーネントを 持っていない場合は -1
     std::vector<int> entity_to_index;
 
+    //entity_to_indexがentity_idを扱えるサイズになるように拡張する
+    //拡張された部分は-1で初期化する
     void EnsureEntityCapacity(uint32_t entity_id)
     {
         if (entity_id >= entity_to_index.size())
@@ -26,6 +33,11 @@ struct ComponentStorage
         }
     }
 
+    //あらかじめメモリを確保しておく。
+    //component_count:このStorageに入るコンポーネント数の予想値
+    //entity_capacity:扱う可能性のあるEntityIDの最大数に近い値
+    //reserveしておくことで、Add時のvector再確保を減らせる
+    //再確保はコストがかかる上、コンポーネント配列内の要素のアドレスも変わるので、できるだけ減らしたい
     void Reserve(size_t component_count, size_t entity_capacity)
     {
         components.reserve(component_count);
@@ -37,12 +49,20 @@ struct ComponentStorage
         }
     }
 
+    //指定したEntityが、このコンポーネント型を持っているか調べる
+    //entity_to_index[entity_id]が0以上なら、
+    // そのEntityはこのコンポーネントを持っている
+    //
     bool Has(uint32_t entity_id) const
     {
         return entity_id < entity_to_index.size()
             && entity_to_index[entity_id] >= 0;
     }
 
+    //指定したEntityのコンポーネントを取得する
+    //持ってないなら、nullptrを渡す
+    //GetByEntityと違い、存在しない場合でも落ちないので、
+    //あるかどうかわからないComponentを取る時に使います
     T* TryGet(uint32_t entity_id)
     {
         if (entity_id >= entity_to_index.size())
@@ -59,7 +79,7 @@ struct ComponentStorage
 
         return &components[static_cast<size_t>(index)];
     }
-
+    //固定のTryGet
     const T* TryGet(uint32_t entity_id) const
     {
         if (entity_id >= entity_to_index.size())
@@ -77,28 +97,40 @@ struct ComponentStorage
         return &components[static_cast<size_t>(index)];
     }
 
+    //
+    // 指定したEntityのComponentを取得する
+    // 必ず持っている前提で使うこと
+    //
     T& GetByEntity(uint32_t entity_id)
     {
         assert(Has(entity_id));
         return components[static_cast<size_t>(entity_to_index[entity_id])];
     }
-
     const T& GetByEntity(uint32_t entity_id) const
     {
         assert(Has(entity_id));
         return components[static_cast<size_t>(entity_to_index[entity_id])];
     }
 
+    //
+    // componentsのIndexを直接指定して、コンポーネントを取得する
+    // entity_idではなく、Storage内部のIndexでアクセスする
+    // at()を使っているので、範囲外の値を入れると例外が発生する
+    //
     T& GetByIndex(int index)
     {
         return components.at(static_cast<size_t>(index));
     }
-
     const T& GetByIndex(int index) const
     {
         return components.at(static_cast<size_t>(index));
     }
 
+    //
+    // 指定したEntityにComponentを追加する
+    // 追加したcomponentはcomponentsの末尾に入る
+    // entitiesの末尾にはentity_idが入る
+    // entity_to_index[entity_id]には、追加されたコンポーネントのindexが入る
     int Add(uint32_t entity_id, const T& component)
     {
         EnsureEntityCapacity(entity_id);
@@ -115,6 +147,13 @@ struct ComponentStorage
         return index;
     }
 
+
+
+    // コンポーネントを直接構築して追加する。
+    // Add は完成済みの コンポーネントを受け取る。
+    // Emplace は constructor の引数を受け取り、components 内で直接 T を構築する。
+    // 今の コンポーネント が単純な構造体中心なら Add だけでも十分だが、
+    // 将来的に初期化コストのある コンポーネント が増えた場合に便利と考えます。
     template<typename... Args>
     int Emplace(uint32_t entity_id, Args&&... args)
     {
@@ -131,6 +170,11 @@ struct ComponentStorage
         return index;
     }
 
+    //指定したEntityのコンポーネントを削除する
+    //ストレージは削除を高速にするため、swap-removeを使います
+    //この方法では、削除したい要素を、配列の最後の要素で上書きします。
+    //その後、末尾をpop-backします。途中の要素を詰める必要がないため処理が速いです。
+    //デメリットとして、要素の並び順が維持されません
     void Remove(uint32_t entity_id)
     {
         if (entity_id >= entity_to_index.size())
@@ -164,6 +208,7 @@ struct ComponentStorage
         entity_to_index[entity_id] = -1;
     }
 
+    //ストレージ内のコンポーネントを削除します
     void Clear()
     {
         components.clear();

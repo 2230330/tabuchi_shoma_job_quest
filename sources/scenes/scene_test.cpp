@@ -78,7 +78,7 @@ bool SceneTest::InitializeCore()
             ComponentPosition pos;
             pos.value = {
                 static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4),
-                static_cast<float>(random_helper::Random(10)),
+                static_cast<float>(random_helper::Random(100)),
                 static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4)
             };
             //カメラにかぶらないように
