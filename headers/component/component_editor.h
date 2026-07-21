@@ -25,6 +25,8 @@ public:
     void Save(const std::string& filename);
     void Load(const std::string& filename);
 private:
+    void DrawGpuTimeMs(float gpu_frame);
+private:
     ComponentManager& comp_mng_;
     EntityManager& enti_mng_;
 
@@ -40,6 +42,7 @@ private:
     int32_t has_camera_ = -1;
     int32_t fog_entity_ = -1;
     bool has_fog_ = false;
+
 
 
     //リネーム中のEntity

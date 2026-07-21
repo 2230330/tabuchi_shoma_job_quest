@@ -95,5 +95,6 @@ private:
     float wheel_{ 0 };
 
     std::unique_ptr<RenderState>                    render_state_=nullptr;
+
 };
 #endif // !PART2_GRAPHICS_H_

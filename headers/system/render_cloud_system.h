@@ -35,12 +35,19 @@ public:
     const bool HasRenderableCloud();
 
 private:
-    //enable cloud
-    bool enable_cloud_ = false;
-
     //初期に1度だけ呼び出し、ノイズマップを作成
     void CreateNoiseTextures(ID3D11Device* device);
     void UpdateConstants(const ComponentVolumetricCloud& cloud);
+
+    //GPU負荷計測用
+    void InitializeGpuTimer(ID3D11Device*device);
+    void BeginGpuFrame(int write_index);
+    void UpdateGpuTimer(int read_index);
+    void EndGpuFrame(int write_index);
+private:
+    //enable cloud
+    bool enable_cloud_ = false;
+
 
     ComponentManager& comp_mng_;
 
@@ -126,4 +133,11 @@ private:
     std::unique_ptr<FrameBuffer>shadow_map_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps_ = nullptr;
 
+    //GPU負荷計測用
+    static const int QUERY_BUFFER_COUNT = 8;
+    int write_index_ = 0;
+    Microsoft::WRL::ComPtr<ID3D11Query> dis_joint_query_[QUERY_BUFFER_COUNT];
+    Microsoft::WRL::ComPtr<ID3D11Query>time_stamp_start_query_[QUERY_BUFFER_COUNT];
+    Microsoft::WRL::ComPtr<ID3D11Query>time_stamp_end_query_[QUERY_BUFFER_COUNT];
+    double gpu_time_ms_ = 0.0;
 };

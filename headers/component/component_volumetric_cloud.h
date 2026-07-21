@@ -3,7 +3,7 @@
 
 struct ComponentVolumetricCloud :public IComponent
 {
-    int iteration{ 128 };//�_�����݂�����E�_
+    int iteration{ 128 };//雲が存在する限界点
 	DirectX::XMFLOAT2 wind_direction = { 1.0f, 0.75f };
 	DirectX::XMFLOAT2 cloud_altitudes_min_max = { 6371500.0f, 6373000.0f }; // highest and lowest altitudes at which clouds are distributed
 
@@ -25,4 +25,7 @@ struct ComponentVolumetricCloud :public IComponent
 	int auto_ray_marching_steps = false;
 
 	bool shadow_flag = false;
+	
+	//GPU負荷保持、エディターへ渡す用
+	float gpu_time_ms = 0.0f;
 };

@@ -103,6 +103,8 @@ RenderCloudSystem::RenderCloudSystem(ComponentManager& comp_mng,RenderPass rende
             SHADOW_RES,
             SHADOW_RES,
             FrameBuffer::usage::color);
+
+    InitializeGpuTimer(device);
 }
 
 void RenderCloudSystem::SetSkyColorSRV(ID3D11ShaderResourceView* sky_color_srv)
@@ -133,6 +135,9 @@ void RenderCloudSystem::Render()
         {
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
+            int read_index = (write_index_ + QUERY_BUFFER_COUNT - 2) % QUERY_BUFFER_COUNT;
+            UpdateGpuTimer(read_index);
+            cloud.gpu_time_ms = static_cast<float>(gpu_time_ms_);
 
             //コンポーネントが存在する場合は、真
             enable_cloud_ = true;
@@ -165,8 +170,14 @@ void RenderCloudSystem::Render()
                 object_depth_srv_.Get(),
             };
             //Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
+            
+            //GPU負荷計測開始 
+            BeginGpuFrame(write_index_);
             // 描画呼び出し
             fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_ps_.Get());
+
+            //GPU負荷計測終了
+            EndGpuFrame(write_index_);
 
             shadow_map_->Clear(context);
             shadow_map_->Activate(context,FrameBuffer::usage::color);
@@ -182,6 +193,8 @@ void RenderCloudSystem::Render()
 
             //一つ見つかればそれで終わり
         });
+
+    write_index_ = (write_index_ + 1) % QUERY_BUFFER_COUNT;
 }
 const bool RenderCloudSystem::HasRenderableCloud()
 {
@@ -395,4 +408,89 @@ void RenderCloudSystem::UpdateConstants(const ComponentVolumetricCloud& cloud)
     cloud_ray_marching_constant_.ray_marching_steps = cloud.ray_marching_steps;
     cloud_ray_marching_constant_.auto_ray_marching_steps = cloud.auto_ray_marching_steps;
 
+}
+
+void RenderCloudSystem::InitializeGpuTimer(ID3D11Device*device)
+{
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DESC desc = {};
+    for (int i = 0; i < QUERY_BUFFER_COUNT; i++)
+    {
+
+        desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
+        hr = device->CreateQuery(&desc, dis_joint_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        desc.Query = D3D11_QUERY_TIMESTAMP;
+        hr = device->CreateQuery(&desc, time_stamp_start_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        hr = device->CreateQuery(&desc, time_stamp_end_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    }
+}
+
+void RenderCloudSystem::BeginGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context= Graphics::Instance().GetDeviceContext();
+    context->Begin(dis_joint_query_[write_index].Get());
+    context->End(time_stamp_start_query_[write_index].Get());
+}
+
+void RenderCloudSystem::UpdateGpuTimer(int read_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint;
+
+    hr = context->GetData(
+        dis_joint_query_[read_index].Get(),
+        &disjoint,
+        sizeof(disjoint),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+
+    UINT64 start;
+    UINT64 end;
+
+    hr = context->GetData(
+        time_stamp_start_query_[read_index].Get(),
+        &start,
+        sizeof(start),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+
+    hr = context->GetData(
+        time_stamp_end_query_[read_index].Get(),
+        &end,
+        sizeof(end),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+    if (!disjoint.Disjoint)
+    {
+        gpu_time_ms_ =
+            double(end - start) *
+            1000.0 /
+            double(disjoint.Frequency);
+    }
+
+}
+
+void RenderCloudSystem::EndGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    context->End(time_stamp_end_query_[write_index].Get());
+    context->End(dis_joint_query_[write_index].Get());
 }

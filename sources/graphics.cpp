@@ -136,6 +136,7 @@ void Graphics::Initialize(HWND hwnd)
     //レンダーステート生成
     render_state_ = std::make_unique<RenderState>(this->device_.Get());
 
+
 }
 
 void Graphics::Finalize()
@@ -248,3 +249,4 @@ void Graphics::ClearSampler(int start_slot, int num)
     immediate_context_->PSSetSamplers(start_slot, num, clear_sampler);
     immediate_context_->CSSetSamplers(start_slot, num, clear_sampler);
 }
+

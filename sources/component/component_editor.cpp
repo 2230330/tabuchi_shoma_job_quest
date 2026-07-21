@@ -76,7 +76,7 @@ void ComponentEditor::DrawImgui()
         }
 
         //大気の追加
-        if (sky_entity_ > 0)has_sky_ = true;
+        if (sky_entity_ != -1)has_sky_ = true;
         else has_sky_ = false;
 
         if (ImGui::Checkbox("atmosphere", &has_sky_))
@@ -108,9 +108,14 @@ void ComponentEditor::DrawImgui()
                 sky_entity_ = -1;
             }
         }
+        if (has_sky_)
+        {
+            ComponentSkyAtmosphere* sky = comp_mng_.TryGetByEntity<ComponentSkyAtmosphere>(sky_entity_);
+            DrawGpuTimeMs(sky->gpu_time_ms);
+        }
 
         //雲の追加
-        if (cloud_entity_ > 0)has_cloud_ = true;
+        if (cloud_entity_ != -1)has_cloud_ = true;
         else has_cloud_ = false;
 
         if (ImGui::Checkbox("cloud",&has_cloud_))
@@ -133,8 +138,15 @@ void ComponentEditor::DrawImgui()
                 cloud_entity_ = -1;
             }
         }
+        if (has_cloud_)
+        {
+            ComponentVolumetricCloud *cloud = comp_mng_.TryGetByEntity<ComponentVolumetricCloud>(cloud_entity_);
+            DrawGpuTimeMs(cloud->gpu_time_ms);
+            
+        }
+
         //カスケードシャドウの追加
-        if (cascade_shadow_entity > 0)has_cascade_shadow_ = true;
+        if (cascade_shadow_entity != -1)has_cascade_shadow_ = true;
         else has_cascade_shadow_ = false;
         if (ImGui::Checkbox("cascade shadow",&has_cascade_shadow_))
         {
@@ -156,7 +168,7 @@ void ComponentEditor::DrawImgui()
             }
         }
         //スクリーンスペースリフレクションの追加
-        if (ssr_entity_ > 0)has_ssr_ = true;
+        if (ssr_entity_ != -1)has_ssr_ = true;
         else has_ssr_ = false;
         if (ImGui::Checkbox("ssr",&has_ssr_))
         {
@@ -177,9 +189,14 @@ void ComponentEditor::DrawImgui()
                 ssr_entity_ = -1;
             }
         }
+        if (has_ssr_)
+        {
+            ComponentSsr* ssr = comp_mng_.TryGetByEntity<ComponentSsr>(ssr_entity_);
+            DrawGpuTimeMs(ssr->gpu_time_ms);
+        }
 
         //フォグの追加
-        if (fog_entity_ > 0)has_fog_ = true;
+        if (fog_entity_ != -1)has_fog_ = true;
         else has_fog_ = false;
         if (ImGui::Checkbox("fog",&has_fog_))
         {
@@ -200,6 +217,13 @@ void ComponentEditor::DrawImgui()
                 fog_entity_ = -1;
             }
         };
+        if (has_fog_)
+        {
+            ComponentFog* fog = 
+                comp_mng_.TryGetByEntity<ComponentFog>(fog_entity_);
+            DrawGpuTimeMs(fog->gpu_time_ms);
+        }
+
         //ディファードレンダリング確認用
         if (ImGui::Button("check Deferred Texture"))
         {
@@ -388,6 +412,7 @@ void ComponentEditor::DrawImgui()
 
                     auto& sky = comp_mng_.GetByEntity<ComponentSkyAtmosphere>(entity.entity);
 
+
                     ImGui::Separator();
                     ImGui::Text("Scattering Scale Heights");
 
@@ -442,6 +467,7 @@ void ComponentEditor::DrawImgui()
 
                     if (ImGui::CollapsingHeader("Cloud Ray Marching Settings", ImGuiTreeNodeFlags_DefaultOpen))
                     {
+
                         if(ImGui::Button("shadow_flag"))
                         {
                             c.shadow_flag =!c.shadow_flag;
@@ -1239,4 +1265,27 @@ void ComponentEditor::Load(const std::string& filename)
 
         }
     }
+}
+
+void ComponentEditor::DrawGpuTimeMs(float gpu_time_ms)
+{
+    //FPS60を安定と考える場合、
+    //GPU負荷は
+    float ratio =
+        std::clamp(
+            gpu_time_ms / 20.0f,
+            0.0f,
+            1.0f);
+
+    char buf[64];
+
+    sprintf_s(
+        buf,
+        "GPU %.2f ms",
+        gpu_time_ms);
+
+    ImGui::ProgressBar(
+        ratio,
+        ImVec2(-1.0f, 20.0f),
+        buf);
 }

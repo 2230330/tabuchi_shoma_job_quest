@@ -19,4 +19,7 @@ struct ComponentSsr :public IComponent
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> normal;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> depth;
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> color;
+
+    //GPU負荷計測用
+    float gpu_time_ms{ 0.0f };
 };

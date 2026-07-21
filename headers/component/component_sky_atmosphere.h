@@ -1,15 +1,16 @@
 #pragma once
 #include"i_component.h"
 
-//‚±‚ê‚ª‚Â‚¢‚Ä‚éƒRƒ“ƒ|[ƒlƒ“ƒg‚ğ“V‹…‚Ég‚¤ƒ^ƒOƒRƒ“ƒ|[ƒlƒ“ƒg
+//ã“ã‚ŒãŒã¤ã„ã¦ã‚‹ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’å¤©çƒã«ä½¿ã†ã‚¿ã‚°ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
 struct ComponentSkyAtmosphere :public IComponent
 {
     float rayleigh_scale_height{ 8000.f };
     float mie_scale_height{ 1200.f };
     float ozone_scale_half_width{ 15000.f };
     float ozone_center_height{ 50000.f };
-    float earth_height{ 6360000.0f }; // ’n‹…”¼Œa [m]
-    float sun_distance{ 150000000000.0f }; // ‘¾—z‚Ü‚Å‚Ì‹——£ [m]
-    float atmosphere_height{ 100000.0f }; // ‘å‹C‚Ì‚‚³ [m]
+    float earth_height{ 6360000.0f }; // åœ°çƒåŠå¾„ [m]
+    float sun_distance{ 150000000000.0f }; // å¤ªé™½ã¾ã§ã®è·é›¢ [m]
+    float atmosphere_height{ 100000.0f }; // å¤§æ°—ã®é«˜ã• [m]
     int max_sample{ 64 };
+    float gpu_time_ms = 0.0f;
 };

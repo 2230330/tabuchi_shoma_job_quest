@@ -67,29 +67,33 @@ bool SceneTest::InitializeCore()
     }
 
     {
+        ResourceManager::Instance()
+            .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\rock.glb");
         //JSONファイルに保存されている情報を取得
         //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
 
-        const int size = 000;
+        const int size = 1000;
         for (int i = 0; i < size; i++)
         {
             uint32_t entity = world->GetEntityManager()->Add();
             ComponentPosition pos;
             pos.value = {
                 static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4),
-                static_cast<float>(random_helper::Random(100)),
+                -0.5f,
                 static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4)
             };
             //カメラにかぶらないように
-            if (-10.f <= pos.value.x && pos.value.x <= 10)pos.value.x *= 10.f;
-            if (-10.f <= pos.value.z && pos.value.z <= 10)pos.value.z *= 10.f;
+            if (-100.f <= pos.value.x && pos.value.x <= 100)pos.value.x *= 100.f;
+            if (-100.f <= pos.value.z && pos.value.z <= 100)pos.value.z *= 100.f;
             comp_mng->Add(entity, pos);
             ComponentRotation rot;
-            rot.value = { 0.f, 0.f, 0.f };
+            rot.value = { static_cast<float>(random_helper::Random(static_cast<int>(10)))/3.14f
+                ,static_cast<float>(random_helper::Random(static_cast<int>(10))) / 3.14f
+                ,static_cast<float>(random_helper::Random(static_cast<int>(10))) / 3.14f };
             comp_mng->Add(entity, rot);
             ComponentScale scale;
-            float scale_rand = static_cast<float>(random_helper::Random(5));
+            float scale_rand = 1000.f;
             scale.value = { scale_rand, scale_rand, scale_rand };
             comp_mng->Add(entity, scale);
             ComponentLocalToWorld l2w;
@@ -115,7 +119,7 @@ bool SceneTest::InitializeCore()
             ComponentGltf gltf;
             gltf.model= 
                 ResourceManager::Instance()
-                .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\cube.glb");
+                .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\rock.glb");
             gltf.dirty = true;
             comp_mng->Add(entity, gltf);
             ComponentInstanced instanced;

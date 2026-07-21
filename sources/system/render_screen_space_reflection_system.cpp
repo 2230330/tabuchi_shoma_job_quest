@@ -117,6 +117,8 @@ RenderScreenSpaceReflectionSystem::RenderScreenSpaceReflectionSystem(ComponentMa
             static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
         );
     ssr_fullscreen_quad_ = std::make_unique<FullscreenQuad>(device);
+
+    InitializeGpuTimer(device);
 }
 
 void RenderScreenSpaceReflectionSystem::Render()
@@ -126,6 +128,13 @@ void RenderScreenSpaceReflectionSystem::Render()
     comp_mng_.ForEach<ComponentSsr>([&](uint32_t entity_id, ComponentSsr& ssr)
         {
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+
+            int read_index = (write_index_ + QUERY_BUFFER_COUNT - 7) % QUERY_BUFFER_COUNT;
+            UpdateGpuTimer(read_index);
+            ssr.gpu_time_ms = static_cast<float>(gpu_time_ms_);
+
+            //GPU負荷計測開始 
+            BeginGpuFrame(write_index_);
 
             ssr_framebuffer_->Clear(context);
             ssr_framebuffer_->Activate(context, FrameBuffer::usage::color);
@@ -169,6 +178,9 @@ void RenderScreenSpaceReflectionSystem::Render()
 
             ssr_synthesis_framebuffer_->Deactivate(context);
 
+            //GPU負荷計測終了
+            EndGpuFrame(write_index_);
+
             //確認用にコンポーネントに収納
             ssr.ssr_texture = ssr_framebuffer_->GetShaderResourceView(0).Get();
             ssr.normal = normal_srv_.Get();
@@ -178,6 +190,8 @@ void RenderScreenSpaceReflectionSystem::Render()
             has_ssr_ = true;
 
         });
+
+    write_index_ = (write_index_ + 1) % QUERY_BUFFER_COUNT;
 }
 
 ID3D11ShaderResourceView* RenderScreenSpaceReflectionSystem::GetSSRTexture()
@@ -238,4 +252,88 @@ void RenderScreenSpaceReflectionSystem::ComputeHiz(ID3D11DeviceContext* ctx)
         ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
         ctx->CSSetShaderResources(0, 1, nullSRV);
     }
+}
+
+void RenderScreenSpaceReflectionSystem::InitializeGpuTimer(ID3D11Device* device)
+{
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DESC desc = {};
+    for (int i = 0; i < QUERY_BUFFER_COUNT; i++)
+    {
+
+        desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
+        hr = device->CreateQuery(&desc, dis_joint_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        desc.Query = D3D11_QUERY_TIMESTAMP;
+        hr = device->CreateQuery(&desc, time_stamp_start_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        hr = device->CreateQuery(&desc, time_stamp_end_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    }
+}
+
+void RenderScreenSpaceReflectionSystem::BeginGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    context->Begin(dis_joint_query_[write_index].Get());
+    context->End(time_stamp_start_query_[write_index].Get());
+}
+
+void RenderScreenSpaceReflectionSystem::UpdateGpuTimer(int read_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint;
+
+    hr = context->GetData(
+        dis_joint_query_[read_index].Get(),
+        &disjoint,
+        sizeof(disjoint),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+
+    UINT64 start;
+    UINT64 end;
+
+    hr = context->GetData(
+        time_stamp_start_query_[read_index].Get(),
+        &start,
+        sizeof(start),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+
+    hr = context->GetData(
+        time_stamp_end_query_[read_index].Get(),
+        &end,
+        sizeof(end),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+    if (!disjoint.Disjoint)
+    {
+        gpu_time_ms_ =
+            double(end - start) *
+            1000.0 /
+            double(disjoint.Frequency);
+    }
+}
+
+void RenderScreenSpaceReflectionSystem::EndGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    context->End(time_stamp_end_query_[write_index].Get());
+    context->End(dis_joint_query_[write_index].Get());
 }

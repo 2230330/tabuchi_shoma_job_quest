@@ -40,6 +40,8 @@ RenderFogSystem::RenderFogSystem(ComponentManager& comp_mng, RenderPass render_p
     frame_buffer_ = std::make_unique<FrameBuffer>(Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()));
+
+    InitializeGpuTimer(device);
 }
 
 void RenderFogSystem::Render()
@@ -53,6 +55,10 @@ void RenderFogSystem::Render()
                 fog_constant_.noise_scale = fog.noise_scale;
 
                 ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+
+                int read_index = (write_index_ + QUERY_BUFFER_COUNT - 7) % QUERY_BUFFER_COUNT;
+                UpdateGpuTimer(read_index);
+                fog.gpu_time_ms = static_cast<float>(gpu_time_ms_);
 
                 //frame_buffer_->Clear(context);
                 //frame_buffer_->Activate(context);
@@ -68,14 +74,109 @@ void RenderFogSystem::Render()
                     noise_map_.Get()
                 };
 
+                //GPU負荷計測開始 
+                BeginGpuFrame(write_index_);
+
+                //描画呼び出し
                 fullscreen_quad_->blit(context, srvs, 0, _countof(srvs),fog_ps_.Get());
                 
+                //GPU負荷計測終了
+                EndGpuFrame(write_index_);
+
                 //frame_buffer_->Deactivate(context);
         });
+    write_index_ = (write_index_ + 1) % QUERY_BUFFER_COUNT;
 }
 
 void RenderFogSystem::SetObjectDepthView(ID3D11ShaderResourceView* depth_map)
 {
     depth_map_ = depth_map;
+}
+
+void RenderFogSystem::InitializeGpuTimer(ID3D11Device* device)
+{
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DESC desc = {};
+    for (int i = 0; i < QUERY_BUFFER_COUNT; i++)
+    {
+
+        desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
+        hr = device->CreateQuery(&desc, dis_joint_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        desc.Query = D3D11_QUERY_TIMESTAMP;
+        hr = device->CreateQuery(&desc, time_stamp_start_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        hr = device->CreateQuery(&desc, time_stamp_end_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    }
+}
+
+void RenderFogSystem::BeginGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    context->Begin(dis_joint_query_[write_index].Get());
+    context->End(time_stamp_start_query_[write_index].Get());
+}
+
+void RenderFogSystem::UpdateGpuTimer(int read_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint;
+
+    hr = context->GetData(
+        dis_joint_query_[read_index].Get(),
+        &disjoint,
+        sizeof(disjoint),
+        0);
+    if (hr != S_OK)
+    {
+
+        OutputDebugStringA("DISJOINT NOT READY\n");
+        return;
+    }
+
+    UINT64 start;
+    UINT64 end;
+
+    hr = context->GetData(
+        time_stamp_start_query_[read_index].Get(),
+        &start,
+        sizeof(start),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+
+    hr = context->GetData(
+        time_stamp_end_query_[read_index].Get(),
+        &end,
+        sizeof(end),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+    if (!disjoint.Disjoint)
+    {
+        gpu_time_ms_ =
+            double(end - start) *
+            1000.0 /
+            double(disjoint.Frequency);
+    }
+
+}
+
+void RenderFogSystem::EndGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    context->End(time_stamp_end_query_[write_index].Get());
+    context->End(dis_joint_query_[write_index].Get());
 }
 
