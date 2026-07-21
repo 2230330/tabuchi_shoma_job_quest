@@ -235,6 +235,7 @@
     <ClInclude Include="headers\component\component_scale.h" />
     <ClInclude Include="headers\component\component_sky_atmosphere.h" />
     <ClInclude Include="headers\component\component_texture.h" />
+    <ClInclude Include="headers\component\component_fog.h" />
     <ClInclude Include="headers\component\i_component.h" />
     <ClInclude Include="headers\constant_buffer_slot.h" />
     <ClInclude Include="headers\deferred_g_buffer.h" />
@@ -265,6 +266,7 @@
     <ClInclude Include="headers\static_mesh.h" />
     <ClInclude Include="headers\system\render_cloud_system.h" />
     <ClInclude Include="headers\system\render_deferred_system.h" />
+    <ClInclude Include="headers\system\render_fog_system.h" />
     <ClInclude Include="headers\system\render_frustum_helper.h" />
     <ClInclude Include="headers\system\render_screen_space_reflection_system.h" />
     <ClInclude Include="headers\system\update_bounding_box_system.h" />
@@ -314,6 +316,7 @@
     <ClCompile Include="sources\static_mesh.cpp" />
     <ClCompile Include="sources\system\render_cloud_system.cpp" />
     <ClCompile Include="sources\system\render_deferred_system.cpp" />
+    <ClCompile Include="sources\system\render_fog_system.cpp" />
     <ClCompile Include="sources\system\render_screen_space_reflection_system.cpp" />
     <ClCompile Include="sources\system\update_bounding_box_system.cpp" />
     <ClCompile Include="sources\system\update_camera_system.cpp" />
@@ -430,6 +433,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\fast_approximate_anti_aliasing_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaderes\fog_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>

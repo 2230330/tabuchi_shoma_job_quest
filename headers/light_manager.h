@@ -47,7 +47,7 @@ public:
     void SetForwardLightConstant(int start_slot);
 
     //デファード用ライトコンスタントをセット
-    void BindDeferredLightConstant(int start_slot,UINT index);
+    void BindDeferredLightConstant(int start_slot,UINT index,bool shadow_frag=false);
     //Update内で動く、ディファードレンダリング用ライトの組みなおし
     void BuildDeferredLights();
 
@@ -82,7 +82,7 @@ private:
     const float shadow_near_plane_ = 0.1f;
     const float shadow_far_plane_ = 200;
     const float shadow_map_size_ = 1024.0f;
-    float shadow_intensity_ = 0.5f;
+    float shadow_attenuation_ = 0.5f;
 
 
 
@@ -143,7 +143,7 @@ private:
         //work_data[3]=xyz=dummy,w=ライト識別番号
         DirectX::XMFLOAT4 work_data[4];
     };
-    struct DeferredLightContstants
+    struct DeferredLightConstants
     {
         IntegrateLight lights{};
 
@@ -154,8 +154,9 @@ private:
         UINT shadow_dummy{0};
         DirectX::XMFLOAT4X4 light_view_projection{}; //ライトの位置から見た射影行列
         DirectX::XMFLOAT4X4 inverse_light_view_projection{};
+        DirectX::XMFLOAT4 ambient_color{};
     };
-    std::vector<DeferredLightContstants>deferred_lights_;
+    std::vector<DeferredLightConstants>deferred_lights_;
 };
 
 #endif //!PART2_LIGHT_MANAGER_H

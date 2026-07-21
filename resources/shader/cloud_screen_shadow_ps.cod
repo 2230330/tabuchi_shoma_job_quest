@@ -418,12 +418,12 @@ if_nz r1.x
   discard_nz r1.x
 endif 
 
-#line 381
+#line 382
 mov r1.xz, l(0,0,0,0)
 mov r1.y, cb12[2].y
 add r1.xyz, r1.xyzx, cb7[0].xyzx  // r1.x <- eye_pos.x; r1.y <- eye_pos.y; r1.z <- eye_pos.z
 
-#line 382
+#line 383
 nop 
 mov r1.xyz, r1.xyzx
 mov r0.yzw, r0.yyzw
@@ -490,10 +490,10 @@ if_z r2.z
   endif 
 endif 
 
-#line 382
+#line 383
 mov r2.w, r2.w  // r2.w <- t0
 
-#line 383
+#line 384
 nop 
 mov r1.w, cb12[0].w
 
@@ -558,42 +558,42 @@ if_z r2.z
   endif 
 endif 
 
-#line 383
+#line 384
 mov r3.x, r3.x  // r3.x <- t1
 
-#line 386
+#line 387
 lt r1.w, r2.w, l(0.000000)
 lt r2.x, r3.x, l(0.000000)
 or r1.w, r1.w, r2.x
 if_nz r1.w
 
-#line 387
+#line 388
   itof o0.xyzw, l(0, 0, 0, 0)  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
   ret 
 endif 
 
-#line 389
+#line 390
 mul r2.xyz, r0.yzwy, r2.wwww
 add r2.xyz, r1.xyzx, r2.xyzx  // r2.x <- ray_origin.x; r2.y <- ray_origin.y; r2.z <- ray_origin.z
 
-#line 390
+#line 391
 mul r3.yzw, r0.yyzw, r3.xxxx
 add r1.xyz, r1.xyzx, r3.yzwy  // r1.x <- ray_endpoint.x; r1.y <- ray_endpoint.y; r1.z <- ray_endpoint.z
 
-#line 391
+#line 392
 mov r3.yzw, -r2.xxyz
 add r3.yzw, r1.xxyz, r3.yyzw
 dp3 r1.y, r3.yzwy, r3.yzwy
 sqrt r1.y, r1.y  // r1.y <- shell_dist
 
-#line 393
+#line 394
 mov r1.w, cb12[3].w  // r1.w <- base_steps
 
-#line 396
+#line 397
 add r1.xz, r1.xxzx, r2.xxzx
 mul r1.xz, r1.xxzx, l(0.500000, 0.000000, 0.500000, 0.000000)  // r1.x <- mid_point.x; r1.z <- mid_point.z
 
-#line 397
+#line 398
 nop 
 mov r1.xz, r1.xxzx
 
@@ -624,25 +624,25 @@ div r1.xz, r4.xxyx, r1.xxxx
 add r1.xz, r3.yyzy, r1.xxzx
 sample_indexable(texture2d)(float,float,float,float) r1.xz, r1.xzxx, t2.xyzw, s2  // r1.x <- <SampleWeatherData return value>.x; r1.z <- <SampleWeatherData return value>.z
 
-#line 397
+#line 398
 mov r1.xz, r1.xxzx  // r1.x <- coarse_weather.x; r1.z <- coarse_weather.z
 
-#line 398
+#line 399
 mul r3.y, r1.x, cb12[1].z  // r3.y <- coarse_coverage
 
-#line 401
+#line 402
 mov r3.z, l(0.030000)  // r3.z <- SKIP_COVERAGE_THRESHOLD
 
-#line 402
+#line 403
 lt r3.z, r3.y, r3.z
 if_nz r3.z
 
-#line 403
+#line 404
   itof o0.xyzw, l(0, 0, 0, 1)  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
   ret 
 endif 
 
-#line 406
+#line 407
 itof r1.w, r1.w
 mov r3.y, -r3.y
 add r3.y, r3.y, l(1.000000)
@@ -656,12 +656,12 @@ mul r1.w, r1.w, r3.y
 ftoi r1.w, r1.w
 imax r1.w, r1.w, l(1)  // r1.w <- steps
 
-#line 407
+#line 408
 itof r3.y, r1.w
 div r1.y, r1.y, r3.y
 mul r0.yzw, r0.yyzw, r1.yyyy  // r0.y <- ray_step.x; r0.z <- ray_step.y; r0.w <- ray_step.z
 
-#line 409
+#line 410
 nop 
 mov r2.xyz, r2.xyzx
 mov r0.yzw, r0.yyzw
@@ -1424,27 +1424,27 @@ min r0.x, r0.x, l(1.000000)  // r0.x <- alpha
 #line 339
 mov r0.x, r0.x  // r0.x <- <RayMarch return value>
 
-#line 409
+#line 410
 mov r0.x, r0.x  // r0.x <- cloud_presence
 
-#line 411
+#line 412
 max r0.x, r0.x, l(0.000000)
 min r0.x, r0.x, l(1.000000)  // r0.x <- cloud_presence
 
-#line 414
+#line 415
 div r0.y, r2.w, r3.x
 max r0.y, r0.y, l(0.000000)
 min r0.y, r0.y, l(1.000000)  // r0.y <- depth_norm
 
-#line 416
+#line 417
 ge r0.z, l(0.001000), r0.x
 if_nz r0.z
 
-#line 417
+#line 418
   mov r0.y, l(1.000000)
 endif 
 
-#line 420
+#line 421
 itof o0.zw, l(0, 0, 0, 1)  // o0.z <- <main return value>.z; o0.w <- <main return value>.w
 mov o0.x, r0.x  // o0.x <- <main return value>.x
 mov o0.y, r0.y  // o0.y <- <main return value>.y

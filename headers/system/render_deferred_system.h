@@ -66,6 +66,7 @@ private:
     DirectX::XMFLOAT4 camera_position_{ 0.f, 0.f, 0.f, 0.f };
     DirectX::XMFLOAT4 camera_front_{ 0.f, 0.f, 0.f, 0.f };
     DirectX::XMFLOAT4 camera_right_{ 0.f, 0.f, 0.f, 0.f };
+    bool has_shadow_ = false;
 
 
     //インスタンスバッファのプール

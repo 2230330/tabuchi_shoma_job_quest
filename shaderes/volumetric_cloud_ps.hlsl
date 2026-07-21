@@ -553,14 +553,10 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                         
 
                     }
-                    //else
-                    //{
-                    //    optical_depth_along_light_ray += sampled_density * 10.f;
-                    //}
 
 
                     //光学的厚み
-                    float shadow_strength = 7.0f; //影が薄くなるので強めにする
+                    float shadow_strength = lerp(5.0f,10.f,henyey_greenstein_phase); //影が薄くなるので強めにする
                     float light_density_scale = density_scale * shadow_strength;
                     float optical_thickness = (light_density_scale * 
                     (optical_depth_along_light_ray+density_along_light_ray));
@@ -588,7 +584,7 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                     (5.0f
                     * beers_law
                     * powdered_sugar
-                    * lerp(1.f, 2.0f, henyey_greenstein_phase) // 太陽光位相関数
+                    * lerp(1.f, 1.5f, henyey_greenstein_phase) // 太陽光位相関数
                     ) 
                     * lerp(0.0f, 1.0f, up_light * top_light)
                     +Ei;

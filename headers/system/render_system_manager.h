@@ -19,6 +19,7 @@ class RenderSkySystem;
 class RenderCloudSystem;
 class RenderDeferredSystem;
 class RenderScreenSpaceReflectionSystem;
+class RenderFogSystem;
 class IBLManager;
 class CameraSetConstants;
 class PostProcessManager;
@@ -53,6 +54,7 @@ private:
     std::unique_ptr<RenderCloudSystem>cloud_render_system_=nullptr;
     std::unique_ptr<RenderDeferredSystem>deferred_render_system_=nullptr;
     std::unique_ptr<RenderScreenSpaceReflectionSystem>ssr_render_system_=nullptr;
+    std::unique_ptr<RenderFogSystem>fog_render_system_ = nullptr;
     ComponentManager& comp_mng_;
 
     //フルスクリーンクワッド(背景用)
@@ -80,7 +82,7 @@ private:
     //背景のサンプリング間隔
     //マイフレーム呼び出す必要はないと感じました
     int back_sample_count_ = 0;
-    const int back_sample_limit_ = 0;
+    const int back_sample_limit_ = 1;
 
     Microsoft::WRL::ComPtr<ID3D11PixelShader> celestial_light_ps_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> light_shafts_ps_=nullptr;

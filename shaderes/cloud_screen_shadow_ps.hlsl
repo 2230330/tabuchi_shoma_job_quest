@@ -378,6 +378,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         clip(-1);
 
     float sun_distance = 1.0f;
+    //視点に合わせた雲の分布を行う
     float3 eye_pos = float3(0.0, earth_radius, 0.0) + camera_position.xyz;
     float t0 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.x);
     float t1 = IntersectSphere(eye_pos, ray_dir, cloud_altitudes_min_max.y);

@@ -7,7 +7,7 @@ enum  ConstantBufferSlot :int {
     kForwardLight,
     kDeferredLight,
     kPostEffect,
-    empty,//現在空席
+    kFog,
     kCamera,
     kCascadeShadow,
     kSsr,

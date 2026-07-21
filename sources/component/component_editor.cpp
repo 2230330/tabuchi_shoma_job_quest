@@ -76,10 +76,13 @@ void ComponentEditor::DrawImgui()
         }
 
         //大気の追加
-        if (ImGui::Button("atmosphere"))
+        if (sky_entity_ > 0)has_sky_ = true;
+        else has_sky_ = false;
+
+        if (ImGui::Checkbox("atmosphere", &has_sky_))
         {
 
-            if (has_sky_<0)
+            if (sky_entity_<0)
             {
                 uint32_t entity = enti_mng_.Add();
                 //基礎情報の追加
@@ -95,77 +98,108 @@ void ComponentEditor::DrawImgui()
                 ComponentSkyAtmosphere sky{};
                 comp_mng_.Add(entity, sky);
 
-                has_sky_ = entity;
+                sky_entity_ = entity;
             }
             else
             {
-                enti_mng_.Remove(has_sky_); // alive = false にする
-                comp_mng_.RemoveAllComponents(has_sky_); // すべてのコンポーネントを削除
+                enti_mng_.Remove(sky_entity_); // alive = false にする
+                comp_mng_.RemoveAllComponents(sky_entity_); // すべてのコンポーネントを削除
 
-                has_sky_ = -1;
+                sky_entity_ = -1;
             }
         }
+
         //雲の追加
-        if (ImGui::Button("cloud"))
+        if (cloud_entity_ > 0)has_cloud_ = true;
+        else has_cloud_ = false;
+
+        if (ImGui::Checkbox("cloud",&has_cloud_))
         {
 
-            if (has_cloud_ < 0)
+            if (cloud_entity_ < 0)
             {
                 uint32_t entity = enti_mng_.Add();
 
                 ComponentVolumetricCloud cloud_dome;
                 comp_mng_.Add(entity, cloud_dome);
 
-                has_cloud_ = entity;
+                cloud_entity_ = entity;
             }
             else
             {
-                enti_mng_.Remove(has_cloud_); // alive = false にする
-                comp_mng_.RemoveAllComponents(has_cloud_); // すべてのコンポーネントを削除
+                enti_mng_.Remove(cloud_entity_); // alive = false にする
+                comp_mng_.RemoveAllComponents(cloud_entity_); // すべてのコンポーネントを削除
 
-                has_cloud_ = -1;
+                cloud_entity_ = -1;
             }
         }
         //カスケードシャドウの追加
-        if (ImGui::Button("cascade shadow"))
+        if (cascade_shadow_entity > 0)has_cascade_shadow_ = true;
+        else has_cascade_shadow_ = false;
+        if (ImGui::Checkbox("cascade shadow",&has_cascade_shadow_))
         {
-            if (has_cascade_shadow_ < 0)
+            if (cascade_shadow_entity < 0)
             {
                 uint32_t entity = enti_mng_.Add();
 
                 ComponentCascadeShadow shadow;
                 comp_mng_.Add(entity, shadow);
 
-                has_cascade_shadow_ = entity;
+                cascade_shadow_entity = entity;
             }
             else
             {
-                enti_mng_.Remove(has_cascade_shadow_); // alive = false にする
-                comp_mng_.RemoveAllComponents(has_cascade_shadow_); // すべてのコンポーネントを削除
+                enti_mng_.Remove(cascade_shadow_entity); // alive = false にする
+                comp_mng_.RemoveAllComponents(cascade_shadow_entity); // すべてのコンポーネントを削除
 
-                has_cascade_shadow_ = -1;
+                cascade_shadow_entity = -1;
             }
         }
         //スクリーンスペースリフレクションの追加
-        if (ImGui::Button("ssr"))
+        if (ssr_entity_ > 0)has_ssr_ = true;
+        else has_ssr_ = false;
+        if (ImGui::Checkbox("ssr",&has_ssr_))
         {
-            if(has_ssr_<0)
+            if(ssr_entity_<0)
             {
                 uint32_t entity = enti_mng_.Add();
 
                 ComponentSsr ssr;
                 comp_mng_.Add(entity, ssr);
 
-                has_ssr_ = entity;
+                ssr_entity_ = entity;
             }
             else
             {
-                enti_mng_.Remove(has_ssr_); // alive = false にする
-                comp_mng_.RemoveAllComponents(has_ssr_); // すべてのコンポーネントを削除
+                enti_mng_.Remove(ssr_entity_); // alive = false にする
+                comp_mng_.RemoveAllComponents(ssr_entity_); // すべてのコンポーネントを削除
 
-                has_ssr_ = -1;
+                ssr_entity_ = -1;
             }
         }
+
+        //フォグの追加
+        if (fog_entity_ > 0)has_fog_ = true;
+        else has_fog_ = false;
+        if (ImGui::Checkbox("fog",&has_fog_))
+        {
+            if (fog_entity_ < 0)
+            {
+                uint32_t entity = enti_mng_.Add();
+
+                ComponentFog fog;
+                comp_mng_.Add(entity, fog);
+
+                fog_entity_ = entity;
+            }
+            else
+            {
+                enti_mng_.Remove(fog_entity_); // alive = false にする
+                comp_mng_.RemoveAllComponents(fog_entity_); // すべてのコンポーネントを削除
+
+                fog_entity_ = -1;
+            }
+        };
         //ディファードレンダリング確認用
         if (ImGui::Button("check Deferred Texture"))
         {
@@ -350,7 +384,7 @@ void ComponentEditor::DrawImgui()
                 if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
                 {
                     ImGui::Text("Sky Atmosphere Component");
-                    has_sky_ = entity.entity;
+                    sky_entity_ = entity.entity;
 
                     auto& sky = comp_mng_.GetByEntity<ComponentSkyAtmosphere>(entity.entity);
 
@@ -413,6 +447,11 @@ void ComponentEditor::DrawImgui()
                             c.shadow_flag =!c.shadow_flag;
                         }
                         ImGui::Separator();
+
+                        if (ImGui::Button("rain"))
+                        {
+                            c.rain_cloud_absorption_scale = 2.5f;
+                        }
 
                         ImGui::Text("Wind");
                         ImGui::DragFloat2("Wind Direction", reinterpret_cast<float*>(&c.wind_direction), 0.01f, -1.0f, 1.0f);
@@ -631,8 +670,19 @@ void ComponentEditor::DrawImgui()
 
                 }
 
+                //Fog
+                if (comp_mng_.Has<ComponentFog>(entity.entity))
+                {
+                    auto& fog = comp_mng_.GetByEntity<ComponentFog>(entity.entity);
+
+                    ImGui::DragFloat("steps", &fog.fog_steps, 1, 1, 128);
+                    ImGui::DragFloat("density", &fog.fog_density, 0.001f, 0.001f, 0.1f);
+                    ImGui::DragFloat("dinstance", &fog.fog_max_distance, 1.0f, 0.0f, 1000.f);
+                    ImGui::DragFloat("noise_scale", &fog.noise_scale, 0.0001f, 0.0001f, .05f);
+                }
+
                 //コンポーネントの追加
-                if (has_sky_!=entity.entity|| !has_cloud_!=entity.entity)
+                if (sky_entity_!=entity.entity|| !cloud_entity_!=entity.entity)
                 {
                     if (ImGui::TreeNode("Add Component"))
                     {
@@ -707,8 +757,8 @@ void ComponentEditor::DrawImgui()
                     enti_mng_.Remove(entity.entity); // alive = false にする
                     comp_mng_.RemoveAllComponents(entity.entity); // すべてのコンポーネントを削除
 
-                    if (has_sky_ == entity.entity)has_sky_ = -1;
-                    else if (has_cloud_ == entity.entity)has_cloud_ = -1;
+                    if (sky_entity_ == entity.entity)sky_entity_ = -1;
+                    else if (cloud_entity_ == entity.entity)cloud_entity_ = -1;
                 }
 
                 ImGui::TreePop();
@@ -964,8 +1014,8 @@ void ComponentEditor::Load(const std::string& filename)
     json root;
     file >> root;
 
-    has_sky_ = -1;
-    has_cloud_ = -1;
+    sky_entity_ = -1;
+    cloud_entity_ = -1;
 
     // 既存削除
     for (auto& e : enti_mng_.GetArray())
@@ -1040,7 +1090,7 @@ void ComponentEditor::Load(const std::string& filename)
             s.max_sample = j["max_sample"];
 
             comp_mng_.Add(entity, s);
-            has_sky_ = entity;
+            sky_entity_ = entity;
         }
 
         // Cloud
@@ -1073,7 +1123,7 @@ void ComponentEditor::Load(const std::string& filename)
             c.auto_ray_marching_steps = j["auto_ray_march"];
 
             comp_mng_.Add(entity, c);
-            has_cloud_ = entity;
+            cloud_entity_ = entity;
         }
 
         // GLTF
@@ -1155,7 +1205,7 @@ void ComponentEditor::Load(const std::string& filename)
         {
             ComponentCascadeShadow shadow;
             comp_mng_.Add(entity, shadow);
-            has_cascade_shadow_ = entity;
+            cascade_shadow_entity = entity;
         }
 
         // SSR
@@ -1170,7 +1220,7 @@ void ComponentEditor::Load(const std::string& filename)
             ssr.resolution = j["resolution"];
             ssr.intensity = j["intensity"];
             comp_mng_.Add(entity, ssr);
-            has_ssr_ = entity;
+            ssr_entity_ = entity;
         }
         //Deferred Render
         if (comp_json.contains("Deferred Render"))

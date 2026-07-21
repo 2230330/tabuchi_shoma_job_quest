@@ -20,7 +20,7 @@ Texture2D<float4> gbuffer_velocity : register(t5);
 SamplerState sampler_states[7] : register(s0);
 
 //  シャドウマップ用テクスチャ
-Texture2D shadow_map[4] : register(t10);
+Texture2D shadow_map[3] : register(t10);
 
 
 float4 main(VS_OUT pin) : SV_TARGET
@@ -49,10 +49,10 @@ float4 main(VS_OUT pin) : SV_TARGET
             {
         
                 float attenuation = 1.0f;
-                if (use_shadow)
+                if (use_shadow>0)
                 {
                     for (int i = 0; i < 4;i++)
-                    {
+                    {           
                 	    //  シャドウマップ用のパラメーター計算
                         float3 shadow_texcoord;
 	                    {
@@ -166,7 +166,15 @@ float4 main(VS_OUT pin) : SV_TARGET
                 }
             }
             break;
-        
+        case light_kind_ambient:
+            lighting_data.attenuation = 1.f;
+            lighting_data.direction = camera_direction.xyz;
+            lighting_data.color = convert_ambient_lights();
+            lighting_data.camera_position = camera_position.xyz;
+            DirectLighting result = integrate_bxdf(data, lighting_data);
+            diffuse += result.diffuse;
+            specular += result.specular;
+            break;
 
 
     }

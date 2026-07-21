@@ -13,6 +13,7 @@
 #include"../../headers/system/i_render_system.h"
 #include"../../headers/system/render_sky_system.h"
 #include"../../headers/system/render_cloud_system.h"
+#include"../../headers/system/render_fog_system.h"
 #include"../../headers/system/render_deferred_system.h"
 #include"../../headers/system/render_screen_space_reflection_system.h"
 #include"../../headers/system/ibl_manager.h"
@@ -34,6 +35,7 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     //AddSystem(std::make_unique<CloudRenderSystem>(comp_mng_,RenderPass_Background));
     sky_render_system_ = std::make_unique<RenderSkySystem>(comp_mng_, RenderPass_Background);
     cloud_render_system_ = std::make_unique<RenderCloudSystem>(comp_mng_, RenderPass_Background);
+    fog_render_system_ = std::make_unique<RenderFogSystem>(comp_mng_,RenderPass_Background);
     AddSystem(std::make_unique<GltfRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<InstancingRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Lighting));
@@ -165,6 +167,8 @@ void RenderSystemManager::RenderAll()
 
         }
 
+
+
         back_framebuffer_->Deactivate(ctx);
 
     }
@@ -219,7 +223,7 @@ void RenderSystemManager::RenderAll()
     ssr_render_system_->Render();
 
     // === 合成
-    //final_framebuffer_->Clear(ctx);
+    final_framebuffer_->Clear(ctx);
     final_framebuffer_->Activate(ctx);
 
     ID3D11ShaderResourceView* srvs[] = {
@@ -228,6 +232,10 @@ void RenderSystemManager::RenderAll()
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
+
+    fog_render_system_->SetObjectDepthView(deferred_framebuffer_->GetSRV(Target::Depth));
+    fog_render_system_->Render();
+
     final_framebuffer_->Deactivate(ctx);
     Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
 

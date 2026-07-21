@@ -11,6 +11,8 @@ FullscreenQuad::FullscreenQuad(ID3D11Device* device)
 
 	render_state = std::make_unique<RenderState>(device);
 }
+FullscreenQuad::~FullscreenQuad() = default;
+
 void FullscreenQuad::blit(ID3D11DeviceContext* immediate_context, ID3D11ShaderResourceView* const* shader_resource_views, uint32_t start_slot, uint32_t num_views, ID3D11PixelShader* replaced_pixel_shader)
 {
 	ID3D11ShaderResourceView* cached_shader_resource_views[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT]{};

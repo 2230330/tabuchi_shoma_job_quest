@@ -30,6 +30,7 @@
 #include "component_deferred_render.h"
 #include "component_bound_box.h"
 #include "component_dynamic.h"
+#include "component_fog.h"
 
 #include "../job_system.h"
 
@@ -271,6 +272,7 @@ public:
         Remove<ComponentDeferredRender>(entity_id);
         Remove<ComponentBoundingBox>(entity_id);
         Remove<ComponentDynamic>(entity_id);
+        Remove<ComponentFog>(entity_id);
     }
 
     void ClearAll()
@@ -296,6 +298,7 @@ public:
         deferred_renders_.Clear();
         bounding_boxes_.Clear();
         dynamics_.Clear();
+        fogs_.Clear();
     }
 
 private:
@@ -320,6 +323,7 @@ private:
     ComponentStorage<ComponentDeferredRender> deferred_renders_;
     ComponentStorage<ComponentBoundingBox> bounding_boxes_;
     ComponentStorage<ComponentDynamic> dynamics_;
+    ComponentStorage<ComponentFog> fogs_;
 };
 
 
@@ -362,5 +366,6 @@ DEFINE_COMPONENT_STORAGE(ComponentCascadeShadow, cas_shadows_)
 DEFINE_COMPONENT_STORAGE(ComponentDeferredRender, deferred_renders_)
 DEFINE_COMPONENT_STORAGE(ComponentBoundingBox, bounding_boxes_)
 DEFINE_COMPONENT_STORAGE(ComponentDynamic, dynamics_)
+DEFINE_COMPONENT_STORAGE(ComponentFog, fogs_)
 
 #undef DEFINE_COMPONENT_STORAGE

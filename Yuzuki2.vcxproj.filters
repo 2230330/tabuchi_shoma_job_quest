@@ -302,6 +302,12 @@
     <ClInclude Include="headers\component\component_storage.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_fog.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\render_fog_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -438,6 +444,9 @@
     </ClCompile>
     <ClCompile Include="sources\job_system.cpp">
       <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\render_fog_system.cpp">
+      <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -697,6 +706,9 @@
     </FxCompile>
     <FxCompile Include="shaderes\compute_shaders\bloom_upsample_cs.hlsl">
       <Filter>Shaders\ComputeShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\fog_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

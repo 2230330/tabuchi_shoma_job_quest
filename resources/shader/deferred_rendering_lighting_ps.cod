@@ -19,7 +19,7 @@
 // {
 //
 //   float4 camera_position;            // Offset:    0 Size:    16
-//   float4 camera_direction;           // Offset:   16 Size:    16 [unused]
+//   float4 camera_direction;           // Offset:   16 Size:    16
 //   float4 camera_clip_distance;       // Offset:   32 Size:    16 [unused]
 //   row_major float4x4 view_transform; // Offset:   48 Size:    64 [unused]
 //   row_major float4x4 projection_transform;// Offset:  112 Size:    64 [unused]
@@ -46,6 +46,7 @@
 //   uint shadow_dummy;                 // Offset:   76 Size:     4 [unused]
 //   row_major float4x4 light_view_projection;// Offset:   80 Size:    64 [unused]
 //   row_major float4x4 inverse_light_view_projection;// Offset:  144 Size:    64 [unused]
+//   float4 ambient_color;              // Offset:  208 Size:    16 [unused]
 //
 // }
 //
@@ -73,7 +74,6 @@
 // shadow_map[0]                     texture  float4          2d            t10      1 
 // shadow_map[1]                     texture  float4          2d            t11      1 
 // shadow_map[2]                     texture  float4          2d            t12      1 
-// shadow_map[3]                     texture  float4          2d            t13      1 
 // SCENE_CONSTANT_BUFFER             cbuffer      NA          NA            cb1      1 
 // LIGHT_CONSTANT_BUFFER             cbuffer      NA          NA            cb4      1 
 // CameraBuffer                      cbuffer      NA          NA            cb7      1 
@@ -110,7 +110,6 @@ dcl_resource_texture2d (float,float,float,float) t4
 dcl_resource_texture2d (float,float,float,float) t10
 dcl_resource_texture2d (float,float,float,float) t11
 dcl_resource_texture2d (float,float,float,float) t12
-dcl_resource_texture2d (float,float,float,float) t13
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
 dcl_temps 15
@@ -251,7 +250,7 @@ itof r1.xyz, l(0, 0, 0, 0)  // r1.x <- specular.x; r1.y <- specular.y; r1.z <- s
 #line 45
 nop 
 
-#line 69 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 70 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
 add r1.w, cb4[3].w, l(0.500000)
 ftoi r1.w, r1.w  // r1.w <- <get_light_kinds return value>
 
@@ -264,13 +263,13 @@ switch r1.w
 #line 48
   nop 
 
-#line 75 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 76 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
   mov r2.xyz, cb4[0].xyzx  // r2.x <- data.direction.x; r2.y <- data.direction.y; r2.z <- data.direction.z
 
-#line 76
+#line 77
   mov r3.xyzw, cb4[1].xyzw  // r3.x <- data.color.x; r3.y <- data.color.y; r3.z <- data.color.z; r3.w <- data.color.w
 
-#line 77
+#line 78
   mov r3.xyzw, r3.xyzw  // r3.x <- <convert_directional_lights return value>.color.x; r3.y <- <convert_directional_lights return value>.color.y; r3.z <- <convert_directional_lights return value>.color.z; r3.w <- <convert_directional_lights return value>.color.w
   mov r2.xyz, r2.xyzx  // r2.x <- <convert_directional_lights return value>.direction.x; r2.y <- <convert_directional_lights return value>.direction.y; r2.z <- <convert_directional_lights return value>.direction.z
 
@@ -282,7 +281,7 @@ switch r1.w
   mov r1.w, l(1.000000)  // r1.w <- attenuation
 
 #line 52
-  ine r2.w, l(0, 0, 0, 0), cb4[4].x
+  ilt r2.w, l(0), cb4[4].x
   if_nz r2.w
 
 #line 60
@@ -551,7 +550,7 @@ switch r1.w
       if_nz r2.w
 
 #line 73
-        sample_indexable(texture2d)(float,float,float,float) r2.w, r4.yzyy, t13.yzwx, s6  // r2.w <- depth
+        sample_indexable(texture2d)(float,float,float,float) r2.w, r4.yzyy, t10.yzwx, s6  // r2.w <- depth
 
 #line 75
         mov r2.w, -r2.w
@@ -877,16 +876,16 @@ switch r1.w
 #line 94
   nop 
 
-#line 83 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 84 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
   mov r2.xyz, cb4[0].xyzx  // r2.x <- data.position.x; r2.y <- data.position.y; r2.z <- data.position.z
 
-#line 84
+#line 85
   mov r3.xyzw, cb4[1].xyzw  // r3.x <- data.color.x; r3.y <- data.color.y; r3.z <- data.color.z; r3.w <- data.color.w
 
-#line 85
+#line 86
   mov r4.y, cb4[2].x  // r4.y <- data.range
 
-#line 86
+#line 87
   mov r2.xyz, r2.xyzx  // r2.x <- <convert_point_lights return value>.position.x; r2.y <- <convert_point_lights return value>.position.y; r2.z <- <convert_point_lights return value>.position.z
   mov r3.xyz, r3.xyzx  // r3.x <- <convert_point_lights return value>.color.x; r3.y <- <convert_point_lights return value>.color.y; r3.z <- <convert_point_lights return value>.color.z
   mov r4.x, r3.w  // r4.x <- <convert_point_lights return value>.color.w
@@ -1233,27 +1232,27 @@ switch r1.w
 #line 119
   nop 
 
-#line 92 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 93 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
   mov r2.xyz, cb4[0].xyzx  // r2.x <- data.position.x; r2.y <- data.position.y; r2.z <- data.position.z
 
-#line 93
+#line 94
   dp4 r1.w, cb4[1].xyzw, cb4[1].xyzw
   rsq r1.w, r1.w
   mul r3.xyz, r1.wwww, cb4[1].xyzx  // r3.x <- data.direction.x; r3.y <- data.direction.y; r3.z <- data.direction.z
 
-#line 94
+#line 95
   mov r4.xyzw, cb4[2].xyzw  // r4.x <- data.color.x; r4.y <- data.color.y; r4.z <- data.color.z; r4.w <- data.color.w
 
-#line 95
+#line 96
   mov r5.y, cb4[3].x  // r5.y <- data.range
 
-#line 96
+#line 97
   mov r5.z, cb4[3].y  // r5.z <- data.inner_corn
 
-#line 97
+#line 98
   mov r5.w, cb4[3].z  // r5.w <- data.outer_corn
 
-#line 98
+#line 99
   mov r5.x, r4.w  // r5.x <- <convert_spot_lights return value>.color.w
   mov r5.y, r5.y  // r5.y <- <convert_spot_lights return value>.range
   mov r5.z, r5.z  // r5.z <- <convert_spot_lights return value>.inner_corn
@@ -1375,7 +1374,7 @@ switch r1.w
 #line 34
         dp3 r2.w, r8.yzwy, r8.yzwy
         rsq r2.w, r2.w
-        mul r8.xyz, r2.wwww, r8.yzwy  // r8.x <- normal.x; r8.y <- normal.y; r8.z <- normal.z
+        mul r12.xyz, r2.wwww, r8.yzwy  // r12.x <- normal.x; r12.y <- normal.y; r12.z <- normal.z
 
 #line 35
         mov r4.xyz, -r4.xyzx
@@ -1391,23 +1390,23 @@ switch r1.w
         add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- diffuse_reflectance.x; r6.y <- diffuse_reflectance.y; r6.z <- diffuse_reflectance.z
 
 #line 37
-        mov r12.xyz, l(-0.040000,-0.040000,-0.040000,-0.000000)
-        add r7.xyz, r7.xyzx, r12.xyzx
-        mul r7.xyz, r7.xyzx, r10.yyyy
-        add r7.xyz, r7.xyzx, l(0.040000, 0.040000, 0.040000, 0.000000)  // r7.x <- fresnel0.x; r7.y <- fresnel0.y; r7.z <- fresnel0.z
+        mov r13.xyz, l(-0.040000,-0.040000,-0.040000,-0.000000)
+        add r13.xyz, r7.xyzx, r13.xyzx
+        mul r13.xyz, r10.yyyy, r13.xyzx
+        add r13.xyz, r13.xyzx, l(0.040000, 0.040000, 0.040000, 0.000000)  // r13.x <- fresnel0.x; r13.y <- fresnel0.y; r13.z <- fresnel0.z
 
 #line 38
         nop 
         mov r6.xyz, r6.xyzx
-        mov r7.xyz, r7.xyzx
-        mov r8.xyz, r8.xyzx
+        mov r13.xyz, r13.xyzx
+        mov r12.xyz, r12.xyzx
         mov r4.xyz, r4.xyzx
         mov r2.xyz, r2.xyzx
         mov r3.xyz, r3.xyzx
         mov r10.x, r10.x
 
 #line 212 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
-        mov r8.xyz, r8.xyzx  // r8.x <- N.x; r8.y <- N.y; r8.z <- N.z
+        mov r12.xyz, r12.xyzx  // r12.x <- N.x; r12.y <- N.y; r12.z <- N.z
 
 #line 213
         mov r2.xyz, -r2.xyzx  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
@@ -1416,25 +1415,25 @@ switch r1.w
         mov r4.xyz, -r4.xyzx  // r4.x <- V.x; r4.y <- V.y; r4.z <- V.z
 
 #line 215
-        add r10.yzw, r2.xxyz, r4.xxyz
-        dp3 r2.w, r10.yzwy, r10.yzwy
+        add r14.xyz, r2.xyzx, r4.xyzx
+        dp3 r2.w, r14.xyzx, r14.xyzx
         rsq r2.w, r2.w
-        mul r10.yzw, r2.wwww, r10.yyzw  // r10.y <- H.x; r10.z <- H.y; r10.w <- H.z
+        mul r14.xyz, r2.wwww, r14.xyzx  // r14.x <- H.x; r14.y <- H.y; r14.z <- H.z
 
 #line 217
-        dp3 r2.w, r8.xyzx, r4.xyzx
+        dp3 r2.w, r12.xyzx, r4.xyzx
         max r2.w, r2.w, l(0.000100)  // r2.w <- NdotV
 
 #line 218
-        dp3 r2.x, r8.xyzx, r2.xyzx
+        dp3 r2.x, r12.xyzx, r2.xyzx
         max r2.x, r2.x, l(0.000100)  // r2.x <- NdotL
 
 #line 219
-        dp3 r2.y, r8.xyzx, r10.yzwy
+        dp3 r2.y, r12.xyzx, r14.xyzx
         max r2.y, r2.y, l(0.000100)  // r2.y <- NdotH
 
 #line 220
-        dp3 r2.z, r4.xyzx, r10.yzwy
+        dp3 r2.z, r4.xyzx, r14.xyzx
         max r2.z, r2.z, l(0.000100)  // r2.z <- VdotH
 
 #line 222
@@ -1443,16 +1442,16 @@ switch r1.w
 #line 224
         nop 
         mov r2.z, r2.z
-        mov r7.xyz, r7.xyzx
+        mov r13.xyz, r13.xyzx
         mov r6.xyz, r6.xyzx
 
 #line 144
         nop 
-        mov r7.xyz, r7.xyzx
+        mov r13.xyz, r13.xyzx
         mov r2.z, r2.z
 
 #line 132
-        mov r4.xyz, -r7.xyzx
+        mov r4.xyz, -r13.xyzx
         add r4.xyz, r4.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
         mov r3.w, -r2.z
         add r3.w, r3.w, l(1.000000)
@@ -1464,7 +1463,7 @@ switch r1.w
         mul r3.w, r3.w, r3.w
         mul r3.w, r3.w, r4.w
         mul r4.xyz, r3.wwww, r4.xyzx
-        add r4.xyz, r4.xyzx, r7.xyzx  // r4.x <- <CalcFresnel return value>.x; r4.y <- <CalcFresnel return value>.y; r4.z <- <CalcFresnel return value>.z
+        add r4.xyz, r4.xyzx, r13.xyzx  // r4.x <- <CalcFresnel return value>.x; r4.y <- <CalcFresnel return value>.y; r4.z <- <CalcFresnel return value>.z
 
 #line 144
         mov r4.xyz, -r4.xyzx
@@ -1481,7 +1480,7 @@ switch r1.w
         mov r2.x, r2.x
         mov r2.y, r2.y
         mov r2.z, r2.z
-        mov r7.xyz, r7.xyzx
+        mov r13.xyz, r13.xyzx
         mov r10.x, r10.x
 
 #line 184
@@ -1500,12 +1499,12 @@ switch r1.w
         add r2.y, r2.y, l(1.000000)  // r2.y <- b
 
 #line 156
-        mul r0.x, r0.x, r2.y
-        mul r0.x, r2.y, r0.x
-        div r0.x, r3.w, r0.x  // r0.x <- <CalcNormalDistributionFunction return value>
+        mul r4.w, r0.x, r2.y
+        mul r2.y, r2.y, r4.w
+        div r2.y, r3.w, r2.y  // r2.y <- <CalcNormalDistributionFunction return value>
 
 #line 184
-        mov r0.x, r0.x  // r0.x <- D
+        mov r2.y, r2.y  // r2.y <- D
 
 #line 185
         nop 
@@ -1514,57 +1513,57 @@ switch r1.w
         mov r10.x, r10.x
 
 #line 167
-        mul r2.y, r10.x, l(0.500000)  // r2.y <- r
+        mul r3.w, r10.x, l(0.500000)  // r3.w <- r
 
 #line 168
-        mov r3.w, -r2.y
-        add r3.w, r3.w, l(1.000000)
-        mul r3.w, r2.x, r3.w
-        add r3.w, r2.y, r3.w
-        div r3.w, r2.x, r3.w  // r3.w <- shadowing
+        mov r4.w, -r3.w
+        add r4.w, r4.w, l(1.000000)
+        mul r4.w, r2.x, r4.w
+        add r4.w, r3.w, r4.w
+        div r4.w, r2.x, r4.w  // r4.w <- shadowing
 
 #line 169
-        mov r4.w, -r2.y
-        add r4.w, r4.w, l(1.000000)
-        mul r4.w, r2.w, r4.w
-        add r2.y, r2.y, r4.w
-        div r2.y, r2.w, r2.y  // r2.y <- masking
+        mov r6.x, -r3.w
+        add r6.x, r6.x, l(1.000000)
+        mul r6.x, r2.w, r6.x
+        add r3.w, r3.w, r6.x
+        div r3.w, r2.w, r3.w  // r3.w <- masking
 
 #line 170
-        mul r2.y, r2.y, r3.w  // r2.y <- <CalcGeometryFunction return value>
+        mul r3.w, r3.w, r4.w  // r3.w <- <CalcGeometryFunction return value>
 
 #line 185
-        mov r2.y, r2.y  // r2.y <- G
+        mov r3.w, r3.w  // r3.w <- G
 
 #line 186
         nop 
-        mov r7.xyz, r7.xyzx
+        mov r13.xyz, r13.xyzx
         mov r2.z, r2.z
 
 #line 132
-        mov r6.xyz, -r7.xyzx
+        mov r6.xyz, -r13.xyzx
         add r6.xyz, r6.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
         mov r2.z, -r2.z
         add r2.z, r2.z, l(1.000000)
         max r2.z, r2.z, l(0.000000)
         min r2.z, r2.z, l(1.000000)
-        mov r3.w, l(1.000000)
-        mul r3.w, r2.z, r3.w
+        mov r4.w, l(1.000000)
+        mul r4.w, r2.z, r4.w
         mul r2.z, r2.z, r2.z
         mul r2.z, r2.z, r2.z
-        mul r2.z, r2.z, r3.w
+        mul r2.z, r2.z, r4.w
         mul r6.xyz, r2.zzzz, r6.xyzx
-        add r6.xyz, r6.xyzx, r7.xyzx  // r6.x <- <CalcFresnel return value>.x; r6.y <- <CalcFresnel return value>.y; r6.z <- <CalcFresnel return value>.z
+        add r6.xyz, r6.xyzx, r13.xyzx  // r6.x <- <CalcFresnel return value>.x; r6.y <- <CalcFresnel return value>.y; r6.z <- <CalcFresnel return value>.z
 
 #line 186
         mov r6.xyz, r6.xyzx  // r6.x <- F.x; r6.y <- F.y; r6.z <- F.z
 
 #line 187
-        mul r0.x, r0.x, r2.y
-        mul r6.xyz, r6.xyzx, r0.xxxx
-        mul r0.x, r2.w, r2.x
-        mul r0.x, r0.x, l(4.000000)
-        div r2.xyz, r6.xyzx, r0.xxxx  // r2.x <- <SpecularBRDF return value>.x; r2.y <- <SpecularBRDF return value>.y; r2.z <- <SpecularBRDF return value>.z
+        mul r2.y, r2.y, r3.w
+        mul r6.xyz, r6.xyzx, r2.yyyy
+        mul r2.x, r2.w, r2.x
+        mul r2.x, r2.x, l(4.000000)
+        div r2.xyz, r6.xyzx, r2.xxxx  // r2.x <- <SpecularBRDF return value>.x; r2.y <- <SpecularBRDF return value>.y; r2.z <- <SpecularBRDF return value>.z
 
 #line 226
         mul r2.xyz, r3.xyzx, r2.xyzx  // r2.x <- out_specular.x; r2.y <- out_specular.y; r2.z <- out_specular.z
@@ -1594,7 +1593,7 @@ switch r1.w
         add r11.xyz, r2.xyzx, r3.xyzx  // r11.y <- result.specular.y; r11.z <- result.specular.z; r11.x <- result.specular.x
 
 #line 46
-        break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r8.x <- data.w_position.x; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r10.y <- data.metalness; r10.z <- data.w_position.y; r10.w <- data.w_position.z; r2.x <- L.x; r2.y <- L.y; r2.z <- L.z; r3.w <- outerCorn; r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z; r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z; r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z; r0.x <- PI; r7.x <- gbuffer_data.base_color.x; r7.y <- gbuffer_data.base_color.y; r7.z <- gbuffer_data.base_color.z; r8.y <- gbuffer_data.w_normal.x; r8.z <- gbuffer_data.w_normal.y; r6.x <- gbuffer_data.w_position.x; r6.y <- gbuffer_data.w_position.y; r6.z <- gbuffer_data.w_position.z; r10.y <- gbuffer_data.metalness; r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z; r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z; r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z; r5.w <- result.specular.x; r0.x <- PI
+        break   // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z; r3.w <- outerCorn; r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z; r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z; r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z; r6.x <- gbuffer_data.w_position.x; r6.y <- gbuffer_data.w_position.y; r6.z <- gbuffer_data.w_position.z; r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z; r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z; r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z; r5.w <- result.specular.x
 
 #line 48
         default 
@@ -1624,22 +1623,326 @@ switch r1.w
   endif 
 
 #line 168
-  break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r7.w <- data.shading_model; r8.x <- data.w_position.x; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r8.w <- data.w_normal.z; r10.x <- data.roughness; r10.y <- data.metalness; r10.z <- data.w_position.y; r10.w <- data.w_position.z; r9.x <- data.occlusion_factor; r9.y <- data.occlusion_strength; r0.x <- PI
+  break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r7.w <- data.shading_model; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r8.w <- data.w_normal.z; r10.x <- data.roughness; r10.y <- data.metalness; r9.x <- data.occlusion_factor; r9.y <- data.occlusion_strength
+
+#line 169
+  case l(3)
+
+#line 170
+  mov r1.w, l(1.000000)  // r1.w <- lighting_data.attenuation
+
+#line 171
+  mov r2.xyz, cb7[1].xyzx  // r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z
 
 #line 172
+  nop 
+
+#line 104 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+  mul r3.xyz, cb4[0].wwww, cb4[0].xyzx  // r3.x <- <convert_ambient_lights return value>.x; r3.y <- <convert_ambient_lights return value>.y; r3.z <- <convert_ambient_lights return value>.z
+
+#line 172 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+  mov r3.xyz, r3.xyzx  // r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z
+
+#line 173
+  mov r4.xyz, cb7[0].xyzx  // r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z
+
+#line 174
+  nop 
+  mov r7.xyz, r7.xyzx
+  mov r5.xyz, r8.yzwy
+  mov r8.x, r8.x
+  mov r8.yz, r10.zzwz
+  mov r7.w, r7.w
+  mov r10.xy, r10.xyxx
+  mov r9.xy, r9.xyxx
+  mov r2.xyz, r2.xyzx
+  mov r3.xyz, r3.xyzx
+  mov r1.w, r1.w
+  mov r4.xyz, r4.xyzx
+
+#line 23 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+  itof r6.xyzw, l(0, 0, 0, 0)  // r6.x <- result.diffuse.x; r6.y <- result.diffuse.y; r6.z <- result.diffuse.z; r6.w <- result.specular.x
+  itof r11.yz, l(0, 0, 0, 0)  // r11.y <- result.specular.y; r11.z <- result.specular.z
+
+#line 24
+  switch r7.w
+
+#line 26
+    case l(0)
+
+#line 29
+    mov r11.w, r6.w
+    mov r11.xyz, r11.wyzw  // r11.x <- result.specular.x
+    break   // r6.w <- result.specular.x
+
+#line 31
+    case l(1)
+
+#line 33
+    mov r7.xyz, r7.xyzx  // r7.x <- albedo.x; r7.y <- albedo.y; r7.z <- albedo.z
+
+#line 34
+    dp3 r2.w, r5.xyzx, r5.xyzx
+    rsq r2.w, r2.w
+    mul r5.xyz, r2.wwww, r5.xyzx  // r5.x <- normal.x; r5.y <- normal.y; r5.z <- normal.z
+
+#line 35
+    mov r4.xyz, -r4.xyzx
+    add r4.xyz, r4.xyzx, r8.xyzx
+    dp3 r2.w, r4.xyzx, r4.xyzx
+    rsq r2.w, r2.w
+    mul r4.xyz, r2.wwww, r4.xyzx  // r4.x <- view_vector.x; r4.y <- view_vector.y; r4.z <- view_vector.z
+
+#line 36
+    mov r8.xyz, -r7.xyzx
+    add r8.xyz, r8.xyzx, l(0.000000, 0.000000, 0.000000, 0.000000)
+    mul r8.xyz, r8.xyzx, r10.yyyy
+    add r8.xyz, r7.xyzx, r8.xyzx  // r8.x <- diffuse_reflectance.x; r8.y <- diffuse_reflectance.y; r8.z <- diffuse_reflectance.z
+
+#line 37
+    mov r12.xyz, l(-0.040000,-0.040000,-0.040000,-0.000000)
+    add r7.xyz, r7.xyzx, r12.xyzx
+    mul r7.xyz, r7.xyzx, r10.yyyy
+    add r7.xyz, r7.xyzx, l(0.040000, 0.040000, 0.040000, 0.000000)  // r7.x <- fresnel0.x; r7.y <- fresnel0.y; r7.z <- fresnel0.z
+
+#line 38
+    nop 
+    mov r8.xyz, r8.xyzx
+    mov r7.xyz, r7.xyzx
+    mov r5.xyz, r5.xyzx
+    mov r4.xyz, r4.xyzx
+    mov r2.xyz, r2.xyzx
+    mov r3.xyz, r3.xyzx
+    mov r10.x, r10.x
+
+#line 212 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+    mov r5.xyz, r5.xyzx  // r5.x <- N.x; r5.y <- N.y; r5.z <- N.z
+
+#line 213
+    mov r2.xyz, -r2.xyzx  // r2.x <- L.x; r2.y <- L.y; r2.z <- L.z
+
+#line 214
+    mov r4.xyz, -r4.xyzx  // r4.x <- V.x; r4.y <- V.y; r4.z <- V.z
+
+#line 215
+    add r10.yzw, r2.xxyz, r4.xxyz
+    dp3 r2.w, r10.yzwy, r10.yzwy
+    rsq r2.w, r2.w
+    mul r10.yzw, r2.wwww, r10.yyzw  // r10.y <- H.x; r10.z <- H.y; r10.w <- H.z
+
+#line 217
+    dp3 r2.w, r5.xyzx, r4.xyzx
+    max r2.w, r2.w, l(0.000100)  // r2.w <- NdotV
+
+#line 218
+    dp3 r2.x, r5.xyzx, r2.xyzx
+    max r2.x, r2.x, l(0.000100)  // r2.x <- NdotL
+
+#line 219
+    dp3 r2.y, r5.xyzx, r10.yzwy
+    max r2.y, r2.y, l(0.000100)  // r2.y <- NdotH
+
+#line 220
+    dp3 r2.z, r4.xyzx, r10.yzwy
+    max r2.z, r2.z, l(0.000100)  // r2.z <- VdotH
+
+#line 222
+    mul r3.xyz, r2.xxxx, r3.xyzx  // r3.x <- irradiance.x; r3.y <- irradiance.y; r3.z <- irradiance.z
+
+#line 224
+    nop 
+    mov r2.z, r2.z
+    mov r7.xyz, r7.xyzx
+    mov r8.xyz, r8.xyzx
+
+#line 144
+    nop 
+    mov r7.xyz, r7.xyzx
+    mov r2.z, r2.z
+
+#line 132
+    mov r4.xyz, -r7.xyzx
+    add r4.xyz, r4.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mov r3.w, -r2.z
+    add r3.w, r3.w, l(1.000000)
+    max r3.w, r3.w, l(0.000000)
+    min r3.w, r3.w, l(1.000000)
+    mov r4.w, l(1.000000)
+    mul r4.w, r3.w, r4.w
+    mul r3.w, r3.w, r3.w
+    mul r3.w, r3.w, r3.w
+    mul r3.w, r3.w, r4.w
+    mul r4.xyz, r3.wwww, r4.xyzx
+    add r4.xyz, r4.xyzx, r7.xyzx  // r4.x <- <CalcFresnel return value>.x; r4.y <- <CalcFresnel return value>.y; r4.z <- <CalcFresnel return value>.z
+
+#line 144
+    mov r4.xyz, -r4.xyzx
+    add r4.xyz, r4.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    div r5.xyz, r8.xyzx, r0.xxxx
+    mul r4.xyz, r4.xyzx, r5.xyzx  // r4.x <- <DiffuseBRDF return value>.x; r4.y <- <DiffuseBRDF return value>.y; r4.z <- <DiffuseBRDF return value>.z
+
+#line 224
+    mul r4.xyz, r3.xyzx, r4.xyzx  // r4.x <- out_diffuse.x; r4.y <- out_diffuse.y; r4.z <- out_diffuse.z
+
+#line 226
+    nop 
+    mov r2.w, r2.w
+    mov r2.x, r2.x
+    mov r2.y, r2.y
+    mov r2.z, r2.z
+    mov r7.xyz, r7.xyzx
+    mov r10.x, r10.x
+
+#line 184
+    nop 
+    mov r2.y, r2.y
+    mov r10.x, r10.x
+
+#line 154
+    mul r3.w, r10.x, r10.x  // r3.w <- a
+
+#line 155
+    mul r2.y, r2.y, r2.y
+    mov r4.w, l(-1.000000)
+    add r4.w, r3.w, r4.w
+    mul r2.y, r2.y, r4.w
+    add r2.y, r2.y, l(1.000000)  // r2.y <- b
+
+#line 156
+    mul r0.x, r0.x, r2.y
+    mul r0.x, r2.y, r0.x
+    div r0.x, r3.w, r0.x  // r0.x <- <CalcNormalDistributionFunction return value>
+
+#line 184
+    mov r0.x, r0.x  // r0.x <- D
+
+#line 185
+    nop 
+    mov r2.x, r2.x
+    mov r2.w, r2.w
+    mov r10.x, r10.x
+
+#line 167
+    mul r2.y, r10.x, l(0.500000)  // r2.y <- r
+
+#line 168
+    mov r3.w, -r2.y
+    add r3.w, r3.w, l(1.000000)
+    mul r3.w, r2.x, r3.w
+    add r3.w, r2.y, r3.w
+    div r3.w, r2.x, r3.w  // r3.w <- shadowing
+
+#line 169
+    mov r4.w, -r2.y
+    add r4.w, r4.w, l(1.000000)
+    mul r4.w, r2.w, r4.w
+    add r2.y, r2.y, r4.w
+    div r2.y, r2.w, r2.y  // r2.y <- masking
+
+#line 170
+    mul r2.y, r2.y, r3.w  // r2.y <- <CalcGeometryFunction return value>
+
+#line 185
+    mov r2.y, r2.y  // r2.y <- G
+
+#line 186
+    nop 
+    mov r7.xyz, r7.xyzx
+    mov r2.z, r2.z
+
+#line 132
+    mov r5.xyz, -r7.xyzx
+    add r5.xyz, r5.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+    mov r2.z, -r2.z
+    add r2.z, r2.z, l(1.000000)
+    max r2.z, r2.z, l(0.000000)
+    min r2.z, r2.z, l(1.000000)
+    mov r3.w, l(1.000000)
+    mul r3.w, r2.z, r3.w
+    mul r2.z, r2.z, r2.z
+    mul r2.z, r2.z, r2.z
+    mul r2.z, r2.z, r3.w
+    mul r5.xyz, r2.zzzz, r5.xyzx
+    add r5.xyz, r5.xyzx, r7.xyzx  // r5.x <- <CalcFresnel return value>.x; r5.y <- <CalcFresnel return value>.y; r5.z <- <CalcFresnel return value>.z
+
+#line 186
+    mov r5.xyz, r5.xyzx  // r5.x <- F.x; r5.y <- F.y; r5.z <- F.z
+
+#line 187
+    mul r0.x, r0.x, r2.y
+    mul r5.xyz, r5.xyzx, r0.xxxx
+    mul r0.x, r2.w, r2.x
+    mul r0.x, r0.x, l(4.000000)
+    div r2.xyz, r5.xyzx, r0.xxxx  // r2.x <- <SpecularBRDF return value>.x; r2.y <- <SpecularBRDF return value>.y; r2.z <- <SpecularBRDF return value>.z
+
+#line 226
+    mul r2.xyz, r3.xyzx, r2.xyzx  // r2.x <- out_specular.x; r2.y <- out_specular.y; r2.z <- out_specular.z
+
+#line 38 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+    mov r4.xyz, r4.xyzx  // r4.x <- result.diffuse.x; r4.y <- result.diffuse.y; r4.z <- result.diffuse.z
+    mov r2.xyz, r2.xyzx  // r2.x <- result.specular.x; r2.y <- result.specular.y; r2.z <- result.specular.z
+
+#line 40
+    mul r3.xyz, r1.wwww, r4.xyzx  // r3.x <- result.diffuse.x; r3.y <- result.diffuse.y; r3.z <- result.diffuse.z
+
+#line 41
+    mul r2.xyz, r1.wwww, r2.xyzx
+
+#line 44
+    mul r4.xyz, r9.xxxx, r3.xyzx
+    mov r5.xyz, -r3.xyzx
+    add r4.xyz, r4.xyzx, r5.xyzx
+    mul r4.xyz, r4.xyzx, r9.yyyy
+    add r6.xyz, r3.xyzx, r4.xyzx  // r6.x <- result.diffuse.x; r6.y <- result.diffuse.y; r6.z <- result.diffuse.z
+
+#line 45
+    mul r3.xyz, r9.xxxx, r2.xyzx
+    mov r4.xyz, -r2.xyzx
+    add r3.xyz, r3.xyzx, r4.xyzx
+    mul r3.xyz, r3.xyzx, r9.yyyy
+    add r11.xyz, r2.xyzx, r3.xyzx  // r11.y <- result.specular.y; r11.z <- result.specular.z; r11.x <- result.specular.x
+
+#line 46
+    break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r8.x <- data.w_position.x; r10.y <- data.metalness; r10.z <- data.w_position.y; r10.w <- data.w_position.z; r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z; r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z; r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z; r0.x <- PI; r7.x <- gbuffer_data.base_color.x; r7.y <- gbuffer_data.base_color.y; r7.z <- gbuffer_data.base_color.z; r5.x <- gbuffer_data.w_normal.x; r5.y <- gbuffer_data.w_normal.y; r5.z <- gbuffer_data.w_normal.z; r8.x <- gbuffer_data.w_position.x; r8.y <- gbuffer_data.w_position.y; r8.z <- gbuffer_data.w_position.z; r10.y <- gbuffer_data.metalness; r2.x <- lighting_data.direction.x; r2.y <- lighting_data.direction.y; r2.z <- lighting_data.direction.z; r3.x <- lighting_data.color.x; r3.y <- lighting_data.color.y; r3.z <- lighting_data.color.z; r4.x <- lighting_data.camera_position.x; r4.y <- lighting_data.camera_position.y; r4.z <- lighting_data.camera_position.z; r6.w <- result.specular.x; r0.x <- PI
+
+#line 48
+    default 
+    mov r11.x, r6.w
+    mov r11.xyz, r11.xyzx  // r11.x <- result.specular.x
+    break   // r6.w <- result.specular.x
+  endswitch   // r11.x <- result.specular.x
+
+#line 50
+  mov r6.xyz, r6.xyzx  // r6.x <- <integrate_bxdf return value>.diffuse.x; r6.y <- <integrate_bxdf return value>.diffuse.y; r6.z <- <integrate_bxdf return value>.diffuse.z
+  mov r11.xyz, r11.xyzx  // r11.x <- <integrate_bxdf return value>.specular.x; r11.y <- <integrate_bxdf return value>.specular.y; r11.z <- <integrate_bxdf return value>.specular.z
+
+#line 174 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+  mov r6.xyz, r6.xyzx  // r6.x <- result.diffuse.x; r6.y <- result.diffuse.y; r6.z <- result.diffuse.z
+  mov r11.xyz, r11.xyzx  // r11.x <- result.specular.x; r11.y <- result.specular.y; r11.z <- result.specular.z
+
+#line 175
+  add r0.yzw, r0.yyzw, r6.xxyz
+
+#line 176
+  add r1.xyz, r1.xyzx, r11.xyzx
+
+#line 177
+  break   // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r8.x <- data.w_position.x; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r10.x <- data.roughness; r10.y <- data.metalness; r10.z <- data.w_position.y; r10.w <- data.w_position.z; r0.x <- PI
+
+#line 180
   default 
   break 
 endswitch 
 
-#line 175
+#line 183
 add r0.xyz, r0.yzwy, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 176
+#line 184
 add r0.w, r0.y, r0.x
 add r0.w, r0.z, r0.w
 div r0.w, r0.w, l(3.000000)  // r0.w <- alpha
 
-#line 177
+#line 185
 eq r1.x, r0.x, l(0.000000)
 eq r1.y, r0.y, l(0.000000)
 and r1.x, r1.y, r1.x
@@ -1647,14 +1950,14 @@ eq r1.y, r0.z, l(0.000000)
 and r1.x, r1.y, r1.x
 if_nz r1.x
 
-#line 179
+#line 187
   itof r0.w, l(0)
 
-#line 180
+#line 188
 endif 
 
-#line 182
+#line 190
 mov o0.xyz, r0.xyzx
 mov o0.w, r0.w
 ret 
-// Approximately 902 instruction slots used
+// Approximately 1082 instruction slots used

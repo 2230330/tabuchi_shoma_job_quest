@@ -14,7 +14,7 @@ class FullscreenQuad
 {
 public:
 	FullscreenQuad(ID3D11Device* device);
-	virtual ~FullscreenQuad() = default;
+	virtual ~FullscreenQuad();
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> embedded_vertex_shader=nullptr;

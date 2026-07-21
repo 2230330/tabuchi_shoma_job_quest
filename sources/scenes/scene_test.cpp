@@ -71,7 +71,7 @@ bool SceneTest::InitializeCore()
         //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
 
-        const int size = 1000;
+        const int size = 000;
         for (int i = 0; i < size; i++)
         {
             uint32_t entity = world->GetEntityManager()->Add();

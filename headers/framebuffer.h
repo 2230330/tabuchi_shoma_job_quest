@@ -34,7 +34,7 @@ public:
         int subsamples = 1,
         bool generate_mips = false
     );
-    ~FrameBuffer() = default;
+    ~FrameBuffer();
 
     //画面のクリア
     void Clear(ID3D11DeviceContext* immediate_context, usage flags = usage::color_depth_stencil, DirectX::XMFLOAT4 color = { 0.0f, 0.0f, 0.0f, 0.f }, float depth = 1, uint8_t stencil = 0);
@@ -43,7 +43,8 @@ public:
     //レンダリング終了
     void Deactivate(ID3D11DeviceContext* immediate_context);
 
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetShaderResourceView(int num) { return shader_resource_views_[num]; }
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetShaderResourceView(int num) 
+    { return shader_resource_views_[num]; }
     const Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> GetShaderResourceView(int num)
         const { return shader_resource_views_[num]; }
 

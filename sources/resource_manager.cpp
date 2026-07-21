@@ -97,6 +97,7 @@ Microsoft::WRL::ComPtr<ID3D11PixelShader> ResourceManager::LoadPixelShader(ID3D1
     {
         std::wstring message = L"Failed to load pixel shader: " + filename + L" Error: " + HRTrace(hr);
         OutputDebugStringW(message.c_str());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
         return nullptr;
     }
 

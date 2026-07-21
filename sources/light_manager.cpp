@@ -26,7 +26,7 @@ LightManager::LightManager()
 	}
 	//ディファードレンダリング用定数バッファ
 	{
-		buffer_desc.ByteWidth = sizeof(DeferredLightContstants);
+		buffer_desc.ByteWidth = sizeof(DeferredLightConstants);
 		hr = Graphics::Instance().GetDevice()->CreateBuffer(&buffer_desc, nullptr,
 			deferred_light_constant_buffer_.GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
@@ -77,10 +77,11 @@ void LightManager::SetForwardLightConstant(int start_slot)
 	Graphics::Instance().SetConstantBuffer(start_slot, 1, forward_light_constant_buffer_.GetAddressOf());
 }
 
-void LightManager::BindDeferredLightConstant(int start_slot, UINT index)
+void LightManager::BindDeferredLightConstant(int start_slot, UINT index,bool shadow_frag)
 {
 	auto* ctx = Graphics::Instance().GetDeviceContext();
 
+	deferred_lights_[index].use_shadow = (shadow_frag == true) ? 1 : -1;
 	ctx->UpdateSubresource(deferred_light_constant_buffer_.Get(), 0, 0, &deferred_lights_[index], 0, 0);
 	Graphics::Instance().SetConstantBuffer(start_slot, 1, deferred_light_constant_buffer_.GetAddressOf());
 
@@ -97,7 +98,7 @@ void LightManager::DrawImgui()
 			ImGui::TreePop();
 		}
 		//影強度
-		if (ImGui::SliderFloat("shadow intensity", &shadow_intensity_, 0.0f, 1.f));
+		if (ImGui::SliderFloat("shadow attenuation", &shadow_attenuation_, 0.0f, 1.f));
 		//ディレクションライト
 		if (ImGui::TreeNode("directional light"))
 		{
@@ -253,6 +254,8 @@ void LightManager::Update(float elapsed_time)
 void LightManager::BuildDeferredLights()
 {
 	deferred_lights_.clear();
+	DeferredLightConstants l{};
+	l.ambient_color = ambient_color_;
 
 	// Ambient
 	{
@@ -261,7 +264,6 @@ void LightManager::BuildDeferredLights()
 		//work_data[1]=dummy
 		//work_data[2]=dummy
 		//work_data[3]=xyz=dummy,w=ライト識別番号
-		DeferredLightContstants l{};
 		l.lights.work_data[0] = ambient_color_;
 		l.lights.work_data[3].w = static_cast<float>(light_kind_ambient_light);
 
@@ -276,14 +278,13 @@ void LightManager::BuildDeferredLights()
 		//work_data[1]=color
 		//work_data[2]=dummy
 		//work_data[3]=xyz=dummy,w=ライト識別番号
-		DeferredLightContstants l{};
 		l.lights.work_data[0] = direction_light_.direction;
 		l.lights.work_data[1] = direction_light_.color;
 		l.lights.work_data[3].w = static_cast<float>(light_kind_derectional_light);
 		l.use_shadow = 1;
 		l.light_view_projection = light_view_projection_;
 		l.inverse_light_view_projection = inverse_light_view_projection_;
-		l.shadow_attenuation = shadow_intensity_;
+		l.shadow_attenuation = shadow_attenuation_;
 
 		deferred_lights_.emplace_back(l);
 	}
@@ -296,7 +297,6 @@ void LightManager::BuildDeferredLights()
 		//work_data[1]=color
 		//work_data[2]=x=range,yzw=dummy
 		//work_data[3]=xyz=dummy,w=ライト識別番号
-		DeferredLightContstants l{};
 		l.lights.work_data[0] = p.position;
 		l.lights.work_data[1] = p.color;
 		l.lights.work_data[2].x = p.range;
@@ -314,7 +314,6 @@ void LightManager::BuildDeferredLights()
 		//work_data[1]=direction
 		//work_data[2]=color
 		//work_data[3]=x=range,y=inner_cone,z=outer_cone,w=ライト識別番号
-		DeferredLightContstants l{};
 		l.lights.work_data[0] = s.position;
 		l.lights.work_data[1] = s.direction;
 		l.lights.work_data[2] = s.color;

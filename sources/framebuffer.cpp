@@ -109,6 +109,8 @@ FrameBuffer::FrameBuffer(
 
 }
 
+FrameBuffer::~FrameBuffer() = default;
+
 void FrameBuffer::Clear(
 	ID3D11DeviceContext* ctx,
 	usage flags,
@@ -132,6 +134,7 @@ void FrameBuffer::Clear(
 
 		ctx->ClearDepthStencilView(depth_stencil_view_.Get(), clear_flags, depth, stencil);
 	}
+
 }
 
 void FrameBuffer::Activate(ID3D11DeviceContext* immediate_context, usage flags)

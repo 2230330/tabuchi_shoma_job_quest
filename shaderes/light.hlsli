@@ -1,6 +1,6 @@
 #ifndef __LIGHTS_HLSLI__
 #define __LIGHTS_HLSLI__
-// •½sŒõŒ¹
+// å¹³è¡Œå…‰æº
 struct directional_lights
 {
     float4 direction;
@@ -8,7 +8,7 @@ struct directional_lights
 
 };
 
-// “_ŒõŒ¹
+// ç‚¹å…‰æº
 struct point_lights
 {
     float4 position;
@@ -18,7 +18,7 @@ struct point_lights
     float2 dummy;
 };
 
-// ƒXƒ|ƒbƒgƒ‰ƒCƒg
+// ã‚¹ãƒãƒƒãƒˆãƒ©ã‚¤ãƒˆ
 struct spot_lights
 {
     float4 position;
@@ -30,7 +30,7 @@ struct spot_lights
     float dummy;
 };
 
-// ”¼‹…ƒ‰ƒCƒg
+// åŠçƒãƒ©ã‚¤ãƒˆ
 struct hemisphere_lights
 {
     float4 sky_color;
@@ -39,4 +39,9 @@ struct hemisphere_lights
     float3 dummy;
 };
 
+//ç’°å¢ƒãƒ©ã‚¤ãƒˆ
+struct ambient_lights
+{
+    float4 color;
+};
 #endif	//	__LIGHTS_HLSLI__

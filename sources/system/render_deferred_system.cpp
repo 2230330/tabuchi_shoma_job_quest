@@ -156,6 +156,8 @@ void RenderDeferredSystem::Render()
 
     directional_shadow_rendering();
 
+
+
     const auto size = light_manager_->GetDeferredLightsSize();
     for (int i = 0; i < size; i++)
     {
@@ -171,7 +173,9 @@ void RenderDeferredSystem::Render()
             srvs_[Target::Velocity].Get(),
         };
 
-        light_manager_->BindDeferredLightConstant(ConstantBufferSlot::kDeferredLight, i);
+
+        light_manager_->BindDeferredLightConstant(ConstantBufferSlot::kDeferredLight, i
+            ,has_shadow_);
 
         comp_mng_.ForEach<ComponentCascadeShadow>([this,ctx](uint32_t entity_id, ComponentCascadeShadow& shadow)
             {
@@ -182,10 +186,7 @@ void RenderDeferredSystem::Render()
                     ID3D11ShaderResourceView* shadowmap = shadowmap_framebuffers_.at(i)->GetShaderResourceView(1).Get();
                     ctx->PSSetShaderResources(10 + i, 1, &shadowmap);
                 }
-                Graphics::Instance().GetDeviceContext()->UpdateSubresource(
-                    cascade_shadow_scene_constant_buffer_.Get(), 0, nullptr, &cascade_shadow_scene_constant_, 0, 0);
-                Graphics::Instance().SetConstantBuffer(
-                    ConstantBufferSlot::kCascadeShadow, 1, cascade_shadow_scene_constant_buffer_.GetAddressOf());
+
             });
 
         fullscreen_quad_->blit(ctx, srvs, 0,_countof(srvs), deferred_rendering_directional_ps_.Get());
@@ -205,10 +206,11 @@ void RenderDeferredSystem::SetSRV(ID3D11ShaderResourceView* srv, int num)
 
 void RenderDeferredSystem::directional_shadow_rendering()
 {
+    has_shadow_ = false;
     comp_mng_.ForEach<ComponentCascadeShadow>([this](uint32_t entity_id, ComponentCascadeShadow& shadow)
         {
 
-
+            has_shadow_ = true;
 
         //ライト方向から見た視線行列を生成
         DirectX::XMVECTOR light_dir =
@@ -409,9 +411,9 @@ void RenderDeferredSystem::directional_shadow_rendering()
                     //クロップ行列をかけた行列を保存
                     DirectX::XMStoreFloat4x4(&light_view_projection, VP*clop_matrix);
                     DirectX::XMStoreFloat4x4(&inverse_light_view_projection, DirectX::XMMatrixInverse(nullptr, VP*clop_matrix));
-                    cascade_shadow_scene_constant_.light_view_projection[i] = light_view_projection;
-                    cascade_shadow_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
-                    cascade_shadow_scene_constant_.current_index = i;
+                    this->cascade_shadow_scene_constant_.light_view_projection[i] = light_view_projection;
+                    this->cascade_shadow_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
+                    this->cascade_shadow_scene_constant_.current_index = i;
 
                 }
                 //フラスタムカリングを行う
