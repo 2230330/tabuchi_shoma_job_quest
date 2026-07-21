@@ -96,6 +96,8 @@ RenderDeferredSystem::RenderDeferredSystem(ComponentManager&comp_mng,RenderPass 
 
     fullscreen_quad_ = std::make_unique<FullscreenQuad>(device);
     render_state_ = std::make_unique<RenderState>(device);
+
+    InitializeGpuTimer(device);
 }
 
 RenderDeferredSystem::~RenderDeferredSystem() = default;
@@ -154,7 +156,7 @@ void RenderDeferredSystem::Render()
         fullscreen_quad_->blit(ctx, srvs, 0, _countof(srvs), deferred_rendering_emissive_ps_.Get());
     }
 
-    directional_shadow_rendering();
+    DirectionalShadowRendering();
 
 
 
@@ -204,11 +206,15 @@ void RenderDeferredSystem::SetSRV(ID3D11ShaderResourceView* srv, int num)
 }
 
 
-void RenderDeferredSystem::directional_shadow_rendering()
+void RenderDeferredSystem::DirectionalShadowRendering()
 {
     has_shadow_ = false;
     comp_mng_.ForEach<ComponentCascadeShadow>([this](uint32_t entity_id, ComponentCascadeShadow& shadow)
         {
+
+            int read_index = (write_index_ + QUERY_BUFFER_COUNT - 7) % QUERY_BUFFER_COUNT;
+            UpdateGpuTimer(read_index);
+            shadow.gpu_time_ms = static_cast<float>(shadow_gpu_time_ms_);
 
             has_shadow_ = true;
 
@@ -295,6 +301,10 @@ void RenderDeferredSystem::directional_shadow_rendering()
         float aspect_ratio = Graphics::Instance().GetScreenWidth() / Graphics::Instance().GetScreenHeight();
         DirectX::XMFLOAT4X4 light_view_projection;
         DirectX::XMFLOAT4X4 inverse_light_view_projection;
+
+        //GPU負荷計測開始 
+        BeginGpuFrame(write_index_);
+
         //カスケードシャドウ
         for(int i = 0; i < CASCADE::CascadeCount; i++)
         {
@@ -528,5 +538,93 @@ void RenderDeferredSystem::directional_shadow_rendering()
             }
             shadowmap_framebuffers_.at(i)->Deactivate(Graphics::Instance().GetDeviceContext());
         }
+
+        //GPU負荷計測終了
+        EndGpuFrame(write_index_);
     });
+    write_index_ = (write_index_ + 1) % QUERY_BUFFER_COUNT;
+}
+
+void RenderDeferredSystem::InitializeGpuTimer(ID3D11Device* device)
+{
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DESC desc = {};
+    for (int i = 0; i < QUERY_BUFFER_COUNT; i++)
+    {
+
+        desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
+        hr = device->CreateQuery(&desc, dis_joint_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        desc.Query = D3D11_QUERY_TIMESTAMP;
+        hr = device->CreateQuery(&desc, time_stamp_start_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        hr = device->CreateQuery(&desc, time_stamp_end_query_[i].GetAddressOf());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    }
+}
+
+void RenderDeferredSystem::BeginGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    context->Begin(dis_joint_query_[write_index].Get());
+    context->End(time_stamp_start_query_[write_index].Get());
+}
+
+void RenderDeferredSystem::UpdateGpuTimer(int read_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    HRESULT hr{ S_OK };
+
+    D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint;
+
+    hr = context->GetData(
+        dis_joint_query_[read_index].Get(),
+        &disjoint,
+        sizeof(disjoint),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+
+    UINT64 start;
+    UINT64 end;
+
+    hr = context->GetData(
+        time_stamp_start_query_[read_index].Get(),
+        &start,
+        sizeof(start),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+
+    hr = context->GetData(
+        time_stamp_end_query_[read_index].Get(),
+        &end,
+        sizeof(end),
+        0);
+    if (hr != S_OK)
+    {
+        return;
+    }
+    if (!disjoint.Disjoint)
+    {
+        shadow_gpu_time_ms_ =
+            double(end - start) *
+            1000.0 /
+            double(disjoint.Frequency);
+    }
+}
+
+void RenderDeferredSystem::EndGpuFrame(int write_index)
+{
+    ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
+    context->End(time_stamp_end_query_[write_index].Get());
+    context->End(dis_joint_query_[write_index].Get());
 }

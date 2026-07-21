@@ -146,27 +146,33 @@ void ComponentEditor::DrawImgui()
         }
 
         //カスケードシャドウの追加
-        if (cascade_shadow_entity != -1)has_cascade_shadow_ = true;
+        if (cascade_shadow_entity_ != -1)has_cascade_shadow_ = true;
         else has_cascade_shadow_ = false;
         if (ImGui::Checkbox("cascade shadow",&has_cascade_shadow_))
         {
-            if (cascade_shadow_entity < 0)
+            if (cascade_shadow_entity_ < 0)
             {
                 uint32_t entity = enti_mng_.Add();
 
                 ComponentCascadeShadow shadow;
                 comp_mng_.Add(entity, shadow);
 
-                cascade_shadow_entity = entity;
+                cascade_shadow_entity_ = entity;
             }
             else
             {
-                enti_mng_.Remove(cascade_shadow_entity); // alive = false にする
-                comp_mng_.RemoveAllComponents(cascade_shadow_entity); // すべてのコンポーネントを削除
+                enti_mng_.Remove(cascade_shadow_entity_); // alive = false にする
+                comp_mng_.RemoveAllComponents(cascade_shadow_entity_); // すべてのコンポーネントを削除
 
-                cascade_shadow_entity = -1;
+                cascade_shadow_entity_ = -1;
             }
         }
+        if (has_cascade_shadow_)
+        {
+            ComponentCascadeShadow* shadow = comp_mng_.TryGetByEntity<ComponentCascadeShadow>(cascade_shadow_entity_);
+            DrawGpuTimeMs(shadow->gpu_time_ms);
+        }
+
         //スクリーンスペースリフレクションの追加
         if (ssr_entity_ != -1)has_ssr_ = true;
         else has_ssr_ = false;
@@ -1231,7 +1237,7 @@ void ComponentEditor::Load(const std::string& filename)
         {
             ComponentCascadeShadow shadow;
             comp_mng_.Add(entity, shadow);
-            cascade_shadow_entity = entity;
+            cascade_shadow_entity_ = entity;
         }
 
         // SSR

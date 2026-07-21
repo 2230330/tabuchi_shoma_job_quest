@@ -34,7 +34,7 @@ private:
     bool has_sky_ = false;
     int32_t cloud_entity_ = -1;
     bool has_cloud_ = false;
-    int32_t cascade_shadow_entity = -1;
+    int32_t cascade_shadow_entity_ = -1;
     bool has_cascade_shadow_ = false;
     int32_t ssr_entity_ = -1;
     bool has_ssr_ = false;

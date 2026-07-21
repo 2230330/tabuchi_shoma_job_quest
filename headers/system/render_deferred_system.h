@@ -43,7 +43,13 @@ public:
     };
 
 private:
-    void directional_shadow_rendering();
+    void DirectionalShadowRendering();
+    //GPU負荷計測用
+    void InitializeGpuTimer(ID3D11Device* device);
+    void BeginGpuFrame(int write_index);
+    void UpdateGpuTimer(int read_index);
+    void EndGpuFrame(int write_index);
+private:
     ComponentManager& comp_mng_;
     LightManager* light_manager_ = nullptr;
     std::unique_ptr<FullscreenQuad>fullscreen_quad_ = nullptr;
@@ -56,10 +62,10 @@ private:
     std::unique_ptr<RenderState>render_state_=nullptr;
 
     //シャドウマップ
-    const float shadow_distance_ = 250.0f;
+    const float shadow_distance_ = 500.0f;
     float shadow_coverage_ = 80.f; 
     const float shadow_near_clip_plane_ = 1.f;
-    const float shadow_far_clip_plane_ = 500.f;
+    const float shadow_far_clip_plane_ = 1000.f;
     const float shadowmap_width_ = 2048.f;
     const float shadowmap_height_ = 2048.f;
     const float shadowmap_fov_y_ = DirectX::XMConvertToRadians(60.f);
@@ -92,9 +98,8 @@ private:
     {
         0.1f,
         25.f,
-        100.f,
-        250.f,
-        500.f,
+        200.f,
+        600.f,
     };
     std::array<std::unique_ptr<FrameBuffer>,CASCADE::CascadeCount> shadowmap_framebuffers_;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowmap_depth_stencil_view_=nullptr;
@@ -104,5 +109,13 @@ private:
 
     //シャドウマップ用のモデルのワールド行列を保持するマップ
     std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds_;
+
+    //GPU負荷計測用
+    static const int QUERY_BUFFER_COUNT = 8;
+    int write_index_ = 0;
+    Microsoft::WRL::ComPtr<ID3D11Query> dis_joint_query_[QUERY_BUFFER_COUNT];
+    Microsoft::WRL::ComPtr<ID3D11Query>time_stamp_start_query_[QUERY_BUFFER_COUNT];
+    Microsoft::WRL::ComPtr<ID3D11Query>time_stamp_end_query_[QUERY_BUFFER_COUNT];
+    double shadow_gpu_time_ms_ = 0.0;
 
 };

@@ -80,7 +80,7 @@ dcl_temps 13
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
 #line 112 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\screen_space_reflection_ps.hlsl"
-mov r0.x, l(256)  // r0.x <- MAX_STEPS
+mov r0.x, l(64)  // r0.x <- MAX_STEPS
 
 #line 117
 nop 
