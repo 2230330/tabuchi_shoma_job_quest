@@ -10,8 +10,6 @@
 //   float4 options;                    // Offset:    0 Size:    16 [unused]
 //   float4 z_buffer_parameteres;       // Offset:   16 Size:    16
 //   float4 viewport_size;              // Offset:   32 Size:    16 [unused]
-//   float2 sun_uv;                     // Offset:   48 Size:     8 [unused]
-//   float2 padding0;                   // Offset:   56 Size:     8 [unused]
 //
 // }
 //
@@ -28,6 +26,7 @@
 //   row_major float4x4 inverse_projection_transform;// Offset:  304 Size:    64 [unused]
 //   row_major float4x4 inverse_view_projection_transform;// Offset:  368 Size:    64
 //   row_major float4x4 previous_view_projection_transform;// Offset:  432 Size:    64 [unused]
+//   float4 sun_param;                  // Offset:  496 Size:    16 [unused]
 //
 // }
 //

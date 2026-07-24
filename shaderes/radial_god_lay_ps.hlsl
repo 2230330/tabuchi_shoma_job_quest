@@ -2,6 +2,7 @@
 #include "fullscreen_quad.hlsli"
 #include "scene_constant_buffer.hlsli"
 #include"volumetric_cloud.hlsli"
+#include"camera_buffer.hlsli"
 
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
@@ -13,10 +14,10 @@ SamplerState sampler_states[6] : register(s0);
 
 Texture2D<float4> cloud_map : register(t0); // R=presence, G=cloudDepth01
 
-// ‚¿‚å‚¢‚•i¿‚ÈƒmƒCƒYiƒfƒBƒU—pjŠÈˆÕŠÖ”
+// ã¡ã‚‡ã„é«˜å“è³ªãªãƒã‚¤ã‚ºï¼ˆãƒ‡ã‚£ã‚¶ç”¨ï¼‰ç°¡æ˜“é–¢æ•°
 float Hash12(float2 p)
 {
-    // UV ‚Æ time ‚Å•Ï‰»‚·‚éŠÈˆÕƒnƒbƒVƒ…
+    // UV ã¨ time ã§å¤‰åŒ–ã™ã‚‹ç°¡æ˜“ãƒãƒƒã‚·ãƒ¥
     float h = dot(p, float2(127.1, 311.7));
     return frac(sin(h) * 43758.5453123);
 }
@@ -26,14 +27,14 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     float2 uv0 = pin.texcoord;
 
-    // ‘¾—z‚ª–³Œø‚È‚ç‰½‚ào‚³‚È‚¢
+    // å¤ªé™½ãŒç„¡åŠ¹ãªã‚‰ä½•ã‚‚å‡ºã•ãªã„
     //if (sun_visible <= 0.001f)
     //    return float4(0, 0, 0, 0);
 
-    float2 lightPos = sun_uv;
+    float2 lightPos = sun_param.xy;
 
-    // ‘¾—z‚ª‰æ–ÊŠO‚É‚ ‚é‚Æ‚«‚ÍŒ¸Ši”CˆÓj
-    // ‰æ–ÊŠO‚Å‚ào‚µ‚½‚¢‚È‚ç‚±‚ÌƒuƒƒbƒN‚ÍíœOK
+    // å¤ªé™½ãŒç”»é¢å¤–ã«ã‚ã‚‹ã¨ãã¯æ¸›è¡°ï¼ˆä»»æ„ï¼‰
+    // ç”»é¢å¤–ã§ã‚‚å‡ºã—ãŸã„ãªã‚‰ã“ã®ãƒ–ãƒ­ãƒƒã‚¯ã¯å‰Šé™¤OK
     float2 lp = lightPos;
     float inScreen =
         (lp.x >= 0.0f && lp.x <= 1.0f && lp.y >= 0.0f && lp.y <= 1.0f) ? 1.0f : 0.0f;
@@ -41,65 +42,65 @@ float4 main(VS_OUT pin) : SV_TARGET
         return float4(0, 0, 0, 1);
 
     // -------------------------
-    // ƒpƒ‰ƒ[ƒ^i’²®—pj
+    // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ï¼ˆèª¿æ•´ç”¨ï¼‰
     // -------------------------
-    const int NUM_SAMPLES = 56; // 32`80‚­‚ç‚¢‚Å’²®
-    float density = 0.95f; // •úË•ûŒü‚Ì’·‚³
-    float decay = 0.965f; // Œ¸Ši‰“•û‚Ù‚Ç¬‚³‚­j
-    float weight = 0.35f; // ƒTƒ“ƒvƒ‹Šñ—^
-    float exposure = 1.25f; // ÅI˜Io
+    const int NUM_SAMPLES = 56; // 32ï½80ãã‚‰ã„ã§èª¿æ•´
+    float density = 0.95f; // æ”¾å°„æ–¹å‘ã®é•·ã•
+    float decay = 0.965f; // æ¸›è¡°ï¼ˆé æ–¹ã»ã©å°ã•ãï¼‰
+    float weight = 0.35f; // ã‚µãƒ³ãƒ—ãƒ«å¯„ä¸
+    float exposure = 1.25f; // æœ€çµ‚éœ²å‡º
 
-    // ‰_ƒIƒ“ƒŠ[—p‚Ì’²®F
-    // ‰_[“x(G)‚ğg‚Á‚Äu‹ß‚¢‰_‚Ù‚ÇÕ•Á‚ª‹­‚¢v‚È‚Ç‚ğì‚ê‚é
-    // 0: g‚í‚È‚¢ / 1: g‚¤
+    // é›²ã‚ªãƒ³ãƒªãƒ¼ç”¨ã®èª¿æ•´ï¼š
+    // é›²æ·±åº¦(G)ã‚’ä½¿ã£ã¦ã€Œè¿‘ã„é›²ã»ã©é®è”½ãŒå¼·ã„ã€ãªã©ã‚’ä½œã‚Œã‚‹
+    // 0: ä½¿ã‚ãªã„ / 1: ä½¿ã†
     const bool USE_CLOUD_DEPTH_WEIGHT = true;
 
-    // ‰_[“x‚ğg‚¤ê‡‚ÌƒJ[ƒu
-    // depth01 ‚ª¬‚³‚¢‹ß‚¢‰_ ¨ ‹­‚­Õ•Á
-    float depthPower = 1.5f; // 1`3‚­‚ç‚¢‚Å’²®
+    // é›²æ·±åº¦ã‚’ä½¿ã†å ´åˆã®ã‚«ãƒ¼ãƒ–
+    // depth01 ãŒå°ã•ã„ï¼è¿‘ã„é›² â†’ å¼·ãé®è”½
+    float depthPower = 1.5f; // 1ï½3ãã‚‰ã„ã§èª¿æ•´
 
-    // ƒfƒBƒU‹­“xiÈ–h~j
+    // ãƒ‡ã‚£ã‚¶å¼·åº¦ï¼ˆç¸é˜²æ­¢ï¼‰
     float jitterStrength = 1.0f;
 
     // -------------------------
-    // ƒ‰ƒWƒAƒ‹ƒXƒeƒbƒv
+    // ãƒ©ã‚¸ã‚¢ãƒ«ã‚¹ãƒ†ãƒƒãƒ—
     // -------------------------
     float2 dir = (lightPos - uv0);
     float2 stepUV = dir * (density / NUM_SAMPLES);
 
-    // ƒfƒBƒUiŠJnˆÊ’u‚ğƒ‰ƒ“ƒ_ƒ€‰»j
+    // ãƒ‡ã‚£ã‚¶ï¼ˆé–‹å§‹ä½ç½®ã‚’ãƒ©ãƒ³ãƒ€ãƒ åŒ–ï¼‰
     float jitter = Hash12((uv0 * viewport_size.xy) + options.z) - 0.5f;
     float2 uv = uv0 + stepUV * jitter * jitterStrength;
 
     // -------------------------
-    // Ï•ª
+    // ç©åˆ†
     // -------------------------
     float illum = 0.0f;
     float illumDecay = 1.0f;
 
-    // ƒ‹[ƒv‚ÌÅ“K‰»i•ªŠò­‚È‚ßj
+    // ãƒ«ãƒ¼ãƒ—ã®æœ€é©åŒ–ï¼ˆåˆ†å²å°‘ãªã‚ï¼‰
     [unroll]
     for (int i = 0; i < NUM_SAMPLES; ++i)
     {
         uv += stepUV;
 
-        // ‰æ–ÊŠO‚È‚çI—¹
+        // ç”»é¢å¤–ãªã‚‰çµ‚äº†
         if (uv.x < 0.0f || uv.x > 1.0f || uv.y < 0.0f || uv.y > 1.0f)
             break;
 
         float4 cm = cloud_map.SampleLevel(sampler_states[LINEAR_CLAMP], uv, 0);
-        float cloudOcc = saturate(cm.r); // 0..1i‘å‚«‚¢‚Ù‚ÇÕ•Áj
-        float cloudD = saturate(cm.g); // 0..1i‰_–³‚µ‚È‚ç1j
+        float cloudOcc = saturate(cm.r); // 0..1ï¼ˆå¤§ãã„ã»ã©é®è”½ï¼‰
+        float cloudD = saturate(cm.g); // 0..1ï¼ˆé›²ç„¡ã—ãªã‚‰1ï¼‰
 
-        // gŒõ‚ª’Ê‚é—Êh‚Æ‚µ‚ÄÏ•ª‚µ‚½‚¢‚Ì‚Å“§‰ß‚É•ÏŠ·
+        // â€œå…‰ãŒé€šã‚‹é‡â€ã¨ã—ã¦ç©åˆ†ã—ãŸã„ã®ã§é€éã«å¤‰æ›
         float trans = 1.0f - cloudOcc;
 
-        // ‹ß‚¢‰_‚Ù‚Ç‹­‚­Õ‚éitrans‚ğ‚æ‚è‰º‚°‚éj‚È‚Ç‚Ì’²®
-        // cloudD‚ª¬‚³‚¢‚Ù‚Ç‹ß‚¢
+        // è¿‘ã„é›²ã»ã©å¼·ãé®ã‚‹ï¼ˆï¼transã‚’ã‚ˆã‚Šä¸‹ã’ã‚‹ï¼‰ãªã©ã®èª¿æ•´
+        // cloudDãŒå°ã•ã„ã»ã©è¿‘ã„
         if (USE_CLOUD_DEPTH_WEIGHT)
         {
-            float nearFactor = pow(saturate(1.0f - cloudD), depthPower); // ‹ß‚¢‚Ù‚Ç‘å‚«‚¢
-            // ‹ß‚¢‰_‚ÍÕ•Á‹­‚­ ¨ “§‰ß‚ğ‚³‚ç‚É‰º‚°‚é
+            float nearFactor = pow(saturate(1.0f - cloudD), depthPower); // è¿‘ã„ã»ã©å¤§ãã„
+            // è¿‘ã„é›²ã¯é®è”½å¼·ã â†’ é€éã‚’ã•ã‚‰ã«ä¸‹ã’ã‚‹
             trans = saturate(trans * (1.0f - 0.75f * nearFactor));
         }
 
@@ -107,10 +108,10 @@ float4 main(VS_OUT pin) : SV_TARGET
         illumDecay *= decay;
     }
 
-    // dã‚°
+    // ä»•ä¸Šã’
     float shafts = illum * exposure;
 
-    // ‘¾—z’†S‚©‚ç—£‚ê‚é‚Ù‚Çã‚ß‚éi©‘R‚ÈŠ´‚¶‚Éj
+    // å¤ªé™½ä¸­å¿ƒã‹ã‚‰é›¢ã‚Œã‚‹ã»ã©å¼±ã‚ã‚‹ï¼ˆè‡ªç„¶ãªæ„Ÿã˜ã«ï¼‰
     float distToLight = length(uv0 - lightPos);
     shafts *= saturate(1.0f - distToLight);
 

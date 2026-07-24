@@ -13,6 +13,7 @@ cbuffer CameraBuffer : register(b7)
     row_major float4x4 inverse_projection_transform;
     row_major float4x4 inverse_view_projection_transform;
     row_major float4x4 previous_view_projection_transform;
+    float4 sun_param; //x:uv_x,y:uv_y,z:sun_visible,w:null
 };
 
 #endif // CAMERA_BUFFER_

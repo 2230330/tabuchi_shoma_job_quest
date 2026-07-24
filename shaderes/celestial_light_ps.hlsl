@@ -30,7 +30,7 @@ float3 ComputeSunIrradiance(float air_mass)
     return Ei;
 }
 
-// 3x3 ƒ{ƒbƒNƒXƒuƒ‰[ + smoothstep ‚É‚æ‚éƒ\ƒtƒg‚È‰_ƒJƒoƒŒƒbƒWi0..1j
+// 3x3 ãƒœãƒƒã‚¯ã‚¹ãƒ–ãƒ©ãƒ¼ + smoothstep ã«ã‚ˆã‚‹ã‚½ãƒ•ãƒˆãªé›²ã‚«ãƒãƒ¬ãƒƒã‚¸ï¼ˆ0..1ï¼‰
 float SampleSoftCloudCoverage(float2 uv)
 {
     float2 texel = 1.0 / max(viewport_size.xy, float2(1e-6, 1e-6));
@@ -52,12 +52,97 @@ float SampleSoftCloudCoverage(float2 uv)
     return saturate(smoothstep(inner, outer, avg));
 }
 
+//float ComputeGodRay(float2 uv, float2 sunUV)
+//{
+//    // å¤ªé™½ä½ç½®ãŒç”»é¢å¤–ã«è¿‘ã„å ´åˆã®æš´ã‚Œé˜²æ­¢
+//    if (sunUV.x < -0.2f || sunUV.x > 1.2f ||
+//        sunUV.y < -0.2f || sunUV.y > 1.2f)
+//    {
+//        return 0.0f;
+//    }
+
+//    // ã‚¢ã‚¹ãƒšã‚¯ãƒˆè£œæ­£ä»˜ãã®å¤ªé™½è·é›¢
+//    float aspect = viewport_size.x / max(viewport_size.y, 1e-6f);
+
+//    float2 toSun = sunUV - uv;
+//    float2 areaVec = uv - sunUV;
+//    areaVec.x *= aspect;
+
+//    float distToSun = length(areaVec);
+
+//    // å¤ªé™½å‘¨è¾ºã ã‘ã«é™å®šã™ã‚‹åŠå¾„
+//    // å°ã•ã„ã»ã©å¤ªé™½ä»˜è¿‘ã ã‘ã«ãªã‚‹
+//    const float rayRadius = 0.32f;
+
+//    float sunAreaMask =
+//        1.0f - smoothstep(
+//            rayRadius * 0.35f,
+//            rayRadius,
+//            distToSun);
+
+//    sunAreaMask = saturate(sunAreaMask);
+
+//    if (sunAreaMask <= 0.0001f)
+//    {
+//        return 0.0f;
+//    }
+
+//    const int NUM_SAMPLES = 32;
+
+//    float decay = 0.94f;
+//    float weight = 0.14f;
+//    float exposure = 0.22f;
+
+//    float illumination = 1.0f;
+//    float ray = 0.0f;
+
+//    float2 stepUV = toSun / NUM_SAMPLES;
+//    float2 sampleUV = uv;
+
+//    [unroll]
+//    for (int i = 0; i < NUM_SAMPLES; ++i)
+//    {
+//        sampleUV += stepUV;
+
+//        if (sampleUV.x < 0.0f || sampleUV.x > 1.0f ||
+//            sampleUV.y < 0.0f || sampleUV.y > 1.0f)
+//        {
+//            illumination *= decay;
+//            continue;
+//        }
+
+//        float cloud =
+//            cloud_texture.Sample(
+//                sampler_states[LINEAR_CLAMP],
+//                sampleUV).r;
+
+//        // é›²ãŒå°‘ãªã„ã»ã©å…‰ãŒé€šã‚‹
+//        float transmission = 1.0f - saturate(cloud);
+
+//        ray += transmission * illumination * weight;
+
+//        illumination *= decay;
+//    }
+
+//    // å¤ªé™½ä¸­å¿ƒã«è¿‘ã„ã»ã©å¼·ãã™ã‚‹
+//    float centerBoost = exp(-distToSun * 8.0f);
+
+//    float result =
+//        ray *
+//        exposure *
+//        sunAreaMask *
+//        lerp(0.45f, 1.8f, centerBoost);
+
+//    return saturate(result);
+//}
+
+
 float4 main(VS_OUT pin) : SV_Target
 {
-    // ƒ\ƒtƒgƒ}ƒXƒNi0..1j
+    // ã‚½ãƒ•ãƒˆãƒã‚¹ã‚¯ï¼ˆ0..1ï¼‰
     float softMask = SampleSoftCloudCoverage(pin.texcoord);
 
-    // ƒrƒ…[•ûŒüŒvZ
+    // ãƒ“ãƒ¥ãƒ¼æ–¹å‘è¨ˆç®—
     float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
@@ -65,7 +150,7 @@ float4 main(VS_OUT pin) : SV_Target
     float3 view_dir = normalize(pos.xyz - camera_position.xyz);
     if (view_dir.y <= 0)
     {
-        clip(-1); // ’n•½ü‚æ‚è‰º‚Í•`‚©‚È‚¢)
+        clip(-1); // åœ°å¹³ç·šã‚ˆã‚Šä¸‹ã¯æã‹ãªã„)
     }
 
     float light_scale = 1.0f;
@@ -74,16 +159,16 @@ float4 main(VS_OUT pin) : SV_Target
     if(directional_light.direction.y >= 0)
     {
         light_dir = normalize(directional_light.direction.xyz);
-        light_scale = 0.8f; // ŒŒõ‚Íã‚­
+        light_scale = 0.8f; // æœˆå…‰ã¯å¼±ã
     }
     //float3 sun_dir = normalize(-directional_light.direction.xyz);
     //float3 moon_dir = normalize(directional_light.direction.xyz);
     
-    // ˆÀ’è‚µ‚½Šp“xŒvZiƒXƒJƒ‰[j
+    // å®‰å®šã—ãŸè§’åº¦è¨ˆç®—ï¼ˆã‚¹ã‚«ãƒ©ãƒ¼ï¼‰
     float cosTheta = clamp(dot(view_dir, light_dir), -0.0f, 1.0f);
-    float angle = acos(cosTheta); // 0 = ‹ü‚Æ‘¾—z‚ªˆê’v
+    float angle = acos(cosTheta); // 0 = è¦–ç·šã¨å¤ªé™½ãŒä¸€è‡´
 
-    //ƒ‰ƒCƒ“óƒnƒCƒ‰ƒCƒg®
+    //ãƒ©ã‚¤ãƒ³çŠ¶ãƒã‚¤ãƒ©ã‚¤ãƒˆå¼
     const float EPS = 1e-4f;
     float mx = sin(abs(angle)) * 4.0;
     float my = mx;
@@ -99,10 +184,10 @@ float4 main(VS_OUT pin) : SV_Target
     float s = lx + ly + lxy + lyx;
 
 
-    // ‘¾—z‚ÌŒõiFE‹­“xj
+    // å¤ªé™½ã®å…‰ï¼ˆè‰²ãƒ»å¼·åº¦ï¼‰
     float3 finalColor = (s.xxx);
 
-    // ‹ó‹C¿—ÊE‘¾—zƒXƒyƒNƒgƒ‹
+    // ç©ºæ°—è³ªé‡ãƒ»å¤ªé™½ã‚¹ãƒšã‚¯ãƒˆãƒ«
     if (directional_light.direction.y < 0)
     {
         float sun_elevation = clamp(dot(light_dir, float3(0, 1, 0)), 0.0f, 1.0f);
@@ -113,23 +198,41 @@ float4 main(VS_OUT pin) : SV_Target
         finalColor *= Ei;
     }
     
-    //‰_‚É‚æ‚éÕ•ÁŒvZ
+    //é›²ã«ã‚ˆã‚‹é®è”½è¨ˆç®—
     float erosion = pow(softMask, 1.5f);
-    //‘¾—z‚ğNH
+    //å¤ªé™½ã‚’ä¾µé£Ÿ
     float3 eroded_color = finalColor * (1.0f - erosion);
 
-    // ‘¾—z‚Ì‹­‚³‚ÉŠî‚Ã‚­ˆÀ‘S‚ÈƒAƒ‹ƒtƒ@i•“_”­¶‚ğ”ğ‚¯‚éj
-    // finalColor ‚ª¬‚³‚­‚Ä‚àƒAƒ‹ƒtƒ@‚ªƒ[ƒ‚É’£‚è•t‚©‚È‚¢‚æ‚¤‚É‚·‚é
-    float sunIntensity = max(max(finalColor.r, finalColor.g), finalColor.b); // Å‘åƒ`ƒƒƒlƒ‹
-    // ƒXƒP[ƒŠƒ“ƒO‚ÍŒ©‚½–Ú‚É‰‚¶‚Ä’²®i0.8~2.0 ’ö“xj
+    // å¤ªé™½ã®å¼·ã•ã«åŸºã¥ãå®‰å…¨ãªã‚¢ãƒ«ãƒ•ã‚¡ï¼ˆé»’ç‚¹ç™ºç”Ÿã‚’é¿ã‘ã‚‹ï¼‰
+    // finalColor ãŒå°ã•ãã¦ã‚‚ã‚¢ãƒ«ãƒ•ã‚¡ãŒã‚¼ãƒ­ã«å¼µã‚Šä»˜ã‹ãªã„ã‚ˆã†ã«ã™ã‚‹
+    float sunIntensity = max(max(finalColor.r, finalColor.g), finalColor.b); // æœ€å¤§ãƒãƒ£ãƒãƒ«
+    // ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã¯è¦‹ãŸç›®ã«å¿œã˜ã¦èª¿æ•´ï¼ˆ0.8~2.0 ç¨‹åº¦ï¼‰
     float intensityScale = 1.;
     float colorAlpha = saturate(sunIntensity * intensityScale);
 
-    // NH‚ğl—¶‚µ‚½ÅIƒAƒ‹ƒtƒ@
+    // ä¾µé£Ÿã‚’è€ƒæ…®ã—ãŸæœ€çµ‚ã‚¢ãƒ«ãƒ•ã‚¡
     float outAlpha = saturate(colorAlpha * (1.0 - erosion )); 
 
-    // ”ñƒvƒŠƒ}ƒ‹ƒ`o—Í‚É‚·‚éiƒŒƒ“ƒ_ƒ‰[‚Å’ÊíƒAƒ‹ƒtƒ@‡¬‚ğ‘z’èj
+    // éãƒ—ãƒªãƒãƒ«ãƒå‡ºåŠ›ã«ã™ã‚‹ï¼ˆãƒ¬ãƒ³ãƒ€ãƒ©ãƒ¼ã§é€šå¸¸ã‚¢ãƒ«ãƒ•ã‚¡åˆæˆã‚’æƒ³å®šï¼‰
     float3 outColor =saturate( eroded_color*light_scale);
-
+    
+    //float god_ray = ComputeGodRay(pin.texcoord.xy, sun_param.xy)*sun_param.z;
+    
+    //float3 god_ray_color = float3(1.0f, 0.82f, 0.55f);
+    //float sun_elevation = clamp(dot(light_dir, float3(0.f, 1.0f, 0.f)), 0.0f, 1.0f);
+    //float sun_theta = acos(sun_elevation) * (180.f / PI);
+    
+    //float air_mass = 1.0f /
+    //(sun_elevation + 0.50572f * pow(96.07995f - sun_theta, -1.6364f));
+    
+    //god_ray_color = ComputeSunIrradiance(air_mass);
+    
+    //float god_ray_intensity = 0.4f;
+    
+    //float3 god_ray_add = god_ray_color * god_ray * god_ray_intensity;
+    //outColor = saturate(outColor + god_ray_add);
+    //outAlpha = saturate(outAlpha + god_ray *god_ray_intensity);
+    
+    
     return float4(outColor, outAlpha);
 }

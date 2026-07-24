@@ -3,15 +3,15 @@
         {
             "components": {
                 "Camera": {
-                    "dir_x": 0.0,
-                    "dir_y": 0.0,
-                    "dir_z": -1.0,
+                    "dir_x": 0.8146775960922241,
+                    "dir_y": -0.3986094892024994,
+                    "dir_z": -0.4212019145488739,
                     "far": 1000.0,
                     "main": true,
                     "near": 0.10000000149011612,
-                    "pos_x": -1.1916799545288086,
-                    "pos_y": 2.65775990486145,
-                    "pos_z": 11.199999809265137
+                    "pos_x": -86.0062026977539,
+                    "pos_y": 106.99195098876953,
+                    "pos_z": 4.677463531494141
                 },
                 "Name": {
                     "value": "Camera"
@@ -213,6 +213,330 @@
                 }
             },
             "entity_id": 8
+        },
+        {
+            "components": {
+                "Fog": {
+                    "density": 0.004999999888241291,
+                    "max_distance": 300.0,
+                    "noise_scale": 0.014999999664723873,
+                    "steps": 32
+                },
+                "Name": {
+                    "value": "Fog"
+                }
+            },
+            "entity_id": 9
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": -99.0,
+                    "y": -12.0,
+                    "z": -148.0
+                },
+                "Rotation": {
+                    "x": 0.0,
+                    "y": 0.8489999771118164,
+                    "z": -0.2930000126361847
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 10
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": -106.0,
+                    "y": -9.0,
+                    "z": -44.0
+                },
+                "Rotation": {
+                    "x": 2.229299306869507,
+                    "y": 3.140000104904175,
+                    "z": 2.5477705001831055
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 11
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": -124.0,
+                    "y": -28.0,
+                    "z": 17.0
+                },
+                "Rotation": {
+                    "x": 2.866241931915283,
+                    "y": 0.9554139971733093,
+                    "z": 3.184713363647461
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 12
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": 15.0,
+                    "y": 20.0,
+                    "z": -278.0
+                },
+                "Rotation": {
+                    "x": 0.33899998664855957,
+                    "y": 0.2549999952316284,
+                    "z": -3.140000104904175
+                },
+                "Scale": {
+                    "x": 500.0,
+                    "y": 500.0,
+                    "z": 500.0
+                }
+            },
+            "entity_id": 13
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": -100.0,
+                    "y": -31.0,
+                    "z": 121.0
+                },
+                "Rotation": {
+                    "x": 3.140000104904175,
+                    "y": -0.9340000152587891,
+                    "z": -3.140000104904175
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 14
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": 0.0,
+                    "y": -10.0,
+                    "z": 200.0
+                },
+                "Rotation": {
+                    "x": 2.229299306869507,
+                    "y": 0.6369426250457764,
+                    "z": 3.184713363647461
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 15
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": 124.0,
+                    "y": -12.0,
+                    "z": 180.0
+                },
+                "Rotation": {
+                    "x": 0.33899998664855957,
+                    "y": -0.9340000152587891,
+                    "z": 0.20900000631809235
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 16
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": 222.0,
+                    "y": 0.0,
+                    "z": 224.0
+                },
+                "Rotation": {
+                    "x": 2.229299306869507,
+                    "y": 2.229299306869507,
+                    "z": 2.229299306869507
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 17
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": 212.0,
+                    "y": -7.0,
+                    "z": -71.0
+                },
+                "Rotation": {
+                    "x": 0.33899998664855957,
+                    "y": 0.08500000089406967,
+                    "z": 0.37700000405311584
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 18
+        },
+        {
+            "components": {
+                "AdjustPBR": {
+                    "metalness": 0.0,
+                    "roughness": 0.0
+                },
+                "Dynamic": true,
+                "Gltf": {
+                    "animation_index": 0,
+                    "animation_time": 0.0,
+                    "filename": ".\\resources\\model\\gltf\\rock.glb"
+                },
+                "Instanced": true,
+                "Position": {
+                    "x": 100.0,
+                    "y": -10.0,
+                    "z": 0.0
+                },
+                "Rotation": {
+                    "x": 1.9108279943466187,
+                    "y": 1.9108279943466187,
+                    "z": 0.9554139971733093
+                },
+                "Scale": {
+                    "x": 1000.0,
+                    "y": 1000.0,
+                    "z": 1000.0
+                }
+            },
+            "entity_id": 19
         }
     ]
 }

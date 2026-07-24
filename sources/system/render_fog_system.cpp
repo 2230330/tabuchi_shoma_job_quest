@@ -53,10 +53,11 @@ void RenderFogSystem::Render()
                 fog_constant_.fog_max_distance = fog.fog_max_distance;
                 fog_constant_.fog_density = fog.fog_density;
                 fog_constant_.noise_scale = fog.noise_scale;
+                fog_constant_.fog_max_height = fog.fog_height_max;
 
                 ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
-                int read_index = (write_index_ + QUERY_BUFFER_COUNT - 7) % QUERY_BUFFER_COUNT;
+                int read_index = (write_index_ + QUERY_BUFFER_COUNT - 15) % QUERY_BUFFER_COUNT;
                 UpdateGpuTimer(read_index);
                 fog.gpu_time_ms = static_cast<float>(gpu_time_ms_);
 

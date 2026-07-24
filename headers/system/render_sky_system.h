@@ -69,7 +69,7 @@ private:
     bool sky_flag_ = false;
 
     //GPU負荷計測用
-    static const int QUERY_BUFFER_COUNT = 8;
+    static const int QUERY_BUFFER_COUNT = 16;
     int write_index_ = 0;
     Microsoft::WRL::ComPtr<ID3D11Query> dis_joint_query_[QUERY_BUFFER_COUNT];
     Microsoft::WRL::ComPtr<ID3D11Query>time_stamp_start_query_[QUERY_BUFFER_COUNT];

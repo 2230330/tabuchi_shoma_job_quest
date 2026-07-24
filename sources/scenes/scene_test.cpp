@@ -73,14 +73,14 @@ bool SceneTest::InitializeCore()
         //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
 
-        const int size = 1000;
+        const int size = 0;
         for (int i = 0; i < size; i++)
         {
             uint32_t entity = world->GetEntityManager()->Add();
             ComponentPosition pos;
             pos.value = {
                 static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4),
-                -0.5f,
+                -10.f,
                 static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4)
             };
             //カメラにかぶらないように
@@ -120,7 +120,6 @@ bool SceneTest::InitializeCore()
             gltf.model= 
                 ResourceManager::Instance()
                 .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\rock.glb");
-            gltf.dirty = true;
             comp_mng->Add(entity, gltf);
             ComponentInstanced instanced;
             comp_mng->Add(entity, instanced);
@@ -128,6 +127,8 @@ bool SceneTest::InitializeCore()
             bounding_box.local_min = gltf.model->GetBoundingBox().local_min;
             bounding_box.local_max = gltf.model->GetBoundingBox().local_max;
             comp_mng->Add(entity, bounding_box);
+            ComponentDynamic dyn{};
+            comp_mng->Add(entity, dyn);
         }
     }
     return true;

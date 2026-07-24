@@ -3,11 +3,9 @@
 
 cbuffer SCENE_CONSTANT_BUFFER : register(b1)
 {
-    float4 options; //	xy : �}�E�X�̍��W�l, z : �^�C�}�[, w : �t���O
-    float4 z_buffer_parameteres; // ����`�[�x������`�[�x�֕ϊ����邽�߂̃p�����[�^�[
-    float4 viewport_size; //  xy : �r���[�|�[�g�T�C�Y, zw : �t�r���[�|�[�g�T�C�Y
-    float2 sun_uv;
-    float2 padding0;
+    float4 options; //	xy : マウスの座標値, z : タイマー, w : フラグ
+    float4 z_buffer_parameteres; // 非線形深度から線形深度へ変換するためのパラメーター
+    float4 viewport_size; //  xy : ビューポートサイズ, zw : 逆ビューポートサイズ
 };
 
 #endif  //  __SCENE_CONSTANT_BUFFER_H__

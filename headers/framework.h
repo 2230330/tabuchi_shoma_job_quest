@@ -13,8 +13,8 @@
 class HighResolutionTimer;
 class Scene;
 
-const long kScreenWidth{ 1980 };
-const long kScreenHeight{ 1080 };
+const long kScreenWidth{ 1400 };
+const long kScreenHeight{ 1000 };
 const bool kFullScreen{ false };
 const LPCWSTR kApplicationName{ L"ecc_tabuchi" };
 

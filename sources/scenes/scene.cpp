@@ -118,36 +118,6 @@ void Scene::SetSceneConstant(
 		scene.viewport_size.z = 1.0f / view_w;
 		scene.viewport_size.w = 1.0f / view_h;
 
-		//画面上の太陽1の計算
-		DirectX::XMVECTOR sun_dir =DirectX::XMLoadFloat4(&directional_light);
-		sun_dir = DirectX::XMVector3Normalize(DirectX::XMVectorScale(sun_dir,-1.0f));
-        DirectX::XMVECTOR sun_pos = DirectX::XMVectorAdd(
-			DirectX::XMLoadFloat3(&camera_position), DirectX::XMVectorScale(sun_dir, 1000.0f));
-		DirectX::XMMATRIX VP = DirectX::XMLoadFloat4x4(&view_projection); 
-
-		DirectX::XMVECTOR sun_clip4 = DirectX::XMVector4Transform(
-			DirectX::XMVectorSetW(sun_pos, 1.0f),
-			VP
-		);
-
-		float w = DirectX::XMVectorGetW(sun_clip4);
-		if (w <= 0.0001f) {
-			// カメラ後方 or 不正：画面計算しない
-			sun_visible_ = 0.0f;
-		}
-		else {
-			DirectX::XMVECTOR sun_ndc = DirectX::XMVectorScale(sun_clip4, 1.0f / w);
-			float ndcX = DirectX::XMVectorGetX(sun_ndc);
-			float ndcY = DirectX::XMVectorGetY(sun_ndc);
-
-			sun_uv_.x = 0.5f + 0.5f * ndcX;
-			sun_uv_.y = 0.5f - 0.5f * ndcY;
-			sun_visible_ = w;
-		}
-
-
-		scene.sun_uv = sun_uv_;
-        scene.sun_visible = sun_visible_;
 
 		Graphics::Instance().GetDeviceContext()->UpdateSubresource(scene_constant_buffer.Get(), 0, 0, &scene, 0, 0);
 	}

@@ -9,10 +9,11 @@
 
 cbuffer FOG_CONSTANT_BUFFER:register(b6)
 {
-    float fog_steps;
+    int fog_steps;
     float fog_max_distance;
     float noise_scale;
     float fog_density;
+    float fog_max_height;
 };
 
 #define POINT_WRAP 0
@@ -76,27 +77,6 @@ float SampleFogDensity(float3 world_pos)
     return base_density * noise_factor;
 }
 
-static const float dither_pattern_8x8[64] =
-{
-    0.0f / 64.0f, 32.0f / 64.0f, 8.0f / 64.0f, 40.0f / 64.0f, 2.0f / 64.0f, 34.0f / 64.0f, 10.0f / 64.0f, 42.0f / 64.0f,
-    48.0f / 64.0f, 16.0f / 64.0f, 56.0f / 64.0f, 24.0f / 64.0f, 50.0f / 64.0f, 18.0f / 64.0f, 58.0f / 64.0f, 26.0f / 64.0f,
-    12.0f / 64.0f, 44.0f / 64.0f, 4.0f / 64.0f, 36.0f / 64.0f, 14.0f / 64.0f, 46.0f / 64.0f, 6.0f / 64.0f, 38.0f / 64.0f,
-    60.0f / 64.0f, 28.0f / 64.0f, 52.0f / 64.0f, 20.0f / 64.0f, 62.0f / 64.0f, 30.0f / 64.0f, 54.0f / 64.0f, 22.0f / 64.0f,
-     3.0f / 64.0f, 35.0f / 64.0f, 11.0f / 64.0f, 43.0f / 64.0f, 1.0f / 64.0f, 33.0f / 64.0f, 9.0f / 64.0f, 41.0f / 64.0f,
-    51.0f / 64.0f, 19.0f / 64.0f, 59.0f / 64.0f, 27.0f / 64.0f, 49.0f / 64.0f, 17.0f / 64.0f, 57.0f / 64.0f, 25.0f / 64.0f,
-    15.0f / 64.0f, 47.0f / 64.0f, 7.0f / 64.0f, 39.0f / 64.0f, 13.0f / 64.0f, 45.0f / 64.0f, 5.0f / 64.0f, 37.0f / 64.0f,
-    63.0f / 64.0f, 31.0f / 64.0f, 55.0f / 64.0f, 23.0f / 64.0f, 61.0f / 64.0f, 29.0f / 64.0f, 53.0f / 64.0f, 21.0f / 64.0f
-};
-
-float GetDither8x8(float2 pixel_position)
-{
-    uint2 p = uint2(pixel_position);
-    uint x = p.x & 7u;
-    uint y = p.y & 7u;
-
-    return dither_pattern_8x8[x + y * 8u];
-}
-
 
 float4 main(VS_OUT pin) : SV_TARGET
 {
@@ -107,10 +87,8 @@ float4 main(VS_OUT pin) : SV_TARGET
     pos /= pos.w;
     float3 ray_dir = normalize(pos.xyz-camera_position.xyz);
     
-    //オブジェクトの解像度と背景の解像度が別なので、
-    //情報の取得場所を計算
     float object_depth = depth_map.Sample(sampler_states[POINT_CLAMP],pin.texcoord.xy);
-    
+        
     float3 ray_start = camera_position.xyz ;
     float3 ray_end = camera_position.xyz + (ray_dir * fog_max_distance);
     float3 obj_pos = camera_position.xyz + (ray_dir * fog_max_distance);
@@ -128,12 +106,12 @@ float4 main(VS_OUT pin) : SV_TARGET
         { 0.1875f, 0.6875f, 0.0625f, 0.5625 },
         { 0.9375f, 0.4375f, 0.8125f, 0.3125 }
     };
-    //float dither_value = GetDither8x8(pin.position.xy);
     float dither_value = dither_pattern[pin.position.x % 4][pin.position.y % 4];
     float3 ray_current = ray_start + ray_step * dither_value;
     
     float distance=0;
     float step = fog_max_distance / fog_steps;
+    float step_length = length(ray_step);
     float stop_dis = camera_clip_distance.y * object_depth;
     float volume = 0.f;
     bool hit = true;
@@ -142,6 +120,13 @@ float4 main(VS_OUT pin) : SV_TARGET
     for (int i = 0; i < fog_steps;i++)
     {
         hit = true;
+        
+        if (ray_current.y > fog_max_height)//一定高度以上ならば
+        {
+            ray_current += ray_step;
+            continue;
+        }
+        
         if(use_shadow>0)
         {
             //シャドウマップを参照し、陰でなければ加算
@@ -175,16 +160,17 @@ float4 main(VS_OUT pin) : SV_TARGET
             }
         }
         
+        float current_distance = step_length * (i + dither_value);
+        if (current_distance > camera_to_obj_length||volume>=1.5f )
+            break;
+         else
+            ray_current += ray_step;
+
         if(hit)
         {
-            volume += SampleFogDensity(ray_current) * length(ray_step);
+            volume += SampleFogDensity(ray_current) * step_length;
         }
         
-        if (length(ray_current - ray_start) > camera_to_obj_length
-            ||volume>=1.0f)
-            break;
-        else
-            ray_current += ray_step;
     }
 
     

@@ -13,9 +13,6 @@ struct scene_constants
 	DirectX::XMFLOAT4 options{0.f,0.f,0.f,0.f};	//	xy : マウスの座標値, z : タイマー, w : フラグ
 	DirectX::XMFLOAT4 z_buffer_parameteres{ 0.f,0.f,0.f,0.f };
 	DirectX::XMFLOAT4 viewport_size{ 0.f,0.f,0.f,0.f };
-	DirectX::XMFLOAT2 sun_uv{ 0.f,0.f }; //画面上の太陽位置
-	float sun_visible{ 0 }; //カメラ前方にあるか
-	float dummy;
 };
 
 class Scene
@@ -97,10 +94,6 @@ private:
 	float min_distance{ 10.f };
 	float max_distance{ 100.f };
 
-	//sun_uv
-    DirectX::XMFLOAT2 sun_uv_{ 0.0f,0.0f };//画面上の太陽位置
-	int sun_visible_{ 0 };//カメラ前方にあるか
-	
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> scene_constant_buffer=nullptr;
 };

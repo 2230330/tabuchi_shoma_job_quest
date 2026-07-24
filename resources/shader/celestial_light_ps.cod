@@ -10,8 +10,6 @@
 //   float4 options;                    // Offset:    0 Size:    16 [unused]
 //   float4 z_buffer_parameteres;       // Offset:   16 Size:    16 [unused]
 //   float4 viewport_size;              // Offset:   32 Size:    16
-//   float2 sun_uv;                     // Offset:   48 Size:     8 [unused]
-//   float2 padding0;                   // Offset:   56 Size:     8 [unused]
 //
 // }
 //
@@ -72,6 +70,7 @@
 //   row_major float4x4 inverse_projection_transform;// Offset:  304 Size:    64 [unused]
 //   row_major float4x4 inverse_view_projection_transform;// Offset:  368 Size:    64
 //   row_major float4x4 previous_view_projection_transform;// Offset:  432 Size:    64 [unused]
+//   float4 sun_param;                  // Offset:  496 Size:    16 [unused]
 //
 // }
 //
@@ -121,7 +120,7 @@ dcl_temps 6
 #line 20 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\celestial_light_ps.hlsl"
 mov r0.xyz, l(0.000000,0.000000,0.000000,0)  // r0.x <- INV_WAVELENGTH4.x; r0.y <- INV_WAVELENGTH4.y; r0.z <- INV_WAVELENGTH4.z
 
-#line 58
+#line 143
 nop 
 mov r1.xy, v1.xyxx
 
@@ -204,10 +203,10 @@ mul r0.w, r0.w, r1.x
 max r0.w, r0.w, l(0.000000)
 min r0.w, r0.w, l(1.000000)  // r0.w <- <SampleSoftCloudCoverage return value>
 
-#line 58
+#line 143
 mov r0.w, r0.w  // r0.w <- softMask
 
-#line 61
+#line 146
 mul r1.x, v1.x, l(2.000000)
 mov r1.y, l(-1.000000)
 add r1.x, r1.y, r1.x  // r1.x <- ndc.x
@@ -216,7 +215,7 @@ mov r1.y, -r1.y
 add r1.y, r1.y, l(1.000000)  // r1.y <- ndc.y
 mov r1.zw, l(0,0,0,1.000000)  // r1.z <- ndc.z; r1.w <- ndc.w
 
-#line 62
+#line 147
 mul r2.xyzw, r1.xxxx, cb7[23].xyzw
 mul r3.xyzw, r1.yyyy, cb7[24].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw
@@ -225,61 +224,61 @@ add r2.xyzw, r2.xyzw, r3.xyzw
 mul r1.xyzw, r1.wwww, cb7[26].xyzw
 add r1.xyzw, r1.xyzw, r2.xyzw  // r1.x <- pos.x; r1.y <- pos.y; r1.z <- pos.z; r1.w <- pos.w
 
-#line 63
+#line 148
 div r1.xyz, r1.xyzx, r1.wwww
 
-#line 65
+#line 150
 mov r2.xyz, -cb7[0].xyzx
 add r1.xyz, r1.xyzx, r2.xyzx
 dp3 r1.w, r1.xyzx, r1.xyzx
 rsq r1.w, r1.w
 mul r1.xyz, r1.wwww, r1.xyzx  // r1.x <- view_dir.x; r1.y <- view_dir.y; r1.z <- view_dir.z
 
-#line 66
+#line 151
 itof r1.w, l(0)
 ge r1.w, r1.w, r1.y
 if_nz r1.w
 
-#line 68
+#line 153
   itof r1.w, l(-1)
   lt r1.w, r1.w, l(0.000000)
   and r1.w, r1.w, l(-1)
   discard_nz r1.w
 
-#line 69
+#line 154
 endif 
 
-#line 71
+#line 156
 mov r1.w, l(1.000000)  // r1.w <- light_scale
 
-#line 73
+#line 158
 mov r2.xyz, -cb3[11].xyzx
 dp3 r2.w, r2.xyzx, r2.xyzx
 rsq r2.w, r2.w
 mul r2.xyz, r2.wwww, r2.xyzx  // r2.x <- light_dir.x; r2.y <- light_dir.y; r2.z <- light_dir.z
 
-#line 74
+#line 159
 itof r2.w, l(0)
 ge r2.w, cb3[11].y, r2.w
 if_nz r2.w
 
-#line 76
+#line 161
   dp3 r2.w, cb3[11].xyzx, cb3[11].xyzx
   rsq r2.w, r2.w
   mul r2.xyz, r2.wwww, cb3[11].xyzx
 
-#line 77
+#line 162
   mov r1.w, l(0.800000)
 
-#line 78
+#line 163
 endif 
 
-#line 83
+#line 168
 dp3 r1.x, r1.xyzx, r2.xyzx
 max r1.x, r1.x, l(-0.000000)
 min r1.x, r1.x, l(1.000000)  // r1.x <- cosTheta
 
-#line 84
+#line 169
 mov r1.y, -r1.x
 max r1.z, r1.y, r1.x
 mov r2.w, -r1.z
@@ -298,31 +297,31 @@ lt r1.x, r1.x, r1.y
 and r1.x, r1.x, r2.w
 add r1.x, r1.x, r1.z  // r1.x <- angle
 
-#line 87
+#line 172
 mov r1.y, l(0.000100)  // r1.y <- EPS
 
-#line 88
+#line 173
 mov r1.z, -r1.x
 max r1.z, r1.z, r1.x
 sincos r1.z, null, r1.z
 mul r1.z, r1.z, l(4.000000)  // r1.z <- mx
 
-#line 89
+#line 174
 mov r1.z, r1.z  // r1.z <- my
 
-#line 90
+#line 175
 mov r2.w, -r1.x
 max r2.w, r1.x, r2.w
 add r2.w, r1.z, r2.w
 max r2.w, r1.y, r2.w  // r2.w <- denom_x
 
-#line 91
+#line 176
 mov r3.x, -r1.x
 max r3.x, r1.x, r3.x
 add r3.x, r1.z, r3.x
 max r3.x, r1.y, r3.x  // r3.x <- denom_y
 
-#line 92
+#line 177
 mov r3.y, -r1.x
 add r3.y, r1.x, r3.y
 mov r3.z, -r3.y
@@ -330,45 +329,45 @@ max r3.y, r3.z, r3.y
 add r3.y, r1.z, r3.y
 max r3.y, r1.y, r3.y  // r3.y <- denom_xdiff
 
-#line 93
+#line 178
 add r1.x, r1.x, r1.x
 mov r3.z, -r1.x
 max r1.x, r1.x, r3.z
 add r1.x, r1.z, r1.x
 max r1.x, r1.y, r1.x  // r1.x <- denom_ysum
 
-#line 95
+#line 180
 div r1.y, l(0.010000), r2.w  // r1.y <- lx
 
-#line 96
+#line 181
 div r1.z, l(0.010000), r3.x  // r1.z <- ly
 
-#line 97
+#line 182
 div r2.w, l(0.010000), r3.y  // r2.w <- lxy
 
-#line 98
+#line 183
 div r1.x, l(0.010000), r1.x  // r1.x <- lyx
 
-#line 99
+#line 184
 add r1.y, r1.z, r1.y
 add r1.y, r2.w, r1.y
 add r1.xyz, r1.xxxx, r1.yyyy  // r1.z <- s
 
-#line 103
+#line 188
 mov r1.xyz, r1.xyzx  // r1.x <- finalColor.x; r1.y <- finalColor.y; r1.z <- finalColor.z
 
-#line 106
+#line 191
 itof r2.w, l(0)
 lt r2.w, cb3[11].y, r2.w
 if_nz r2.w
 
-#line 108
+#line 193
   itof r3.xyz, l(0, 1, 0, 0)
   dp3 r2.x, r2.xyzx, r3.xyzx
   max r2.x, r2.x, l(0.000000)
   min r2.x, r2.x, l(1.000000)  // r2.x <- sun_elevation
 
-#line 109
+#line 194
   mov r2.y, -r2.x
   max r2.z, r2.y, r2.x
   mov r2.w, -r2.z
@@ -388,7 +387,7 @@ if_nz r2.w
   add r2.y, r2.y, r2.z
   mul r2.y, r2.y, l(57.295780)  // r2.y <- sun_theta
 
-#line 110
+#line 195
   mov r2.y, -r2.y
   add r2.y, r2.y, l(96.079948)
   log r2.y, r2.y
@@ -398,7 +397,7 @@ if_nz r2.w
   add r2.x, r2.y, r2.x
   div r2.x, l(1.000000), r2.x  // r2.x <- air_mass
 
-#line 111
+#line 196
   nop 
   mov r2.x, r2.x
 
@@ -414,50 +413,50 @@ if_nz r2.w
 #line 30
   mov r0.xyz, r0.xyzx  // r0.x <- <ComputeSunIrradiance return value>.x; r0.y <- <ComputeSunIrradiance return value>.y; r0.z <- <ComputeSunIrradiance return value>.z
 
-#line 111
+#line 196
   mov r0.xyz, r0.xyzx  // r0.x <- Ei.x; r0.y <- Ei.y; r0.z <- Ei.z
 
-#line 113
+#line 198
   mul r1.xyz, r0.xyzx, r1.xyzx
 
-#line 114
+#line 199
 endif 
 
-#line 117
+#line 202
 log r0.x, r0.w
 mul r0.x, r0.x, l(1.500000)
 exp r0.x, r0.x  // r0.x <- erosion
 
-#line 119
+#line 204
 mov r0.y, -r0.x
 add r0.y, r0.y, l(1.000000)
 mul r0.yzw, r0.yyyy, r1.xxyz  // r0.y <- eroded_color.x; r0.z <- eroded_color.y; r0.w <- eroded_color.z
 
-#line 123
+#line 208
 max r1.x, r1.y, r1.x
 max r1.x, r1.z, r1.x  // r1.x <- sunIntensity
 
-#line 125
+#line 210
 mov r1.y, l(1.000000)  // r1.y <- intensityScale
 
-#line 126
+#line 211
 mul r1.x, r1.y, r1.x
 max r1.x, r1.x, l(0.000000)
 min r1.x, r1.x, l(1.000000)  // r1.x <- colorAlpha
 
-#line 129
+#line 214
 mov r0.x, -r0.x
 add r0.x, r0.x, l(1.000000)
 mul r0.x, r0.x, r1.x
 max r0.x, r0.x, l(0.000000)
 min r0.x, r0.x, l(1.000000)  // r0.x <- outAlpha
 
-#line 132
+#line 217
 mul r0.yzw, r1.wwww, r0.yyzw
 max r0.yzw, r0.yyzw, l(0.000000, 0.000000, 0.000000, 0.000000)
 min r0.yzw, r0.yyzw, l(0.000000, 1.000000, 1.000000, 1.000000)  // r0.y <- outColor.x; r0.z <- outColor.y; r0.w <- outColor.z
 
-#line 134
+#line 237
 mov o0.xyz, r0.yzwy
 mov o0.w, r0.x
 ret 

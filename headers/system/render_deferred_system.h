@@ -111,7 +111,7 @@ private:
     std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds_;
 
     //GPU負荷計測用
-    static const int QUERY_BUFFER_COUNT = 8;
+    static const int QUERY_BUFFER_COUNT = 32;
     int write_index_ = 0;
     Microsoft::WRL::ComPtr<ID3D11Query> dis_joint_query_[QUERY_BUFFER_COUNT];
     Microsoft::WRL::ComPtr<ID3D11Query>time_stamp_start_query_[QUERY_BUFFER_COUNT];

@@ -448,7 +448,7 @@ float3 ComputeSunIrradiance(float air_mass)
 
 
 // レイマーチングによる大気散乱と雲のレンダリング
-float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*背景の空の色*/)
+float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*背景の空の色*/,float2 screen_pos)
 {
     const float TRANSMITTANCE_EPS = 1e-3f;  //これ以下でほぼ遮蔽
     const int ZERO_INSIDE_EXIT_COUNT = 6;   //雲内部で密度が連続する回数の閾値
@@ -461,7 +461,15 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
     const float3 ray_direction = normalize(ray_step);
 	
 	// レイ開始位置を少しランダムにして横筋を目立たなくする
-    float3 sample_point =ray_origin + ray_step * Hash(ray_origin * 6.0);
+    const float4x4 dither_pattern =
+    {
+        { 0.0f, 0.5f, 0.125f, 0.625f },
+        { 0.75f, 0.22f, 0.875f, 0.375f },
+        { 0.1875f, 0.6875f, 0.0625f, 0.5625 },
+        { 0.9375f, 0.4375f, 0.8125f, 0.3125 }
+    };
+    float3 sample_point = ray_origin + ray_step * dither_pattern[screen_pos.x % 4][screen_pos.y % 4];
+    //float3 sample_point = ray_origin + ray_step * Hash(ray_origin * 6.0);
 	
     //太陽方向と位相関数
     float3 sun = -directional_light.direction.xyz;
@@ -553,7 +561,6 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
                         
 
                     }
-
 
                     //光学的厚み
                     float shadow_strength = lerp(5.0f,10.f,henyey_greenstein_phase); //影が薄くなるので強めにする
@@ -739,7 +746,7 @@ float4 main(VS_OUT pin) : SV_TARGET
 
         float3 ray_step = ray_dir * shell_dist / steps;
         // メインのレイマーチング関数を呼び出す
-        float4 volume = RayMarch(ray_origin, ray_step, int(steps),pin.texcoord.xy);
+        float4 volume = RayMarch(ray_origin, ray_step, int(steps),pin.texcoord.xy,pin.position.xy);
         //空の色
         float3 background = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb;
         // 雲のボリュームカラーと背景色をアルファブレンド

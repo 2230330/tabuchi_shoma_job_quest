@@ -135,7 +135,7 @@ void RenderCloudSystem::Render()
         {
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
-            int read_index = (write_index_ + QUERY_BUFFER_COUNT - 2) % QUERY_BUFFER_COUNT;
+            int read_index = (write_index_ + QUERY_BUFFER_COUNT - 7) % QUERY_BUFFER_COUNT;
             UpdateGpuTimer(read_index);
             cloud.gpu_time_ms = static_cast<float>(gpu_time_ms_);
 

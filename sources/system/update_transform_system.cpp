@@ -19,19 +19,16 @@ void UpdateTransformSystem::Update(float elapsed_time)
         ComponentLocalToWorld,
         ComponentPosition,
         ComponentRotation,
-        ComponentScale,
-        ComponentGltf
+        ComponentScale
     >(
         [](uint32_t entity_id,
             ComponentDynamic,
             ComponentLocalToWorld& l2w,
             ComponentPosition& pos,
             ComponentRotation& rot,
-            ComponentScale& scale,
-            ComponentGltf& gltf)
+            ComponentScale& scale)
         {
-            if (gltf.dirty)
-                return;
+
 
             DirectX::XMMATRIX scale_matrix = DirectX::XMMatrixScaling(
                 scale.value.x,

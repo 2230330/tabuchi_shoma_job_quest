@@ -57,7 +57,7 @@ void RenderSkySystem::Render()
 
             ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
-            int read_index = (write_index_ + QUERY_BUFFER_COUNT-2) % QUERY_BUFFER_COUNT;
+            int read_index = (write_index_ + QUERY_BUFFER_COUNT-15) % QUERY_BUFFER_COUNT;
             UpdateGpuTimer(read_index);
             sky_atmosphere.gpu_time_ms = gpu_time_ms_;
 

@@ -21,6 +21,7 @@ void CameraUpdateSystem::Update(float elapsed_time)
 			if(camera.main_camera_flag_)
 			{ 
 
+
 				float screen_w = Graphics::Instance().GetScreenWidth();
 				float screen_h = Graphics::Instance().GetScreenHeight();
 				// 視線行列を生成

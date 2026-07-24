@@ -32,11 +32,12 @@ private:
     //コンスタントバッファ
     struct FogConstants
     {
-        float fog_steps{ 32 };
-        float fog_max_distance{ 300 };
-        float noise_scale{ 0.015 };
-        float fog_density{ 0.005 };
-
+        int fog_steps{ 32 };
+        float fog_max_distance{ 300.f };
+        float noise_scale{ 0.015f };
+        float fog_density{ 0.005f };
+        float fog_max_height{ 100.f };
+        float dummy[3];
     };
 
     FogConstants fog_constant_{};
@@ -55,7 +56,7 @@ private:
     std::unique_ptr<FrameBuffer>frame_buffer_ = nullptr;
 
     //GPU負荷計測用
-    static const int QUERY_BUFFER_COUNT = 8;
+    static const int QUERY_BUFFER_COUNT = 16;
     int write_index_ = 0;
     Microsoft::WRL::ComPtr<ID3D11Query> dis_joint_query_[QUERY_BUFFER_COUNT];
     Microsoft::WRL::ComPtr<ID3D11Query>time_stamp_start_query_[QUERY_BUFFER_COUNT];

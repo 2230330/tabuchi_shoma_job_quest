@@ -212,7 +212,7 @@ void RenderDeferredSystem::DirectionalShadowRendering()
     comp_mng_.ForEach<ComponentCascadeShadow>([this](uint32_t entity_id, ComponentCascadeShadow& shadow)
         {
 
-            int read_index = (write_index_ + QUERY_BUFFER_COUNT - 7) % QUERY_BUFFER_COUNT;
+            int read_index = (write_index_ + QUERY_BUFFER_COUNT - (QUERY_BUFFER_COUNT-1)) % QUERY_BUFFER_COUNT;
             UpdateGpuTimer(read_index);
             shadow.gpu_time_ms = static_cast<float>(shadow_gpu_time_ms_);
 

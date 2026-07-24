@@ -104,7 +104,7 @@ void RenderSystemManager::RenderAll()
     auto* ctx = Graphics::Instance().GetDeviceContext();
 
     //カメラ情報の更新
-    camera_set_constants_->SetBuffer(ctx);
+    camera_set_constants_->SetBuffer(ctx,light_manager_->GetDirectionLight().direction);
 
     //ライト情報の更新
     deferred_render_system_->SetLightManager(light_manager_);

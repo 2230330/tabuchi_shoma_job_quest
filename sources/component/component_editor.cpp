@@ -272,528 +272,541 @@ void ComponentEditor::DrawImgui()
         {
             if (!entity.alive) continue;
 
-            ImGui::PushID(entity.entity);
+            bool has_editor_component =
+                comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity) ||
+                comp_mng_.Has<ComponentVolumetricCloud>(entity.entity) ||
+                comp_mng_.Has<ComponentCascadeShadow>(entity.entity) ||
+                comp_mng_.Has<ComponentSsr>(entity.entity) ||
+                comp_mng_.Has<ComponentFog>(entity.entity) ||
+                comp_mng_.Has<ComponentDeferredRender>(entity.entity);
 
-            // 表示する名前
-            std::string label;
-            if (const auto* name = comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
-            {
-                label = name->value;
-            }
-            else
-            {
-                label = "Entity " + std::to_string(entity.entity);
-            }
+            //if(has_editor_component)
+            { 
 
-            // 通常表示
-            if (!is_renaming_ || rename_entity_ != entity.entity)
-            {
-                ImVec2 text_size = ImGui::CalcTextSize(label.c_str());
-                ImVec2 screen_pos = ImGui::GetCursorScreenPos();
+                ImGui::PushID(entity.entity);
 
-                // 当たり判定
-                ImGui::InvisibleButton("rename_hitbox", text_size);
-
-                // 表示（完全に同じ座標）
-                ImGui::SetCursorScreenPos(screen_pos);
-                ImGui::TextUnformatted(label.c_str());
-
-                // ダブルクリック or 右クリック
-                if (
-                    (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) ||
-                    (ImGui::IsItemHovered() && ImGui::IsMouseClicked(1))
-                    )
+                // 表示する名前
+                std::string label{};
+                if (const auto* name = comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
                 {
-                    is_renaming_ = true;
-                    rename_entity_ = entity.entity;
-                    renaming_just_started_ = true;
+                    label = name->value;
+                }
+                else
+                {
+                    label = "Entity " + std::to_string(entity.entity);
+                }
 
-                    if (const auto* name = comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
+                // 通常表示
+                if (!is_renaming_ || rename_entity_ != entity.entity)
+                {
+                    ImVec2 text_size = ImGui::CalcTextSize(label.c_str());
+                    ImVec2 screen_pos = ImGui::GetCursorScreenPos();
+
+                    // 当たり判定
+                    ImGui::InvisibleButton("rename_hitbox", text_size);
+
+                    // 表示（完全に同じ座標）
+                    ImGui::SetCursorScreenPos(screen_pos);
+                    ImGui::TextUnformatted(label.c_str());
+
+                    // ダブルクリック or 右クリック
+                    if (
+                        (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) ||
+                        (ImGui::IsItemHovered() && ImGui::IsMouseClicked(1))
+                        )
                     {
-                        strncpy_s(
-                            rename_buffer_,
-                            name->value.c_str(),
-                            sizeof(rename_buffer_));
-                    }
-                    else
-                    {
-                        snprintf(rename_buffer_, sizeof(rename_buffer_),
-                            "Entity %u", entity.entity);
-                    }
+                        is_renaming_ = true;
+                        rename_entity_ = entity.entity;
+                        renaming_just_started_ = true;
 
-                    // 入力用の座標と幅を保存
-                    rename_text_pos_ = screen_pos;
-                    rename_text_width_ = text_size.x + 20.0f;
-
-                    ImGui::SetKeyboardFocusHere();
-                }
-            }
-            // リネーム中
-            else
-
-            {
-                ImGui::SetCursorScreenPos(rename_text_pos_);
-                ImGui::PushItemWidth(rename_text_width_);
-
-                bool commit = ImGui::InputText(
-                    "##rename",
-                    rename_buffer_,
-                    sizeof(rename_buffer_),
-                    ImGuiInputTextFlags_EnterReturnsTrue);
-
-                ImGui::PopItemWidth();
-
-                //開始フレームは何もしない
-                if (renaming_just_started_)
-                {
-                    renaming_just_started_ = false;
-                    continue; 
-                }
-
-                //一度でも Active になったか記録
-                if (ImGui::IsItemActive())
-                {
-                    renaming_ever_active_ = true;
-                }
-
-                //Active を経験した後だけ確定判定
-                if (renaming_ever_active_ &&
-                    (commit || !ImGui::IsItemActive()))
-                {
-                    if (!comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
-                    {
-                        ComponentName cn{};
-                        comp_mng_.Add(entity.entity, cn);
-                    }
-
-                    comp_mng_.GetByEntity<ComponentName>(entity.entity).value
-                        = rename_buffer_;
-
-                    is_renaming_ = false;
-                    rename_entity_ = UINT32_MAX;
-                    renaming_ever_active_ = false;
-                }
-            }
-
-            ImGui::PopID();
-
-
-            if (ImGui::TreeNode(label.c_str()))
-            {
-                ImGui::Separator();
-                // 位置
-                if (comp_mng_.Has<ComponentPosition>(entity.entity))
-                {
-                    auto& pos = comp_mng_.GetByEntity<ComponentPosition>(entity.entity);
-                    ImGui::DragFloat3("Position", &pos.value.x);
-                    ImGui::Separator();
-                }       
-                // 回転
-                if (comp_mng_.Has<ComponentRotation>(entity.entity))
-                {
-                    auto& rot = comp_mng_.GetByEntity<ComponentRotation>(entity.entity);
-                    ImGui::SliderFloat3("Rotation", &rot.value.x, -3.14f,3.14f);
-                    ImGui::Separator();
-                }
-                // スケール
-                if (comp_mng_.Has<ComponentScale>(entity.entity))
-                {
-                    auto& scale = comp_mng_.GetByEntity<ComponentScale>(entity.entity);
-                    ImGui::DragFloat3("Scale", &scale.value.x, 0.01f);
-                    ImGui::Separator();
-                }
-                // 色
-                if (comp_mng_.Has<ComponentColor>(entity.entity))
-                {
-                    auto& color = comp_mng_.GetByEntity<ComponentColor>(entity.entity);
-                    ImGui::ColorEdit4("Color", &color.value.x);
-                    ImGui::Separator();
-                }
-
-                //大気散乱調整用
-                if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
-                {
-                    ImGui::Text("Sky Atmosphere Component");
-                    sky_entity_ = entity.entity;
-
-                    auto& sky = comp_mng_.GetByEntity<ComponentSkyAtmosphere>(entity.entity);
-
-
-                    ImGui::Separator();
-                    ImGui::Text("Scattering Scale Heights");
-
-                    ImGui::DragFloat("Rayleigh Scale Height (m)",
-                        &sky.rayleigh_scale_height,
-                        100.0f, 1000.0f, 20000.0f, "%.0f");
-
-                    ImGui::DragFloat("Mie Scale Height (m)",
-                        &sky.mie_scale_height,
-                        50.0f, 100.0f, 10000.0f, "%.0f");
-
-                    ImGui::Separator();
-                    ImGui::Text("Ozone Layer");
-
-                    ImGui::DragFloat("Ozone Half Width (m)",
-                        &sky.ozone_scale_half_width,
-                        500.0f, 1000.0f, 50000.0f, "%.0f");
-
-                    ImGui::DragFloat("Ozone Center Height (m)",
-                        &sky.ozone_center_height,
-                        1000.0f, 10000.0f, 100000.0f, "%.0f");
-
-                    ImGui::Separator();
-                    ImGui::Text("Planet Settings");
-
-                    ImGui::DragFloat("Earth Radius (m)",
-                        &sky.earth_height,
-                        1000.0f, 6000000.0f, 7000000.0f, "%.0f");
-
-                    ImGui::DragFloat("Atmosphere Height (m)",
-                        &sky.atmosphere_height,
-                        100.0f, 10000.0f, 200000.0f, "%.0f");
-
-                    ImGui::DragFloat("Sun Distance (m)",
-                        &sky.sun_distance,
-                        1e7f, 1e9f, 3e11f, "%.0e");
-
-                    ImGui::Separator();
-                    ImGui::Text("Sampling");
-
-                    ImGui::SliderInt("Max Sample Count",
-                        &sky.max_sample,
-                        1, 128);
-
-                    ImGui::Separator();
-                }
-
-                //雲のみの処理なので、上の方に置いておきます
-                if (comp_mng_.Has<ComponentVolumetricCloud>(entity.entity))
-                {
-                    auto& c = comp_mng_.GetByEntity<ComponentVolumetricCloud>(entity.entity);
-
-                    if (ImGui::CollapsingHeader("Cloud Ray Marching Settings", ImGuiTreeNodeFlags_DefaultOpen))
-                    {
-
-                        if(ImGui::Button("shadow_flag"))
+                        if (const auto* name = comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
                         {
-                            c.shadow_flag =!c.shadow_flag;
-                        }
-                        ImGui::Separator();
-
-                        if (ImGui::Button("rain"))
-                        {
-                            c.rain_cloud_absorption_scale = 2.5f;
-                        }
-
-                        ImGui::Text("Wind");
-                        ImGui::DragFloat2("Wind Direction", reinterpret_cast<float*>(&c.wind_direction), 0.01f, -1.0f, 1.0f);
-                        ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 20.f);
-
-                        ImGui::Separator();
-
-                        ImGui::Text("Altitude");
-                        ImGui::DragFloat2("Cloud Altitude Min/Max", reinterpret_cast<float*>(&c.cloud_altitudes_min_max),
-                            10.0f, 0.0f, 6383000.0f);
-
-                        ImGui::Separator();
-
-                        ImGui::Text("Density / Coverage");
-                        ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.5f);
-                        ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.0f, 0.8f);
-                        ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 10.0f);
-                        //ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
-                        static int cloud_type = 1;
-                        ImGui::SliderInt("Cloud Type", &cloud_type, 0, 3);
-                        c.cloud_type_scale = static_cast<float>(cloud_type);
-
-                        ImGui::Separator();
-
-                        ImGui::Text("Ray March / Planet");
-                        ImGui::DragFloat("Earth Radius", &c.earth_radius, 1000.0f, 1000000.0f, 20000000.0f);
-                        ImGui::SliderFloat("Horizon Distance Scale", &c.horizon_distance_scale, 0.0f, 3.0f);
-
-                        ImGui::Separator();
-
-                        ImGui::Text("Noise Sampling");
-                        ImGui::DragFloat("Low Freq Sampling Scale", &c.low_frequency_perlin_worley_sampling_scale,
-                            0.00001f, 0.000001f, 0.01f, "%.8f");
-                        ImGui::DragFloat("High Freq Sampling Scale", &c.high_frequency_worley_sampling_scale,
-                            0.0001f, 0.000001f, 0.01f, "%.8f");
-
-                        ImGui::SliderFloat("Long Distance Density Scale", &c.cloud_density_long_distance_scale, 0.1f, 30.0f);
-
-                        ImGui::Separator();
-
-                        ImGui::Checkbox("Powdered Sugar Effect", reinterpret_cast<bool*>(&c.enable_powdered_sugar_efffect));
-
-                        ImGui::Separator();
-
-                        ImGui::Text("Ray March Quality");
-                        ImGui::SliderInt("Ray March Steps", &c.ray_marching_steps, 8, 512);
-                        ImGui::Checkbox("Auto Ray March Steps", reinterpret_cast<bool*>(&c.auto_ray_marching_steps));
-                    }
-
-                    ImGui::Separator();
-                }
-                // GLTFモデル
-                if (comp_mng_.Has<ComponentGltf>(entity.entity))
-                {
-                    auto& gltf = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
-                    ImGui::Text("GLTF Model");
-
-                    ImGui::Separator();
-                    auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
-
-                    ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
-                    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, .0f, 1.0f);
-
-                    //インスタンシング描画
-                    if (ImGui::Button("instanced"))
-                    {
-                        if (!comp_mng_.Has<ComponentInstanced>(entity.entity))
-                        {
-                            ComponentInstanced instance;
-                            comp_mng_.Add(entity.entity, instance);
+                            strncpy_s(
+                                rename_buffer_,
+                                name->value.c_str(),
+                                sizeof(rename_buffer_));
                         }
                         else
                         {
-                            comp_mng_.Remove<ComponentInstanced>(entity.entity);
+                            snprintf(rename_buffer_, sizeof(rename_buffer_),
+                                "Entity %u", entity.entity);
                         }
-                    }
-                    if (comp_mng_.Has<ComponentInstanced>(entity.entity))
-                    {
-                        ImGui::Text("Instancing Render");
-                    }
-                    ImGui::Separator();
-                    //位置更新する化しないか
-                    if (ImGui::Button("dynamic"))
-                    {
-                        if (!comp_mng_.Has<ComponentDynamic>(entity.entity))
-                        {
-                            ComponentDynamic dynamic;
-                            comp_mng_.Add(entity.entity, dynamic);
-                        }
-                        else
-                        {
-                            comp_mng_.Remove<ComponentDynamic>(entity.entity);
-                        }
-                    }
-                    if (comp_mng_.Has<ComponentDynamic>(entity.entity))
-                    {
-                        ImGui::Text("Dynamic Object");
-                    }
-                    ImGui::Separator();
 
-                    ImGui::Text("Filename: %s", gltf.model->GetFilename().c_str());
-                    ImGui::DragFloat("Animation Time", &gltf.animation_time, 0.01f);
-                    ImGui::DragInt("Animation Index", reinterpret_cast<int*>(&gltf.animation_index), 1, 0, static_cast<int>(gltf.model->GetAnimations().size()) - 1);
-                    ImGui::Separator();
+                        // 入力用の座標と幅を保存
+                        rename_text_pos_ = screen_pos;
+                        rename_text_width_ = text_size.x + 20.0f;
+
+                        ImGui::SetKeyboardFocusHere();
+                    }
                 }
-                if (comp_mng_.Has<ComponentTexture>(entity.entity))
+                // リネーム中
+                else
+
                 {
-                    auto& texture = comp_mng_.GetByEntity<ComponentTexture>(entity.entity);
-                    if (ImGui::TreeNode("Texture Model"))
+                    ImGui::SetCursorScreenPos(rename_text_pos_);
+                    ImGui::PushItemWidth(rename_text_width_);
+
+                    bool commit = ImGui::InputText(
+                        "##rename",
+                        rename_buffer_,
+                        sizeof(rename_buffer_),
+                        ImGuiInputTextFlags_EnterReturnsTrue);
+
+                    ImGui::PopItemWidth();
+
+                    //開始フレームは何もしない
+                    if (renaming_just_started_)
                     {
-                        if (texture.texture != nullptr)
+                        renaming_just_started_ = false;
+                        continue; 
+                    }
+
+                    //一度でも Active になったか記録
+                    if (ImGui::IsItemActive())
+                    {
+                        renaming_ever_active_ = true;
+                    }
+
+                    //Active を経験した後だけ確定判定
+                    if (renaming_ever_active_ &&
+                        (commit || !ImGui::IsItemActive()))
+                    {
+                        if (!comp_mng_.TryGetByEntity<ComponentName>(entity.entity))
                         {
-                            ImGui::Text("Filename: %s", texture.name.c_str());
-                            ImGui::Image(texture.texture.Get(), { 256,256, }, { 0,0 });
+                            ComponentName cn{};
+                            comp_mng_.Add(entity.entity, cn);
                         }
+
+                        comp_mng_.GetByEntity<ComponentName>(entity.entity).value
+                            = rename_buffer_;
+
+                        is_renaming_ = false;
+                        rename_entity_ = UINT32_MAX;
+                        renaming_ever_active_ = false;
+                    }
+                }
+
+                ImGui::PopID();
+
+
+                if (ImGui::TreeNode(label.c_str()))
+                {
+                    ImGui::Separator();
+                    // 位置
+                    if (comp_mng_.Has<ComponentPosition>(entity.entity))
+                    {
+                        auto& pos = comp_mng_.GetByEntity<ComponentPosition>(entity.entity);
+                        ImGui::DragFloat3("Position", &pos.value.x);
+                        ImGui::Separator();
+                    }       
+                    // 回転
+                    if (comp_mng_.Has<ComponentRotation>(entity.entity))
+                    {
+                        auto& rot = comp_mng_.GetByEntity<ComponentRotation>(entity.entity);
+                        ImGui::SliderFloat3("Rotation", &rot.value.x, -3.14f,3.14f);
+                        ImGui::Separator();
+                    }
+                    // スケール
+                    if (comp_mng_.Has<ComponentScale>(entity.entity))
+                    {
+                        auto& scale = comp_mng_.GetByEntity<ComponentScale>(entity.entity);
+                        ImGui::DragFloat3("Scale", &scale.value.x, 0.01f);
+                        ImGui::Separator();
+                    }
+                    //// 色
+                    //if (comp_mng_.Has<ComponentColor>(entity.entity))
+                    //{
+                    //    auto& color = comp_mng_.GetByEntity<ComponentColor>(entity.entity);
+                    //    ImGui::ColorEdit4("Color", &color.value.x);
+                    //    ImGui::Separator();
+                    //}
+
+                    //大気散乱調整用
+                    if (comp_mng_.Has<ComponentSkyAtmosphere>(entity.entity))
+                    {
+                        ImGui::Text("Sky Atmosphere Component");
+                        sky_entity_ = entity.entity;
+
+                        auto& sky = comp_mng_.GetByEntity<ComponentSkyAtmosphere>(entity.entity);
+
 
                         ImGui::Separator();
-                            ImGui::TreePop();
+                        ImGui::Text("Scattering Scale Heights");
+
+                        ImGui::DragFloat("Rayleigh Scale Height (m)",
+                            &sky.rayleigh_scale_height,
+                            100.0f, 1000.0f, 20000.0f, "%.0f");
+
+                        ImGui::DragFloat("Mie Scale Height (m)",
+                            &sky.mie_scale_height,
+                            50.0f, 100.0f, 10000.0f, "%.0f");
+
+                        ImGui::Separator();
+                        ImGui::Text("Ozone Layer");
+
+                        ImGui::DragFloat("Ozone Half Width (m)",
+                            &sky.ozone_scale_half_width,
+                            500.0f, 1000.0f, 50000.0f, "%.0f");
+
+                        ImGui::DragFloat("Ozone Center Height (m)",
+                            &sky.ozone_center_height,
+                            1000.0f, 10000.0f, 100000.0f, "%.0f");
+
+                        ImGui::Separator();
+                        ImGui::Text("Planet Settings");
+
+                        ImGui::DragFloat("Earth Radius (m)",
+                            &sky.earth_height,
+                            1000.0f, 6000000.0f, 7000000.0f, "%.0f");
+
+                        ImGui::DragFloat("Atmosphere Height (m)",
+                            &sky.atmosphere_height,
+                            100.0f, 10000.0f, 200000.0f, "%.0f");
+
+                        ImGui::DragFloat("Sun Distance (m)",
+                            &sky.sun_distance,
+                            1e7f, 1e9f, 3e11f, "%.0e");
+
+                        ImGui::Separator();
+                        ImGui::Text("Sampling");
+
+                        ImGui::SliderInt("Max Sample Count",
+                            &sky.max_sample,
+                            1, 128);
+
+                        ImGui::Separator();
                     }
-                    ImGui::Separator();
-                }
 
-                // Camera
-                if (comp_mng_.Has<ComponentCamera>(entity.entity))
-                {
-                    ComponentCamera& cam = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
-
-                    //メインカメラを変更する際、他のカメラのフラグをオフにする
-                    if (ImGui::Button("Main Camera"))
+                    //雲のみの処理なので、上の方に置いておきます
+                    if (comp_mng_.Has<ComponentVolumetricCloud>(entity.entity))
                     {
-                        for (const Entity& ather_entity : entities)
-                        {
-                            if (ather_entity.entity == entity.entity)
-                                continue;
+                        auto& c = comp_mng_.GetByEntity<ComponentVolumetricCloud>(entity.entity);
 
-                            if(comp_mng_.Has<ComponentCamera>(ather_entity.entity))
+                        if (ImGui::CollapsingHeader("Cloud Ray Marching Settings", ImGuiTreeNodeFlags_DefaultOpen))
+                        {
+
+                            if(ImGui::Button("shadow_flag"))
                             {
-                                ComponentCamera& ather_cam = comp_mng_.GetByEntity<ComponentCamera>(ather_entity.entity);                                
-                                ather_cam.main_camera_flag_ = false;
+                                c.shadow_flag =!c.shadow_flag;
+                            }
+                            ImGui::Separator();
 
+                            if (ImGui::Button("rain"))
+                            {
+                                c.rain_cloud_absorption_scale = 2.5f;
+                            }
+
+                            ImGui::Text("Wind");
+                            ImGui::DragFloat2("Wind Direction", reinterpret_cast<float*>(&c.wind_direction), 0.01f, -1.0f, 1.0f);
+                            ImGui::DragFloat("Wind Speed", &c.wind_speed, 0.05f, 0.0f, 20.f);
+
+                            ImGui::Separator();
+
+                            ImGui::Text("Altitude");
+                            ImGui::DragFloat2("Cloud Altitude Min/Max", reinterpret_cast<float*>(&c.cloud_altitudes_min_max),
+                                10.0f, 0.0f, 6383000.0f);
+
+                            ImGui::Separator();
+
+                            ImGui::Text("Density / Coverage");
+                            ImGui::SliderFloat("Density Scale", &c.density_scale, 0.01f, 0.5f);
+                            ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.0f, 0.8f);
+                            ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 10.0f);
+                            //ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
+                            static int cloud_type = 1;
+                            ImGui::SliderInt("Cloud Type", &cloud_type, 0, 3);
+                            c.cloud_type_scale = static_cast<float>(cloud_type);
+
+                            ImGui::Separator();
+
+                            ImGui::Text("Ray March / Planet");
+                            ImGui::DragFloat("Earth Radius", &c.earth_radius, 1000.0f, 1000000.0f, 20000000.0f);
+                            ImGui::SliderFloat("Horizon Distance Scale", &c.horizon_distance_scale, 0.0f, 3.0f);
+
+                            ImGui::Separator();
+
+                            ImGui::Text("Noise Sampling");
+                            ImGui::DragFloat("Low Freq Sampling Scale", &c.low_frequency_perlin_worley_sampling_scale,
+                                0.00001f, 0.000001f, 0.01f, "%.8f");
+                            ImGui::DragFloat("High Freq Sampling Scale", &c.high_frequency_worley_sampling_scale,
+                                0.0001f, 0.000001f, 0.01f, "%.8f");
+
+                            ImGui::SliderFloat("Long Distance Density Scale", &c.cloud_density_long_distance_scale, 0.1f, 30.0f);
+
+                            ImGui::Separator();
+
+                            ImGui::Checkbox("Powdered Sugar Effect", reinterpret_cast<bool*>(&c.enable_powdered_sugar_efffect));
+
+                            ImGui::Separator();
+
+                            ImGui::Text("Ray March Quality");
+                            ImGui::SliderInt("Ray March Steps", &c.ray_marching_steps, 8, 512);
+                            ImGui::Checkbox("Auto Ray March Steps", reinterpret_cast<bool*>(&c.auto_ray_marching_steps));
+                        }
+
+                        ImGui::Separator();
+                    }
+                    //// GLTFモデル
+                    //if (comp_mng_.Has<ComponentGltf>(entity.entity))
+                    //{
+                    //    auto& gltf = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
+                    //    ImGui::Text("GLTF Model");
+
+                    //    ImGui::Separator();
+                    //    auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
+
+                    //    ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
+                    //    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, .0f, 1.0f);
+
+                    //    //インスタンシング描画
+                    //    if (ImGui::Button("instanced"))
+                    //    {
+                    //        if (!comp_mng_.Has<ComponentInstanced>(entity.entity))
+                    //        {
+                    //            ComponentInstanced instance;
+                    //            comp_mng_.Add(entity.entity, instance);
+                    //        }
+                    //        else
+                    //        {
+                    //            comp_mng_.Remove<ComponentInstanced>(entity.entity);
+                    //        }
+                    //    }
+                    //    if (comp_mng_.Has<ComponentInstanced>(entity.entity))
+                    //    {
+                    //        ImGui::Text("Instancing Render");
+                    //    }
+                    //    ImGui::Separator();
+                    //    //位置更新する化しないか
+                        if (ImGui::Button("dynamic"))
+                        {
+                            if (!comp_mng_.Has<ComponentDynamic>(entity.entity))
+                            {
+                                ComponentDynamic dynamic;
+                                comp_mng_.Add(entity.entity, dynamic);
+                            }
+                            else
+                            {
+                                comp_mng_.Remove<ComponentDynamic>(entity.entity);
                             }
                         }
-                        cam.main_camera_flag_ = true;
-                    }
+                        if (comp_mng_.Has<ComponentDynamic>(entity.entity))
+                        {
+                            ImGui::Text("Dynamic Object");
+                        }
+                        ImGui::Separator();
 
-                    if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+                    //    ImGui::Text("Filename: %s", gltf.model->GetFilename().c_str());
+                    //    ImGui::DragFloat("Animation Time", &gltf.animation_time, 0.01f);
+                    //    ImGui::DragInt("Animation Index", reinterpret_cast<int*>(&gltf.animation_index), 1, 0, static_cast<int>(gltf.model->GetAnimations().size()) - 1);
+                    //    ImGui::Separator();
+                    //}
+                    //if (comp_mng_.Has<ComponentTexture>(entity.entity))
+                    //{
+                    //    auto& texture = comp_mng_.GetByEntity<ComponentTexture>(entity.entity);
+                    //    if (ImGui::TreeNode("Texture Model"))
+                    //    {
+                    //        if (texture.texture != nullptr)
+                    //        {
+                    //            ImGui::Text("Filename: %s", texture.name.c_str());
+                    //            ImGui::Image(texture.texture.Get(), { 256,256, }, { 0,0 });
+                    //        }
+
+                    //        ImGui::Separator();
+                    //            ImGui::TreePop();
+                    //    }
+                    //    ImGui::Separator();
+                    //}
+
+                    // Camera
+                    if (comp_mng_.Has<ComponentCamera>(entity.entity))
                     {
-                        ImGui::Checkbox("Main Camera", &cam.main_camera_flag_);
+                        ComponentCamera& cam = comp_mng_.GetByEntity<ComponentCamera>(entity.entity);
 
-                        ImGui::DragFloat3("Position", &cam.camera_position.x, 0.1f);
-                        ImGui::DragFloat3("Direction", &cam.camera_direction.x, 0.01f);
+                        //メインカメラを変更する際、他のカメラのフラグをオフにする
+                        if (ImGui::Button("Main Camera"))
+                        {
+                            for (const Entity& ather_entity : entities)
+                            {
+                                if (ather_entity.entity == entity.entity)
+                                    continue;
 
-                        ImGui::Separator();
+                                if(comp_mng_.Has<ComponentCamera>(ather_entity.entity))
+                                {
+                                    ComponentCamera& ather_cam = comp_mng_.GetByEntity<ComponentCamera>(ather_entity.entity);                                
+                                    ather_cam.main_camera_flag_ = false;
 
-                        ImGui::DragFloat("Near Clip", &cam.camera_clip_distance.x, 0.01f, 0.001f, 100.0f);
-                        ImGui::DragFloat("Far Clip", &cam.camera_clip_distance.y, 1.0f, 1.0f, 100000.0f);
+                                }
+                            }
+                            cam.main_camera_flag_ = true;
+                        }
 
-                        ImGui::Separator();
+                        if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+                        {
+                            ImGui::Checkbox("Main Camera", &cam.main_camera_flag_);
 
-                        ImGui::Text("View Matrix");
-                        ImGui::TextDisabled("Auto calculated");
+                            ImGui::DragFloat3("Position", &cam.camera_position.x, 0.1f);
+                            ImGui::DragFloat3("Direction", &cam.camera_direction.x, 0.01f);
 
-                        ImGui::Text("Projection Matrix");
-                        ImGui::TextDisabled("Auto calculated");
-                    }
+                            ImGui::Separator();
+
+                            ImGui::DragFloat("Near Clip", &cam.camera_clip_distance.x, 0.01f, 0.001f, 100.0f);
+                            ImGui::DragFloat("Far Clip", &cam.camera_clip_distance.y, 1.0f, 1.0f, 100000.0f);
+
+                            ImGui::Separator();
+
+                            ImGui::Text("View Matrix");
+                            ImGui::TextDisabled("Auto calculated");
+
+                            ImGui::Text("Projection Matrix");
+                            ImGui::TextDisabled("Auto calculated");
+                        }
                     
 
-                    ImGui::Separator();
-                }
-
-                //Cascade Shadow
-                if (comp_mng_.Has<ComponentCascadeShadow>(entity.entity))
-                {
-                    auto& shadow = comp_mng_.GetByEntity<ComponentCascadeShadow>(entity.entity);
-                    for (int i = 0; i < RenderDeferredSystem::CASCADE::CascadeCount; i++)
-                    {
-                        ImGui::Image(shadow.srvs_.at(i).Get(), { 256,256 }, { 0,0 });
+                        ImGui::Separator();
                     }
-                }
 
-                //SSR
-                if (comp_mng_.Has<ComponentSsr>(entity.entity))
-                {
-                    auto& ssr = comp_mng_.GetByEntity<ComponentSsr>(entity.entity);
-
-                    ImGui::Text("Screen Space Reflection");
-
-                    ImGui::DragFloat("Distance", &ssr.distance, 0.1f, 0.1f, 1000.0f);
-                    ImGui::DragInt("Num Steps", &ssr.num_steps, 1, 1, 128);
-                    ImGui::DragInt("Max Mip", &ssr.max_mip, 1, 1, 6);
-                    ImGui::DragFloat("Thickness", &ssr.thickness, 0.01f, 0.01f, 1.0f);
-                    ImGui::DragFloat("Resolution", &ssr.resolution, 0.01f, 0.01f, 1.0f);
-                    ImGui::SliderFloat("Intensity", &ssr.intensity, 0.0f, 10.0f);
-
-                    ImGui::Image(ssr.ssr_texture.Get(), { 256,256, }, { 0,0 });
-                    ImGui::Image(ssr.normal.Get(), { 256,256, }, { 0,0 });
-                    ImGui::Image(ssr.color.Get(), { 256,256, }, { 0,0 });
-                    ImGui::Image(ssr.depth.Get(), { 256,256, }, { 0,0 });
-
-                    ImGui::Separator();
-                }
-
-                //DeferredRenderの画像を表示
-                if (comp_mng_.Has<ComponentDeferredRender>(entity.entity))
-                {
-                    auto& srvs = comp_mng_.GetByEntity<ComponentDeferredRender>(entity.entity);
-                    if (!srvs.srvs_.empty())
+                    //Cascade Shadow
+                    if (comp_mng_.Has<ComponentCascadeShadow>(entity.entity))
                     {
-                        auto* data = srvs.srvs_.data();
-                        int size = static_cast<int>(srvs.srvs_.size());
-                        for (int i=0;i<size;i++)
+                        auto& shadow = comp_mng_.GetByEntity<ComponentCascadeShadow>(entity.entity);
+                        for (int i = 0; i < RenderDeferredSystem::CASCADE::CascadeCount; i++)
                         {
-                            ImGui::Image(data[i], { 256.f,256.f }, { 0,0 });
+                            ImGui::Image(shadow.srvs_.at(i).Get(), { 256,256 }, { 0,0 });
                         }
                     }
 
-                }
-
-                //Fog
-                if (comp_mng_.Has<ComponentFog>(entity.entity))
-                {
-                    auto& fog = comp_mng_.GetByEntity<ComponentFog>(entity.entity);
-
-                    ImGui::DragFloat("steps", &fog.fog_steps, 1, 1, 128);
-                    ImGui::DragFloat("density", &fog.fog_density, 0.001f, 0.001f, 0.1f);
-                    ImGui::DragFloat("dinstance", &fog.fog_max_distance, 1.0f, 0.0f, 1000.f);
-                    ImGui::DragFloat("noise_scale", &fog.noise_scale, 0.0001f, 0.0001f, .05f);
-                }
-
-                //コンポーネントの追加
-                if (sky_entity_!=entity.entity|| !cloud_entity_!=entity.entity)
-                {
-                    if (ImGui::TreeNode("Add Component"))
+                    //SSR
+                    if (comp_mng_.Has<ComponentSsr>(entity.entity))
                     {
+                        auto& ssr = comp_mng_.GetByEntity<ComponentSsr>(entity.entity);
 
-                        //モデル関係の取
+                        ImGui::Text("Screen Space Reflection");
+
+                        ImGui::DragFloat("Distance", &ssr.distance, 0.1f, 0.1f, 1000.0f);
+                        ImGui::DragInt("Num Steps", &ssr.num_steps, 1, 1, 128);
+                        ImGui::DragInt("Max Mip", &ssr.max_mip, 1, 1, 6);
+                        ImGui::DragFloat("Thickness", &ssr.thickness, 0.01f, 0.01f, 1.0f);
+                        ImGui::DragFloat("Resolution", &ssr.resolution, 0.01f, 0.01f, 1.0f);
+                        ImGui::SliderFloat("Intensity", &ssr.intensity, 0.0f, 10.0f);
+
+                        ImGui::Image(ssr.ssr_texture.Get(), { 256,256, }, { 0,0 });
+                        ImGui::Image(ssr.normal.Get(), { 256,256, }, { 0,0 });
+                        ImGui::Image(ssr.color.Get(), { 256,256, }, { 0,0 });
+                        ImGui::Image(ssr.depth.Get(), { 256,256, }, { 0,0 });
+
+                        ImGui::Separator();
+                    }
+
+                    //DeferredRenderの画像を表示
+                    if (comp_mng_.Has<ComponentDeferredRender>(entity.entity))
+                    {
+                        auto& srvs = comp_mng_.GetByEntity<ComponentDeferredRender>(entity.entity);
+                        if (!srvs.srvs_.empty())
                         {
-                            if (!comp_mng_.Has<ComponentGltf>(entity.entity))
+                            auto* data = srvs.srvs_.data();
+                            int size = static_cast<int>(srvs.srvs_.size());
+                            for (int i=0;i<size;i++)
                             {
-                                if (ImGui::TreeNode("GLTF Model"))
-                                {
-                                    const auto& models = ResourceManager::Instance().GetGltfs();
-                                    //もしGLTFのモデルが空なら
-                                    if (models.empty())
-                                    {
-                                        ImGui::Text("No models loaded.");
-                                    }
-                                    else
-                                    {
-                                        for (const auto& [name, model_ptr] : models)
-                                        {
-                                            if (ImGui::Button(name.c_str()))
-                                            {
-                                                if (!model_ptr) {
-                                                    ImGui::Text("Model ptr is null.");
-                                                }
-                                                else
-                                                {
-                                                    ComponentGltf gltf{};
-                                                    gltf.model = model_ptr;
-                                                    comp_mng_.Add(entity.entity, gltf);
-                                                    ComponentAdjastPbrParamter ajast_pbr{};
-                                                    comp_mng_.Add(entity.entity, ajast_pbr);
-                                                    ComponentBoundingBox bounding_box{};
-                                                    bounding_box.local_min.x = gltf.model->GetBoundingBox().local_min.x;
-                                                    bounding_box.local_min.y = gltf.model->GetBoundingBox().local_min.y;
-                                                    bounding_box.local_min.z = gltf.model->GetBoundingBox().local_min.z;
-                                                    bounding_box.local_max.x = gltf.model->GetBoundingBox().local_max.x;
-                                                    bounding_box.local_max.y = gltf.model->GetBoundingBox().local_max.y;
-                                                    bounding_box.local_max.z = gltf.model->GetBoundingBox().local_max.z;
-                                                    comp_mng_.Add(entity.entity, bounding_box);
-                                                }
-
-                                            }
-                                        }
-                                    }
-                                    ImGui::TreePop();
-                                }
+                                ImGui::Image(data[i], { 256.f,256.f }, { 0,0 });
                             }
-                            if (!comp_mng_.Has<ComponentTexture>(entity.entity)) {
-
-                                if (ImGui::Button("Add Texture"))
-                                {
-                                    ComponentTexture tex_comp{};
-                                    tex_comp.texture = nullptr;
-                                    tex_comp.name = "";
-                                    comp_mng_.Add(entity.entity, tex_comp);
-                                    break;
-                                }
-
-                            }
-
-
                         }
 
-                        ImGui::TreePop();
                     }
+
+                    //Fog
+                    if (comp_mng_.Has<ComponentFog>(entity.entity))
+                    {
+                        auto& fog = comp_mng_.GetByEntity<ComponentFog>(entity.entity);
+
+                        ImGui::DragInt("steps", &fog.fog_steps, 1, 1, 128);
+                        ImGui::DragFloat("density", &fog.fog_density, 0.001f, 0.001f, 0.1f);
+                        ImGui::DragFloat("dinstance", &fog.fog_max_distance, 1.0f, 0.0f, 1000.f);
+                        ImGui::DragFloat("noise_scale", &fog.noise_scale, 0.0001f, 0.0001f, .05f);
+                        ImGui::DragFloat("fog_max_height", &fog.fog_height_max, 1.f, 0.f, 1000.f);
+                    }
+
+                    ////コンポーネントの追加
+                    //if (sky_entity_!=entity.entity|| !cloud_entity_!=entity.entity)
+                    //{
+                    //    if (ImGui::TreeNode("Add Component"))
+                    //    {
+
+                    //        //モデル関係の取
+                    //        {
+                    //            if (!comp_mng_.Has<ComponentGltf>(entity.entity))
+                    //            {
+                    //                if (ImGui::TreeNode("GLTF Model"))
+                    //                {
+                    //                    const auto& models = ResourceManager::Instance().GetGltfs();
+                    //                    //もしGLTFのモデルが空なら
+                    //                    if (models.empty())
+                    //                    {
+                    //                        ImGui::Text("No models loaded.");
+                    //                    }
+                    //                    else
+                    //                    {
+                    //                        for (const auto& [name, model_ptr] : models)
+                    //                        {
+                    //                            if (ImGui::Button(name.c_str()))
+                    //                            {
+                    //                                if (!model_ptr) {
+                    //                                    ImGui::Text("Model ptr is null.");
+                    //                                }
+                    //                                else
+                    //                                {
+                    //                                    ComponentGltf gltf{};
+                    //                                    gltf.model = model_ptr;
+                    //                                    comp_mng_.Add(entity.entity, gltf);
+                    //                                    ComponentAdjastPbrParamter ajast_pbr{};
+                    //                                    comp_mng_.Add(entity.entity, ajast_pbr);
+                    //                                    ComponentBoundingBox bounding_box{};
+                    //                                    bounding_box.local_min.x = gltf.model->GetBoundingBox().local_min.x;
+                    //                                    bounding_box.local_min.y = gltf.model->GetBoundingBox().local_min.y;
+                    //                                    bounding_box.local_min.z = gltf.model->GetBoundingBox().local_min.z;
+                    //                                    bounding_box.local_max.x = gltf.model->GetBoundingBox().local_max.x;
+                    //                                    bounding_box.local_max.y = gltf.model->GetBoundingBox().local_max.y;
+                    //                                    bounding_box.local_max.z = gltf.model->GetBoundingBox().local_max.z;
+                    //                                    comp_mng_.Add(entity.entity, bounding_box);
+                    //                                }
+
+                    //                            }
+                    //                        }
+                    //                    }
+                    //                    ImGui::TreePop();
+                    //                }
+                    //            }
+                    //            if (!comp_mng_.Has<ComponentTexture>(entity.entity)) {
+
+                    //                if (ImGui::Button("Add Texture"))
+                    //                {
+                    //                    ComponentTexture tex_comp{};
+                    //                    tex_comp.texture = nullptr;
+                    //                    tex_comp.name = "";
+                    //                    comp_mng_.Add(entity.entity, tex_comp);
+                    //                    break;
+                    //                }
+
+                    //            }
+
+
+                    //        }
+
+                    //        ImGui::TreePop();
+                    //    }
+                    //}
+
+                    //// エンティティ削除ボタン
+                    //if (ImGui::Button("Delete Entity"))
+                    //{
+                    //    enti_mng_.Remove(entity.entity); // alive = false にする
+                    //    comp_mng_.RemoveAllComponents(entity.entity); // すべてのコンポーネントを削除
+
+                    //    if (sky_entity_ == entity.entity)sky_entity_ = -1;
+                    //    else if (cloud_entity_ == entity.entity)cloud_entity_ = -1;
+                    //}
+
+                    ImGui::TreePop();
                 }
-
-                // エンティティ削除ボタン
-                if (ImGui::Button("Delete Entity"))
-                {
-                    enti_mng_.Remove(entity.entity); // alive = false にする
-                    comp_mng_.RemoveAllComponents(entity.entity); // すべてのコンポーネントを削除
-
-                    if (sky_entity_ == entity.entity)sky_entity_ = -1;
-                    else if (cloud_entity_ == entity.entity)cloud_entity_ = -1;
-                }
-
-                ImGui::TreePop();
             }
         }
         ImGui::End();
@@ -1010,6 +1023,24 @@ void ComponentEditor::Save(const std::string& filename)
 
 
         }
+        // =========================
+        // Fog
+        // =========================
+        if (comp_mng_.Has<ComponentFog>(entity.entity))
+        {
+            auto& fog = comp_mng_.GetByEntity<ComponentFog>(entity.entity);
+
+            comp_json["Fog"] =
+            {
+                {"steps", fog.fog_steps},
+                {"density", fog.fog_density},
+                {"noise_scale", fog.noise_scale},
+                {"max_distance", fog.fog_max_distance}
+            };
+
+
+        }
+
 
         //Deferred確認用
         if (comp_mng_.Has<ComponentDeferredRender>(entity.entity))
@@ -1254,6 +1285,19 @@ void ComponentEditor::Load(const std::string& filename)
             comp_mng_.Add(entity, ssr);
             ssr_entity_ = entity;
         }
+        // Fog
+        if (comp_json.contains("Fog"))
+        {
+            ComponentFog fog;
+            auto& j = comp_json["Fog"];
+            fog.fog_steps = j["steps"];
+            fog.fog_density = j["density"];
+            fog.noise_scale = j["noise_scale"];
+            fog.fog_max_distance = j["max_distance"];
+            comp_mng_.Add(entity, fog);
+            fog_entity_ = entity;
+        }
+
         //Deferred Render
         if (comp_json.contains("Deferred Render"))
         {

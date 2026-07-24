@@ -33,6 +33,7 @@
 //   row_major float4x4 inverse_projection_transform;// Offset:  304 Size:    64 [unused]
 //   row_major float4x4 inverse_view_projection_transform;// Offset:  368 Size:    64
 //   row_major float4x4 previous_view_projection_transform;// Offset:  432 Size:    64 [unused]
+//   float4 sun_param;                  // Offset:  496 Size:    16 [unused]
 //
 // }
 //

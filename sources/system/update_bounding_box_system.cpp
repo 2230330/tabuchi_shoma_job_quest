@@ -12,18 +12,16 @@ UpdateBoundingBoxSystem::UpdateBoundingBoxSystem(ComponentManager& comp_mng)
 void UpdateBoundingBoxSystem::Update(float elapsed_time)
 {
     comp_mng_.ParallelForEach<
-        ComponentGltf,
+        ComponentDynamic,
         ComponentBoundingBox,
         ComponentLocalToWorld
     >(
         [](uint32_t entity_id,
-            ComponentGltf& gltf,
+            ComponentDynamic& dyn,
             ComponentBoundingBox& b_box,
             ComponentLocalToWorld& l2w )
         {
-            // すでにワールド空間のAABBが計算済みで、かつgltfが静的オブジェクトの場合は計算をスキップ
-            if (gltf.dirty && b_box.world_max.x != -FLT_MAX)
-                return;
+
 
             DirectX::XMFLOAT3 center =
             {
