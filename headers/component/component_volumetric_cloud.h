@@ -9,7 +9,7 @@ struct ComponentVolumetricCloud :public IComponent
 
 	float wind_speed = 1.0f; // [0.0, 20.0]
 
-	float density_scale = 0.05f; // [0.01, 0.2]
+	float density_scale = 0.10f; // [0.01, 0.2]
 	float cloud_coverage_scale = 0.25f; // [0.1, 1.0]
 	float rain_cloud_absorption_scale = 0.5;
 	float cloud_type_scale = 1.0f;

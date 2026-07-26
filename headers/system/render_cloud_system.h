@@ -63,7 +63,7 @@ private:
         float wind_speed = 1.0f; // [0.0, 20.0]
 
         //密度
-        float density_scale = 0.05f; // [0.01, 0.2]
+        float density_scale = 0.10f; // [0.01, 0.2]
         //雲の覆う割合
         float cloud_coverage_scale = 0.25f; 
         //雨雲の光吸収の強さ

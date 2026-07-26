@@ -139,7 +139,7 @@ float GetDensityHeightGradient(float height_fraction, float cloud_type)
 {
     float density_gradient = 0.0;
 
-    #if 0
+    #if 1
     // height_fraction に基づいて、stratus、stratocumulus、cumulus の各雲タイプの密度勾配をブレンドする
     const float4 stratus_gradient = float4(0.02f, 0.05f, 0.09f, 0.11f);
     const float4 stratocumulus_gradient = float4(0.02f, 0.2f, 0.48f, 0.625f);

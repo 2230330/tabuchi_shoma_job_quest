@@ -5,6 +5,7 @@
 #include<wrl.h>
 #include<DirectXMath.h>
 #include<memory>
+#include<cstdint>
 
 class ComponentManager;
 class FrameBuffer;
@@ -18,6 +19,10 @@ public:
     void Render()override;
 
     void SetObjectDepthView(ID3D11ShaderResourceView* depth_map);
+
+    //オブジェクトのレンダーマップの解像度を取得
+    //これは、フォグの描画解像度を下げ、処理を軽くするため
+    void SetObjectResolution(float width, float height);
 
 private:
     //GPU負荷計測用
@@ -36,8 +41,11 @@ private:
         float fog_max_distance{ 300.f };
         float noise_scale{ 0.015f };
         float fog_density{ 0.005f };
+
         float fog_max_height{ 100.f };
-        float dummy[3];
+        float fog_intensity{ 1.f };
+        float fog_resolution_width{ 0.f };
+        float fog_resolution_height{ 0.f };
     };
 
     FogConstants fog_constant_{};
@@ -52,8 +60,6 @@ private:
 
     //フルスクリーン描画
     std::unique_ptr<FullscreenQuad>fullscreen_quad_ = nullptr;
-    //フレームバッファ
-    std::unique_ptr<FrameBuffer>frame_buffer_ = nullptr;
 
     //GPU負荷計測用
     static const int QUERY_BUFFER_COUNT = 16;

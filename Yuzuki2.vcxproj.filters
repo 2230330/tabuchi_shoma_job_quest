@@ -710,5 +710,8 @@
     <FxCompile Include="shaderes\fog_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
+    <FxCompile Include="shaderes\render_master_synthesis_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -513,9 +513,7 @@ void ComponentEditor::DrawImgui()
                             ImGui::SliderFloat("Coverage Scale", &c.cloud_coverage_scale, 0.0f, 0.8f);
                             ImGui::SliderFloat("Rain Absorption", &c.rain_cloud_absorption_scale, 0.0f, 10.0f);
                             //ImGui::SliderFloat("Cloud Type Scale", &c.cloud_type_scale, 0.0f, 3.0f);
-                            static int cloud_type = 1;
-                            ImGui::SliderInt("Cloud Type", &cloud_type, 0, 3);
-                            c.cloud_type_scale = static_cast<float>(cloud_type);
+                            ImGui::SliderFloat("Cloud Type", &c.cloud_type_scale, 0, 3);
 
                             ImGui::Separator();
 
@@ -723,6 +721,7 @@ void ComponentEditor::DrawImgui()
                         ImGui::DragFloat("dinstance", &fog.fog_max_distance, 1.0f, 0.0f, 1000.f);
                         ImGui::DragFloat("noise_scale", &fog.noise_scale, 0.0001f, 0.0001f, .05f);
                         ImGui::DragFloat("fog_max_height", &fog.fog_height_max, 1.f, 0.f, 1000.f);
+                        ImGui::SliderFloat("fog_intensity", &fog.fog_intensity, 1.f, 10.f);
                     }
 
                     ////コンポーネントの追加
@@ -1035,7 +1034,9 @@ void ComponentEditor::Save(const std::string& filename)
                 {"steps", fog.fog_steps},
                 {"density", fog.fog_density},
                 {"noise_scale", fog.noise_scale},
-                {"max_distance", fog.fog_max_distance}
+                {"max_distance", fog.fog_max_distance},
+                {"height_max", fog.fog_height_max},
+                {"intensity", fog.fog_intensity}
             };
 
 
@@ -1294,6 +1295,8 @@ void ComponentEditor::Load(const std::string& filename)
             fog.fog_density = j["density"];
             fog.noise_scale = j["noise_scale"];
             fog.fog_max_distance = j["max_distance"];
+            fog.fog_height_max = j["height_max"];
+            fog.fog_intensity = j["intensity"];
             comp_mng_.Add(entity, fog);
             fog_entity_ = entity;
         }

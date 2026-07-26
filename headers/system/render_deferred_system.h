@@ -62,13 +62,13 @@ private:
     std::unique_ptr<RenderState>render_state_=nullptr;
 
     //シャドウマップ
-    const float shadow_distance_ = 500.0f;
-    float shadow_coverage_ = 80.f; 
+    const float shadow_distance_ = 1500.f;
+    float shadow_coverage_ = 500.f; 
     const float shadow_near_clip_plane_ = 1.f;
-    const float shadow_far_clip_plane_ = 1000.f;
-    const float shadowmap_width_ = 2048.f;
-    const float shadowmap_height_ = 2048.f;
-    const float shadowmap_fov_y_ = DirectX::XMConvertToRadians(60.f);
+    const float shadow_far_clip_plane_ = 3000.f;
+    const float shadowmap_width_ = 4096.f;
+    const float shadowmap_height_ = 4096.f;
+    const float shadowmap_fov_y_ = DirectX::XMConvertToRadians(30.f);
     DirectX::XMFLOAT4 camera_position_{ 0.f, 0.f, 0.f, 0.f };
     DirectX::XMFLOAT4 camera_front_{ 0.f, 0.f, 0.f, 0.f };
     DirectX::XMFLOAT4 camera_right_{ 0.f, 0.f, 0.f, 0.f };
@@ -97,9 +97,9 @@ private:
     static constexpr float split_aria_table_[] = 
     {
         0.1f,
-        25.f,
-        200.f,
-        600.f,
+        120.f,
+        500.f,
+        1000.f,
     };
     std::array<std::unique_ptr<FrameBuffer>,CASCADE::CascadeCount> shadowmap_framebuffers_;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView> shadowmap_depth_stencil_view_=nullptr;

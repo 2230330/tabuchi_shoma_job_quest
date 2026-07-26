@@ -13,7 +13,11 @@ cbuffer FOG_CONSTANT_BUFFER:register(b6)
     float fog_max_distance;
     float noise_scale;
     float fog_density;
+    
     float fog_max_height;
+    float intensity;
+    float fog_resolution_width;
+    float fog_resolution_height;
 };
 
 #define POINT_WRAP 0
@@ -33,20 +37,41 @@ Texture2D shadow_map[shadow_num] : register(t10);
 //static const float PI = 3.14159265359f;
 static const float time_offset = .10f;
 
-// from: https://www.shadertoy.com/view/4sfgzs credit to iq
-float Hash(float3 p)
+float SampleObjectDepth(float2 sample_point)
 {
-    p = frac(p * 0.3183099 + 0.1);
-    p *= 17.0;
-    return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
+    //物体深度テクスチャから深度をサンプリングする関数
+    //物体を描画する際に、雲が物体の前にあるか後ろにあるかを判断するために使用される
+    //そのままサンプリングした場合、テクスチャの解像度の違いによりジャギーが発生する可能性がある為、
+    //周囲のサンプルを取って最大値を返すことで、実際の物体よりも一回り小さい輪郭を作るようにしている
+    float2 object_resolution = float2(fog_resolution_width, fog_resolution_height);
+    float d = 0.0f;
+    float2 texel = 1.0f / object_resolution;
+    [unroll]
+    for (int x = -1; x <= 1; x++)
+    {
+        [unroll]
+        for (int y = -1; y <= 1; y++)
+        {
+            float2 offset = float2(x, y) * texel;
+            float sample = depth_map.Sample(sampler_states[POINT_CLAMP], sample_point + offset);
+            
+            //周囲のサンプルの最大値を取ることで、物体の輪郭を少し削る
+            d = max(d, sample);
+            if (d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
+            {
+                break;
+            }
+        }
+    }
+
+    return d;
 }
 
-//フェーズ関数(ミー散乱)
 float MiePhase(float cos_theta, float g)
 {
-    //ヘニエイ・グリーンスタイン関数
     float g2 = g * g;
-    return (1.0f - g2) / (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.50f) * 4.0f * PI);
+    return (1.0f - g2) /
+        (pow(1.0f + g2 - 2.0f * g * cos_theta, 1.5f) * 4.0f * PI);
 }
 float SampleFogNoiseAdvanced(float3 world_pos)
 {
@@ -67,14 +92,12 @@ float SampleFogNoiseAdvanced(float3 world_pos)
 }
 float SampleFogDensity(float3 world_pos)
 {
-    float base_density = fog_density;
-
     float noise = SampleFogNoiseAdvanced(world_pos);
-
-    // noise_amount で模様の強さを制御
-    float noise_factor = lerp(1.0f, noise, 1.0);
-
-    return base_density * noise_factor;
+    
+    float height_factor = saturate(1.0f - world_pos.y / fog_max_height);
+    height_factor *= height_factor;
+    
+    return fog_density * noise*height_factor;
 }
 
 
@@ -87,14 +110,14 @@ float4 main(VS_OUT pin) : SV_TARGET
     pos /= pos.w;
     float3 ray_dir = normalize(pos.xyz-camera_position.xyz);
     
-    float object_depth = depth_map.Sample(sampler_states[POINT_CLAMP],pin.texcoord.xy);
+    float object_depth = SampleObjectDepth(pin.texcoord.xy);
         
     float3 ray_start = camera_position.xyz ;
     float3 ray_end = camera_position.xyz + (ray_dir * fog_max_distance);
     float3 obj_pos = camera_position.xyz + (ray_dir * fog_max_distance);
     if(object_depth<1.0f)
     {
-        obj_pos = camera_position.xyz + (ray_dir * (camera_clip_distance.y * object_depth));
+        ray_end = camera_position.xyz + (ray_dir * (camera_clip_distance.y * object_depth));
     }
     float camera_to_obj_length = length(obj_pos - ray_start);
     float3 ray_step = (ray_end - ray_start) / fog_steps;
@@ -115,6 +138,17 @@ float4 main(VS_OUT pin) : SV_TARGET
     float stop_dis = camera_clip_distance.y * object_depth;
     float volume = 0.f;
     bool hit = true;
+    
+    //太陽方向を見ているときほど強く
+    float cos_theta = saturate(dot(ray_dir, normalize(-light_direction.xyz)));
+    //ミー散乱
+    float phase = MiePhase(cos_theta, 0.6f);
+    phase *= 20.0f;//見た目用にスケール
+    //最低値
+    
+    phase = min(3.0f,max(phase, 2.0f));
+    float transmittance = 1.0f;
+    float scattering = 0.0f;
     
     [loop]
     for (int i = 0; i < fog_steps;i++)
@@ -160,20 +194,34 @@ float4 main(VS_OUT pin) : SV_TARGET
             }
         }
         
+
+        if (hit)
+        {
+            float density = SampleFogDensity(ray_current);
+                        
+            float optical_depth = density * step_length;
+            
+            float step_alpha = 1.0f - exp(-optical_depth);
+            
+            float light_factor = 1.0f;
+            
+            scattering += transmittance * step_alpha * phase * light_factor;
+            
+            transmittance *= 1.0f - step_alpha;
+            
+            if (transmittance <= 0.01f)
+                break;
+
+        }
+        
         float current_distance = step_length * (i + dither_value);
-        if (current_distance > camera_to_obj_length||volume>=1.5f )
+        if (current_distance > camera_to_obj_length||volume>=1.0f )
             break;
          else
             ray_current += ray_step;
-
-        if(hit)
-        {
-            volume += SampleFogDensity(ray_current) * step_length;
-        }
-        
     }
 
     
-    color = float4(color.rgb*volume, 0);
+    color = float4(color.rgb*scattering*intensity, 0);
     return color;
 }

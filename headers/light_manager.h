@@ -155,6 +155,7 @@ private:
         DirectX::XMFLOAT4X4 light_view_projection{}; //ライトの位置から見た射影行列
         DirectX::XMFLOAT4X4 inverse_light_view_projection{};
         DirectX::XMFLOAT4 ambient_color{};
+        DirectX::XMFLOAT4 light_direction{};
     };
     std::vector<DeferredLightConstants>deferred_lights_;
 };

@@ -37,9 +37,6 @@ RenderFogSystem::RenderFogSystem(ComponentManager& comp_mng, RenderPass render_p
         noise_map_ = ResourceManager::Instance().LoadTextureFromFile(device, low_freq_noise_tex_path);
     }
     fullscreen_quad_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
-    frame_buffer_ = std::make_unique<FrameBuffer>(Graphics::Instance().GetDevice(),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()));
 
     InitializeGpuTimer(device);
 }
@@ -54,6 +51,7 @@ void RenderFogSystem::Render()
                 fog_constant_.fog_density = fog.fog_density;
                 fog_constant_.noise_scale = fog.noise_scale;
                 fog_constant_.fog_max_height = fog.fog_height_max;
+                fog_constant_.fog_intensity = fog.fog_intensity;
 
                 ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
@@ -61,8 +59,6 @@ void RenderFogSystem::Render()
                 UpdateGpuTimer(read_index);
                 fog.gpu_time_ms = static_cast<float>(gpu_time_ms_);
 
-                //frame_buffer_->Clear(context);
-                //frame_buffer_->Activate(context);
 
                 context->UpdateSubresource(
                     fog_constant_buffer_.Get(), 0, nullptr, &fog_constant_, 0, 0);
@@ -84,7 +80,6 @@ void RenderFogSystem::Render()
                 //GPU負荷計測終了
                 EndGpuFrame(write_index_);
 
-                //frame_buffer_->Deactivate(context);
         });
     write_index_ = (write_index_ + 1) % QUERY_BUFFER_COUNT;
 }
@@ -92,6 +87,12 @@ void RenderFogSystem::Render()
 void RenderFogSystem::SetObjectDepthView(ID3D11ShaderResourceView* depth_map)
 {
     depth_map_ = depth_map;
+}
+
+void RenderFogSystem::SetObjectResolution(float width, float height)
+{
+    fog_constant_.fog_resolution_width = width;
+    fog_constant_.fog_resolution_height = height;
 }
 
 void RenderFogSystem::InitializeGpuTimer(ID3D11Device* device)

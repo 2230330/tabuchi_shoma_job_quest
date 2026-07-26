@@ -256,6 +256,7 @@ void LightManager::BuildDeferredLights()
 	deferred_lights_.clear();
 	DeferredLightConstants l{};
 	l.ambient_color = ambient_color_;
+	l.light_direction = direction_light_.direction;
 
 	// Ambient
 	{

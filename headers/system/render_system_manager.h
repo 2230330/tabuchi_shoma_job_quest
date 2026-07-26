@@ -62,6 +62,7 @@ private:
     std::unique_ptr<FrameBuffer> back_framebuffer_=nullptr;
     std::unique_ptr<FrameBuffer> object_framebuffer_=nullptr;
     std::unique_ptr<FrameBuffer> sky_framebuffer_=nullptr;
+    std::unique_ptr<FrameBuffer> fog_framebuffer_=nullptr;
     std::unique_ptr<FrameBuffer> final_framebuffer_=nullptr;
     std::unique_ptr<DeferredGBuffer> deferred_framebuffer_=nullptr;
 
@@ -82,10 +83,13 @@ private:
     //背景のサンプリング間隔
     //マイフレーム呼び出す必要はないと感じました
     int back_sample_count_ = 0;
-    const int back_sample_limit_ = 0;
+    const int back_sample_limit_ = 2;
 
     Microsoft::WRL::ComPtr<ID3D11PixelShader> celestial_light_ps_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> light_shafts_ps_=nullptr;
+    //最終画像合成用
+    //解像度別のものなど、異なるレンダーターゲットで描画していたので、ここで合成します
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> final_synthesis_ps_ = nullptr;
 
     //ポストエフェクトを管理しているマネージャ  
     std::unique_ptr<PostProcessManager> post_process_manager_=nullptr;

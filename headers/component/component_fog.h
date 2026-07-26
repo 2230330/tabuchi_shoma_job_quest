@@ -9,6 +9,7 @@ struct ComponentFog :public IComponent
     float noise_scale{ 0.015f };
     float fog_density{ 0.005f };
     float fog_height_max{ 100.f };
+    float fog_intensity{ 1.f };
 
     float gpu_time_ms= 0.0f;
 };

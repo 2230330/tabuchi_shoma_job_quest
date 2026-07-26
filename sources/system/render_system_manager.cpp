@@ -36,6 +36,7 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     sky_render_system_ = std::make_unique<RenderSkySystem>(comp_mng_, RenderPass_Background);
     cloud_render_system_ = std::make_unique<RenderCloudSystem>(comp_mng_, RenderPass_Background);
     fog_render_system_ = std::make_unique<RenderFogSystem>(comp_mng_,RenderPass_Background);
+    fog_render_system_->SetObjectResolution(Graphics::Instance().GetScreenWidth(), Graphics::Instance().GetScreenHeight());
     AddSystem(std::make_unique<GltfRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<InstancingRenderSystem>(comp_mng_,RenderPass_Object));
     AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Lighting));
@@ -44,6 +45,11 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
+        Graphics::Instance().GetDevice(),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale_),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)
+    );
+    fog_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale_),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)
@@ -82,6 +88,9 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     light_shafts_ps_ =
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
             L".\\resources\\shader\\radial_god_lay_ps.cso");
+    final_synthesis_ps_ =
+        ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
+            L".\\resources\\shader\\render_master_synthesis_ps.cso");
 
     post_process_manager_ = std::make_unique<PostProcessManager>(Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
@@ -154,7 +163,6 @@ void RenderSystemManager::RenderAll()
         // 天体光描画
         if (sky_flag)
         {
-
             ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
             if (cloud_flag)
             {
@@ -163,10 +171,7 @@ void RenderSystemManager::RenderAll()
                 };
             }
             bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
-
-
         }
-
 
 
         back_framebuffer_->Deactivate(ctx);
@@ -215,6 +220,12 @@ void RenderSystemManager::RenderAll()
 
     object_framebuffer_->Deactivate(ctx);
 
+    fog_framebuffer_->Clear(ctx);
+    fog_framebuffer_->Activate(ctx);
+    fog_render_system_->Render();
+    fog_render_system_->SetObjectDepthView(deferred_framebuffer_->GetSRV(Target::Depth));
+    fog_framebuffer_->Deactivate(ctx);
+
     //SSRを行う
     ssr_render_system_->SetNormalSRV(deferred_framebuffer_->GetSRV(Target::Normal));
     ssr_render_system_->SetDepthSRV(deferred_framebuffer_->GetSRV(Target::Depth));
@@ -229,12 +240,12 @@ void RenderSystemManager::RenderAll()
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),
         ssr_render_system_->GetSSRTexture(),
+        fog_framebuffer_->GetShaderResourceView(0).Get()
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
-    bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs));
+    bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs),final_synthesis_ps_.Get());
 
-    fog_render_system_->SetObjectDepthView(deferred_framebuffer_->GetSRV(Target::Depth));
-    fog_render_system_->Render();
+
 
     final_framebuffer_->Deactivate(ctx);
     Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
