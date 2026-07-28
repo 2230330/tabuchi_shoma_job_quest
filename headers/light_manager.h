@@ -82,7 +82,7 @@ private:
     const float shadow_near_plane_ = 0.1f;
     const float shadow_far_plane_ = 200;
     const float shadow_map_size_ = 1024.0f;
-    float shadow_attenuation_ = 0.5f;
+    float shadow_attenuation_ = 0.f;
 
 
 

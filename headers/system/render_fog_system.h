@@ -38,14 +38,16 @@ private:
     struct FogConstants
     {
         int fog_steps{ 32 };
-        float fog_max_distance{ 300.f };
-        float noise_scale{ 0.015f };
-        float fog_density{ 0.005f };
+        float fog_max_distance{ 1000.f };
+        float noise_scale{ 0.003f };
+        float fog_density{ 0.001f };
 
         float fog_max_height{ 100.f };
         float fog_intensity{ 1.f };
-        float fog_resolution_width{ 0.f };
-        float fog_resolution_height{ 0.f };
+        float object_resolution_width{ 0.f };
+        float object_resolution_height{ 0.f };
+
+        DirectX::XMFLOAT4 fog_color{ 0.5f,0.5f,0.5f,1.0f };
     };
 
     FogConstants fog_constant_{};
@@ -57,6 +59,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>depth_map_ = nullptr;
     //ノイズマップ、雲のノイズマップを流用
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>noise_map_ = nullptr;
+    //ディザリング用のノイズマップ
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>dither_noise_map_ = nullptr;
 
     //フルスクリーン描画
     std::unique_ptr<FullscreenQuad>fullscreen_quad_ = nullptr;

@@ -1,4 +1,5 @@
 #include "fullscreen_quad.hlsli"
+#include"fog.hlsli"
 #include"deferred_rendering.hlsli"
 #include"camera_buffer.hlsli"
 #include"light_view_projection.hlsli"
@@ -7,18 +8,7 @@
 
 //簡易的なレイマーチングフォグ
 
-cbuffer FOG_CONSTANT_BUFFER:register(b6)
-{
-    int fog_steps;
-    float fog_max_distance;
-    float noise_scale;
-    float fog_density;
-    
-    float fog_max_height;
-    float intensity;
-    float fog_resolution_width;
-    float fog_resolution_height;
-};
+
 
 #define POINT_WRAP 0
 #define POINT_CLAMP 1
@@ -43,13 +33,13 @@ float SampleObjectDepth(float2 sample_point)
     //物体を描画する際に、雲が物体の前にあるか後ろにあるかを判断するために使用される
     //そのままサンプリングした場合、テクスチャの解像度の違いによりジャギーが発生する可能性がある為、
     //周囲のサンプルを取って最大値を返すことで、実際の物体よりも一回り小さい輪郭を作るようにしている
-    float2 object_resolution = float2(fog_resolution_width, fog_resolution_height);
+    float2 object_resolution = float2(object_resolution_width, object_resolution_height);
     float d = 0.0f;
     float2 texel = 1.0f / object_resolution;
-    [unroll]
+    [loop]
     for (int x = -1; x <= 1; x++)
     {
-        [unroll]
+        [loop]
         for (int y = -1; y <= 1; y++)
         {
             float2 offset = float2(x, y) * texel;
@@ -57,11 +47,14 @@ float SampleObjectDepth(float2 sample_point)
             
             //周囲のサンプルの最大値を取ることで、物体の輪郭を少し削る
             d = max(d, sample);
-            if (d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
+            if(d>=1.0f)
             {
                 break;
             }
         }
+        
+        if(d>=1.0f)
+            break;
     }
 
     return d;
@@ -108,120 +101,150 @@ float4 main(VS_OUT pin) : SV_TARGET
     float4 ndc = float4(2.0 * pin.texcoord.x - 1.0, 1.0 - 2.0 * pin.texcoord.y, 0.0, 1.0);
     float4 pos = mul(ndc, inverse_view_projection_transform);
     pos /= pos.w;
-    float3 ray_dir = normalize(pos.xyz-camera_position.xyz);
+    float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
     
     float object_depth = SampleObjectDepth(pin.texcoord.xy);
         
-    float3 ray_start = camera_position.xyz ;
+    float3 ray_start = camera_position.xyz;
     float3 ray_end = camera_position.xyz + (ray_dir * fog_max_distance);
-    float3 obj_pos = camera_position.xyz + (ray_dir * fog_max_distance);
-    if(object_depth<1.0f)
+    if (object_depth < 1.0f)
     {
-        ray_end = camera_position.xyz + (ray_dir * (camera_clip_distance.y * object_depth));
+        
+        float3 obj_pos = camera_position.xyz + (ray_dir * (camera_clip_distance.y * object_depth));
+        
+        //オブジェクト深度の方がレイの終わりより近いならば、
+        //レイの終点をオブジェクト深度に合わせる
+        if (length(ray_end - ray_start) > length(obj_pos-ray_start))
+            ray_end = obj_pos;
+
     }
-    float camera_to_obj_length = length(obj_pos - ray_start);
     float3 ray_step = (ray_end - ray_start) / fog_steps;
     
     const float4x4 dither_pattern =
     {
         { 0.0f, 0.5f, 0.125f, 0.625f },
-        { 0.75f, 0.22f, 0.875f, 0.375f },
-        { 0.1875f, 0.6875f, 0.0625f, 0.5625 },
-        { 0.9375f, 0.4375f, 0.8125f, 0.3125 }
+        { 0.75f, 0.25f, 0.875f, 0.375f },
+        { 0.1875f, 0.6875f, 0.0625f, 0.5625f },
+        { 0.9375f, 0.4375f, 0.8125f, 0.3125f }
     };
-    float dither_value = dither_pattern[pin.position.x % 4][pin.position.y % 4];
+    float dither_value = dither_pattern
+        [(pin.position.x) % 4]
+        [(pin.position.y) % 4];
     float3 ray_current = ray_start + ray_step * dither_value;
     
-    float distance=0;
+    //距離内なら処理をしなくてもよい
+    if(fog_max_distance<=0.f)
+        clip(0);
     float step = fog_max_distance / fog_steps;
     float step_length = length(ray_step);
     float stop_dis = camera_clip_distance.y * object_depth;
-    float volume = 0.f;
     bool hit = true;
     
     //太陽方向を見ているときほど強く
     float cos_theta = saturate(dot(ray_dir, normalize(-light_direction.xyz)));
     //ミー散乱
-    float phase = MiePhase(cos_theta, 0.6f);
-    phase *= 20.0f;//見た目用にスケール
+    float phase = MiePhase(cos_theta, 0.4f);
+    //補正
+    phase *= 4.0f;
     //最低値
     
-    phase = min(3.0f,max(phase, 2.0f));
+    phase = min(1.5f, max(phase,0.0f));
     float transmittance = 1.0f;
     float scattering = 0.0f;
     
-    [loop]
-    for (int i = 0; i < fog_steps;i++)
+    bool skip = false;
+    //レイの現在地が霧の上限より高く、
+    //かつ上向きのレイならば処理はしなくてよい
+    if(ray_current.y>fog_max_height)
     {
-        hit = true;
-        
-        if (ray_current.y > fog_max_height)//一定高度以上ならば
+        if(ray_step.y>0.f)
         {
-            ray_current += ray_step;
-            continue;
+            skip = true;
         }
+    }
+    
+    if (!skip)
+    {
         
-        if(use_shadow>0)
+        [loop]
+        for (int i = 0; i < fog_steps; i++)
         {
-            //シャドウマップを参照し、陰でなければ加算
-            [unroll]
-            for (int j = 0; j < shadow_num;j++)
+            hit = true;
+        
+            if (ray_current.y > fog_max_height)//一定高度以上ならば
             {
-            
-                float3 shadow_texcoord;
-	            {
-		            // ライトから見たNDC座標を算出
-                    float4 wvpPos = mul(float4(ray_current, 1.0f), cascade_light_view_projection[j]);
-		            // NDC座標からUV座標を算出する
-                    wvpPos /= wvpPos.w;
-                    wvpPos.y = -wvpPos.y;
-                    wvpPos.xy = 0.5f * wvpPos.xy + 0.5f;
-                    shadow_texcoord = wvpPos.xyz;
+                if (ray_step.y > 0.f)
+                {
+                    skip = true;
                 }
+                
+                ray_current += ray_step;
+                continue;
+            }
+        
+            if (use_shadow > 0)
+            {
+                for (int j = 0; j < shadow_num;j++)
+                {
             
-                if (shadow_texcoord.z >= 0 && shadow_texcoord.z <= 1 &&
-                            shadow_texcoord.x >= 0 && shadow_texcoord.x <= 1 &&
-                            shadow_texcoord.y >= 0 && shadow_texcoord.y <= 1)
-                {            
-                    float depth = shadow_map[j].Sample(sampler_states[SHADOWMAP], shadow_texcoord.xy).r;
-                    //深度値を比較して、影じゃなければ加算
-                    if (shadow_texcoord.z - depth > shadow_bias)
+                    float3 shadow_texcoord;
+	                {
+		                // ライトから見たNDC座標を算出
+                        float4 wvpPos = mul(float4(ray_current, 1.0f), cascade_light_view_projection[j]);
+		                // NDC座標からUV座標を算出する
+                        wvpPos /= wvpPos.w;
+                        wvpPos.y = -wvpPos.y;
+                        wvpPos.xy = 0.5f * wvpPos.xy + 0.5f;
+                        shadow_texcoord = wvpPos.xyz;
+                    }
+            
+                    if (shadow_texcoord.z >= 0 && shadow_texcoord.z <= 1 &&
+                                shadow_texcoord.x >= 0 && shadow_texcoord.x <= 1 &&
+                                shadow_texcoord.y >= 0 && shadow_texcoord.y <= 1)
                     {
-                        hit = false;
+                        float depth = shadow_map[j].Sample(sampler_states[SHADOWMAP], shadow_texcoord.xy).r;
+
+                        //深度値を比較して、影じゃなければ加算
+                        if (shadow_texcoord.z - depth > shadow_bias)
+                        {
+                            hit = false;
+                        }
                         break;
                     }
                 }
             }
-        }
         
 
-        if (hit)
-        {
-            float density = SampleFogDensity(ray_current);
+            {
+                float density = SampleFogDensity(ray_current);
                         
-            float optical_depth = density * step_length;
+                float optical_depth = density * step_length;
             
-            float step_alpha = 1.0f - exp(-optical_depth);
+                //beer-lambertの近似式
+                //本来：1.0f-exp(-optical_depth)
+                //float step_alpha = optical_depth / (1.0f + optical_depth);
+                float step_alpha = 1.0f - exp(-optical_depth);
+                
+                //影の中なら弱くする
+                float light_factor = hit ? 1.5f : 0.15f;
             
-            float light_factor = 1.0f;
+                scattering += transmittance * step_alpha * lerp(0.0f,1.0f,phase) * light_factor;
             
-            scattering += transmittance * step_alpha * phase * light_factor;
+                transmittance *= 1.0f - step_alpha;
             
-            transmittance *= 1.0f - step_alpha;
-            
-            if (transmittance <= 0.01f)
-                break;
+                //早期処理
+                if (transmittance <= 0.01f)
+                    break;
 
-        }
+            }
         
-        float current_distance = step_length * (i + dither_value);
-        if (current_distance > camera_to_obj_length||volume>=1.0f )
-            break;
-         else
-            ray_current += ray_step;
-    }
 
+            
+            ray_current += ray_step;
+        }
+
+    }
     
-    color = float4(color.rgb*scattering*intensity, 0);
+    color = float4((scattering),0,0, object_depth);
     return color;
 }

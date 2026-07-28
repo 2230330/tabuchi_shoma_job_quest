@@ -531,6 +531,9 @@
     <None Include="shaderes\camera_buffer.hlsli">
       <Filter>Shaders\Header</Filter>
     </None>
+    <None Include="shaderes\fog.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaderes\compute_shaders\low_freq_perlin_worley_cs.hlsl">

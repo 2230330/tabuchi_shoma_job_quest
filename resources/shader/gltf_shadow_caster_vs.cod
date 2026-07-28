@@ -28,8 +28,8 @@
 //
 //   row_major float4x4 cascade_light_view_projection[4];// Offset:    0 Size:   256
 //   row_major float4x4 cascade_inverse_light_view_projection;// Offset:  256 Size:    64 [unused]
-//   int current_index;                 // Offset:  320 Size:     4
-//   int dummy[3];                      // Offset:  336 Size:    36 [unused]
+//   float4 split_aria_table;           // Offset:  320 Size:    16 [unused]
+//   int current_index;                 // Offset:  336 Size:     4
 //
 // }
 //
@@ -72,7 +72,7 @@ vs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
 dcl_constantbuffer CB0[9], immediateIndexed
 dcl_constantbuffer CB2[2048], dynamicIndexed
-dcl_constantbuffer CB8[21], dynamicIndexed
+dcl_constantbuffer CB8[22], dynamicIndexed
 dcl_input v0.xyz
 dcl_input v4.xyzw
 dcl_input v5.xyzw
@@ -192,7 +192,7 @@ mul r0.xyzw, r0.wwww, cb0[3].xyzw
 add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- wpos.x; r0.y <- wpos.y; r0.z <- wpos.z; r0.w <- wpos.w
 
 #line 27
-imul null, r1.x, cb8[20].x, l(4)
+imul null, r1.x, cb8[21].x, l(4)
 mul r2.xyzw, r0.xxxx, cb8[r1.x + 0].xyzw
 mul r3.xyzw, r0.yyyy, cb8[r1.x + 1].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw

@@ -1,7 +1,7 @@
 #include"volumetric_cloud.hlsli"
 #include"forward_light.hlsli"
 #include "scene_constant_buffer.hlsli"
-//#include "noise_functions.hlsli"
+#include "noise_functions.hlsli"
 #include "fullscreen_quad.hlsli"
 #include"camera_buffer.hlsli"
 
@@ -336,8 +336,8 @@ float SampleCloudOpticalDepthAlongCone(
     float3 sample_point = ray_origin;
     float optical_depth = 0.0f;
 
-    const int loop_samples = 6;
-    const int cone_samples = 6;
+    const int loop_samples = 3;
+    const int cone_samples = 3;
 
     
     [unroll]
@@ -400,7 +400,7 @@ float SampleCloudDensityLongDistance(float3 ray_origin, float3 ray_direction /*n
     float height_fraction = GetHeightFractionForPoint(length(sample_point));
     float3 weather_data = SampleWeatherData(sample_point.xz);
 	
-    return pow(SampleCloudDensity(sample_point, weather_data, 5.0 /*mip_level*/, false /*cheap_sample*/), (1.0 - height_fraction) * 0.8 + 0.5);
+    return pow(SampleCloudDensity(sample_point, weather_data, 5.0 /*mip_level*/, true /*cheap_sample*/), (1.0 - height_fraction) * 0.8 + 0.5);
 }
 
 //太陽光の色を取得
@@ -469,7 +469,8 @@ float4 RayMarch(float3 ray_origin, float3 ray_step, int steps, float2 texcoord/*
         { 0.9375f, 0.4375f, 0.8125f, 0.3125 }
     };
     float3 sample_point = ray_origin + ray_step * dither_pattern[screen_pos.x % 4][screen_pos.y % 4];
-    //float3 sample_point = ray_origin + ray_step * Hash(ray_origin * 6.0);
+    //float3 sample_point = ray_origin + ray_step * rand(screen_pos);
+    //float3 sample_point = ray_origin + ray_step * Hash(float3(screen_pos, 0.0f));
 	
     //太陽方向と位相関数
     float3 sun = -directional_light.direction.xyz;

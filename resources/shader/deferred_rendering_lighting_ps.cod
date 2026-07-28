@@ -55,8 +55,8 @@
 //
 //   row_major float4x4 cascade_light_view_projection[4];// Offset:    0 Size:   256
 //   row_major float4x4 cascade_inverse_light_view_projection;// Offset:  256 Size:    64 [unused]
-//   int current_index;                 // Offset:  320 Size:     4 [unused]
-//   int dummy[3];                      // Offset:  336 Size:    36 [unused]
+//   float4 split_aria_table;           // Offset:  320 Size:    16 [unused]
+//   int current_index;                 // Offset:  336 Size:     4 [unused]
 //
 // }
 //

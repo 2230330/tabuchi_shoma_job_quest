@@ -424,7 +424,7 @@ void RenderDeferredSystem::DirectionalShadowRendering()
                     this->cascade_shadow_scene_constant_.light_view_projection[i] = light_view_projection;
                     this->cascade_shadow_scene_constant_.inverse_light_view_projection = inverse_light_view_projection;
                     this->cascade_shadow_scene_constant_.current_index = i;
-
+                    this->cascade_shadow_scene_constant_.split_aria_table[i] = split_aria_table_[i];
                 }
                 //フラスタムカリングを行う
                 std::array<DirectX::XMFLOAT4, 6> frustum_planes{};

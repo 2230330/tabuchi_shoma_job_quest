@@ -33,5 +33,5 @@ private:
     float far_clip_distance{ 1000.0f };
     float fov_y{ DirectX::XMConvertToRadians(30) };
     //カメラの初期位置
-    DirectX::XMFLOAT3 camera_focus{ 0.0f, 10.0f, 10.0f };
+    DirectX::XMFLOAT3 camera_focus{ 0.0f, 10.0f, 120.0f };
 };

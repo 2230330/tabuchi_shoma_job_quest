@@ -1,5 +1,6 @@
 //BLOOM
-
+#ifndef __BLOOM_HLSLI__
+#define __BLOOM_HLSLI__
 cbuffer BloomComputeConstants : register(b5)
 {
     float bloom_extraction_threshold;
@@ -12,3 +13,5 @@ cbuffer BloomComputeConstants : register(b5)
     uint output_width;
     uint output_height;
 };
+
+#endif

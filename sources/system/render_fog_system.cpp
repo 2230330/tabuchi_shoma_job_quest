@@ -36,6 +36,11 @@ RenderFogSystem::RenderFogSystem(ComponentManager& comp_mng, RenderPass render_p
     {
         noise_map_ = ResourceManager::Instance().LoadTextureFromFile(device, low_freq_noise_tex_path);
     }
+    const wchar_t* dither_noise_path = L".\\resources\\sprite\\blue_noise.dds";
+    _ASSERT_EXPR(std::filesystem::exists(dither_noise_path), "ファイルが存在しません");
+    {
+        dither_noise_map_ = ResourceManager::Instance().LoadTextureFromFile(device, dither_noise_path);
+    }
     fullscreen_quad_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
 
     InitializeGpuTimer(device);
@@ -52,6 +57,7 @@ void RenderFogSystem::Render()
                 fog_constant_.noise_scale = fog.noise_scale;
                 fog_constant_.fog_max_height = fog.fog_height_max;
                 fog_constant_.fog_intensity = fog.fog_intensity;
+                fog_constant_.fog_color = fog.fog_color;
 
                 ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 
@@ -68,7 +74,7 @@ void RenderFogSystem::Render()
                 ID3D11ShaderResourceView* srvs[] =
                 {
                     depth_map_.Get(),
-                    noise_map_.Get()
+                    noise_map_.Get(),
                 };
 
                 //GPU負荷計測開始 
@@ -91,8 +97,8 @@ void RenderFogSystem::SetObjectDepthView(ID3D11ShaderResourceView* depth_map)
 
 void RenderFogSystem::SetObjectResolution(float width, float height)
 {
-    fog_constant_.fog_resolution_width = width;
-    fog_constant_.fog_resolution_height = height;
+    fog_constant_.object_resolution_width = width;
+    fog_constant_.object_resolution_height = height;
 }
 
 void RenderFogSystem::InitializeGpuTimer(ID3D11Device* device)

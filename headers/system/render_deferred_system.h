@@ -89,8 +89,11 @@ private:
     {
         DirectX::XMFLOAT4X4 light_view_projection[4];
         DirectX::XMFLOAT4X4 inverse_light_view_projection;
+        float split_aria_table[4] = {120.f,500.f,1000.f,0.0f/*dummy*/};
+        
         int current_index = 0;
         int dummy[3];
+
     };
     CascadeShadowSceneConstants cascade_shadow_scene_constant_{}; 
 

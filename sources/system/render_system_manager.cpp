@@ -51,8 +51,8 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     );
     fog_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale_),
-        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/2.f),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/2.f)
     );
     back_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
@@ -220,6 +220,8 @@ void RenderSystemManager::RenderAll()
 
     object_framebuffer_->Deactivate(ctx);
 
+    //オブジェクトのライティング後にフォグの生成
+    //影情報を用いて疑似的なライトシャフトを行うため
     fog_framebuffer_->Clear(ctx);
     fog_framebuffer_->Activate(ctx);
     fog_render_system_->Render();
@@ -240,7 +242,8 @@ void RenderSystemManager::RenderAll()
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),
         ssr_render_system_->GetSSRTexture(),
-        fog_framebuffer_->GetShaderResourceView(0).Get()
+        deferred_framebuffer_->GetSRV(Target::Depth),
+        fog_framebuffer_->GetShaderResourceView(0).Get(),
     };
     Graphics::Instance().SetShaderResource(0, _countof(srvs), srvs);
     bit_block_transfer_->blit(ctx, srvs, 0, _countof(srvs),final_synthesis_ps_.Get());

@@ -337,6 +337,7 @@
     <None Include="shaderes\bloom.hlsli" />
     <None Include="shaderes\camera_buffer.hlsli" />
     <None Include="shaderes\filter_functions.hlsli" />
+    <None Include="shaderes\fog.hlsli" />
     <None Include="shaderes\light_view_projection.hlsli" />
     <None Include="shaderes\physical_based_rendering.hlsli" />
     <None Include="shaderes\shading_models.hlsli" />

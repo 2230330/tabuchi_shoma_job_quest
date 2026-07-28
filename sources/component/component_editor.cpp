@@ -280,7 +280,7 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.Has<ComponentFog>(entity.entity) ||
                 comp_mng_.Has<ComponentDeferredRender>(entity.entity);
 
-            //if(has_editor_component)
+            if(has_editor_component)
             { 
 
                 ImGui::PushID(entity.entity);
@@ -494,6 +494,7 @@ void ComponentEditor::DrawImgui()
                             if (ImGui::Button("rain"))
                             {
                                 c.rain_cloud_absorption_scale = 2.5f;
+                                c.cloud_coverage_scale = 0.5f;
                             }
 
                             ImGui::Text("Wind");
@@ -715,6 +716,7 @@ void ComponentEditor::DrawImgui()
                     if (comp_mng_.Has<ComponentFog>(entity.entity))
                     {
                         auto& fog = comp_mng_.GetByEntity<ComponentFog>(entity.entity);
+                        ImGui::ColorEdit4("color", &fog.fog_color.x);
 
                         ImGui::DragInt("steps", &fog.fog_steps, 1, 1, 128);
                         ImGui::DragFloat("density", &fog.fog_density, 0.001f, 0.001f, 0.1f);

@@ -109,7 +109,7 @@ bool OutOfBounds(float2 uv)
 //    return clamp((int) mip, 0, max_mip);
 //}
 
-static const int MAX_STEPS = 128;
+static const int MAX_STEPS = 16;
 
 float4 main(VS_OUT pin) : SV_TARGET
 {
@@ -161,7 +161,16 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     //mip0で作られている
     float2 increment = delta / steps;
-    float2 frag = start_frag;
+    //低ステップをごまかすディザリング
+    const float4x4 dither_pattern =
+    {
+        { 0.0f, 0.5f, 0.125f, 0.625f },
+        { 0.75f, 0.25f, 0.875f, 0.375f },
+        { 0.1875f, 0.6875f, 0.0625f, 0.5625f },
+        { 0.9375f, 0.4375f, 0.8125f, 0.3125f }
+    };
+    float dither_value = dither_pattern[pin.position.x % 4][pin.position.y % 4];
+    float2 frag = start_frag + (increment*dither_value);
     float2 uv =frag/dimensions;
     if(OutOfBounds(uv))
     {
