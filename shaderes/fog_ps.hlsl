@@ -105,20 +105,28 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     float object_depth = SampleObjectDepth(pin.texcoord.xy);
         
+        
+    //距離内なら処理をしなくてもよい
+    if (fog_max_distance <= 0.f)
+        clip(0);
+    float step_length = fog_max_distance / fog_steps;
+    
     float3 ray_start = camera_position.xyz;
     float3 ray_end = camera_position.xyz + (ray_dir * fog_max_distance);
+    float3 obj_pos = camera_position.xyz + (ray_dir * fog_max_distance);
     if (object_depth < 1.0f)
     {
         
-        float3 obj_pos = camera_position.xyz + (ray_dir * (camera_clip_distance.y * object_depth));
+        obj_pos = camera_position.xyz + (ray_dir * (camera_clip_distance.y * object_depth));
         
         //オブジェクト深度の方がレイの終わりより近いならば、
         //レイの終点をオブジェクト深度に合わせる
-        if (length(ray_end - ray_start) > length(obj_pos-ray_start))
-            ray_end = obj_pos;
+        //if (length(ray_end - ray_start) > length(obj_pos-ray_start))
+        //    ray_end = obj_pos;
 
     }
-    float3 ray_step = (ray_end - ray_start) / fog_steps;
+    float obj_dis = length(obj_pos - ray_start);
+    float3 ray_step =ray_dir*step_length;
     
     const float4x4 dither_pattern =
     {
@@ -131,15 +139,10 @@ float4 main(VS_OUT pin) : SV_TARGET
         [(pin.position.x) % 4]
         [(pin.position.y) % 4];
     float3 ray_current = ray_start + ray_step * dither_value;
+
+    float step_current = dither_value * step_length;
     
-    //距離内なら処理をしなくてもよい
-    if(fog_max_distance<=0.f)
-        clip(0);
-    float step = fog_max_distance / fog_steps;
-    float step_length = length(ray_step);
-    float stop_dis = camera_clip_distance.y * object_depth;
     bool hit = true;
-    
     //太陽方向を見ているときほど強く
     float cos_theta = saturate(dot(ray_dir, normalize(-light_direction.xyz)));
     //ミー散乱
@@ -148,7 +151,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     phase *= 4.0f;
     //最低値
     
-    phase = min(1.5f, max(phase,0.0f));
+    phase = min(1.0f, max(phase,0.0f));
     float transmittance = 1.0f;
     float scattering = 0.0f;
     
@@ -170,16 +173,25 @@ float4 main(VS_OUT pin) : SV_TARGET
         for (int i = 0; i < fog_steps; i++)
         {
             hit = true;
-        
-            if (ray_current.y > fog_max_height)//一定高度以上ならば
+            
+            //早期処理
             {
-                if (ray_step.y > 0.f)
-                {
-                    skip = true;
-                }
+                //距離がオブジェクトの位置まで到達したら
+                if(step_current>=obj_dis)
+                    break;
                 
-                ray_current += ray_step;
-                continue;
+                //レイがレイ高度を超えている場合
+                if (ray_current.y > fog_max_height)//一定高度以上ならば
+                {
+                    //レイが上向きならば、
+                    if (ray_step.y > 0.f)
+                    {
+                        break;
+                    }
+                
+                    ray_current += ray_step;
+                    continue;
+                }
             }
         
             if (use_shadow > 0)
@@ -220,15 +232,15 @@ float4 main(VS_OUT pin) : SV_TARGET
                         
                 float optical_depth = density * step_length;
             
-                //beer-lambertの近似式
+                //beer-lambert
                 //本来：1.0f-exp(-optical_depth)
-                //float step_alpha = optical_depth / (1.0f + optical_depth);
+                //近似式 : float step_alpha = optical_depth / (1.0f + optical_depth);
                 float step_alpha = 1.0f - exp(-optical_depth);
                 
                 //影の中なら弱くする
                 float light_factor = hit ? 1.5f : 0.15f;
             
-                scattering += transmittance * step_alpha * lerp(0.0f,1.0f,phase) * light_factor;
+                scattering += transmittance * step_alpha * lerp(1.f,1.5f,phase) * light_factor;
             
                 transmittance *= 1.0f - step_alpha;
             
@@ -237,10 +249,10 @@ float4 main(VS_OUT pin) : SV_TARGET
                     break;
 
             }
-        
-
-            
+                    
             ray_current += ray_step;
+            step_current += step_length;
+
         }
 
     }

@@ -73,7 +73,7 @@ float4 main(VS_OUT pin):SV_TARGET
     
     // α合成（オブジェクトが前）
     color.rgb = obj.rgb + (back.rgb * (1.0f - obj.a));
-    color.rgb += fog_color.rgb * fog_color.a*fog_intensity * SampleFogBlur(uv);
+    color.rgb += (fog_color.rgb * fog_color.a*fog_intensity * SampleFogBlur(uv));
     
     
     return float4(color.rgb, 1.0f);

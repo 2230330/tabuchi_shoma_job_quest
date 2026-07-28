@@ -130,6 +130,7 @@ void RenderSystemManager::RenderAll()
     // === 背景（低頻度） ===
     bool sky_flag = sky_render_system_->GetSkyFlag();
     bool cloud_flag = cloud_render_system_->HasRenderableCloud();
+    ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
 
     if (back_sample_count_ < back_sample_limit_) {
         back_sample_count_++;
@@ -163,7 +164,6 @@ void RenderSystemManager::RenderAll()
         // 天体光描画
         if (sky_flag)
         {
-            ID3D11ShaderResourceView* cloud_shadow_srv[] = { nullptr };
             if (cloud_flag)
             {
                 cloud_shadow_srv[0] = {
@@ -171,6 +171,7 @@ void RenderSystemManager::RenderAll()
                 };
             }
             bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
+
         }
 
 
@@ -238,6 +239,7 @@ void RenderSystemManager::RenderAll()
     // === 合成
     final_framebuffer_->Clear(ctx);
     final_framebuffer_->Activate(ctx);
+
 
     ID3D11ShaderResourceView* srvs[] = {
         back_framebuffer_->GetShaderResourceView(0).Get(),

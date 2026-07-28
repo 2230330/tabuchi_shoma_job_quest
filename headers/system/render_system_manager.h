@@ -83,7 +83,7 @@ private:
     //背景のサンプリング間隔
     //マイフレーム呼び出す必要はないと感じました
     int back_sample_count_ = 0;
-    const int back_sample_limit_ = 0;
+    const int back_sample_limit_ = 1;
 
     Microsoft::WRL::ComPtr<ID3D11PixelShader> celestial_light_ps_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> light_shafts_ps_=nullptr;

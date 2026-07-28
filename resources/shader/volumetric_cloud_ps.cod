@@ -3611,11 +3611,7 @@ if_nz r0.w
 
 #line 761
   mul r2.x, r1.w, r1.w
-  mul r2.y, r1.w, r1.w
-  mul r2.x, r2.y, r2.x
-  mul r2.y, r1.w, r1.w
   mul r1.w, r1.w, r1.w
-  mul r1.w, r1.w, r2.y
   mul r1.w, r1.w, r2.x  // r1.w <- horizon_fade
 
 #line 764
@@ -3644,4 +3640,4 @@ endif
 mov o0.xyz, r0.xyzx  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z
 mov o0.w, l(1.000000)  // o0.w <- <main return value>.w
 ret 
-// Approximately 2226 instruction slots used
+// Approximately 2222 instruction slots used

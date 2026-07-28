@@ -322,7 +322,7 @@ float3 coarse_weather)
         }
         else
         {
-            cloud_test = SampleCloudDensity(sample_point, coarse_weather, 6.0, true);
+            cloud_test = SampleCloudDensity(sample_point, coarse_weather, 6.0, false);
             float step_scale = 1.0f;
             if (cloud_test <= 0.0)
             {
@@ -369,7 +369,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     if (object_depth < 1.0f)
     {
         //物体が雲の前にある場合、雲を描画しない
-        return float4(sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb, 1.0f);
+        return float4(1.0f, 0.f, 0.f, 1.0f);
     }
     
     float3 ray_dir = normalize(pos.xyz - camera_position.xyz);
