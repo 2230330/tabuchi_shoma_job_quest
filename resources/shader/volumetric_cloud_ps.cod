@@ -3606,38 +3606,44 @@ if_nz r0.w
   min r1.w, r1.w, l(1.000000)  // r1.w <- view_up
 
 #line 760
-  mov r1.w, -r1.w
-  add r1.w, r1.w, l(1.000000)  // r1.w <- horizon
-
-#line 761
-  mul r2.x, r1.w, r1.w
+  mov r2.x, l(-0.050000)
+  add r2.y, r2.x, l(0.200000)
+  add r1.w, r1.w, r2.x
+  div r2.x, l(1.000000, 1.000000, 1.000000, 1.000000), r2.y
+  mul r1.w, r1.w, r2.x
+  max r1.w, r1.w, l(0.000000)
+  min r1.w, r1.w, l(1.000000)
+  mul r2.x, r1.w, l(-2.000000)
+  add r2.x, r2.x, l(3.000000)
   mul r1.w, r1.w, r1.w
-  mul r1.w, r1.w, r2.x  // r1.w <- horizon_fade
+  mul r1.w, r1.w, r2.x
+  mov r1.w, -r1.w
+  add r1.w, r1.w, l(1.000000)  // r1.w <- horizon_fade
 
-#line 764
+#line 763
   mul r2.xyz, r0.wwww, r1.xyzx
   mov r3.xyz, -r0.xyzx
   add r2.xyz, r2.xyzx, r3.xyzx
   mul r2.xyz, r1.wwww, r2.xyzx
   add r0.xyz, r0.xyzx, r2.xyzx  // r0.x <- cloud_color_only.x; r0.y <- cloud_color_only.y; r0.z <- cloud_color_only.z
 
-#line 767
+#line 766
   mov r0.w, -r0.w
   add r0.w, r0.w, l(1.000000)
   mul r1.xyz, r0.wwww, r1.xyzx
   add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 771
+#line 770
 else   // Prior locations: r2.x <- ray_dir.x; r2.y <- ray_dir.y; r2.z <- ray_dir.z; r3.w <- t0; r4.x <- t1; r0.z <- shell_dist; r0.x <- PI; r0.y <- time_offset; r1.x <- INV_WAVELENGTH4.x; r1.y <- INV_WAVELENGTH4.y; r1.z <- INV_WAVELENGTH4.z
 
-#line 775
+#line 774
   sample_indexable(texture2d)(float,float,float,float) r0.xyz, v1.xyxx, t4.xyzw, s3  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
 
-#line 776
+#line 775
 endif 
 
-#line 779
+#line 778
 mov o0.xyz, r0.xyzx  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z
 mov o0.w, l(1.000000)  // o0.w <- <main return value>.w
 ret 
-// Approximately 2222 instruction slots used
+// Approximately 2230 instruction slots used

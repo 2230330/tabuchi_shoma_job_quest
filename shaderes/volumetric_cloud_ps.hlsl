@@ -757,8 +757,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         {
             ////地平線方向でフェードを強める
             float view_up = saturate(dot(ray_dir, float3(0, 1, 0)));
-            float horizon = 1.0 - view_up;
-            float horizon_fade = ((horizon * horizon) * (horizon * horizon));
+            float horizon_fade =1.0f - smoothstep(0.05f,0.2f,view_up);
             
             //雲の色を空に近づけるが、遮蔽は意地
             float3 cloud_color_only =

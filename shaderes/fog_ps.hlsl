@@ -86,11 +86,16 @@ float SampleFogNoiseAdvanced(float3 world_pos)
 float SampleFogDensity(float3 world_pos)
 {
     float noise = SampleFogNoiseAdvanced(world_pos);
-    
-    float height_factor = saturate(1.0f - world_pos.y / fog_max_height);
-    height_factor *= height_factor;
-    
-    return fog_density * noise*height_factor;
+        
+    return fog_density * noise;
+}
+
+//高度減衰
+//use_noiseにより、高度減衰をループ側で行うために実装
+float HeightFactor(float height)
+{
+    float height_factor = saturate(1.0f - height / fog_max_height);
+    return height_factor * height_factor;
 }
 
 
@@ -165,6 +170,11 @@ float4 main(VS_OUT pin) : SV_TARGET
         }
     }
     
+    //シャドウフラグ
+    //ライトが下からになったとき、シャドウを描画しない。
+    //これは、現在が屋外のような構造のため実装します。
+    //直したい場合は、ライト情報をマップ化するなりしてフォグに影響させる時だけです
+    
     {
         
         [loop]
@@ -178,6 +188,8 @@ float4 main(VS_OUT pin) : SV_TARGET
                 density = SampleFogDensity(ray_current);
 
             }
+            density *= HeightFactor(ray_current.y);
+            
             //早期処理
             {
                 
@@ -195,6 +207,7 @@ float4 main(VS_OUT pin) : SV_TARGET
                     }
                 
                     ray_current += ray_step;
+                    step_current += step_length;
                     continue;
                 }
             }
@@ -232,11 +245,9 @@ float4 main(VS_OUT pin) : SV_TARGET
             }
         
 
-            {
-                
-
-                
-                        
+            //計算本体
+            {      
+                //光が進む距離*密度
                 float optical_depth = density * step_length;
             
                 //beer-lambert

@@ -167,15 +167,32 @@ float4 main(VS_OUT pin) : SV_TARGET
             }
             break;
         case light_kind_ambient:
-            lighting_data.attenuation = 1.f;
-            lighting_data.direction = camera_direction.xyz;
-            lighting_data.color = convert_ambient_lights();
-            lighting_data.camera_position = camera_position.xyz;
-            DirectLighting result = integrate_bxdf(data, lighting_data);
-            diffuse += result.diffuse;
-            specular += result.specular;
-            break;
-
+            //lighting_data.attenuation = 1.f;
+            //lighting_data.direction = camera_direction.xyz;
+            //lighting_data.color = convert_ambient_lights();
+            //lighting_data.camera_position = camera_position.xyz;
+            //DirectLighting result = integrate_bxdf(data, lighting_data);
+            //diffuse += result.diffuse;
+            //specular += result.specular;
+            //break;
+            if(data.shading_model==shading_model_pbr)
+            {
+                float3 ambient_color = convert_ambient_lights();
+                float ao = lerp(1.0f, data.occlusion_factor, data.occlusion_strength);
+            
+                float metallic = saturate(data.metalness);
+            
+                float3 base_color = data.base_color;
+            
+                float3 diffuse_reflectance = base_color * (1.0f - metallic);
+            
+                diffuse += ambient_color * diffuse_reflectance * ao;
+            }
+            else if(data.shading_model==shading_model_unlit)
+            {
+                diffuse += data.base_color;
+            }
+            break; 
 
     }
     

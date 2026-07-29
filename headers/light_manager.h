@@ -72,7 +72,7 @@ private:
     DirectionLight direction_light_;
     float azimuth_ = 0.f;//ライトの水平角度
     float elevation_ = DirectX::XMConvertToRadians(-25);//ライトの仰角
-    DirectX::XMFLOAT4 ambient_color_ = { 0.5,0.5,0.5,1 };
+    DirectX::XMFLOAT4 ambient_color_ = { 0.f,0.f,0.f,1.f };
     //ライト空間用
     DirectX::XMFLOAT4X4 light_view_{};
     DirectX::XMFLOAT4X4 light_projection_{};
