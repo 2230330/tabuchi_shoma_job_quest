@@ -48,6 +48,9 @@ private:
         float object_resolution_height{ 0.f };
 
         DirectX::XMFLOAT4 fog_color{ 0.5f,0.5f,0.5f,1.0f };
+
+        int use_noise{ 1 };
+        int dummy[3];
     };
 
     FogConstants fog_constant_{};

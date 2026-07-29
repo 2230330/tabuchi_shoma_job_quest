@@ -14,5 +14,8 @@ cbuffer FOG_CONSTANT_BUFFER : register(b6)
     float object_resolution_height;
     
     float4 fog_color;
+    
+    int use_noise;
+    int dummy[3];
 };
 #endif// __FOG_HLSLI__

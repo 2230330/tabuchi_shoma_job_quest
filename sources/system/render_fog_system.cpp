@@ -58,6 +58,7 @@ void RenderFogSystem::Render()
                 fog_constant_.fog_max_height = fog.fog_height_max;
                 fog_constant_.fog_intensity = fog.fog_intensity;
                 fog_constant_.fog_color = fog.fog_color;
+                fog_constant_.use_noise = fog.use_noise;
 
                 ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
 

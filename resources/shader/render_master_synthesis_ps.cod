@@ -16,6 +16,8 @@
 //   float object_resolution_width;     // Offset:   24 Size:     4 [unused]
 //   float object_resolution_height;    // Offset:   28 Size:     4 [unused]
 //   float4 fog_color;                  // Offset:   32 Size:    16
+//   int use_noise;                     // Offset:   48 Size:     4 [unused]
+//   int dummy[3];                      // Offset:   64 Size:    36 [unused]
 //
 // }
 //

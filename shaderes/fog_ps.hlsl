@@ -155,18 +155,16 @@ float4 main(VS_OUT pin) : SV_TARGET
     float transmittance = 1.0f;
     float scattering = 0.0f;
     
-    bool skip = false;
     //レイの現在地が霧の上限より高く、
     //かつ上向きのレイならば処理はしなくてよい
     if(ray_current.y>fog_max_height)
     {
         if(ray_step.y>0.f)
         {
-            skip = true;
+            return float4((scattering), 0, 0, object_depth);
         }
     }
     
-    if (!skip)
     {
         
         [loop]
@@ -174,8 +172,15 @@ float4 main(VS_OUT pin) : SV_TARGET
         {
             hit = true;
             
+            float density = fog_density;
+            if (use_noise)
+            {
+                density = SampleFogDensity(ray_current);
+
+            }
             //早期処理
             {
+                
                 //距離がオブジェクトの位置まで到達したら
                 if(step_current>=obj_dis)
                     break;
@@ -228,7 +233,9 @@ float4 main(VS_OUT pin) : SV_TARGET
         
 
             {
-                float density = SampleFogDensity(ray_current);
+                
+
+                
                         
                 float optical_depth = density * step_length;
             

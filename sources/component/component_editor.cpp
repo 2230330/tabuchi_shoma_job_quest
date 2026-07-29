@@ -724,6 +724,7 @@ void ComponentEditor::DrawImgui()
                         ImGui::DragFloat("noise_scale", &fog.noise_scale, 0.0001f, 0.0001f, .05f);
                         ImGui::DragFloat("fog_max_height", &fog.fog_height_max, 1.f, 0.f, 1000.f);
                         ImGui::SliderFloat("fog_intensity", &fog.fog_intensity, 1.f, 10.f);
+                        ImGui::SliderInt("use_noise", &fog.use_noise, 0, 1);
                     }
 
                     ////コンポーネントの追加
