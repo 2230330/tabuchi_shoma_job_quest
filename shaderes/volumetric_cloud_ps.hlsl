@@ -72,24 +72,29 @@ float SampleObjectDepth(float2 sample_point)
     //周囲のサンプルを取って最大値を返すことで、実際の物体よりも一回り小さい輪郭を作るようにしている
     float d = 0.0f;
     float2 texel = 1.0f/(object_resolution);
-    int weight = 1;
-    [unroll]
-    for (int x = -weight; x <= weight; x++)
+    float width = 200.f;
+
+    d = max(d, object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point));
+    if (d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
     {
-        [unroll]
-        for (int y = -weight; y <= weight; y++)
-        {
-            float2 offset = float2(x, y) * texel*200.f;
-            float sample = object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + offset);
-            
-            //周囲のサンプルの最大値を取ることで、物体の輪郭を少し削る
-            d = max(d, sample); 
-            if(d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
-            {
-                break;
-            }
-        }
+        return d;
     }
+    d = max(d, object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + (texel * width * float2(1, 0))));
+    if (d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
+    {
+        return d;
+    }
+    d = max(d, object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + (texel * width * float2(-1, 0))));
+    if (d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
+    {
+        return d;
+    }
+    d = max(d, object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + (texel * width * float2(0, 1))));
+    if (d >= 1.0f) //完全に空ならこれ以上サンプルする必要はない
+    {
+        return d;
+    }
+    d = max(d, object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + (texel * width * float2(0, -1))));
 
     return d;
 }
