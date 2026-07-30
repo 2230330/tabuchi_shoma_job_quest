@@ -174,6 +174,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     //ライトが下からになったとき、シャドウを描画しない。
     //これは、現在が屋外のような構造のため実装します。
     //直したい場合は、ライト情報をマップ化するなりしてフォグに影響させる時だけです
+    float shadow_angle = (dot(float3(0.f, 1.f, 0.f), -light_direction.xyz));
     
     {
         
@@ -212,7 +213,7 @@ float4 main(VS_OUT pin) : SV_TARGET
                 }
             }
         
-            if (use_shadow > 0)
+            if (use_shadow > 0&&shadow_angle>0.f)
             {
                 for (int j = 0; j < shadow_num;j++)
                 {
