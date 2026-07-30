@@ -71,14 +71,15 @@ float SampleObjectDepth(float2 sample_point)
     //そのままサンプリングした場合、テクスチャの解像度の違いによりジャギーが発生する可能性がある為、
     //周囲のサンプルを取って最大値を返すことで、実際の物体よりも一回り小さい輪郭を作るようにしている
     float d = 0.0f;
-    float2 texel = 1.0f/object_resolution;
+    float2 texel = 1.0f/(object_resolution);
+    int weight = 1;
     [unroll]
-    for (int x = -1; x <= 1; x++)
+    for (int x = -weight; x <= weight; x++)
     {
         [unroll]
-        for (int y = -1; y <= 1; y++)
+        for (int y = -weight; y <= weight; y++)
         {
-            float2 offset = float2(x, y) * texel;
+            float2 offset = float2(x, y) * texel*200.f;
             float sample = object_depth_texture.Sample(sampler_states[POINT_CLAMP], sample_point + offset);
             
             //周囲のサンプルの最大値を取ることで、物体の輪郭を少し削る
