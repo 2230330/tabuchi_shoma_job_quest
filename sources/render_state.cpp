@@ -4,13 +4,13 @@
 
 #include"../headers/misc.h"
 
-//ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+//ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
 RenderState::RenderState(ID3D11Device* device)
 {
-	//ƒTƒ“ƒvƒŠƒ“ƒOƒXƒeƒCƒg
+	//ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã‚¹ãƒ†ã‚¤ãƒˆ
 	{
 		D3D11_SAMPLER_DESC desc;
-		// ƒ|ƒCƒ“ƒgƒTƒ“ƒvƒŠƒ“ƒO•ƒeƒNƒXƒ`ƒƒŒJ‚è•Ô‚µ‚ ‚è
+		// ãƒã‚¤ãƒ³ãƒˆã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ï¼†ãƒ†ã‚¯ã‚¹ãƒãƒ£ç¹°ã‚Šè¿”ã—ã‚ã‚Š
 		{
 			desc.MipLODBias = 0.0f;
 			desc.MaxAnisotropy = 16;
@@ -29,7 +29,7 @@ RenderState::RenderState(ID3D11Device* device)
 				sampler_state_[static_cast<int>(SamplerState::point_wrap)].GetAddressOf());
 			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
-		// ƒ|ƒCƒ“ƒgƒTƒ“ƒvƒŠƒ“ƒO•ƒeƒNƒXƒ`ƒƒŒJ‚è•Ô‚µ‚È‚µ
+		// ãƒã‚¤ãƒ³ãƒˆã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ï¼†ãƒ†ã‚¯ã‚¹ãƒãƒ£ç¹°ã‚Šè¿”ã—ãªã—
 		{
 			desc.MipLODBias = 0.0f;
 			desc.MaxAnisotropy = 16;
@@ -48,7 +48,7 @@ RenderState::RenderState(ID3D11Device* device)
 				sampler_state_[static_cast<int>(SamplerState::point_clamp)].GetAddressOf());
 			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
-		// ƒŠƒjƒAƒTƒ“ƒvƒŠƒ“ƒO•ƒeƒNƒXƒ`ƒƒŒJ‚è•Ô‚µ‚ ‚è
+		// ãƒªãƒ‹ã‚¢ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ï¼†ãƒ†ã‚¯ã‚¹ãƒãƒ£ç¹°ã‚Šè¿”ã—ã‚ã‚Š
 		{
 			desc.MipLODBias = 0.0f;
 			desc.MaxAnisotropy = 16;
@@ -67,7 +67,7 @@ RenderState::RenderState(ID3D11Device* device)
 				sampler_state_[static_cast<int>(SamplerState::linear_wrap)].GetAddressOf());
 			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
-		// ƒŠƒjƒAƒTƒ“ƒvƒŠƒ“ƒO•ƒeƒNƒXƒ`ƒƒŒJ‚è•Ô‚µ‚È‚µ
+		// ãƒªãƒ‹ã‚¢ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ï¼†ãƒ†ã‚¯ã‚¹ãƒãƒ£ç¹°ã‚Šè¿”ã—ãªã—
 		{
 			desc.MipLODBias = 0.0f;
 			desc.MaxAnisotropy = 16;
@@ -105,7 +105,7 @@ RenderState::RenderState(ID3D11Device* device)
 				sampler_state_[static_cast<int>(SamplerState::anisotropic)].GetAddressOf());
 			_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
-		//ƒŠƒjƒAƒTƒ“ƒvƒŠƒ“ƒOAƒ~ƒ‰[(ƒ{ƒŠƒ…[ƒƒgƒŠƒbƒNƒNƒ‰ƒEƒh—l‚Éì¬)
+		//ãƒªãƒ‹ã‚¢ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã€ãƒŸãƒ©ãƒ¼(ãƒœãƒªãƒ¥ãƒ¼ãƒ¡ãƒˆãƒªãƒƒã‚¯ã‚¯ãƒ©ã‚¦ãƒ‰æ§˜ã«ä½œæˆ)
 		{
 			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 			desc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
@@ -120,7 +120,7 @@ RenderState::RenderState(ID3D11Device* device)
             _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 		}
 
-		//ƒVƒƒƒhƒEƒ}ƒbƒv—pƒTƒ“ƒvƒ‰[
+		//ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ç”¨ã‚µãƒ³ãƒ—ãƒ©ãƒ¼
 		{
 			desc.MipLODBias = 0;
 			desc.MaxAnisotropy = 16;
@@ -141,7 +141,7 @@ RenderState::RenderState(ID3D11Device* device)
 		}
 	}
 
-	// [“xƒeƒXƒg‚ ‚è•[“x‘‚«‚İ‚ ‚è
+	// æ·±åº¦ãƒ†ã‚¹ãƒˆã‚ã‚Šï¼†æ·±åº¦æ›¸ãè¾¼ã¿ã‚ã‚Š
 	{
 		D3D11_DEPTH_STENCIL_DESC desc{};
 		desc.DepthEnable = true;
@@ -151,7 +151,7 @@ RenderState::RenderState(ID3D11Device* device)
 			depth_stencil_state_[static_cast<int>(DepthState::test_and_write)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// [“xƒeƒXƒg‚ ‚è•[“x‘‚«‚İ‚È‚µ
+	// æ·±åº¦ãƒ†ã‚¹ãƒˆã‚ã‚Šï¼†æ·±åº¦æ›¸ãè¾¼ã¿ãªã—
 	{
 		D3D11_DEPTH_STENCIL_DESC desc{};
 		desc.DepthEnable = true;
@@ -161,7 +161,7 @@ RenderState::RenderState(ID3D11Device* device)
 			depth_stencil_state_[static_cast<int>(DepthState::test_only)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// [“xƒeƒXƒg‚È‚µ•[“x‘‚«‚İ‚ ‚è
+	// æ·±åº¦ãƒ†ã‚¹ãƒˆãªã—ï¼†æ·±åº¦æ›¸ãè¾¼ã¿ã‚ã‚Š
 	{
 		D3D11_DEPTH_STENCIL_DESC desc{};
 		desc.DepthEnable = true;
@@ -171,7 +171,7 @@ RenderState::RenderState(ID3D11Device* device)
 			depth_stencil_state_[static_cast<int>(DepthState::write_only)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// [“xƒeƒXƒg‚È‚µ•[“x‘‚«‚İ‚È‚µ
+	// æ·±åº¦ãƒ†ã‚¹ãƒˆãªã—ï¼†æ·±åº¦æ›¸ãè¾¼ã¿ãªã—
 	{
 		D3D11_DEPTH_STENCIL_DESC desc{};
 		desc.DepthEnable = false;
@@ -182,7 +182,7 @@ RenderState::RenderState(ID3D11Device* device)
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
 
-	// ‡¬‚È‚µ
+	// åˆæˆãªã—
 	{
 		D3D11_BLEND_DESC desc{};
 		desc.AlphaToCoverageEnable = false;
@@ -199,12 +199,12 @@ RenderState::RenderState(ID3D11Device* device)
 			blend_state_[static_cast<int>(BlendState::opaque)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// ’Êí‡¬
+	// é€šå¸¸åˆæˆ
 	{
 		D3D11_BLEND_DESC desc{};
 		desc.AlphaToCoverageEnable = false;
 		desc.IndependentBlendEnable = false;
-		desc.RenderTarget[0].BlendEnable = true;
+		desc.RenderTarget[0].BlendEnable = false;
 		desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 		desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 		desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
@@ -216,7 +216,7 @@ RenderState::RenderState(ID3D11Device* device)
 			blend_state_[static_cast<int>(BlendState::transparency)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// ‰ÁZ‡¬
+	// åŠ ç®—åˆæˆ
 	{
 		D3D11_BLEND_DESC desc{};
 		desc.AlphaToCoverageEnable = false;
@@ -233,7 +233,7 @@ RenderState::RenderState(ID3D11Device* device)
 			blend_state_[static_cast<int>(BlendState::additive)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// Œ¸Z‡¬
+	// æ¸›ç®—åˆæˆ
 	{
 		D3D11_BLEND_DESC desc{};
 		desc.AlphaToCoverageEnable = false;
@@ -250,7 +250,7 @@ RenderState::RenderState(ID3D11Device* device)
 			blend_state_[static_cast<int>(BlendState::subtraction)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// æZ‡¬
+	// ä¹—ç®—åˆæˆ
 	{
 		D3D11_BLEND_DESC desc{};
 		desc.AlphaToCoverageEnable = false;
@@ -268,7 +268,7 @@ RenderState::RenderState(ID3D11Device* device)
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
 
-	// ƒxƒ^“h‚è•ƒJƒŠƒ“ƒO‚È‚µ
+	// ãƒ™ã‚¿å¡—ã‚Šï¼†ã‚«ãƒªãƒ³ã‚°ãªã—
 	{
 		D3D11_RASTERIZER_DESC desc{};
 		desc.FrontCounterClockwise = false;
@@ -285,7 +285,7 @@ RenderState::RenderState(ID3D11Device* device)
 			rasterizer_state_[static_cast<int>(RasterizerState::solid_cull_none)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// ƒxƒ^“h‚è•— –ÊƒJƒŠƒ“ƒO
+	// ãƒ™ã‚¿å¡—ã‚Šï¼†è£é¢ã‚«ãƒªãƒ³ã‚°
 	{
 		D3D11_RASTERIZER_DESC desc{};
 		desc.FrontCounterClockwise = false;
@@ -302,7 +302,7 @@ RenderState::RenderState(ID3D11Device* device)
 			rasterizer_state_[static_cast<int>(RasterizerState::solid_cull_back)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// ƒƒCƒ„[ƒtƒŒ[ƒ€•ƒJƒŠƒ“ƒO‚È‚µ
+	// ãƒ¯ã‚¤ãƒ¤ãƒ¼ãƒ•ãƒ¬ãƒ¼ãƒ ï¼†ã‚«ãƒªãƒ³ã‚°ãªã—
 	{
 		D3D11_RASTERIZER_DESC desc{};
 		desc.FrontCounterClockwise = false;
@@ -319,7 +319,7 @@ RenderState::RenderState(ID3D11Device* device)
 			rasterizer_state_[static_cast<int>(RasterizerState::wire_cull_none)].GetAddressOf());
 		_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 	}
-	// ƒƒCƒ„[ƒtƒŒ[ƒ€•— –ÊƒJƒŠƒ“ƒO
+	// ãƒ¯ã‚¤ãƒ¤ãƒ¼ãƒ•ãƒ¬ãƒ¼ãƒ ï¼†è£é¢ã‚«ãƒªãƒ³ã‚°
 	{
 		D3D11_RASTERIZER_DESC desc{};
 		desc.FrontCounterClockwise = false;

@@ -113,7 +113,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         
     //距離内なら処理をしなくてもよい
     if (fog_max_distance <= 0.f)
-        clip(0);
+        return float4(0.f, 1.0f, 0.f, 0.f);
     float step_length = fog_max_distance / fog_steps;
     
     float3 ray_start = camera_position.xyz;
@@ -124,11 +124,6 @@ float4 main(VS_OUT pin) : SV_TARGET
         
         obj_pos = camera_position.xyz + (ray_dir * (camera_clip_distance.y * object_depth));
         
-        //オブジェクト深度の方がレイの終わりより近いならば、
-        //レイの終点をオブジェクト深度に合わせる
-        //if (length(ray_end - ray_start) > length(obj_pos-ray_start))
-        //    ray_end = obj_pos;
-
     }
     float obj_dis = length(obj_pos - ray_start);
     float3 ray_step =ray_dir*step_length;
@@ -166,7 +161,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     {
         if(ray_step.y>0.f)
         {
-            return float4((scattering), 0, 0, object_depth);
+            return float4((scattering), transmittance, 0, object_depth);
         }
     }
     
@@ -257,11 +252,11 @@ float4 main(VS_OUT pin) : SV_TARGET
                 float step_alpha = 1.0f - exp(-optical_depth);
                 
                 //影の中なら弱くする
-                float light_factor = hit ? 1.5f : 0.15f;
+                float light_factor = hit ? 1.25f : 0.5f;
             
                 scattering += transmittance * step_alpha * lerp(1.f,1.5f,phase) * light_factor;
             
-                transmittance *= 1.0f - step_alpha;
+                transmittance *= (1.0f - step_alpha*light_factor);
             
                 //早期処理
                 if (transmittance <= 0.01f)
@@ -276,6 +271,6 @@ float4 main(VS_OUT pin) : SV_TARGET
 
     }
     
-    color = float4((scattering),0,0, object_depth);
+    color = float4((scattering),transmittance,0, object_depth);
     return color;
 }

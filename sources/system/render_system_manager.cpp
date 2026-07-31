@@ -75,6 +75,9 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight())
     );
 
+    //
+    render_state_ = std::make_unique<RenderState>(Graphics::Instance().GetDevice());
+
     //IBLマネージャ
     ibl_manager_ = std::make_unique<IBLManager>();
     ibl_manager_->Initialize(Graphics::Instance().GetDevice());
@@ -164,6 +167,8 @@ void RenderSystemManager::RenderAll()
         // 天体光描画
         if (sky_flag)
         {
+            ctx->OMSetBlendState(render_state_->GetBlendState(BlendState::additive), nullptr, 0xFFFFFFFF);
+
             if (cloud_flag)
             {
                 cloud_shadow_srv[0] = {
@@ -223,7 +228,8 @@ void RenderSystemManager::RenderAll()
 
     //オブジェクトのライティング後にフォグの生成
     //影情報を用いて疑似的なライトシャフトを行うため
-    fog_framebuffer_->Clear(ctx);
+    fog_framebuffer_->Clear(ctx,FrameBuffer::usage::color,{0.f,1.0f,0.f,0.f});
+    ctx->OMSetBlendState(render_state_->GetBlendState(BlendState::opaque), nullptr, 0xFFFFFFFF);
     fog_framebuffer_->Activate(ctx);
     fog_render_system_->Render();
     fog_render_system_->SetObjectDepthView(deferred_framebuffer_->GetSRV(Target::Depth));
@@ -262,8 +268,7 @@ void RenderSystemManager::RenderAll()
     ////最終結果を描画
     Graphics::Instance().ViewClear(0, 0, 0, 0);
     Graphics::Instance().SetRenderTargets(); //FXAAでフルスクリーン描画するため、コンテキストをリセット
-    RenderState render_state(Graphics::Instance().GetDevice());
-    ctx->OMSetBlendState(render_state.GetBlendState(BlendState::transparency),nullptr,0xFFFFFFFF);
+    ctx->OMSetBlendState(render_state_->GetBlendState(BlendState::transparency),nullptr,0xFFFFFFFF);
     bit_block_transfer_->blit(ctx, post_process_manager_->GetResultShaderResourceView().GetAddressOf(), 0, 1);
 
 

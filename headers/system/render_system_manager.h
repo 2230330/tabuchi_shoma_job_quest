@@ -13,6 +13,7 @@ class FullscreenQuad;
 class FrameBuffer;
 class DeferredGBuffer;
 class LightManager;
+class RenderState;
 
 class IRenderSystem;
 class RenderSkySystem;
@@ -66,6 +67,8 @@ private:
     std::unique_ptr<FrameBuffer> final_framebuffer_=nullptr;
     std::unique_ptr<DeferredGBuffer> deferred_framebuffer_=nullptr;
 
+    //
+    std::unique_ptr<RenderState>render_state_ = nullptr;
 
     //IBLマネージャ
     std::unique_ptr<IBLManager> ibl_manager_ =nullptr;

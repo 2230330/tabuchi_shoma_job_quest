@@ -61,32 +61,24 @@ dcl_resource_texture2d (float,float,float,float) t2
 dcl_resource_texture2d (float,float,float,float) t3
 dcl_input_ps linear v1.xy
 dcl_output o0.xyzw
-dcl_temps 7
+dcl_temps 9
 //
 // Initial variable locations:
 //   v0.x <- pin.position.x; v0.y <- pin.position.y; v0.z <- pin.position.z; v0.w <- pin.position.w; 
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 69 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\render_master_synthesis_ps.hlsl"
+#line 71 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\render_master_synthesis_ps.hlsl"
 mov r0.xy, v1.xyxx  // r0.x <- uv.x; r0.y <- uv.y
 
-#line 71
+#line 73
 sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, t0.xyzw, s3
 mov r1.xyz, r1.xyzx  // r1.x <- back.x; r1.y <- back.y; r1.z <- back.z
 
-#line 72
+#line 74
 sample_indexable(texture2d)(float,float,float,float) r2.xyzw, v1.xyxx, t1.xyzw, s3  // r2.x <- obj.x; r2.y <- obj.y; r2.z <- obj.z; r2.w <- obj.w
 
 #line 75
-mov r0.z, -r2.w
-add r0.z, r0.z, l(1.000000)
-mul r1.xyz, r0.zzzz, r1.xyzx
-add r1.xyz, r1.xyzx, r2.xyzx  // r1.x <- color.x; r1.y <- color.y; r1.z <- color.z
-
-#line 76
-mul r2.xyz, cb6[2].wwww, cb6[2].xyzx
-mul r2.xyz, r2.xyzx, cb6[1].yyyy
 nop 
 mov r0.xy, r0.xyxx
 
@@ -99,121 +91,140 @@ mov r0.w, r0.w  // r0.w <- fog_height
 mov r1.w, l(0)  // r1.w <- accumulated_weight
 
 #line 25
-mov r2.w, l(0)  // r2.w <- accumulated_radiance
+mov r3.xy, l(0,0,0,0)  // r3.x <- accumulated_fog.x; r3.y <- accumulated_fog.y
 
 #line 26
-mov r3.x, l(4.000000)  // r3.x <- radius
+mov r3.z, l(4.000000)  // r3.z <- radius
 
 #line 27
-sample_indexable(texture2d)(float,float,float,float) r3.y, v1.xyxx, t2.yxzw, s1
-mov r3.y, r3.y  // r3.y <- depth
+sample_indexable(texture2d)(float,float,float,float) r3.w, v1.xyxx, t2.yzwx, s1
+mov r3.w, r3.w  // r3.w <- depth
 
-#line 30
-mov r3.z, l(-4.000000)  // r3.z <- x
-mov r4.x, r1.w  // r4.x <- accumulated_weight
-mov r4.y, r2.w  // r4.y <- accumulated_radiance
-mov r3.w, r3.z  // r3.w <- x
+#line 29
+mov r4.x, l(-4.000000)  // r4.x <- x
+mov r4.y, r1.w  // r4.y <- accumulated_weight
+mov r4.zw, r3.xxxy  // r4.z <- accumulated_fog.x; r4.w <- accumulated_fog.y
+mov r5.x, r4.x  // r5.x <- x
 loop 
-  ge r4.z, r3.x, r3.w
-  breakc_z r4.z
+  ge r5.y, r3.z, r5.x
+  breakc_z r5.y
 
-#line 32
-  mov r4.z, l(-4.000000)  // r4.z <- y
-  mov r5.xy, r4.xyxx  // r5.x <- accumulated_weight; r5.y <- accumulated_radiance
-  mov r5.z, r4.z  // r5.z <- y
+#line 31
+  mov r5.y, l(-4.000000)  // r5.y <- y
+  mov r6.x, r4.y  // r6.x <- accumulated_weight
+  mov r6.y, r5.y  // r6.y <- y
+  mov r5.zw, r4.zzzw  // r5.z <- accumulated_fog.x; r5.w <- accumulated_fog.y
   loop 
-    ge r4.w, r3.x, r5.z
-    breakc_z r4.w
+    ge r6.z, r3.z, r6.y
+    breakc_z r6.z
+
+#line 33
+    utof r7.x, r0.z
+    utof r7.y, r0.w
+    mov r8.x, r5.x
+    mov r8.y, r6.y
+    div r6.zw, r8.xxxy, r7.xxxy  // r6.z <- offset.x; r6.w <- offset.y
 
 #line 34
-    utof r4.w, r0.z
-    utof r5.w, r0.w
-    div r6.x, r3.w, r4.w  // r6.x <- offset.x
-    div r6.y, r5.z, r5.w  // r6.y <- offset.y
+    add r6.zw, r0.xxxy, r6.zzzw  // r6.z <- texcoord.x; r6.w <- texcoord.y
 
-#line 35
-    add r6.xy, r0.xyxx, r6.xyxx  // r6.x <- texcoord.x; r6.y <- texcoord.y
+#line 36
+    sample_indexable(texture2d)(float,float,float,float) r7.xyz, r6.zwzz, t3.xywz, s3
+    mov r7.xyz, r7.xyzx  // r7.x <- fog_sample.x; r7.y <- fog_sample.y; r7.z <- fog_sample.w
 
 #line 37
-    sample_indexable(texture2d)(float,float,float,float) r6.xy, r6.xyxx, t3.xwyz, s3
-    mov r6.xy, r6.xyxx  // r6.x <- fog_sample.x; r6.y <- fog_sample.w
+    mov r7.x, r7.x  // r7.x <- scattering
 
 #line 38
-    mov r6.x, r6.x  // r6.x <- sampled_radiance
+    mov r7.y, r7.y  // r7.y <- transmittance
 
-#line 40
-    mul r4.w, r3.w, r3.w
-    mul r5.w, r5.z, r5.z
-    add r4.w, r4.w, r5.w  // r4.w <- distance
+#line 39
+    mov r7.z, r7.z  // r7.z <- sample_depth
 
 #line 41
-    mov r5.w, l(32.000000)  // r5.w <- sigma
+    mul r6.z, r5.x, r5.x
+    mul r6.w, r6.y, r6.y
+    add r6.z, r6.w, r6.z  // r6.z <- distance
 
 #line 42
-    mov r4.w, -r4.w
-    div r4.w, r4.w, r5.w
-    mul r4.w, r4.w, l(1.442695)
-    exp r4.w, r4.w  // r4.w <- domain_gaussian
+    mov r6.w, l(32.000000)  // r6.w <- sigma
 
-#line 44
-    mov r6.y, r6.y  // r6.y <- sample_depth
+#line 43
+    mov r6.z, -r6.z
+    div r6.z, r6.z, r6.w
+    mul r6.z, r6.z, l(1.442695)
+    exp r6.z, r6.z  // r6.z <- domain_gaussian
 
 #line 45
-    mov r5.w, -r6.y
-    add r5.w, r3.y, r5.w
-    mov r6.y, -r6.y
-    add r6.y, r3.y, r6.y
-    mul r5.w, r5.w, r6.y  // r5.w <- distance
+    mov r6.w, -r7.z
+    add r6.w, r3.w, r6.w
+    mov r7.z, -r7.z
+    add r7.z, r3.w, r7.z
+    mul r6.w, r6.w, r7.z  // r6.w <- depth_distance
 
 #line 46
-    mov r6.y, l(0.000100)  // r6.y <- sigma2
+    mov r7.z, l(0.000100)  // r7.z <- sigma2
 
 #line 47
-    mov r5.w, -r5.w
-    div r5.w, r5.w, r6.y
-    mul r5.w, r5.w, l(1.442695)
-    exp r5.w, r5.w  // r5.w <- range_gaussian
+    mov r6.w, -r6.w
+    div r6.w, r6.w, r7.z
+    mul r6.w, r6.w, l(1.442695)
+    exp r6.w, r6.w  // r6.w <- range_gaussian
 
 #line 49
-    mul r6.x, r4.w, r6.x
-    mul r6.x, r5.w, r6.x
-    add r5.y, r5.y, r6.x
+    mul r6.z, r6.w, r6.z  // r6.z <- weight
 
-#line 50
-    mul r4.w, r4.w, r5.w
-    add r5.x, r4.w, r5.x
+#line 51
+    mul r7.xy, r6.zzzz, r7.xyxx
+    add r5.zw, r5.zzzw, r7.xxxy
 
 #line 52
-    add r5.z, r5.z, l(1.000000)
-  endloop 
-  mov r4.x, r5.x  // r4.x <- accumulated_weight
-  mov r4.y, r5.y  // r4.y <- accumulated_radiance
+    add r6.x, r6.z, r6.x
 
-#line 53
-  add r3.w, r3.w, l(1.000000)
-endloop 
+#line 54
+    add r6.y, r6.y, l(1.000000)
+  endloop 
+  mov r4.y, r6.x  // r4.y <- accumulated_weight
+  mov r4.z, r5.z  // r4.z <- accumulated_fog.x
+  mov r4.w, r5.w  // r4.w <- accumulated_fog.y
 
 #line 55
-ge r0.x, l(0.000010), r4.x
-if_nz r0.x
+  add r5.x, r5.x, l(1.000000)
+endloop 
 
 #line 57
-  sample_indexable(texture2d)(float,float,float,float) r0.y, v1.xyxx, t3.yxzw, s1
+ge r0.x, l(0.000010), r4.y
+if_nz r0.x
 
-#line 58
-endif   // r0.y <- <SampleFogBlur return value>
+#line 59
+  sample_indexable(texture2d)(float,float,float,float) r0.yz, v1.xyxx, t3.zxyw, s1
 
-#line 61
+#line 60
+endif   // r0.y <- <SampleFogBlur return value>.x; r0.z <- <SampleFogBlur return value>.y
+
+#line 63
 if_z r0.x
-  div r0.y, r4.y, r4.x
+  div r0.yz, r4.zzwz, r4.yyyy
 endif 
 
-#line 76
-mul r0.xyz, r0.yyyy, r2.xyzx
-add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
+#line 75
+mov r0.yz, r0.yyzy  // r0.y <- fog.x; r0.z <- fog.y
+
+#line 78
+mov r0.x, -r2.w
+add r0.x, r0.x, l(1.000000)
+mul r1.xyz, r0.xxxx, r1.xyzx
+add r1.xyz, r1.xyzx, r2.xyzx  // r1.x <- color.x; r1.y <- color.y; r1.z <- color.z
 
 #line 79
+mul r0.xzw, r0.zzzz, r1.xxyz
+mul r1.xyz, cb6[2].wwww, cb6[2].xyzx
+mul r1.xyz, r1.xyzx, cb6[1].yyyy
+mul r1.xyz, r0.yyyy, r1.xyzx
+add r0.xyz, r0.xzwx, r1.xyzx  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z
+
+#line 82
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 
-// Approximately 83 instruction slots used
+// Approximately 88 instruction slots used
