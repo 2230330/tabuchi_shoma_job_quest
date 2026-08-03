@@ -16,6 +16,7 @@
 #include"../../headers/system/render_fog_system.h"
 #include"../../headers/system/render_deferred_system.h"
 #include"../../headers/system/render_screen_space_reflection_system.h"
+#include"../../headers/system/render_golden_ratio_system.h"
 #include"../../headers/system/ibl_manager.h"
 #include"../../headers/system/camera_set_constants.h"
 #include"../../headers/post_process/post_process_manager.h"
@@ -42,9 +43,15 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     AddSystem(std::make_unique<SpriteRenderSystem>(comp_mng_,RenderPass_Lighting));
     deferred_render_system_ = std::make_unique<RenderDeferredSystem>(comp_mng_, RenderPass_Lighting);
     ssr_render_system_ = std::make_unique<RenderScreenSpaceReflectionSystem>(comp_mng_, RenderPass_Lighting);
+    golden_ratio_render_system_ = std::make_unique<RenderGoldenRatioSystem>(comp_mng_,RenderPass_UI);
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
+        Graphics::Instance().GetDevice(),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale_),
+        static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)
+    );
+    cloud_framebuffer_ = std::make_unique<FrameBuffer>(
         Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()/back_scale_),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()/back_scale_)
@@ -94,7 +101,7 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     final_synthesis_ps_ =
         ResourceManager::Instance().LoadPixelShader(Graphics::Instance().GetDevice(),
             L".\\resources\\shader\\render_master_synthesis_ps.cso");
-
+    
     post_process_manager_ = std::make_unique<PostProcessManager>(Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()));
@@ -147,8 +154,8 @@ void RenderSystemManager::RenderAll()
         sky_render_system_->Render();
         sky_framebuffer_->Deactivate(ctx);
 
-        back_framebuffer_->Clear(ctx);
-        back_framebuffer_->Activate(ctx);
+        cloud_framebuffer_->Clear(ctx);
+        cloud_framebuffer_->Activate(ctx);
 
         cloud_render_system_->SetSkyColorSRV(sky_framebuffer_->GetShaderResourceView(0).Get());
         //オブジェクトの深度情報を渡すことで、オブジェクトがある位置は雲が描画されないようにする(早期処理)
@@ -156,7 +163,10 @@ void RenderSystemManager::RenderAll()
         cloud_render_system_->SetObjectResolution(Graphics::Instance().GetScreenWidth()*obj_scale_, Graphics::Instance().GetScreenHeight()*obj_scale_);
         cloud_render_system_->Render();
 
+        cloud_framebuffer_->Deactivate(ctx);
         
+        back_framebuffer_->Clear(ctx);
+        back_framebuffer_->Activate(ctx);
         //雲がなかった場合、大気をそのまま描画する
         if (!cloud_flag)
         {
@@ -172,7 +182,7 @@ void RenderSystemManager::RenderAll()
             if (cloud_flag)
             {
                 cloud_shadow_srv[0] = {
-                    cloud_render_system_->GetCloudShadowSRV(),
+                    cloud_framebuffer_->GetShaderResourceView(0).Get(),
                 };
             }
             bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
@@ -271,7 +281,9 @@ void RenderSystemManager::RenderAll()
     ctx->OMSetBlendState(render_state_->GetBlendState(BlendState::transparency),nullptr,0xFFFFFFFF);
     bit_block_transfer_->blit(ctx, post_process_manager_->GetResultShaderResourceView().GetAddressOf(), 0, 1);
 
-
+    //黄金分割構図を描画
+    ctx->OMSetBlendState(render_state_->GetBlendState(BlendState::additive), nullptr, 0xFFFFFFFF);
+    golden_ratio_render_system_->Render();
 }
 
 void RenderSystemManager::SetLightManager(LightManager* light_manager)

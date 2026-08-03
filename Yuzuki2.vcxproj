@@ -217,6 +217,7 @@
     <ClInclude Include="headers\component\component_cascade_shadow.h" />
     <ClInclude Include="headers\component\component_deferred_render.h" />
     <ClInclude Include="headers\component\component_dynamic.h" />
+    <ClInclude Include="headers\component\component_golden_spiral.h" />
     <ClInclude Include="headers\component\component_screen_space_reflection.h" />
     <ClInclude Include="headers\component\component_name.h" />
     <ClInclude Include="headers\component\component_storage.h" />
@@ -268,6 +269,7 @@
     <ClInclude Include="headers\system\render_deferred_system.h" />
     <ClInclude Include="headers\system\render_fog_system.h" />
     <ClInclude Include="headers\system\render_frustum_helper.h" />
+    <ClInclude Include="headers\system\render_golden_ratio_system.h" />
     <ClInclude Include="headers\system\render_screen_space_reflection_system.h" />
     <ClInclude Include="headers\system\update_bounding_box_system.h" />
     <ClInclude Include="headers\system\update_camera_system.h" />
@@ -317,6 +319,7 @@
     <ClCompile Include="sources\system\render_cloud_system.cpp" />
     <ClCompile Include="sources\system\render_deferred_system.cpp" />
     <ClCompile Include="sources\system\render_fog_system.cpp" />
+    <ClCompile Include="sources\system\render_golden_ratio_system.cpp" />
     <ClCompile Include="sources\system\render_screen_space_reflection_system.cpp" />
     <ClCompile Include="sources\system\update_bounding_box_system.cpp" />
     <ClCompile Include="sources\system\update_camera_system.cpp" />
@@ -469,6 +472,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaderes\golden_spiral_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaderes\ibl_diffuse_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -500,12 +509,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="shaderes\volumetric_cloud_ps.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="shaderes\cloud_screen_shadow_ps.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>

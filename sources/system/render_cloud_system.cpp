@@ -90,19 +90,11 @@ RenderCloudSystem::RenderCloudSystem(ComponentManager& comp_mng,RenderPass rende
     //シェーダーの設定
     cloud_ps_ = 
         ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\volumetric_cloud_ps.cso");
-    cloud_screen_shadow_ps_ = 
-        ResourceManager::Instance().LoadPixelShader(device, L".\\resources\\shader\\cloud_screen_shadow_ps.cso");
 
     //フルスクリーンクワッドの作成
     fullscreen_quad_ = std::make_unique<FullscreenQuad>(device);
 
-    //シャドウマップ
-    shadow_map_ = 
-        std::make_unique<FrameBuffer>(
-            device, 
-            SHADOW_RES,
-            SHADOW_RES,
-            FrameBuffer::usage::color);
+
 
     InitializeGpuTimer(device);
 }
@@ -122,10 +114,6 @@ void RenderCloudSystem::SetObjectResolution(float width, float height)
     cloud_ray_marching_constant_.object_resolution = DirectX::XMFLOAT2(width, height);
 }
 
-ID3D11ShaderResourceView* RenderCloudSystem::GetCloudShadowSRV()
-{
-    return this->shadow_map_->GetShaderResourceView(0).Get();
-}
 
 void RenderCloudSystem::Render()
 {
@@ -179,19 +167,10 @@ void RenderCloudSystem::Render()
             //GPU負荷計測終了
             EndGpuFrame(write_index_);
 
-            shadow_map_->Clear(context);
-            shadow_map_->Activate(context,FrameBuffer::usage::color);
-            //影描画様に雲の位置を書き出す
-            {
-                fullscreen_quad_->blit(context, srvs, 0, _countof(srvs), cloud_screen_shadow_ps_.Get());
-            }
-            shadow_map_->Deactivate(context);
 
             Graphics::Instance().ClearShaderResourceViews(0, _countof(srvs));
 
 
-
-            //一つ見つかればそれで終わり
         });
 
     write_index_ = (write_index_ + 1) % QUERY_BUFFER_COUNT;

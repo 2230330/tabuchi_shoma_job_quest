@@ -42,6 +42,8 @@ private:
     int32_t has_camera_ = -1;
     int32_t fog_entity_ = -1;
     bool has_fog_ = false;
+    bool has_golden_spiral_ = false;
+    int32_t golden_spiral_entity_ = -1;
 
 
 

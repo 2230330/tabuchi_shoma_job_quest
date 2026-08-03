@@ -308,6 +308,12 @@
     <ClInclude Include="headers\system\render_fog_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_golden_spiral.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\render_golden_ratio_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -446,6 +452,9 @@
       <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\render_fog_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\render_golden_ratio_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>
@@ -653,9 +662,6 @@
     <FxCompile Include="shaderes\downsample_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
-    <FxCompile Include="shaderes\cloud_screen_shadow_ps.hlsl">
-      <Filter>Shaders\PixelShader</Filter>
-    </FxCompile>
     <FxCompile Include="shaderes\celestial_light_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
@@ -714,6 +720,9 @@
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\render_master_synthesis_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\golden_spiral_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
   </ItemGroup>

@@ -726,6 +726,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 ray_endpoint = eye_pos + ray_dir * t1;
     float shell_dist = length(ray_endpoint - ray_origin);
     
+    float4 volume = float4(sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy),1.0f);
     if (ray_dir.y>=0.0f)
     {
 
@@ -753,7 +754,7 @@ float4 main(VS_OUT pin) : SV_TARGET
 
         float3 ray_step = ray_dir * shell_dist / steps;
         // メインのレイマーチング関数を呼び出す
-        float4 volume = RayMarch(ray_origin, ray_step, int(steps),pin.texcoord.xy,pin.position.xy);
+         volume = RayMarch(ray_origin, ray_step, int(steps),pin.texcoord.xy,pin.position.xy);
         //空の色
         float3 background = sky_color_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy).rgb;
         // 雲のボリュームカラーと背景色をアルファブレンド
@@ -781,6 +782,6 @@ float4 main(VS_OUT pin) : SV_TARGET
     }
 
 
-    return float4(color, 1.0f);
+    return float4(color, volume.a);
 
 }

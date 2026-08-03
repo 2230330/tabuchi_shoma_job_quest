@@ -24,6 +24,7 @@ class RenderFogSystem;
 class IBLManager;
 class CameraSetConstants;
 class PostProcessManager;
+class RenderGoldenRatioSystem;
 
 //描画システムを管理するクラス
 //描画システムは、背景、オブジェクト、UIなどの描画を担当する複数のシステムで構成されます。
@@ -56,6 +57,7 @@ private:
     std::unique_ptr<RenderDeferredSystem>deferred_render_system_=nullptr;
     std::unique_ptr<RenderScreenSpaceReflectionSystem>ssr_render_system_=nullptr;
     std::unique_ptr<RenderFogSystem>fog_render_system_ = nullptr;
+    std::unique_ptr<RenderGoldenRatioSystem>golden_ratio_render_system_ = nullptr;
     ComponentManager& comp_mng_;
 
     //フルスクリーンクワッド(背景用)
@@ -63,6 +65,7 @@ private:
     std::unique_ptr<FrameBuffer> back_framebuffer_=nullptr;
     std::unique_ptr<FrameBuffer> object_framebuffer_=nullptr;
     std::unique_ptr<FrameBuffer> sky_framebuffer_=nullptr;
+    std::unique_ptr<FrameBuffer> cloud_framebuffer_=nullptr;
     std::unique_ptr<FrameBuffer> fog_framebuffer_=nullptr;
     std::unique_ptr<FrameBuffer> final_framebuffer_=nullptr;
     std::unique_ptr<DeferredGBuffer> deferred_framebuffer_=nullptr;

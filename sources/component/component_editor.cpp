@@ -256,12 +256,29 @@ void ComponentEditor::DrawImgui()
                 uint32_t entity = enti_mng_.Add();
                 ComponentCamera camera;
                 comp_mng_.Add(entity, camera);
+                has_camera_ = entity;
             }
             else
             {
                 enti_mng_.Remove(has_camera_);
                 comp_mng_.RemoveAllComponents(has_camera_);
                 has_camera_ = -1;
+            }
+        }
+        if (ImGui::Checkbox("debag golden spiral",&has_golden_spiral_))
+        {
+            if (golden_spiral_entity_<0)
+            {
+                uint32_t entity = enti_mng_.Add();
+                ComponentGoldenSpiral g_s;
+                comp_mng_.Add(entity, g_s);
+                golden_spiral_entity_ = entity;
+            }
+            else
+            {
+                enti_mng_.Remove(golden_spiral_entity_);
+                comp_mng_.RemoveAllComponents(golden_spiral_entity_);
+                golden_spiral_entity_ = -1;
             }
         }
 
@@ -278,6 +295,7 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.Has<ComponentCascadeShadow>(entity.entity) ||
                 comp_mng_.Has<ComponentSsr>(entity.entity) ||
                 comp_mng_.Has<ComponentFog>(entity.entity) ||
+                comp_mng_.Has<ComponentGoldenSpiral>(entity.entity);
                 comp_mng_.Has<ComponentDeferredRender>(entity.entity);
 
             if(has_editor_component)
@@ -725,6 +743,11 @@ void ComponentEditor::DrawImgui()
                         ImGui::DragFloat("fog_max_height", &fog.fog_height_max, 1.f, 0.f, 1000.f);
                         ImGui::SliderFloat("fog_intensity", &fog.fog_intensity, 1.f, 10.f);
                         ImGui::SliderInt("use_noise", &fog.use_noise, 0, 1);
+                    }
+                    if (comp_mng_.Has<ComponentGoldenSpiral>(entity.entity))
+                    {
+                        auto& g = comp_mng_.GetByEntity<ComponentGoldenSpiral>(entity.entity);
+                        ImGui::SliderInt("orientation", &g.orientation, 0, 3);
                     }
 
                     ////コンポーネントの追加

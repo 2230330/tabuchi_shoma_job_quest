@@ -11,7 +11,7 @@
 #define LINEAR_MIRROR 5
 SamplerState sampler_states[6] : register(s0);
 
-Texture2D cloud_texture : register(t0);
+Texture2D<float4> cloud_texture : register(t0);
 
 static const float PI = 3.14159265358979323846;
 
@@ -34,7 +34,7 @@ float3 ComputeSunIrradiance(float air_mass)
 float SampleSoftCloudCoverage(float2 uv)
 {
     float2 texel = 1.0 / max(viewport_size.xy, float2(1e-6, 1e-6));
-    const int R = 1; // 3x3
+    const int R = 2; // 3x3
     float sum = 0.0;
     int count = 0;
     for (int y = -R; y <= R; ++y)
@@ -42,7 +42,7 @@ float SampleSoftCloudCoverage(float2 uv)
         for (int x = -R; x <= R; ++x)
         {
             float2 off = float2(x, y) * texel;
-            sum += cloud_texture.Sample(sampler_states[LINEAR_CLAMP], uv + off).r;
+            sum += cloud_texture.Sample(sampler_states[LINEAR_CLAMP], uv + off).a;
             count++;
         }
     }
@@ -114,7 +114,7 @@ float SampleSoftCloudCoverage(float2 uv)
 //        float cloud =
 //            cloud_texture.Sample(
 //                sampler_states[LINEAR_CLAMP],
-//                sampleUV).r;
+//                sampleUV).a;
 
 //        // 雲が少ないほど光が通る
 //        float transmission = 1.0f - saturate(cloud);
@@ -232,6 +232,10 @@ float4 main(VS_OUT pin) : SV_Target
     //float3 god_ray_add = god_ray_color * god_ray * god_ray_intensity;
     //outColor = saturate(outColor + god_ray_add);
     //outAlpha = saturate(outAlpha + god_ray *god_ray_intensity);
+    
+    float4 cloud_color = cloud_texture.Sample(sampler_states[LINEAR_CLAMP], pin.texcoord.xy);
+    
+    outColor = (cloud_color.rgb * (1.0f - outAlpha)) + outColor;
     
     
     return float4(outColor, outAlpha);

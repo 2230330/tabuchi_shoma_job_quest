@@ -28,8 +28,6 @@ public:
 
     void SetObjectResolution(float width, float height);
 
-    ID3D11ShaderResourceView* GetCloudShadowSRV();
-
     void Render()override;
 
     const bool HasRenderableCloud();
@@ -130,8 +128,6 @@ private:
     //シャドウマップ用
     const int SHADOW_RES = 512;
 
-    std::unique_ptr<FrameBuffer>shadow_map_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>cloud_screen_shadow_ps_ = nullptr;
 
     //GPU負荷計測用
     static const int QUERY_BUFFER_COUNT = 8;
