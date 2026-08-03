@@ -13,7 +13,7 @@ struct ComponentFog :public IComponent
     float fog_height_max{ 100.f };
     float fog_intensity{ 1.f };
 
-    DirectX::XMFLOAT4 fog_color{ 0.5f,0.5f,0.5f,1.0f };
+    DirectX::XMFLOAT4 fog_color{ 0.75f,0.75f,0.75f,1.0f };
     int use_noise{ 1 };
 
     float gpu_time_ms= 0.0f;
