@@ -188,8 +188,6 @@ void RenderSystemManager::RenderAll()
             bit_block_transfer_->blit(ctx, cloud_shadow_srv, 0, 1, celestial_light_ps_.Get());
 
         }
-
-
         back_framebuffer_->Deactivate(ctx);
 
     }

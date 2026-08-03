@@ -50,7 +50,7 @@ dcl_resource_texture2d (float,float,float,float) t0
 dcl_resource_texture2d (float,float,float,float) t1
 dcl_uav_typed_texture2d (float,float,float,float) u0
 dcl_input vThreadID.xy
-dcl_temps 4
+dcl_temps 12
 dcl_thread_group 8, 8, 1
 //
 // Initial variable locations:
@@ -80,19 +80,90 @@ div r1.xy, r1.xyxx, r1.zwzz  // r1.x <- uv.x; r1.y <- uv.y
 #line 29
 sample_l_indexable(texture2d)(float,float,float,float) r2.xyzw, r1.xyxx, t0.xyzw, s3, l(0.000000)  // r2.x <- current.x; r2.y <- current.y; r2.z <- current.z; r2.w <- current.w
 
-#line 36
-sample_l_indexable(texture2d)(float,float,float,float) r1.xyzw, r1.xyxx, t1.xyzw, s3, l(0.000000)  // r1.x <- lower.x; r1.y <- lower.y; r1.z <- lower.z; r1.w <- lower.w
+#line 47
+utof r1.zw, cb5[1].zzzw
+div r1.zw, l(0.000000, 0.000000, 1.000000, 1.000000), r1.zzzw  // r1.z <- texel.x; r1.w <- texel.y
 
-#line 43
-mov r3.x, l(0.650000)  // r3.x <- lower_weight
+#line 50
+itof r3.xy, l(-1, -1, 0, 0)
+mul r3.xy, r1.zwzz, r3.xyxx
+add r3.xy, r1.xyxx, r3.xyxx
+itof r3.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r3.xyzw, r3.xyxx, t1.xyzw, s3, r3.z  // r3.x <- s0.x; r3.y <- s0.y; r3.z <- s0.z; r3.w <- s0.w
 
-#line 45
-mul r1.xyzw, r1.xyzw, r3.xxxx
+#line 51
+itof r4.xy, l(0, -1, 0, 0)
+mul r4.xy, r1.zwzz, r4.xyxx
+add r4.xy, r1.xyxx, r4.xyxx
+itof r4.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r4.xyzw, r4.xyxx, t1.xyzw, s3, r4.z  // r4.x <- s1.x; r4.y <- s1.y; r4.z <- s1.z; r4.w <- s1.w
+
+#line 52
+itof r5.xy, l(1, -1, 0, 0)
+mul r5.xy, r1.zwzz, r5.xyxx
+add r5.xy, r1.xyxx, r5.xyxx
+itof r5.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r5.xyzw, r5.xyxx, t1.xyzw, s3, r5.z  // r5.x <- s2.x; r5.y <- s2.y; r5.z <- s2.z; r5.w <- s2.w
+
+#line 54
+itof r6.xy, l(-1, 0, 0, 0)
+mul r6.xy, r1.zwzz, r6.xyxx
+add r6.xy, r1.xyxx, r6.xyxx
+itof r6.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r6.xyzw, r6.xyxx, t1.xyzw, s3, r6.z  // r6.x <- s3.x; r6.y <- s3.y; r6.z <- s3.z; r6.w <- s3.w
+
+#line 55
+itof r7.x, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r7.xyzw, r1.xyxx, t1.xyzw, s3, r7.x  // r7.x <- s4.x; r7.y <- s4.y; r7.z <- s4.z; r7.w <- s4.w
+
+#line 56
+itof r8.xy, l(1, 0, 0, 0)
+mul r8.xy, r1.zwzz, r8.xyxx
+add r8.xy, r1.xyxx, r8.xyxx
+itof r8.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r8.xyzw, r8.xyxx, t1.xyzw, s3, r8.z  // r8.x <- s5.x; r8.y <- s5.y; r8.z <- s5.z; r8.w <- s5.w
+
+#line 58
+itof r9.xy, l(-1, 1, 0, 0)
+mul r9.xy, r1.zwzz, r9.xyxx
+add r9.xy, r1.xyxx, r9.xyxx
+itof r9.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r9.xyzw, r9.xyxx, t1.xyzw, s3, r9.z  // r9.x <- s6.x; r9.y <- s6.y; r9.z <- s6.z; r9.w <- s6.w
+
+#line 59
+itof r10.xy, l(0, 1, 0, 0)
+mul r10.xy, r1.zwzz, r10.xyxx
+add r10.xy, r1.xyxx, r10.xyxx
+itof r10.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r10.xyzw, r10.xyxx, t1.xyzw, s3, r10.z  // r10.x <- s7.x; r10.y <- s7.y; r10.z <- s7.z; r10.w <- s7.w
+
+#line 60
+itof r11.xy, l(1, 1, 0, 0)
+mul r1.zw, r1.zzzw, r11.xxxy
+add r1.xy, r1.zwzz, r1.xyxx
+itof r1.z, l(0)
+sample_l_indexable(texture2d)(float,float,float,float) r1.xyzw, r1.xyxx, t1.xyzw, s3, r1.z  // r1.x <- s8.x; r1.y <- s8.y; r1.z <- s8.z; r1.w <- s8.w
+
+#line 62
+add r3.xyzw, r3.xyzw, r5.xyzw
+add r3.xyzw, r9.xyzw, r3.xyzw
+add r1.xyzw, r1.xyzw, r3.xyzw
+add r3.xyzw, r4.xyzw, r6.xyzw
+add r3.xyzw, r8.xyzw, r3.xyzw
+add r3.xyzw, r10.xyzw, r3.xyzw
+mul r3.xyzw, r3.xyzw, l(2.000000, 2.000000, 2.000000, 2.000000)
+add r1.xyzw, r1.xyzw, r3.xyzw
+mul r3.xyzw, r7.xyzw, l(4.000000, 4.000000, 4.000000, 4.000000)
+add r1.xyzw, r1.xyzw, r3.xyzw
+div r1.xyzw, r1.xyzw, l(16.000000, 16.000000, 16.000000, 16.000000)  // r1.x <- filtered.x; r1.y <- filtered.y; r1.z <- filtered.z; r1.w <- filtered.w
+
+#line 69
+mul r1.xyzw, r1.xyzw, l(1.000000, 1.000000, 1.000000, 1.000000)
 add r1.xyzw, r1.xyzw, r2.xyzw  // r1.x <- result.x; r1.y <- result.y; r1.z <- result.z; r1.w <- result.w
 
-#line 47
+#line 73
 store_uav_typed u0.xyzw, r0.xyzw, r1.xyzw
 
-#line 48
+#line 74
 ret 
-// Approximately 18 instruction slots used
+// Approximately 71 instruction slots used
