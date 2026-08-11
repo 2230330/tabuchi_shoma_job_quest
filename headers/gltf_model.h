@@ -38,13 +38,6 @@ public:
 		const DirectX::XMFLOAT4X4& world, 
         std::vector<Node>& animated_nodes,
 		bool shadow_render_flag = false);
-	//void InstancingRender(
-	//	ID3D11DeviceContext* immediate_context,
-	//	UINT instance_count, 
-	//	ID3D11Buffer* world_matrices_buffer,
- //       std::vector<Node>& animated_nodes,
-	//	UINT start_instance_location = 0,
-	//	bool shadow_render_flag = false);
 	void InstancingRender(
 		ID3D11Device* device,
 		ID3D11DeviceContext* immediate_context,
