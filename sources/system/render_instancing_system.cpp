@@ -46,6 +46,10 @@ void InstancingRenderSystem::Render()
     {
         worlds.clear();
     }
+    for (auto& [model, animated_nodes_list_] : model_to_animated_nodes_list_)
+    {
+        animated_nodes_list_.clear();
+    }
 
     comp_mng_.ForEach<
         ComponentInstanced,
@@ -60,7 +64,10 @@ void InstancingRenderSystem::Render()
         ComponentBoundingBox& b_box
         ) {
 
-
+            if (!gltf.model)
+            {
+                return;
+            }
 
             bool visible = true;
 
@@ -80,7 +87,10 @@ void InstancingRenderSystem::Render()
                 return;
             }
 
-            model_to_worlds_[gltf.model.get()].push_back(l2w.value);
+            GltfModel* model = gltf.model.get();
+            model_to_worlds_[model].push_back(l2w.value);
+            model_to_animated_nodes_list_[model].push_back(&gltf.animated_nodes);
+
 
         }
     );
@@ -91,8 +101,14 @@ void InstancingRenderSystem::Render()
 
     for (auto& [model, world_matrices] : model_to_worlds_)
     {
-        if (world_matrices.empty()) continue;
+        if (!model||world_matrices.empty()) continue;
 
+        auto& animated_nodes_list = model_to_animated_nodes_list_[model];
+        if (animated_nodes_list.size() != world_matrices.size())
+        {
+            _ASSERT_EXPR(false, L"world_matrices and animated_nodes_list size mismatch");
+            continue;
+        }
 
         InstancingRenderSystem::InstanceBufferInfo& buf_info = instance_buffer_pool_[model];
 
@@ -123,9 +139,18 @@ void InstancingRenderSystem::Render()
         }
 
         // インスタンシング描画呼び出し
-        model->InstancingRender(context,
+        //model->InstancingRender(context,
+        //    static_cast<UINT>(world_matrices.size()),
+        //    buf_info.buffer.Get(),
+        //    model_to_animated_nodes_[model],
+        //    0);
+        model->InstancingRender(
+            Graphics::Instance().GetDevice(),
+            context,
             static_cast<UINT>(world_matrices.size()),
             buf_info.buffer.Get(),
-            0);
+            animated_nodes_list,
+            0, false
+        );
     }
 }

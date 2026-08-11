@@ -34,12 +34,27 @@ public:
 	GltfModel(ID3D11Device* device, const std::string& filename);
 	virtual ~GltfModel() = default;
 
-	void Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world, bool shadow_render_flag = false);
-	void InstancingRender(ID3D11DeviceContext* immediate_context,
-		UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location = 0,
+	void Render(ID3D11DeviceContext* immediate_context, 
+		const DirectX::XMFLOAT4X4& world, 
+        std::vector<Node>& animated_nodes,
+		bool shadow_render_flag = false);
+	//void InstancingRender(
+	//	ID3D11DeviceContext* immediate_context,
+	//	UINT instance_count, 
+	//	ID3D11Buffer* world_matrices_buffer,
+ //       std::vector<Node>& animated_nodes,
+	//	UINT start_instance_location = 0,
+	//	bool shadow_render_flag = false);
+	void InstancingRender(
+		ID3D11Device* device,
+		ID3D11DeviceContext* immediate_context,
+		UINT instance_count,
+		ID3D11Buffer* world_matrices_buffer,
+		const std::vector<const std::vector<Node>*>& animated_nodes_list,
+		UINT start_instance_location,
 		bool shadow_render_flag = false);
 	void Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes);
-	void UpdateAnimation(float elapsed_time);
+	void UpdateAnimation(size_t animation_index,float elapsed_time,std::vector<Node>& animated_nodes);
 	const std::vector<GltfModel::Node>& GetNodes()const;
 	const std::vector<GltfModel::Mesh>& GetMeshes()const;
 	const std::vector<GltfModel::Material>& GetMaterials()const;
@@ -61,7 +76,9 @@ public:
 		return bounding_box_;
 	}
 
-private:
+public:
+	//現在、シェアードポインタでモデル情報を管理中
+	//外部で個別のアニメーション情報を持つため、外部で管理できるようにします
 	struct Node
 	{
 		std::string name;
@@ -75,8 +92,15 @@ private:
 		DirectX::XMFLOAT3 scale{ 1, 1, 1 };
 		DirectX::XMFLOAT3 translation{ 0, 0, 0 };
 
-		DirectX::XMFLOAT4X4 global_transform{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+		DirectX::XMFLOAT4X4 global_transform
+		{ 
+			1, 0, 0, 0,
+			0, 1, 0, 0, 
+			0, 0, 1, 0,
+			0, 0, 0, 1 
+		};
 	};
+private:
 	struct BufferView
 	{
 		DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
@@ -241,6 +265,9 @@ private:
 	void FetchTextures(ID3D11Device* device, const tinygltf::Model& gltf_model);
 	void FetchAnimations(const tinygltf::Model& gltf_model);
 	void CumulateTransforms(std::vector<Node>& nodes);
+	void BuildJointMatrices(int skin_index, const Node& skinned_node, const std::vector<Node>& nodes, DirectX::XMFLOAT4X4* out_matrices, size_t max_joint_count)const;
+	void EnsureInstanceJointBuffer(ID3D11Device* device,UINT matrix_count);
+	void UpdateInstanceJointBuffer(ID3D11DeviceContext* context, const DirectX::XMFLOAT4X4* matrices, UINT matrix_count);
 
 
 	std::string filename_;
@@ -248,7 +275,7 @@ private:
 	float animation_time_ = 0;
 
 	std::vector<Node> nodes_;
-	std::vector<Node> animated_nodes_;	//アニメーションで変更されたノード
+	//std::vector<Node> animated_nodes_;	//アニメーションで変更されたノード
 	std::vector<Scene> scenes;
 	std::vector<Mesh> meshes_;
 	std::vector<Material> materials_;
@@ -265,10 +292,15 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> shadow_instancing_caster_vs_;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixel_shader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> input_layout;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> shadow_input_layout;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> instancing_input_layout;//インスタンシング描画
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> shadow_instancing_input_layout;//インスタンシング描画
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_cbuffer_;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> primitive_joint_cbuffer_;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>adjast_param_cbuffer_;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>instance_joint_buffer_;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>instance_joint_srv_;
+	UINT instance_joint_capacity_=0;
 
 	//キューブマップの実装
     Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cube_map_srv_=nullptr;		

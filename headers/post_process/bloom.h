@@ -38,8 +38,8 @@ private:
 
     struct BloomConstants
     {
-        float bloom_extraction_threshold{ 1.5f };
-        float bloom_intensity{ 0.25f };
+        float bloom_extraction_threshold{ 3.5f };
+        float bloom_intensity{ 1.25f };
         float bloom_soft_knee{ 0.5f };
         float bloom_radius{ 1.5f };
     };

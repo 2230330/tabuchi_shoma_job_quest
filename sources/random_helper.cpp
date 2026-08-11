@@ -21,5 +21,7 @@ int random_helper::Random(int max)
     std::uniform_int_distribution<> dis(1, max);
     random = dis(gen);
 
+    random = (std::min)(random, max);
+
     return random;
 }

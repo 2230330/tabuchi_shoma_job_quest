@@ -9,7 +9,7 @@
 #include"i_render_system.h"
 #include"../deferred_g_buffer.h"
 #include"../render_state.h"
-
+#include"../gltf_model.h"
 
 class ComponentManager;
 class GltfModel;
@@ -112,6 +112,7 @@ private:
 
     //シャドウマップ用のモデルのワールド行列を保持するマップ
     std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds_;
+    std::unordered_map < GltfModel*, std::vector<const std::vector<GltfModel::Node>*>>model_to_animated_nodes_list_;
 
     //GPU負荷計測用
     static const int QUERY_BUFFER_COUNT = 32;

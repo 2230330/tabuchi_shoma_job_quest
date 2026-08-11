@@ -5,9 +5,10 @@
 #include<DirectXMath.h>
 #include<unordered_map>
 
+#include"../gltf_model.h"
+
 //前方宣言
 class ComponentManager;
-class GltfModel;
 
 //描画用システム
 //現在は、元々用意していたGlTFモデルの描画を使っていますが、そのうちちゃんと作りたい
@@ -28,6 +29,7 @@ private:
 
     std::unordered_map<GltfModel*, InstanceBufferInfo>instance_buffer_pool_;
     std::unordered_map<GltfModel*, std::vector<DirectX::XMFLOAT4X4>> model_to_worlds_;
+    std::unordered_map < GltfModel*, std::vector<const std::vector<GltfModel::Node>*>>model_to_animated_nodes_list_;
 
     ComponentManager& comp_mng_;
 };

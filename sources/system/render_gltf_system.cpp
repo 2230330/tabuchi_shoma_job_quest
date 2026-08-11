@@ -64,7 +64,7 @@ void GltfRenderSystem::Render()
                             adjast->adjust_roughness);
                     }
 
-                    gltf.model->Render(Graphics::Instance().GetDeviceContext(), l2w.value);
+                    gltf.model->Render(Graphics::Instance().GetDeviceContext(), l2w.value,gltf.animated_nodes);
                 }
             }
         });

@@ -295,7 +295,8 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.Has<ComponentCascadeShadow>(entity.entity) ||
                 comp_mng_.Has<ComponentSsr>(entity.entity) ||
                 comp_mng_.Has<ComponentFog>(entity.entity) ||
-                comp_mng_.Has<ComponentGoldenSpiral>(entity.entity);
+                comp_mng_.Has<ComponentGoldenSpiral>(entity.entity)||
+                comp_mng_.Has<ComponentGltf>(entity.entity)||
                 comp_mng_.Has<ComponentDeferredRender>(entity.entity);
 
             if(has_editor_component)
@@ -564,36 +565,36 @@ void ComponentEditor::DrawImgui()
                         ImGui::Separator();
                     }
                     //// GLTFモデル
-                    //if (comp_mng_.Has<ComponentGltf>(entity.entity))
-                    //{
-                    //    auto& gltf = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
-                    //    ImGui::Text("GLTF Model");
+                    if (comp_mng_.Has<ComponentGltf>(entity.entity))
+                    {
+                        auto& gltf = comp_mng_.GetByEntity<ComponentGltf>(entity.entity);
+                        ImGui::Text("GLTF Model");
 
-                    //    ImGui::Separator();
-                    //    auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
+                        ImGui::Separator();
+                        auto& ajast_pbr = comp_mng_.GetByEntity<ComponentAdjastPbrParamter>(entity.entity);
 
-                    //    ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
-                    //    ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, .0f, 1.0f);
+                        ImGui::SliderFloat("Adjust Metalness", &ajast_pbr.adjust_metalness, -1.0f, 1.0f);
+                        ImGui::SliderFloat("Adjust Roughness", &ajast_pbr.adjust_roughness, .0f, 1.0f);
 
-                    //    //インスタンシング描画
-                    //    if (ImGui::Button("instanced"))
-                    //    {
-                    //        if (!comp_mng_.Has<ComponentInstanced>(entity.entity))
-                    //        {
-                    //            ComponentInstanced instance;
-                    //            comp_mng_.Add(entity.entity, instance);
-                    //        }
-                    //        else
-                    //        {
-                    //            comp_mng_.Remove<ComponentInstanced>(entity.entity);
-                    //        }
-                    //    }
-                    //    if (comp_mng_.Has<ComponentInstanced>(entity.entity))
-                    //    {
-                    //        ImGui::Text("Instancing Render");
-                    //    }
-                    //    ImGui::Separator();
-                    //    //位置更新する化しないか
+                        //インスタンシング描画
+                        if (ImGui::Button("instanced"))
+                        {
+                            if (!comp_mng_.Has<ComponentInstanced>(entity.entity))
+                            {
+                                ComponentInstanced instance;
+                                comp_mng_.Add(entity.entity, instance);
+                            }
+                            else
+                            {
+                                comp_mng_.Remove<ComponentInstanced>(entity.entity);
+                            }
+                        }
+                        if (comp_mng_.Has<ComponentInstanced>(entity.entity))
+                        {
+                            ImGui::Text("Instancing Render");
+                        }
+                        ImGui::Separator();
+                        //位置更新する化しないか
                         if (ImGui::Button("dynamic"))
                         {
                             if (!comp_mng_.Has<ComponentDynamic>(entity.entity))
@@ -612,11 +613,12 @@ void ComponentEditor::DrawImgui()
                         }
                         ImGui::Separator();
 
-                    //    ImGui::Text("Filename: %s", gltf.model->GetFilename().c_str());
-                    //    ImGui::DragFloat("Animation Time", &gltf.animation_time, 0.01f);
-                    //    ImGui::DragInt("Animation Index", reinterpret_cast<int*>(&gltf.animation_index), 1, 0, static_cast<int>(gltf.model->GetAnimations().size()) - 1);
-                    //    ImGui::Separator();
-                    //}
+                        ImGui::Text("Filename: %s", gltf.model->GetFilename().c_str());
+                        ImGui::DragFloat("Animation Time", &gltf.animation_time, 0.01f);
+                        ImGui::DragFloat("Animation speed", &gltf.animation_speed, 0.01f, 0.0f, 10.f);
+                        ImGui::DragInt("Animation Index", reinterpret_cast<int*>(&gltf.animation_index), 1, 0, static_cast<int>(gltf.model->GetAnimations().size()) - 1);
+                        ImGui::Separator();
+                    }
                     //if (comp_mng_.Has<ComponentTexture>(entity.entity))
                     //{
                     //    auto& texture = comp_mng_.GetByEntity<ComponentTexture>(entity.entity);

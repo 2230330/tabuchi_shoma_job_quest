@@ -72,27 +72,27 @@ bool SceneTest::InitializeCore()
         //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
 
-        const int size = 0;
+        const int size = 100;
         for (int i = 0; i < size; i++)
         {
             uint32_t entity = world->GetEntityManager()->Add();
             ComponentPosition pos;
             pos.value = {
-                static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4),
-                -10.f,
-                static_cast<float>(random_helper::Random(static_cast<int>(size / 2)) - size / 4)
+                static_cast<float>(random_helper::Random(size)),
+                0.f,
+                static_cast<float>(random_helper::Random(size))
             };
             //カメラにかぶらないように
-            if (-100.f <= pos.value.x && pos.value.x <= 100)pos.value.x *= 100.f;
-            if (-100.f <= pos.value.z && pos.value.z <= 100)pos.value.z *= 100.f;
+            if (-100.f <= pos.value.x && pos.value.x <= 100)pos.value.x *= 5.f;
+            if (-100.f <= pos.value.z && pos.value.z <= 100)pos.value.z *= 5.f;
             comp_mng->Add(entity, pos);
             ComponentRotation rot;
-            rot.value = { static_cast<float>(random_helper::Random(static_cast<int>(10)))/3.14f
-                ,static_cast<float>(random_helper::Random(static_cast<int>(10))) / 3.14f
-                ,static_cast<float>(random_helper::Random(static_cast<int>(10))) / 3.14f };
+            rot.value = { static_cast<float>(random_helper::Random(static_cast<int>(10)))
+                ,static_cast<float>(random_helper::Random(static_cast<int>(10)))
+                ,static_cast<float>(random_helper::Random(static_cast<int>(10))) };
             comp_mng->Add(entity, rot);
             ComponentScale scale;
-            float scale_rand = 1000.f;
+            float scale_rand = 10.f;
             scale.value = { scale_rand, scale_rand, scale_rand };
             comp_mng->Add(entity, scale);
             ComponentLocalToWorld l2w;
@@ -118,7 +118,8 @@ bool SceneTest::InitializeCore()
             ComponentGltf gltf;
             gltf.model= 
                 ResourceManager::Instance()
-                .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\rock.glb");
+                .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\RPG-Character.glb");
+            gltf.animated_nodes = gltf.model->GetNodes();
             comp_mng->Add(entity, gltf);
             ComponentInstanced instanced;
             comp_mng->Add(entity, instanced);

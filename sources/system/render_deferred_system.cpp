@@ -441,6 +441,10 @@ void RenderDeferredSystem::DirectionalShadowRendering()
                 {
                     worlds.clear();
                 }
+                for (auto& [model, animated_node_list] : model_to_animated_nodes_list_)
+                {
+                    animated_node_list.clear();
+                }
 
                 //通常GLTFモデルのシャドウマップレンダリング
                 comp_mng_.ForEach<ComponentGltf>([&,this](uint32_t entity_id, ComponentGltf& gltf)
@@ -473,15 +477,16 @@ void RenderDeferredSystem::DirectionalShadowRendering()
                                         adjast->adjust_roughness);
                                 }
 
-                                gltf.model->Render(Graphics::Instance().GetDeviceContext(), l2w->value, true/*shadow_render_flag*/);
+                                gltf.model->Render(Graphics::Instance().GetDeviceContext(), l2w->value,gltf.animated_nodes, true/*shadow_render_flag*/);
                             }
 
 
                             // インスタンシング対象のみ抽出
                             if (l2w && ins)
                             {
-
-                                model_to_worlds_[gltf.model.get()].push_back(l2w->value);
+                                auto* model = gltf.model.get();
+                                model_to_worlds_[model].push_back(l2w->value);
+                                model_to_animated_nodes_list_[model].push_back(&gltf.animated_nodes);
                             }
 
 
@@ -494,11 +499,16 @@ void RenderDeferredSystem::DirectionalShadowRendering()
                     ID3D11Device* device = Graphics::Instance().GetDevice();
                     ID3D11DeviceContext* context = Graphics::Instance().GetDeviceContext();
                     HRESULT hr{ S_OK };
-
+                    int i = 0;
                     for (auto& [model, world_matrices] : model_to_worlds_)
                     {
                         if (world_matrices.empty()) continue;
 
+                        auto& animated_nodes_list = model_to_animated_nodes_list_[model];
+
+                        _ASSERT_EXPR(
+                            animated_nodes_list.size() == world_matrices.size(),
+                            L"world_matrices and animated_nodes_list size mismatch.");
 
                         InstanceBufferInfo& buf_info= instance_buffer_pool_[model];
 
@@ -529,10 +539,18 @@ void RenderDeferredSystem::DirectionalShadowRendering()
                         }
 
                         // インスタンシング描画呼び出し
-                        model->InstancingRender(context,
+                        //model->InstancingRender(context,
+                        //    static_cast<UINT>(world_matrices.size()),
+                        //    buf_info.buffer.Get(),
+                        //    model_to_animated_nodes_[model],
+                        //    0, true/*shadow_render_flag*/);
+                        model->InstancingRender(
+                            Graphics::Instance().GetDevice(),
+                            context,
                             static_cast<UINT>(world_matrices.size()),
                             buf_info.buffer.Get(),
-                            0, true/*shadow_render_flag*/);
+                            animated_nodes_list,
+                            0, true);
                     }
                 }
             }

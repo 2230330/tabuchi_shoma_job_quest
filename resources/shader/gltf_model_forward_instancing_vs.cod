@@ -61,6 +61,7 @@
 // PREVIOUS_WORLD_MATRIX     1   xyzw       11     NONE   float       
 // PREVIOUS_WORLD_MATRIX     2   xyzw       12     NONE   float       
 // PREVIOUS_WORLD_MATRIX     3   xyzw       13     NONE   float       
+// SV_InstanceID            0   x          14   INSTID    uint       
 //
 //
 // Output signature:
@@ -109,6 +110,7 @@ dcl_temps 9
 //   v11.x <- vin.previous_world1.x; v11.y <- vin.previous_world1.y; v11.z <- vin.previous_world1.z; v11.w <- vin.previous_world1.w; 
 //   v12.x <- vin.previous_world2.x; v12.y <- vin.previous_world2.y; v12.z <- vin.previous_world2.z; v12.w <- vin.previous_world2.w; 
 //   v13.x <- vin.previous_world3.x; v13.y <- vin.previous_world3.y; v13.z <- vin.previous_world3.z; v13.w <- vin.previous_world3.w; 
+//   v14.x <- vin.instance_id; 
 //   o5.x <- <main return value>.current_clip_position.x; o5.y <- <main return value>.current_clip_position.y; o5.z <- <main return value>.current_clip_position.z; o5.w <- <main return value>.current_clip_position.w; 
 //   o6.x <- <main return value>.previous_clip_position.x; o6.y <- <main return value>.previous_clip_position.y; o6.z <- <main return value>.previous_clip_position.z; o6.w <- <main return value>.previous_clip_position.w; 
 //   o4.x <- <main return value>.texcoord.x; o4.y <- <main return value>.texcoord.y; 

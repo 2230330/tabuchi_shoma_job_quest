@@ -11,7 +11,7 @@
 //   row_major float4x4 previous_world; // Offset:   64 Size:    64 [unused]
 //   int material;                      // Offset:  128 Size:     4 [unused]
 //   int has_tangent;                   // Offset:  132 Size:     4 [unused]
-//   int skin;                          // Offset:  136 Size:     4 [unused]
+//   int skin;                          // Offset:  136 Size:     4
 //   int pad;                           // Offset:  140 Size:     4 [unused]
 //
 // }
@@ -26,11 +26,24 @@
 //
 // }
 //
+// Resource bind info for g_instance_joint_matrices
+// {
+//
+//   struct INSTANCE_JOINT_MATRIX
+//   {
+//       
+//       row_major float4x4 value;      // Offset:    0
+//
+//   } $Element;                        // Offset:    0 Size:    64
+//
+// }
+//
 //
 // Resource Bindings:
 //
 // Name                                 Type  Format         Dim      HLSL Bind  Count
 // ------------------------------ ---------- ------- ----------- -------------- ------
+// g_instance_joint_matrices         texture  struct         r/o             t8      1 
 // PRIMITIVE_CONSTANT_BUFFER         cbuffer      NA          NA            cb0      1 
 // CascadeShadowMap                  cbuffer      NA          NA            cb8      1 
 //
@@ -44,8 +57,8 @@
 // NORMAL                   0   xyzw        1     NONE   float       
 // TANGENT                  0   xyzw        2     NONE   float       
 // TEXCOORD                 0   xy          3     NONE   float       
-// JOINTS                   0   xyzw        4     NONE    uint       
-// WEIGHTS                  0   xyzw        5     NONE   float       
+// JOINTS                   0   xyzw        4     NONE    uint   xyzw
+// WEIGHTS                  0   xyzw        5     NONE   float   xyzw
 // WORLD_MATRIX             0   xyzw        6     NONE   float   xyzw
 // WORLD_MATRIX             1   xyzw        7     NONE   float   xyzw
 // WORLD_MATRIX             2   xyzw        8     NONE   float   xyzw
@@ -54,6 +67,7 @@
 // PREVIOUS_WORLD_MATRIX     1   xyzw       11     NONE   float       
 // PREVIOUS_WORLD_MATRIX     2   xyzw       12     NONE   float       
 // PREVIOUS_WORLD_MATRIX     3   xyzw       13     NONE   float       
+// SV_InstanceID            0   x          14   INSTID    uint   x   
 //
 //
 // Output signature:
@@ -70,15 +84,19 @@
 //
 vs_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_constantbuffer CB0[4], immediateIndexed
+dcl_constantbuffer CB0[9], immediateIndexed
 dcl_constantbuffer CB8[22], dynamicIndexed
+dcl_resource_structured t8, 64
 dcl_input v0.xyz
+dcl_input v4.xyzw
+dcl_input v5.xyzw
 dcl_input v6.xyzw
 dcl_input v7.xyzw
 dcl_input v8.xyzw
 dcl_input v9.xyzw
+dcl_input_sgv v14.x, instance_id
 dcl_output_siv o0.xyzw, position
-dcl_temps 8
+dcl_temps 19
 //
 // Initial variable locations:
 //   v0.x <- vin.position.x; v0.y <- vin.position.y; v0.z <- vin.position.z; v0.w <- vin.position.w; 
@@ -95,6 +113,7 @@ dcl_temps 8
 //   v11.x <- vin.previous_world1.x; v11.y <- vin.previous_world1.y; v11.z <- vin.previous_world1.z; v11.w <- vin.previous_world1.w; 
 //   v12.x <- vin.previous_world2.x; v12.y <- vin.previous_world2.y; v12.z <- vin.previous_world2.z; v12.w <- vin.previous_world2.w; 
 //   v13.x <- vin.previous_world3.x; v13.y <- vin.previous_world3.y; v13.z <- vin.previous_world3.z; v13.w <- vin.previous_world3.w; 
+//   v14.x <- vin.instance_id; 
 //   o1.x <- <main return value>.w_position.x; o1.y <- <main return value>.w_position.y; o1.z <- <main return value>.w_position.z; o1.w <- <main return value>.w_position.w; 
 //   o2.x <- <main return value>.w_normal.x; o2.y <- <main return value>.w_normal.y; o2.z <- <main return value>.w_normal.z; o2.w <- <main return value>.w_normal.w; 
 //   o3.x <- <main return value>.w_tangent.x; o3.y <- <main return value>.w_tangent.y; o3.z <- <main return value>.w_tangent.z; o3.w <- <main return value>.w_tangent.w; 
@@ -103,85 +122,279 @@ dcl_temps 8
 //   o6.x <- <main return value>.previous_clip_position.x; o6.y <- <main return value>.previous_clip_position.y; o6.z <- <main return value>.previous_clip_position.z; o6.w <- <main return value>.previous_clip_position.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 11 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
-mov r0.xyzw, v6.xyzw  // r0.x <- world_matrix._m00; r0.y <- world_matrix._m01; r0.z <- world_matrix._m02; r0.w <- world_matrix._m03
+#line 58 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model.hlsli"
+mov r0.x, l(512)  // r0.x <- PRIMITIVE_MAX_JOINTS
 
-#line 12
-mov r1.xyzw, v7.xyzw  // r1.x <- world_matrix._m10; r1.y <- world_matrix._m11; r1.z <- world_matrix._m12; r1.w <- world_matrix._m13
+#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
+mov r1.xyz, v0.xyzx  // r1.x <- local_position.x; r1.y <- local_position.y; r1.z <- local_position.z
 
-#line 13
-mov r2.xyzw, v8.xyzw  // r2.x <- world_matrix._m20; r2.y <- world_matrix._m21; r2.z <- world_matrix._m22; r2.w <- world_matrix._m23
+#line 11
+mov r1.w, l(1.000000)  // r1.w <- local_position.w
 
 #line 14
-mov r3.xyzw, v9.xyzw  // r3.x <- world_matrix._m30; r3.y <- world_matrix._m31; r3.z <- world_matrix._m32; r3.w <- world_matrix._m33
+ilt r0.y, l(-1), cb0[8].z
+if_nz r0.y
 
-#line 15
-mul r4.xyzw, r0.xyzw, cb0[0].xxxx
-mul r5.xyzw, r1.xyzw, cb0[0].yyyy
-add r4.xyzw, r4.xyzw, r5.xyzw
-mul r5.xyzw, r2.xyzw, cb0[0].zzzz
-add r4.xyzw, r4.xyzw, r5.xyzw
-mul r5.xyzw, r3.xyzw, cb0[0].wwww
-add r4.xyzw, r4.xyzw, r5.xyzw
-mul r5.xyzw, r0.xyzw, cb0[1].xxxx
-mul r6.xyzw, r1.xyzw, cb0[1].yyyy
-add r5.xyzw, r5.xyzw, r6.xyzw
-mul r6.xyzw, r2.xyzw, cb0[1].zzzz
-add r5.xyzw, r5.xyzw, r6.xyzw
-mul r6.xyzw, r3.xyzw, cb0[1].wwww
-add r5.xyzw, r5.xyzw, r6.xyzw
-mul r6.xyzw, r0.xyzw, cb0[2].xxxx
-mul r7.xyzw, r1.xyzw, cb0[2].yyyy
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r2.xyzw, cb0[2].zzzz
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r7.xyzw, r3.xyzw, cb0[2].wwww
-add r6.xyzw, r6.xyzw, r7.xyzw
-mul r0.xyzw, r0.xyzw, cb0[3].xxxx
-mul r1.xyzw, r1.xyzw, cb0[3].yyyy
-add r0.xyzw, r0.xyzw, r1.xyzw
-mul r1.xyzw, r2.xyzw, cb0[3].zzzz
-add r0.xyzw, r0.xyzw, r1.xyzw
-mul r1.xyzw, r3.xyzw, cb0[3].wwww
-add r0.xyzw, r0.xyzw, r1.xyzw
-mov r1.x, r4.x  // r1.x <- world_matrix._m00
-mov r1.y, r5.x  // r1.y <- world_matrix._m10
-mov r1.z, r6.x  // r1.z <- world_matrix._m20
-mov r1.w, r0.x  // r1.w <- world_matrix._m30
-mov r2.x, r4.y  // r2.x <- world_matrix._m01
-mov r2.y, r5.y  // r2.y <- world_matrix._m11
-mov r2.z, r6.y  // r2.z <- world_matrix._m21
-mov r2.w, r0.y  // r2.w <- world_matrix._m31
-mov r3.x, r4.z  // r3.x <- world_matrix._m02
-mov r3.y, r5.z  // r3.y <- world_matrix._m12
-mov r3.z, r6.z  // r3.z <- world_matrix._m22
-mov r3.w, r0.z  // r3.w <- world_matrix._m32
-mov r0.x, r4.w  // r0.x <- world_matrix._m03
-mov r0.y, r5.w  // r0.y <- world_matrix._m13
-mov r0.z, r6.w  // r0.z <- world_matrix._m23
-mov r0.w, r0.w  // r0.w <- world_matrix._m33
+#line 16
+  nop 
+  mov r2.xyzw, v4.xyzw
+  mov r0.y, v5.x
+  mov r3.xyz, v5.yzwy
+  mov r0.z, v14.x
+
+#line 110 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model.hlsli"
+  nop 
+  mov r0.z, r0.z
+  mov r2.x, r2.x
+
+#line 101
+  imul null, r0.w, r0.x, r0.z
+  iadd r0.w, r2.x, r0.w  // r0.w <- matrix_index
+
+#line 103
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r4.x, r0.w, l(0), t8.xxxx  // r4.x <- <GetInstanceJointMatrix return value>._m00
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r5.x, r0.w, l(4), t8.xxxx  // r5.x <- <GetInstanceJointMatrix return value>._m01
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r6.x, r0.w, l(8), t8.xxxx  // r6.x <- <GetInstanceJointMatrix return value>._m02
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r7.x, r0.w, l(12), t8.xxxx  // r7.x <- <GetInstanceJointMatrix return value>._m03
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r4.y, r0.w, l(16), t8.xxxx  // r4.y <- <GetInstanceJointMatrix return value>._m10
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r5.y, r0.w, l(20), t8.xxxx  // r5.y <- <GetInstanceJointMatrix return value>._m11
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r6.y, r0.w, l(24), t8.xxxx  // r6.y <- <GetInstanceJointMatrix return value>._m12
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r7.y, r0.w, l(28), t8.xxxx  // r7.y <- <GetInstanceJointMatrix return value>._m13
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r4.z, r0.w, l(32), t8.xxxx  // r4.z <- <GetInstanceJointMatrix return value>._m20
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r5.z, r0.w, l(36), t8.xxxx  // r5.z <- <GetInstanceJointMatrix return value>._m21
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r6.z, r0.w, l(40), t8.xxxx  // r6.z <- <GetInstanceJointMatrix return value>._m22
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r7.z, r0.w, l(44), t8.xxxx  // r7.z <- <GetInstanceJointMatrix return value>._m23
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r4.w, r0.w, l(48), t8.xxxx  // r4.w <- <GetInstanceJointMatrix return value>._m30
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r5.w, r0.w, l(52), t8.xxxx  // r5.w <- <GetInstanceJointMatrix return value>._m31
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r6.w, r0.w, l(56), t8.xxxx  // r6.w <- <GetInstanceJointMatrix return value>._m32
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r7.w, r0.w, l(60), t8.xxxx  // r7.w <- <GetInstanceJointMatrix return value>._m33
+
+#line 110
+  mov r4.xyzw, r4.xyzw  // r4.x <- m0._m00; r4.y <- m0._m10; r4.z <- m0._m20; r4.w <- m0._m30
+  mov r5.xyzw, r5.xyzw  // r5.x <- m0._m01; r5.y <- m0._m11; r5.z <- m0._m21; r5.w <- m0._m31
+  mov r6.xyzw, r6.xyzw  // r6.x <- m0._m02; r6.y <- m0._m12; r6.z <- m0._m22; r6.w <- m0._m32
+  mov r7.xyzw, r7.xyzw  // r7.x <- m0._m03; r7.y <- m0._m13; r7.z <- m0._m23; r7.w <- m0._m33
+
+#line 112
+  nop 
+  mov r2.y, r2.y
+
+#line 101
+  imul null, r0.w, r0.x, r0.z
+  iadd r0.w, r2.y, r0.w  // r0.w <- matrix_index
+
+#line 103
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r8.x, r0.w, l(0), t8.xxxx  // r8.x <- <GetInstanceJointMatrix return value>._m00
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r9.x, r0.w, l(4), t8.xxxx  // r9.x <- <GetInstanceJointMatrix return value>._m01
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r10.x, r0.w, l(8), t8.xxxx  // r10.x <- <GetInstanceJointMatrix return value>._m02
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r11.x, r0.w, l(12), t8.xxxx  // r11.x <- <GetInstanceJointMatrix return value>._m03
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r8.y, r0.w, l(16), t8.xxxx  // r8.y <- <GetInstanceJointMatrix return value>._m10
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r9.y, r0.w, l(20), t8.xxxx  // r9.y <- <GetInstanceJointMatrix return value>._m11
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r10.y, r0.w, l(24), t8.xxxx  // r10.y <- <GetInstanceJointMatrix return value>._m12
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r11.y, r0.w, l(28), t8.xxxx  // r11.y <- <GetInstanceJointMatrix return value>._m13
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r8.z, r0.w, l(32), t8.xxxx  // r8.z <- <GetInstanceJointMatrix return value>._m20
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r9.z, r0.w, l(36), t8.xxxx  // r9.z <- <GetInstanceJointMatrix return value>._m21
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r10.z, r0.w, l(40), t8.xxxx  // r10.z <- <GetInstanceJointMatrix return value>._m22
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r11.z, r0.w, l(44), t8.xxxx  // r11.z <- <GetInstanceJointMatrix return value>._m23
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r8.w, r0.w, l(48), t8.xxxx  // r8.w <- <GetInstanceJointMatrix return value>._m30
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r9.w, r0.w, l(52), t8.xxxx  // r9.w <- <GetInstanceJointMatrix return value>._m31
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r10.w, r0.w, l(56), t8.xxxx  // r10.w <- <GetInstanceJointMatrix return value>._m32
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r11.w, r0.w, l(60), t8.xxxx  // r11.w <- <GetInstanceJointMatrix return value>._m33
+
+#line 112
+  mov r8.xyzw, r8.xyzw  // r8.x <- m1._m00; r8.y <- m1._m10; r8.z <- m1._m20; r8.w <- m1._m30
+  mov r9.xyzw, r9.xyzw  // r9.x <- m1._m01; r9.y <- m1._m11; r9.z <- m1._m21; r9.w <- m1._m31
+  mov r10.xyzw, r10.xyzw  // r10.x <- m1._m02; r10.y <- m1._m12; r10.z <- m1._m22; r10.w <- m1._m32
+  mov r11.xyzw, r11.xyzw  // r11.x <- m1._m03; r11.y <- m1._m13; r11.z <- m1._m23; r11.w <- m1._m33
+
+#line 114
+  nop 
+  mov r2.z, r2.z
+
+#line 101
+  imul null, r0.w, r0.x, r0.z
+  iadd r0.w, r2.z, r0.w  // r0.w <- matrix_index
+
+#line 103
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r12.x, r0.w, l(0), t8.xxxx  // r12.x <- <GetInstanceJointMatrix return value>._m00
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r13.x, r0.w, l(4), t8.xxxx  // r13.x <- <GetInstanceJointMatrix return value>._m01
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r14.x, r0.w, l(8), t8.xxxx  // r14.x <- <GetInstanceJointMatrix return value>._m02
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r15.x, r0.w, l(12), t8.xxxx  // r15.x <- <GetInstanceJointMatrix return value>._m03
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r12.y, r0.w, l(16), t8.xxxx  // r12.y <- <GetInstanceJointMatrix return value>._m10
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r13.y, r0.w, l(20), t8.xxxx  // r13.y <- <GetInstanceJointMatrix return value>._m11
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r14.y, r0.w, l(24), t8.xxxx  // r14.y <- <GetInstanceJointMatrix return value>._m12
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r15.y, r0.w, l(28), t8.xxxx  // r15.y <- <GetInstanceJointMatrix return value>._m13
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r12.z, r0.w, l(32), t8.xxxx  // r12.z <- <GetInstanceJointMatrix return value>._m20
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r13.z, r0.w, l(36), t8.xxxx  // r13.z <- <GetInstanceJointMatrix return value>._m21
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r14.z, r0.w, l(40), t8.xxxx  // r14.z <- <GetInstanceJointMatrix return value>._m22
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r15.z, r0.w, l(44), t8.xxxx  // r15.z <- <GetInstanceJointMatrix return value>._m23
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r12.w, r0.w, l(48), t8.xxxx  // r12.w <- <GetInstanceJointMatrix return value>._m30
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r13.w, r0.w, l(52), t8.xxxx  // r13.w <- <GetInstanceJointMatrix return value>._m31
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r14.w, r0.w, l(56), t8.xxxx  // r14.w <- <GetInstanceJointMatrix return value>._m32
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r15.w, r0.w, l(60), t8.xxxx  // r15.w <- <GetInstanceJointMatrix return value>._m33
+
+#line 114
+  mov r12.xyzw, r12.xyzw  // r12.x <- m2._m00; r12.y <- m2._m10; r12.z <- m2._m20; r12.w <- m2._m30
+  mov r13.xyzw, r13.xyzw  // r13.x <- m2._m01; r13.y <- m2._m11; r13.z <- m2._m21; r13.w <- m2._m31
+  mov r14.xyzw, r14.xyzw  // r14.x <- m2._m02; r14.y <- m2._m12; r14.z <- m2._m22; r14.w <- m2._m32
+  mov r15.xyzw, r15.xyzw  // r15.x <- m2._m03; r15.y <- m2._m13; r15.z <- m2._m23; r15.w <- m2._m33
+
+#line 116
+  nop 
+  mov r2.w, r2.w
+
+#line 101
+  imul null, r0.x, r0.x, r0.z
+  iadd r0.x, r2.w, r0.x  // r0.x <- matrix_index
+
+#line 103
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.x, r0.x, l(0), t8.xxxx  // r2.x <- <GetInstanceJointMatrix return value>._m00
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r16.x, r0.x, l(4), t8.xxxx  // r16.x <- <GetInstanceJointMatrix return value>._m01
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r17.x, r0.x, l(8), t8.xxxx  // r17.x <- <GetInstanceJointMatrix return value>._m02
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r18.x, r0.x, l(12), t8.xxxx  // r18.x <- <GetInstanceJointMatrix return value>._m03
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.y, r0.x, l(16), t8.xxxx  // r2.y <- <GetInstanceJointMatrix return value>._m10
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r16.y, r0.x, l(20), t8.xxxx  // r16.y <- <GetInstanceJointMatrix return value>._m11
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r17.y, r0.x, l(24), t8.xxxx  // r17.y <- <GetInstanceJointMatrix return value>._m12
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r18.y, r0.x, l(28), t8.xxxx  // r18.y <- <GetInstanceJointMatrix return value>._m13
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.z, r0.x, l(32), t8.xxxx  // r2.z <- <GetInstanceJointMatrix return value>._m20
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r16.z, r0.x, l(36), t8.xxxx  // r16.z <- <GetInstanceJointMatrix return value>._m21
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r17.z, r0.x, l(40), t8.xxxx  // r17.z <- <GetInstanceJointMatrix return value>._m22
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r18.z, r0.x, l(44), t8.xxxx  // r18.z <- <GetInstanceJointMatrix return value>._m23
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r2.w, r0.x, l(48), t8.xxxx  // r2.w <- <GetInstanceJointMatrix return value>._m30
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r16.w, r0.x, l(52), t8.xxxx  // r16.w <- <GetInstanceJointMatrix return value>._m31
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r17.w, r0.x, l(56), t8.xxxx  // r17.w <- <GetInstanceJointMatrix return value>._m32
+  ld_structured_indexable(structured_buffer, stride=64)(mixed,mixed,mixed,mixed) r18.w, r0.x, l(60), t8.xxxx  // r18.w <- <GetInstanceJointMatrix return value>._m33
+
+#line 116
+  mov r2.xyzw, r2.xyzw  // r2.x <- m3._m00; r2.y <- m3._m10; r2.z <- m3._m20; r2.w <- m3._m30
+  mov r16.xyzw, r16.xyzw  // r16.x <- m3._m01; r16.y <- m3._m11; r16.z <- m3._m21; r16.w <- m3._m31
+  mov r17.xyzw, r17.xyzw  // r17.x <- m3._m02; r17.y <- m3._m12; r17.z <- m3._m22; r17.w <- m3._m32
+  mov r18.xyzw, r18.xyzw  // r18.x <- m3._m03; r18.y <- m3._m13; r18.z <- m3._m23; r18.w <- m3._m33
+
+#line 118
+  mul r4.xyzw, r0.yyyy, r4.xyzw
+  mul r5.xyzw, r0.yyyy, r5.xyzw
+  mul r6.xyzw, r0.yyyy, r6.xyzw
+  mul r0.xyzw, r0.yyyy, r7.xyzw
+  mul r7.xyzw, r3.xxxx, r8.xyzw
+  mul r8.xyzw, r3.xxxx, r9.xyzw
+  mul r9.xyzw, r3.xxxx, r10.xyzw
+  mul r10.xyzw, r3.xxxx, r11.xyzw
+  add r4.xyzw, r4.xyzw, r7.xyzw
+  add r5.xyzw, r5.xyzw, r8.xyzw
+  add r6.xyzw, r6.xyzw, r9.xyzw
+  add r0.xyzw, r0.xyzw, r10.xyzw
+  mul r7.xyzw, r3.yyyy, r12.xyzw
+  mul r8.xyzw, r3.yyyy, r13.xyzw
+  mul r9.xyzw, r3.yyyy, r14.xyzw
+  mul r10.xyzw, r3.yyyy, r15.xyzw
+  add r4.xyzw, r4.xyzw, r7.xyzw
+  add r5.xyzw, r5.xyzw, r8.xyzw
+  add r6.xyzw, r6.xyzw, r9.xyzw
+  add r0.xyzw, r0.xyzw, r10.xyzw
+  mul r2.xyzw, r3.zzzz, r2.xyzw
+  mul r7.xyzw, r3.zzzz, r16.xyzw
+  mul r8.xyzw, r3.zzzz, r17.xyzw
+  mul r3.xyzw, r3.zzzz, r18.xyzw
+  add r2.xyzw, r2.xyzw, r4.xyzw  // r2.x <- <BuildSkinMatrix return value>._m00; r2.y <- <BuildSkinMatrix return value>._m10; r2.z <- <BuildSkinMatrix return value>._m20; r2.w <- <BuildSkinMatrix return value>._m30
+  add r4.xyzw, r5.xyzw, r7.xyzw  // r4.x <- <BuildSkinMatrix return value>._m01; r4.y <- <BuildSkinMatrix return value>._m11; r4.z <- <BuildSkinMatrix return value>._m21; r4.w <- <BuildSkinMatrix return value>._m31
+  add r5.xyzw, r6.xyzw, r8.xyzw  // r5.x <- <BuildSkinMatrix return value>._m02; r5.y <- <BuildSkinMatrix return value>._m12; r5.z <- <BuildSkinMatrix return value>._m22; r5.w <- <BuildSkinMatrix return value>._m32
+  add r0.xyzw, r0.xyzw, r3.xyzw  // r0.x <- <BuildSkinMatrix return value>._m03; r0.y <- <BuildSkinMatrix return value>._m13; r0.z <- <BuildSkinMatrix return value>._m23; r0.w <- <BuildSkinMatrix return value>._m33
+
+#line 16 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
+  mov r2.xyzw, r2.xyzw  // r2.x <- skin_matrix._m00; r2.y <- skin_matrix._m10; r2.z <- skin_matrix._m20; r2.w <- skin_matrix._m30
+  mov r4.xyzw, r4.xyzw  // r4.x <- skin_matrix._m01; r4.y <- skin_matrix._m11; r4.z <- skin_matrix._m21; r4.w <- skin_matrix._m31
+  mov r5.xyzw, r5.xyzw  // r5.x <- skin_matrix._m02; r5.y <- skin_matrix._m12; r5.z <- skin_matrix._m22; r5.w <- skin_matrix._m32
+  mov r0.xyzw, r0.xyzw  // r0.x <- skin_matrix._m03; r0.y <- skin_matrix._m13; r0.z <- skin_matrix._m23; r0.w <- skin_matrix._m33
 
 #line 17
-itof r4.w, l(1)  // r4.w <- vin.position.w
+  dp4 r2.x, r1.xyzw, r2.xyzw  // r2.x <- local_position.x
+  dp4 r2.y, r1.xyzw, r4.xyzw  // r2.y <- local_position.y
+  dp4 r2.z, r1.xyzw, r5.xyzw  // r2.z <- local_position.z
+  dp4 r2.w, r1.xyzw, r0.xyzw  // r2.w <- local_position.w
 
 #line 18
-mov r4.xyz, v0.xyzx
-dp4 r1.x, r4.xyzw, r1.xyzw  // r1.x <- wpos.x
-dp4 r1.y, r4.xyzw, r2.xyzw  // r1.y <- wpos.y
-dp4 r1.z, r4.xyzw, r3.xyzw  // r1.z <- wpos.z
-dp4 r0.x, r4.xyzw, r0.xyzw  // r0.x <- wpos.w
+  mov r1.xyzw, r2.xyzw  // r1.x <- local_position.x; r1.y <- local_position.y; r1.z <- local_position.z; r1.w <- local_position.w
+endif 
 
-#line 19
-imul null, r0.y, cb8[21].x, l(4)
-mul r2.xyzw, r1.xxxx, cb8[r0.y + 0].xyzw
-mul r3.xyzw, r1.yyyy, cb8[r0.y + 1].xyzw
+#line 20
+nop 
+mov r0.xyzw, v6.xyzw
+mov r2.xyzw, v7.xyzw
+mov r3.xyzw, v8.xyzw
+mov r4.xyzw, v9.xyzw
+
+#line 75 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model.hlsli"
+mov r0.xyzw, r0.xyzw  // r0.x <- instance_world._m00; r0.y <- instance_world._m01; r0.z <- instance_world._m02; r0.w <- instance_world._m03
+
+#line 76
+mov r2.xyzw, r2.xyzw  // r2.x <- instance_world._m10; r2.y <- instance_world._m11; r2.z <- instance_world._m12; r2.w <- instance_world._m13
+
+#line 77
+mov r3.xyzw, r3.xyzw  // r3.x <- instance_world._m20; r3.y <- instance_world._m21; r3.z <- instance_world._m22; r3.w <- instance_world._m23
+
+#line 78
+mov r4.xyzw, r4.xyzw  // r4.x <- instance_world._m30; r4.y <- instance_world._m31; r4.z <- instance_world._m32; r4.w <- instance_world._m33
+
+#line 80
+mov r5.x, r0.x  // r5.x <- <BuildInstanceWorldMatrix return value>._m00
+mov r5.y, r2.x  // r5.y <- <BuildInstanceWorldMatrix return value>._m10
+mov r5.z, r3.x  // r5.z <- <BuildInstanceWorldMatrix return value>._m20
+mov r5.w, r4.x  // r5.w <- <BuildInstanceWorldMatrix return value>._m30
+mov r6.x, r0.y  // r6.x <- <BuildInstanceWorldMatrix return value>._m01
+mov r6.y, r2.y  // r6.y <- <BuildInstanceWorldMatrix return value>._m11
+mov r6.z, r3.y  // r6.z <- <BuildInstanceWorldMatrix return value>._m21
+mov r6.w, r4.y  // r6.w <- <BuildInstanceWorldMatrix return value>._m31
+mov r7.x, r0.z  // r7.x <- <BuildInstanceWorldMatrix return value>._m02
+mov r7.y, r2.z  // r7.y <- <BuildInstanceWorldMatrix return value>._m12
+mov r7.z, r3.z  // r7.z <- <BuildInstanceWorldMatrix return value>._m22
+mov r7.w, r4.z  // r7.w <- <BuildInstanceWorldMatrix return value>._m32
+mov r4.x, r0.w  // r4.x <- <BuildInstanceWorldMatrix return value>._m03
+mov r4.y, r2.w  // r4.y <- <BuildInstanceWorldMatrix return value>._m13
+mov r4.z, r3.w  // r4.z <- <BuildInstanceWorldMatrix return value>._m23
+mov r4.w, r4.w  // r4.w <- <BuildInstanceWorldMatrix return value>._m33
+
+#line 20 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
+mov r5.xyzw, r5.xyzw  // r5.x <- instance_world_matrix._m00; r5.y <- instance_world_matrix._m10; r5.z <- instance_world_matrix._m20; r5.w <- instance_world_matrix._m30
+mov r6.xyzw, r6.xyzw  // r6.x <- instance_world_matrix._m01; r6.y <- instance_world_matrix._m11; r6.z <- instance_world_matrix._m21; r6.w <- instance_world_matrix._m31
+mov r7.xyzw, r7.xyzw  // r7.x <- instance_world_matrix._m02; r7.y <- instance_world_matrix._m12; r7.z <- instance_world_matrix._m22; r7.w <- instance_world_matrix._m32
+mov r4.xyzw, r4.xyzw  // r4.x <- instance_world_matrix._m03; r4.y <- instance_world_matrix._m13; r4.z <- instance_world_matrix._m23; r4.w <- instance_world_matrix._m33
+
+#line 23
+dp4 r0.x, cb0[0].xyzw, r5.xyzw  // r0.x <- world_matrix._m00
+dp4 r2.x, cb0[0].xyzw, r6.xyzw  // r2.x <- world_matrix._m01
+dp4 r3.x, cb0[0].xyzw, r7.xyzw  // r3.x <- world_matrix._m02
+dp4 r8.x, cb0[0].xyzw, r4.xyzw  // r8.x <- world_matrix._m03
+dp4 r0.y, cb0[1].xyzw, r5.xyzw  // r0.y <- world_matrix._m10
+dp4 r2.y, cb0[1].xyzw, r6.xyzw  // r2.y <- world_matrix._m11
+dp4 r3.y, cb0[1].xyzw, r7.xyzw  // r3.y <- world_matrix._m12
+dp4 r8.y, cb0[1].xyzw, r4.xyzw  // r8.y <- world_matrix._m13
+dp4 r0.z, cb0[2].xyzw, r5.xyzw  // r0.z <- world_matrix._m20
+dp4 r2.z, cb0[2].xyzw, r6.xyzw  // r2.z <- world_matrix._m21
+dp4 r3.z, cb0[2].xyzw, r7.xyzw  // r3.z <- world_matrix._m22
+dp4 r8.z, cb0[2].xyzw, r4.xyzw  // r8.z <- world_matrix._m23
+dp4 r0.w, cb0[3].xyzw, r5.xyzw  // r0.w <- world_matrix._m30
+dp4 r2.w, cb0[3].xyzw, r6.xyzw  // r2.w <- world_matrix._m31
+dp4 r3.w, cb0[3].xyzw, r7.xyzw  // r3.w <- world_matrix._m32
+dp4 r8.w, cb0[3].xyzw, r4.xyzw  // r8.w <- world_matrix._m33
+
+#line 25
+dp4 r0.x, r1.xyzw, r0.xyzw  // r0.x <- wpos.x
+dp4 r0.y, r1.xyzw, r2.xyzw  // r0.y <- wpos.y
+dp4 r0.z, r1.xyzw, r3.xyzw  // r0.z <- wpos.z
+dp4 r0.w, r1.xyzw, r8.xyzw  // r0.w <- wpos.w
+
+#line 27
+imul null, r1.x, cb8[21].x, l(4)
+mul r2.xyzw, r0.xxxx, cb8[r1.x + 0].xyzw
+mul r3.xyzw, r0.yyyy, cb8[r1.x + 1].xyzw
 add r2.xyzw, r2.xyzw, r3.xyzw
-mul r1.xyzw, r1.zzzz, cb8[r0.y + 2].xyzw
-add r1.xyzw, r1.xyzw, r2.xyzw
-mul r0.xyzw, r0.xxxx, cb8[r0.y + 3].xyzw
-add r0.xyzw, r0.xyzw, r1.xyzw  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z; r0.w <- vout.position.w
+mul r3.xyzw, r0.zzzz, cb8[r1.x + 2].xyzw
+add r2.xyzw, r2.xyzw, r3.xyzw
+mul r0.xyzw, r0.wwww, cb8[r1.x + 3].xyzw
+add r0.xyzw, r0.xyzw, r2.xyzw  // r0.x <- vout.position.x; r0.y <- vout.position.y; r0.z <- vout.position.z; r0.w <- vout.position.w
 
-#line 32
+#line 29
 mov o0.xyzw, r0.xyzw
 ret 
-// Approximately 64 instruction slots used
+// Approximately 204 instruction slots used

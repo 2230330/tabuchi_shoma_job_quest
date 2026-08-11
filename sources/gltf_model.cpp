@@ -56,7 +56,7 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	FetchTextures(device, gltf_model);
 	FetchAnimations(gltf_model);
 
-	animated_nodes_ = nodes_;
+	//animated_nodes_ = nodes_;
 	if (nodes_.size() > 0)
 	{
 		for (Node& node : nodes_)
@@ -84,7 +84,7 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 
 	//shadowmap用
 	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_shadow_caster_vs.cso", shadow_caster_vs_.ReleaseAndGetAddressOf(),
-		input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
+		shadow_input_layout.ReleaseAndGetAddressOf(), input_element_desc, _countof(input_element_desc));
 
 	//インスタンシング描画を埋め込みたい
 	D3D11_INPUT_ELEMENT_DESC instancing_input_element_desc[]
@@ -109,7 +109,7 @@ GltfModel::GltfModel(ID3D11Device* device, const std::string& filename) : filena
 	//shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_model_forward_instancing_vs.cso", instancing_vertex_shader_.ReleaseAndGetAddressOf(),
 	//	instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
 	shader_from_cso::CreateVsFromCso(device, "./resources/shader/gltf_instancing_shadow_caster_vs.cso", shadow_instancing_caster_vs_.ReleaseAndGetAddressOf(),
-		input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
+		shadow_instancing_input_layout.ReleaseAndGetAddressOf(), instancing_input_element_desc, _countof(instancing_input_element_desc));
 
 	shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_gbuffer_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
 	//shader_from_cso::CreatePsFromCso(device, "./resources/shader/gltf_model_ps.cso", pixel_shader.ReleaseAndGetAddressOf());
@@ -196,13 +196,21 @@ void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 	using namespace DirectX;
 
 	std::stack<XMFLOAT4X4> parent_global_transforms;
+
 	std::function<void(int)> traverse{ [&](int node_index)->void
 	{
-		Node& node{nodes.at(node_index)};
-		XMMATRIX S{ XMMatrixScaling(node.scale.x, node.scale.y, node.scale.z) };
-		XMMATRIX R{ XMMatrixRotationQuaternion(XMVectorSet(node.rotation.x, node.rotation.y, node.rotation.z, node.rotation.w)) };
-		XMMATRIX T{ XMMatrixTranslation(node.translation.x, node.translation.y, node.translation.z) };
-		XMStoreFloat4x4(&node.global_transform, S * R * T * XMLoadFloat4x4(&parent_global_transforms.top()));
+		Node& node = nodes.at(node_index);
+
+		XMMATRIX S = XMMatrixScaling(node.scale.x, node.scale.y, node.scale.z);
+		XMMATRIX R = XMMatrixRotationQuaternion(
+			XMVectorSet(node.rotation.x, node.rotation.y, node.rotation.z, node.rotation.w));
+		XMMATRIX T = XMMatrixTranslation(
+			node.translation.x, node.translation.y, node.translation.z);
+
+		XMStoreFloat4x4(
+			&node.global_transform,
+			S * R * T * XMLoadFloat4x4(&parent_global_transforms.top()));
+
 		for (int child_index : node.children)
 		{
 			parent_global_transforms.push(node.global_transform);
@@ -210,13 +218,154 @@ void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 			parent_global_transforms.pop();
 		}
 	} };
-	for (std::vector<int>::value_type node_index : scenes.at(0).nodes)
+	
+
+	const int scene_index = default_scene_ >= 0 ? default_scene_ : 0;
+
+	for (int node_index : scenes.at(scene_index).nodes)
 	{
-		parent_global_transforms.push({ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 });
+		parent_global_transforms.push({
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+			});
+
 		traverse(node_index);
+
 		parent_global_transforms.pop();
 	}
 }
+
+void GltfModel::BuildJointMatrices(
+	int skin_index,
+	const Node& skinned_node,
+	const std::vector<Node>& nodes,
+	DirectX::XMFLOAT4X4* out_matrices,
+	size_t max_joint_count) const
+{
+	using namespace DirectX;
+
+	static const XMFLOAT4X4 identity =
+	{
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+
+	for (size_t i = 0; i < max_joint_count; ++i)
+	{
+		out_matrices[i] = identity;
+	}
+
+	if (skin_index < 0)
+	{
+		return;
+	}
+
+	const Skin& skin = skins_.at(skin_index);
+
+	_ASSERT_EXPR(
+		skin.joints.size() <= max_joint_count,
+		L"Joint count exceeds PRIMITIVE_MAX_JOINTS.");
+
+	const XMMATRIX inverse_node_global =
+		XMMatrixInverse(
+			nullptr,
+			XMLoadFloat4x4(&skinned_node.global_transform));
+
+	for (size_t joint_index = 0; joint_index < skin.joints.size(); ++joint_index)
+	{
+		const int joint_node_index = skin.joints.at(joint_index);
+
+		XMStoreFloat4x4(
+			&out_matrices[joint_index],
+			XMLoadFloat4x4(&skin.inverse_bind_matrices.at(joint_index)) *
+			XMLoadFloat4x4(&nodes.at(joint_node_index).global_transform) *
+			inverse_node_global);
+	}
+}
+
+void GltfModel::EnsureInstanceJointBuffer(
+	ID3D11Device* device,
+	UINT matrix_count)
+{
+	if (matrix_count == 0)
+	{
+		return;
+	}
+
+	if (instance_joint_buffer_ && instance_joint_capacity_ >= matrix_count)
+	{
+		return;
+	}
+
+	instance_joint_buffer_.Reset();
+	instance_joint_srv_.Reset();
+
+	D3D11_BUFFER_DESC desc{};
+	desc.ByteWidth = sizeof(DirectX::XMFLOAT4X4) * matrix_count;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	desc.StructureByteStride = sizeof(DirectX::XMFLOAT4X4);
+
+	HRESULT hr = device->CreateBuffer(
+		&desc,
+		nullptr,
+		instance_joint_buffer_.ReleaseAndGetAddressOf());
+
+	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+	srv_desc.Format = DXGI_FORMAT_UNKNOWN;
+	srv_desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+	srv_desc.Buffer.FirstElement = 0;
+	srv_desc.Buffer.NumElements = matrix_count;
+
+	hr = device->CreateShaderResourceView(
+		instance_joint_buffer_.Get(),
+		&srv_desc,
+		instance_joint_srv_.ReleaseAndGetAddressOf());
+
+	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+	instance_joint_capacity_ = matrix_count;
+}
+void GltfModel::UpdateInstanceJointBuffer(
+	ID3D11DeviceContext* context,
+	const DirectX::XMFLOAT4X4* matrices,
+	UINT matrix_count)
+{
+	if (!instance_joint_buffer_ || !matrices || matrix_count == 0)
+	{
+		return;
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mapped{};
+
+	HRESULT hr = context->Map(
+		instance_joint_buffer_.Get(),
+		0,
+		D3D11_MAP_WRITE_DISCARD,
+		0,
+		&mapped);
+
+	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+	if (SUCCEEDED(hr))
+	{
+		memcpy(
+			mapped.pData,
+			matrices,
+			sizeof(DirectX::XMFLOAT4X4) * matrix_count);
+
+		context->Unmap(instance_joint_buffer_.Get(), 0);
+	}
+}
+
 DXGI_FORMAT ConvertFormat(const tinygltf::Accessor& accessor)
 {
 	switch (accessor.type)
@@ -472,11 +621,14 @@ void GltfModel::FetchMeshes(ID3D11Device* device, const tinygltf::Model& gltf_mo
 	}
 }
 
-void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XMFLOAT4X4& world,bool shadow_render_flag)
+void GltfModel::Render(ID3D11DeviceContext* immediate_context,
+	const DirectX::XMFLOAT4X4& world,
+	std::vector<Node>& animated_nodes,
+	bool shadow_render_flag)
 {
 	using namespace DirectX;
 
-	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
+	const std::vector<Node>& nodes{ animated_nodes.size() > 0 ? animated_nodes: GltfModel::nodes_ };
 
 	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
     immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
@@ -488,13 +640,14 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 	{
 		immediate_context->VSSetShader(vertex_shader_.Get(), nullptr, 0);
 		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+		immediate_context->IASetInputLayout(input_layout.Get());
 	}
 	else
 	{
 		immediate_context->VSSetShader(shadow_caster_vs_.Get(), nullptr, 0);
 		immediate_context->PSSetShader(nullptr, nullptr, 0);
+		immediate_context->IASetInputLayout(shadow_input_layout.Get());
 	}
-	immediate_context->IASetInputLayout(input_layout.Get());
 	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	std::function<void(int)> traverse{ [&](int node_index)->void {
@@ -617,99 +770,204 @@ void GltfModel::Render(ID3D11DeviceContext* immediate_context, const DirectX::XM
 
 }
 
-void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT instance_count, ID3D11Buffer* world_matrices_buffer, UINT start_instance_location,bool shadow_render_flag)
+void GltfModel::InstancingRender(
+	ID3D11Device* device,
+	ID3D11DeviceContext* immediate_context,
+	UINT instance_count,
+	ID3D11Buffer* world_matrices_buffer,
+	const std::vector<const std::vector<Node>*>& animated_nodes_list,
+	UINT start_instance_location,
+	bool shadow_render_flag)
 {
 	using namespace DirectX;
 
-	const std::vector<Node>& nodes{ animated_nodes_.size() > 0 ? animated_nodes_ : GltfModel::nodes_ };
+	if (instance_count == 0)
+	{
+		return;
+	}
 
-	immediate_context->PSSetShaderResources(0, 1, material_resource_view_.GetAddressOf());
-	immediate_context->UpdateSubresource(adjast_param_cbuffer_.Get(), 0, 0, &adjast_param_constants_, 0, 0);
+	_ASSERT_EXPR(
+		animated_nodes_list.size() >= instance_count,
+		L"animated_nodes_list size is smaller than instance_count.");
+
+	immediate_context->PSSetShaderResources(
+		0,
+		1,
+		material_resource_view_.GetAddressOf());
+
+	immediate_context->UpdateSubresource(
+		adjast_param_cbuffer_.Get(),
+		0,
+		nullptr,
+		&adjast_param_constants_,
+		0,
+		0);
+
 	immediate_context->PSSetConstantBuffers(
-		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter), 1, adjast_param_cbuffer_.GetAddressOf());
+		static_cast<UINT>(ConstantBufferSlot::kPbrAjdjastParamter),
+		1,
+		adjast_param_cbuffer_.GetAddressOf());
 
-    //シャドウレンダーフラグがある場合はシャドウマップ用のシェーダーをセットする
 	if (!shadow_render_flag)
 	{
-		immediate_context->VSSetShader(instancing_vertex_shader_.Get(), nullptr, 0);
-		immediate_context->PSSetShader(pixel_shader.Get(), nullptr, 0);
+		immediate_context->VSSetShader(
+			instancing_vertex_shader_.Get(),
+			nullptr,
+			0);
+
+		immediate_context->PSSetShader(
+			pixel_shader.Get(),
+			nullptr,
+			0);
+
+		immediate_context->IASetInputLayout(
+			instancing_input_layout.Get());
 	}
 	else
 	{
-        immediate_context->VSSetShader(shadow_instancing_caster_vs_.Get(), nullptr, 0);
-        immediate_context->PSSetShader(nullptr, nullptr, 0);
+		immediate_context->VSSetShader(
+			shadow_instancing_caster_vs_.Get(),
+			nullptr,
+			0);
+
+		immediate_context->PSSetShader(
+			nullptr,
+			nullptr,
+			0);
+
+		immediate_context->IASetInputLayout(
+			shadow_instancing_input_layout.Get());
 	}
-	immediate_context->IASetInputLayout(instancing_input_layout.Get());
-	immediate_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	immediate_context->IASetPrimitiveTopology(
+		D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	const UINT matrix_count =
+		instance_count * static_cast<UINT>(PRIMITIVE_MAX_JOINTS);
+
+	EnsureInstanceJointBuffer(device, matrix_count);
+
+	std::vector<XMFLOAT4X4> instance_joint_matrices;
+	instance_joint_matrices.resize(matrix_count);
 
 	std::function<void(int)> traverse{ [&](int node_index)->void {
-		const Node& node{nodes.at(node_index)};
-		if (node.skin > -1)
+		const Node& base_node = nodes_.at(node_index);
+
+		if (base_node.skin > -1)
 		{
-			const Skin& skin{ skins_.at(node.skin) };
-			_ASSERT_EXPR(skin.joints.size() <= PRIMITIVE_MAX_JOINTS, L"The size of the joint array is insufficient, please expand it.");
-			PrimitiveJointConstants primitive_joint_data{};
-			for (size_t joint_index = 0; joint_index < skin.joints.size(); ++joint_index)
+			for (UINT instance_index = 0; instance_index < instance_count; ++instance_index)
 			{
-				DirectX::XMStoreFloat4x4(&primitive_joint_data.matrices[joint_index],
-					XMLoadFloat4x4(&skin.inverse_bind_matrices.at(joint_index)) *
-					XMLoadFloat4x4(&nodes.at(skin.joints.at(joint_index)).global_transform) *
-					XMMatrixInverse(NULL, XMLoadFloat4x4(&node.global_transform))
-				);
+				const std::vector<Node>* animated_nodes =
+					animated_nodes_list.at(instance_index);
+
+				const std::vector<Node>& instance_nodes =
+					animated_nodes && !animated_nodes->empty()
+					? *animated_nodes
+					: nodes_;
+
+				const Node& instance_node =
+					instance_nodes.at(node_index);
+
+				BuildJointMatrices(
+					instance_node.skin,
+					instance_node,
+					instance_nodes,
+					&instance_joint_matrices[
+						static_cast<size_t>(instance_index) * PRIMITIVE_MAX_JOINTS],
+					PRIMITIVE_MAX_JOINTS);
 			}
-			immediate_context->UpdateSubresource(primitive_joint_cbuffer_.Get(), 0, 0, &primitive_joint_data, 0, 0);
-			immediate_context->VSSetConstantBuffers(static_cast<int>(ConstantBufferSlot::kPerMaterial), 1, primitive_joint_cbuffer_.GetAddressOf());
+
+			UpdateInstanceJointBuffer(
+				immediate_context,
+				instance_joint_matrices.data(),
+				matrix_count);
+
+			immediate_context->VSSetShaderResources(
+				8,
+				1,
+				instance_joint_srv_.GetAddressOf());
 		}
-		if (node.mesh > -1)
+
+		if (base_node.mesh > -1)
 		{
-			const Mesh& mesh{ meshes_.at(node.mesh) };
+			const Mesh& mesh = meshes_.at(base_node.mesh);
+
 			for (const Mesh::primitive& primitive : mesh.primitives)
 			{
-				ID3D11Buffer* vertex_buffers[]{
-					primitive.has("POSITION") ? buffers_.at(primitive.vertex_buffer_views.at("POSITION").buffer).Get() : 0,
-					primitive.has("NORMAL") ? buffers_.at(primitive.vertex_buffer_views.at("NORMAL").buffer).Get() : 0,
-					primitive.has("TANGENT") ? buffers_.at(primitive.vertex_buffer_views.at("TANGENT").buffer).Get() : 0,
-					primitive.has("TEXCOORD_0") ? buffers_.at(primitive.vertex_buffer_views.at("TEXCOORD_0").buffer).Get() : 0,
-					primitive.has("JOINTS_0") ? buffers_.at(primitive.vertex_buffer_views.at("JOINTS_0").buffer).Get() : 0,
-					primitive.has("WEIGHTS_0") ? buffers_.at(primitive.vertex_buffer_views.at("WEIGHTS_0").buffer).Get() : 0,
+				ID3D11Buffer* vertex_buffers[]
+				{
+					primitive.has("POSITION") ? buffers_.at(primitive.vertex_buffer_views.at("POSITION").buffer).Get() : nullptr,
+					primitive.has("NORMAL") ? buffers_.at(primitive.vertex_buffer_views.at("NORMAL").buffer).Get() : nullptr,
+					primitive.has("TANGENT") ? buffers_.at(primitive.vertex_buffer_views.at("TANGENT").buffer).Get() : nullptr,
+					primitive.has("TEXCOORD_0") ? buffers_.at(primitive.vertex_buffer_views.at("TEXCOORD_0").buffer).Get() : nullptr,
+					primitive.has("JOINTS_0") ? buffers_.at(primitive.vertex_buffer_views.at("JOINTS_0").buffer).Get() : nullptr,
+					primitive.has("WEIGHTS_0") ? buffers_.at(primitive.vertex_buffer_views.at("WEIGHTS_0").buffer).Get() : nullptr,
+
 					world_matrices_buffer,
 					world_matrices_buffer,
 				};
-				UINT strides[]{
+
+				UINT strides[]
+				{
 					primitive.has("POSITION") ? static_cast<UINT>(primitive.vertex_buffer_views.at("POSITION").stride_in_bytes) : 0,
 					primitive.has("NORMAL") ? static_cast<UINT>(primitive.vertex_buffer_views.at("NORMAL").stride_in_bytes) : 0,
 					primitive.has("TANGENT") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TANGENT").stride_in_bytes) : 0,
 					primitive.has("TEXCOORD_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TEXCOORD_0").stride_in_bytes) : 0,
 					primitive.has("JOINTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("JOINTS_0").stride_in_bytes) : 0,
 					primitive.has("WEIGHTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("WEIGHTS_0").stride_in_bytes) : 0,
+
 					sizeof(DirectX::XMFLOAT4X4),
 					sizeof(DirectX::XMFLOAT4X4),
 				};
-				UINT offsets[]{
+
+				UINT offsets[]
+				{
 					primitive.has("POSITION") ? static_cast<UINT>(primitive.vertex_buffer_views.at("POSITION").byte_offset) : 0,
 					primitive.has("NORMAL") ? static_cast<UINT>(primitive.vertex_buffer_views.at("NORMAL").byte_offset) : 0,
 					primitive.has("TANGENT") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TANGENT").byte_offset) : 0,
 					primitive.has("TEXCOORD_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("TEXCOORD_0").byte_offset) : 0,
 					primitive.has("JOINTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("JOINTS_0").byte_offset) : 0,
 					primitive.has("WEIGHTS_0") ? static_cast<UINT>(primitive.vertex_buffer_views.at("WEIGHTS_0").byte_offset) : 0,
+
 					0,
 					0,
 				};
-				//UINT offsets[_countof(vertex_buffers)]{ 0 };
-				immediate_context->IASetVertexBuffers(0, _countof(vertex_buffers), vertex_buffers, strides, offsets);
 
+				immediate_context->IASetVertexBuffers(
+					0,
+					_countof(vertex_buffers),
+					vertex_buffers,
+					strides,
+					offsets);
 
 				PrimitiveConstants primitive_data{};
 				primitive_data.material = primitive.material;
 				primitive_data.has_tangent = primitive.has("TANGENT");
-				primitive_data.skin = node.skin;
-				primitive_data.world = node.global_transform;
-				primitive_data.previous_world = node.global_transform;
-				immediate_context->UpdateSubresource(primitive_cbuffer_.Get(), 0, 0, &primitive_data, 0, 0);
-				immediate_context->VSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
-				immediate_context->PSSetConstantBuffers(static_cast<UINT>(ConstantBufferSlot::kPerObject), 1, primitive_cbuffer_.GetAddressOf());
+				primitive_data.skin = base_node.skin;
 
-				const Material& material{ materials_.at(primitive.material) };
+				primitive_data.world = base_node.global_transform;
+				primitive_data.previous_world = base_node.global_transform;
+
+				immediate_context->UpdateSubresource(
+					primitive_cbuffer_.Get(),
+					0,
+					nullptr,
+					&primitive_data,
+					0,
+					0);
+
+				immediate_context->VSSetConstantBuffers(
+					static_cast<UINT>(ConstantBufferSlot::kPerObject),
+					1,
+					primitive_cbuffer_.GetAddressOf());
+
+				immediate_context->PSSetConstantBuffers(
+					static_cast<UINT>(ConstantBufferSlot::kPerObject),
+					1,
+					primitive_cbuffer_.GetAddressOf());
+
+				const Material& material = materials_.at(primitive.material);
+
 				const int texture_indices[]
 				{
 					material.data.pbr_metallic_roughness.basecolor_texture.index,
@@ -718,56 +976,84 @@ void GltfModel::InstancingRender(ID3D11DeviceContext* immediate_context, UINT in
 					material.data.emissive_texture.index,
 					material.data.occlusion_texture.index,
 				};
-				ID3D11ShaderResourceView* null_shader_resource_view{};
-				std::vector<ID3D11ShaderResourceView*> shader_resource_views(_countof(texture_indices));
-				for (int texture_index = 0; texture_index < shader_resource_views.size(); ++texture_index)
+
+				ID3D11ShaderResourceView* null_shader_resource_view = nullptr;
+
+				std::vector<ID3D11ShaderResourceView*> shader_resource_views(
+					_countof(texture_indices));
+
+				for (int texture_index = 0;
+					texture_index < static_cast<int>(shader_resource_views.size());
+					++texture_index)
 				{
-					shader_resource_views.at(texture_index) = texture_indices[texture_index] > -1
-						? texture_resource_views_.at(textures_.at(texture_indices[texture_index]).source).Get()
+					shader_resource_views.at(texture_index) =
+						texture_indices[texture_index] > -1
+						? texture_resource_views_
+							.at(textures_.at(texture_indices[texture_index]).source)
+							.Get()
 						: null_shader_resource_view;
 				}
-				immediate_context->PSSetShaderResources(1, static_cast<UINT>(shader_resource_views.size()), shader_resource_views.data());
+
+				immediate_context->PSSetShaderResources(
+					1,
+					static_cast<UINT>(shader_resource_views.size()),
+					shader_resource_views.data());
 
 				if (primitive.index_buffer_view.count > 0)
 				{
-					if (primitive.index_buffer_view.format == DXGI_FORMAT_R8_UINT)
-					{
-						immediate_context->IASetIndexBuffer(
-							buffers_.at(primitive.index_buffer_view.buffer).Get(),
-							DXGI_FORMAT_R16_UINT, static_cast<UINT>(primitive.index_buffer_view.byte_offset));
+					DXGI_FORMAT index_format = primitive.index_buffer_view.format;
 
-					}
-					else
+					if (index_format == DXGI_FORMAT_R8_UINT)
 					{
+						index_format = DXGI_FORMAT_R16_UINT;
+					}
 
 					immediate_context->IASetIndexBuffer(
 						buffers_.at(primitive.index_buffer_view.buffer).Get(),
-						primitive.index_buffer_view.format, static_cast<UINT>(primitive.index_buffer_view.byte_offset));
+						index_format,
+						static_cast<UINT>(primitive.index_buffer_view.byte_offset));
 
-					}
-
-					immediate_context->DrawIndexedInstanced(static_cast<UINT>(primitive.index_buffer_view.count), 
-						instance_count, 0,0,start_instance_location);
+					immediate_context->DrawIndexedInstanced(
+						static_cast<UINT>(primitive.index_buffer_view.count),
+						instance_count,
+						0,
+						0,
+						start_instance_location);
 				}
 				else
 				{
-					immediate_context->Draw(static_cast<UINT>(primitive.vertex_buffer_views.at("POSITION").count), 0);
+					immediate_context->DrawInstanced(
+						static_cast<UINT>(
+							primitive.vertex_buffer_views.at("POSITION").count),
+						instance_count,
+						0,
+						start_instance_location);
 				}
 			}
 		}
-		for (std::vector<int>::value_type child_index : node.children)
+
+		for (int child_index : base_node.children)
 		{
 			traverse(child_index);
 		}
 	} };
-	for (std::vector<int>::value_type node_index : scenes.at(default_scene_).nodes)
+
+	for (int node_index : scenes.at(default_scene_).nodes)
 	{
 		traverse(node_index);
 	}
 
 	ID3D11ShaderResourceView* null_srv[] = { nullptr };
+
+	immediate_context->VSSetShaderResources(
+		8,
+		1,
+		null_srv);
+
 	immediate_context->PSSetShaderResources(0, 1, null_srv);
 	immediate_context->PSSetShaderResources(1, 1, null_srv);
+
+	
 }
 
 void GltfModel::FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf_model)
@@ -1081,16 +1367,22 @@ void GltfModel::Animate(size_t animation_index, float time, std::vector<Node>& a
 	}
 }
 
-void GltfModel::UpdateAnimation(float elapsed_time)
+void GltfModel::UpdateAnimation(
+	size_t animation_index,
+	float animated_time,
+	std::vector<Node>& animated_nodes) 
 {
-	if (animations_.size() > 0)
+	if (animations_.size() <= animation_index)
 	{
-		Animate(0, animation_time_ += elapsed_time, animated_nodes_);
-		if (animations_.at(0).duration < animation_time_)
-		{
-			animation_time_ = 0; // Repeat playback
-		}
+		return;
 	}
+
+	if (animated_nodes.size() != nodes_.size())
+	{
+		animated_nodes = nodes_;
+	}
+
+	Animate(animation_index, animated_time, animated_nodes);
 }
 
 const std::vector<GltfModel::Node>& GltfModel::GetNodes() const

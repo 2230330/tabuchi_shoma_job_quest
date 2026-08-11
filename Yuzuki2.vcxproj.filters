@@ -314,6 +314,9 @@
     <ClInclude Include="headers\system\render_golden_ratio_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\system\update_animation_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -455,6 +458,9 @@
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\render_golden_ratio_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\update_animation_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>

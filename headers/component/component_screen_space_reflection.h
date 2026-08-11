@@ -7,7 +7,7 @@ struct ComponentSsr :public IComponent
 {
     //スクリーンスペースリフレクションのパラメータ
     //反射の強さなどを調整するためのパラメータを入れる予定
-    float distance{ 10.0f };
+    float distance{ 1000.0f };
     int num_steps{ 10 };
     int max_mip{ 6 };
     float thickness{ 0.2f };
