@@ -138,12 +138,6 @@ void InstancingRenderSystem::Render()
             context->Unmap(buf_info.buffer.Get(), 0);
         }
 
-        // インスタンシング描画呼び出し
-        //model->InstancingRender(context,
-        //    static_cast<UINT>(world_matrices.size()),
-        //    buf_info.buffer.Get(),
-        //    model_to_animated_nodes_[model],
-        //    0);
         model->InstancingRender(
             Graphics::Instance().GetDevice(),
             context,

@@ -538,12 +538,6 @@ void RenderDeferredSystem::DirectionalShadowRendering()
                             context->Unmap(buf_info.buffer.Get(), 0);
                         }
 
-                        // インスタンシング描画呼び出し
-                        //model->InstancingRender(context,
-                        //    static_cast<UINT>(world_matrices.size()),
-                        //    buf_info.buffer.Get(),
-                        //    model_to_animated_nodes_[model],
-                        //    0, true/*shadow_render_flag*/);
                         model->InstancingRender(
                             Graphics::Instance().GetDevice(),
                             context,
