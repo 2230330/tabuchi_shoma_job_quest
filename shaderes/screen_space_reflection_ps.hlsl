@@ -130,7 +130,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     //ある程度反射方向と視線方向の角度が近い場合、早期処理を行う。
     //SSRはスクリーン空間で行うため、画面に映っていない裏側を映すことが出来ない為、
     //こちら側へと伸びて来るレイには対応できない
-    if(dot(-v,r)>0.75f)
+    if(r.z<=0.f)
     {
         return float4(0, 0, 0, 0);
     }
@@ -179,7 +179,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     
     float t_min = 0.0f;
     float t_max = 0.0f;
-    float2 t = 0.0f;
+    float t = 0.0f;
     
     bool hit = false;
     float depth_delta = 0.0f;
@@ -220,7 +220,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         float scene_linear_depth = raw_depth * camera_clip_distance.y;
         float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
 
-        float ray_z = perspectiveCorrectZ(view_pos.z, view_end.z, t);
+        float ray_z = perspectiveCorrectZ(view_start.z, view_end.z, t);
         float d = ray_z - scene_pos.z;
 
         if (has_prev)
@@ -267,7 +267,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         scene_linear_depth *= camera_clip_distance.y;
         float3 scene_pos = ReconstructViewPosition(uv, scene_linear_depth, projection_scale);
         
-        float view_z = perspectiveCorrectZ(view_pos.z, view_end.z, t);
+        float view_z = perspectiveCorrectZ(view_start.z, view_end.z, t);
         depth_delta = view_z - scene_pos.z;
 
         if (depth_delta > 0 )
@@ -280,7 +280,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     float t_hit = t_max;
     
     //final hit information
-    float2 hit_uv = lerp(start_frag, end_frag, t_max) / dimensions;
+    float2 hit_uv = lerp(start_frag, end_frag, t_hit) / dimensions;
     if(OutOfBounds(hit_uv))
     {
         return (float4) 0;
@@ -296,14 +296,21 @@ float4 main(VS_OUT pin) : SV_TARGET
     float3 hit_pos = ReconstructViewPosition(hit_uv, hit_scene_depth, projection_scale);
     
     //最後に厚みチェックを行う
-    float view_z = perspectiveCorrectZ(view_pos.z, view_end.z, t_max);
+    float view_z = perspectiveCorrectZ(view_start.z, view_end.z, t_max);
     float final_depth_delta = view_z - hit_pos.z;
     float adaptive_thickness = thickness + hit_pos.z * 0.001f;
-    if(final_depth_delta<0.0f||final_depth_delta>adaptive_thickness)
+    if (final_depth_delta < 0.0f || final_depth_delta > adaptive_thickness)
     {
         return float4(0.f, 0.f, 0.f, 0.f);
     }
     
+    float3 hit_n = GetNormalVS(hit_uv);
+    // レイ方向 r がヒット面の表側へ向かっているか確認
+    // dot(-r, hit_n) <= 0 なら裏面ヒットっぽいので破棄
+    if(dot(-r,hit_n)<=0.f)
+    {
+        return float4(0.f, 0.f, 0.f, 0.f);
+    }
 
     //現在、同オブジェクトのヒット判定を取っている事がありました。
     //本来なら深度チェックの精度を上げるなどで対処したいところでしたが、何故か無理だったので、

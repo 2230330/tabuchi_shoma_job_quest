@@ -51,17 +51,21 @@ void InstancingRenderSystem::Render()
         animated_nodes_list_.clear();
     }
 
+    DirectX::XMVECTOR dir = DirectX::XMVector3Normalize(DirectX::XMLoadFloat4(&main_camera->camera_direction));
+    DirectX::XMVECTOR camera_pos = DirectX::XMLoadFloat4(&main_camera->camera_position);
     comp_mng_.ForEach<
         ComponentInstanced,
         ComponentGltf,
         ComponentLocalToWorld,
-        ComponentBoundingBox
+        ComponentBoundingBox,
+        ComponentPosition
     >([&](
         uint32_t entity_id,
         ComponentInstanced& instanced,
         ComponentGltf& gltf,
         ComponentLocalToWorld& l2w,
-        ComponentBoundingBox& b_box
+        ComponentBoundingBox& b_box,
+        ComponentPosition&position
         ) {
 
             if (!gltf.model)
@@ -71,21 +75,51 @@ void InstancingRenderSystem::Render()
 
             bool visible = true;
 
+            DirectX::XMVECTOR obj_pos = DirectX::XMLoadFloat3(&position.value);
+            //{
+            //    DirectX::XMVECTOR camera_to_obj = DirectX::XMVector3Normalize(DirectX::XMVectorSubtract(
+            //        DirectX::XMLoadFloat3(&position.value)
+            //        , camera_pos
+            //    ));
+            //    float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(dir, camera_to_obj));
+            float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVectorSubtract(obj_pos, camera_pos)));
+            if (distance >= main_camera->camera_clip_distance.y)
+                return;
+            //    //後ろにあるなら描画しない
+            //    if (dot < 0.f)
+            //        return;
+            //    
+            //}
+
             // バウンディングボックスを取得して、フラスタムカリングを行う
             if (FrustumHelper::IsValidWorldBoundingBox(b_box))
             {
-                visible = FrustumHelper::IsAABBVisibleFromFrustumPlanes(b_box, frustum_planes);
-            }
-            else
-            {
-                // バウンディングボックスが無効な場合は、常に描画する
-                visible = true;
+                //if (!FrustumHelper::IsAABBVisibleFromFrustumPlanes(b_box, frustum_planes))
+                //{
+                //    return;
+                //}
+                const bool plane_visible =
+                    FrustumHelper::IsAABBVisibleFromFrustumPlanes(
+                        b_box,
+                        frustum_planes
+                    );
+                if (!plane_visible)
+                {
+                    return;
+                }
+
+                const bool clip_visible =
+                    FrustumHelper::IsAABBVisibleFromClipSpace(
+                        b_box,
+                        main_camera->view_projection_transform
+                    );
+
+                if ( !clip_visible)
+                {
+                    return;
+                }
             }
 
-            if (!visible)
-            {
-                return;
-            }
 
             GltfModel* model = gltf.model.get();
             model_to_worlds_[model].push_back(l2w.value);

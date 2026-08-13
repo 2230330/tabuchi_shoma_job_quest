@@ -211,6 +211,7 @@
     <ClInclude Include="external\imgui\imstb_textedit.h" />
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="headers\component\component_ajast_pbr_paramter_.h" />
+    <ClInclude Include="headers\component\component_animation.h" />
     <ClInclude Include="headers\component\component_bounding_box.h" />
     <ClInclude Include="headers\component\component_bound_box.h" />
     <ClInclude Include="headers\component\component_camera.h" />

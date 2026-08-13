@@ -14,6 +14,15 @@
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #include"..\\external\\tinygltf-2.9.6\\tiny_gltf.h"
 
+enum class AnimationTargetPath 
+{
+	Scale,
+	Rotation,
+	Translation,
+	Weights,
+	Unknown
+};
+
 class GltfModel
 {
 private:
@@ -172,7 +181,8 @@ private:
 		{
 			int sampler{ -1 }; // required
 			int target_node{ -1 }; // required (index of the node to target)
-			std::string target_path; // required in ["translation", "rotation", "scale", "weights"]
+			// required in ["translation", "rotation", "scale", "weights"]
+			AnimationTargetPath target_path = AnimationTargetPath::Unknown;
 		};
 		std::vector<Channel> channels;
 
@@ -183,6 +193,19 @@ private:
 			std::string interpolation;
 		};
 		std::vector<Sampler> samplers;
+
+		struct RuntimeAnimationChannel
+		{
+			int target_node{ -1 }; // required (index of the node to target)
+			// required in ["translation", "rotation", "scale", "weights"]
+			AnimationTargetPath target_path = AnimationTargetPath::Unknown;
+
+			const std::vector<float>* timeline = nullptr;
+			const std::vector<DirectX::XMFLOAT3>* scales = nullptr;
+			const std::vector<DirectX::XMFLOAT4>* rotations = nullptr;
+			const std::vector<DirectX::XMFLOAT3>* translations = nullptr;
+		};
+		std::vector<RuntimeAnimationChannel>runtime_channels;
 
 		std::unordered_map<int/*sampler.input*/, std::vector<float>> timelines;
 		std::unordered_map<int/*sampler.output*/, std::vector<DirectX::XMFLOAT3>> scales;
@@ -257,11 +280,14 @@ private:
 	void FetchMaterials(ID3D11Device* device, const tinygltf::Model& gltf_model);
 	void FetchTextures(ID3D11Device* device, const tinygltf::Model& gltf_model);
 	void FetchAnimations(const tinygltf::Model& gltf_model);
+	AnimationTargetPath ToAnimationTargetPath(const std::string& path);
+	void BuildRuntimeAnimationChannels();
 	void CumulateTransforms(std::vector<Node>& nodes);
+	void TraverseCumulate(std::vector<Node>& nodes, int node_index, const DirectX::XMFLOAT4X4& parent_global);
 	void BuildJointMatrices(int skin_index, const Node& skinned_node, const std::vector<Node>& nodes, DirectX::XMFLOAT4X4* out_matrices, size_t max_joint_count)const;
 	void EnsureInstanceJointBuffer(ID3D11Device* device,UINT matrix_count);
 	void UpdateInstanceJointBuffer(ID3D11DeviceContext* context, const DirectX::XMFLOAT4X4* matrices, UINT matrix_count);
-
+	size_t FindKeyframeIndex(const std::vector<float>& timeline, float time, float& interpolation_factor);
 
 	std::string filename_;
 	int default_scene_ = 0;

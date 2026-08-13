@@ -29,7 +29,6 @@ void UpdateTransformSystem::Update(float elapsed_time)
             ComponentScale& scale)
         {
 
-
             DirectX::XMMATRIX scale_matrix = DirectX::XMMatrixScaling(
                 scale.value.x,
                 scale.value.y,

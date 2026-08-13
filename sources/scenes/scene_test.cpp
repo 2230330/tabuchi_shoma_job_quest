@@ -66,8 +66,6 @@ bool SceneTest::InitializeCore()
     }
 
     {
-        ResourceManager::Instance()
-            .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\rock.glb");
         //JSONファイルに保存されている情報を取得
         //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
@@ -78,21 +76,21 @@ bool SceneTest::InitializeCore()
             uint32_t entity = world->GetEntityManager()->Add();
             ComponentPosition pos;
             pos.value = {
-                static_cast<float>(random_helper::Random(size)),
+                static_cast<float>(random_helper::Random(size))-static_cast<float>(size/2),
                 0.f,
-                static_cast<float>(random_helper::Random(size))
+                static_cast<float>(random_helper::Random(size))-static_cast<float>(size/2)
             };
             //カメラにかぶらないように
-            if (-100.f <= pos.value.x && pos.value.x <= 100)pos.value.x *= 5.f;
-            if (-100.f <= pos.value.z && pos.value.z <= 100)pos.value.z *= 5.f;
+            if (-100.f <= pos.value.x && pos.value.x <= 100)pos.value.x *= 10.f;
+            if (-100.f <= pos.value.z && pos.value.z <= 100)pos.value.z *= 10.f;
             comp_mng->Add(entity, pos);
             ComponentRotation rot;
-            rot.value = { static_cast<float>(random_helper::Random(static_cast<int>(10)))
-                ,static_cast<float>(random_helper::Random(static_cast<int>(10)))
-                ,static_cast<float>(random_helper::Random(static_cast<int>(10))) };
+            rot.value = { 0.f
+                ,DirectX::XMConvertToRadians(static_cast<float>(random_helper::Random(static_cast<int>(10))))
+                ,0.f };
             comp_mng->Add(entity, rot);
             ComponentScale scale;
-            float scale_rand = 10.f;
+            float scale_rand = 100.f;
             scale.value = { scale_rand, scale_rand, scale_rand };
             comp_mng->Add(entity, scale);
             ComponentLocalToWorld l2w;
@@ -116,19 +114,100 @@ bool SceneTest::InitializeCore()
             ComponentAdjastPbrParamter ajust_pbr_paramter;
             comp_mng->Add(entity, ajust_pbr_paramter);
             ComponentGltf gltf;
-            gltf.model= 
-                ResourceManager::Instance()
-                .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\RPG-Character.glb");
+            gltf.model= ResourceManager::Instance()
+                .LoadGltfModel(Graphics::Instance().GetDevice(), ".\\resources\\model\\gltf\\sakura_tree_01_-_low_poly_model.glb");
             gltf.animated_nodes = gltf.model->GetNodes();
+            if (gltf.model->GetAnimations().size() > gltf.animation_index)
+            {
+                ComponentAnimation animation{};
+                comp_mng->Add(entity, animation);
+            }
             comp_mng->Add(entity, gltf);
             ComponentInstanced instanced;
             comp_mng->Add(entity, instanced);
-            ComponentBoundingBox bounding_box;
-            bounding_box.local_min = gltf.model->GetBoundingBox().local_min;
-            bounding_box.local_max = gltf.model->GetBoundingBox().local_max;
-            comp_mng->Add(entity, bounding_box);
-            ComponentDynamic dyn{};
-            comp_mng->Add(entity, dyn);
+            ComponentBoundingBox b_box;
+            b_box.local_min = gltf.model->GetBoundingBox().local_min;
+            b_box.local_max = gltf.model->GetBoundingBox().local_max;
+            {
+                DirectX::XMFLOAT3 center =
+                {
+                    (b_box.local_min.x + b_box.local_max.x) * 0.5f,
+                    (b_box.local_min.y + b_box.local_max.y) * 0.5f,
+                    (b_box.local_min.z + b_box.local_max.z) * 0.5f
+                };
+
+                //ローカルExtents(半径)
+                DirectX::XMFLOAT3 extents =
+                {
+                    (b_box.local_max.x - b_box.local_min.x) * 0.5f,
+                    (b_box.local_max.y - b_box.local_min.y) * 0.5f,
+                    (b_box.local_max.z - b_box.local_min.z) * 0.5f
+                };
+
+                //ワールド変換行列
+                DirectX::XMMATRIX m = DirectX::XMLoadFloat4x4(&l2w.value);
+
+                //中心点をワールド変換
+                DirectX::XMVECTOR world_center_v = DirectX::XMVector3TransformCoord(
+                    DirectX::XMLoadFloat3(&center),
+                    m
+                );
+
+                DirectX::XMFLOAT3 world_center;
+                DirectX::XMStoreFloat3(&world_center, world_center_v);
+
+                const DirectX::XMFLOAT4X4& mat = l2w.value;
+
+                // 行ベクトル規約なので、各行の長さが実効スケール
+                const float matrix_scale_x = std::sqrt(
+                    mat._11 * mat._11 +
+                    mat._12 * mat._12 +
+                    mat._13 * mat._13
+                );
+
+                const float matrix_scale_y = std::sqrt(
+                    mat._21 * mat._21 +
+                    mat._22 * mat._22 +
+                    mat._23 * mat._23
+                );
+
+                const float matrix_scale_z = std::sqrt(
+                    mat._31 * mat._31 +
+                    mat._32 * mat._32 +
+                    mat._33 * mat._33
+                );
+
+                DirectX::XMFLOAT3 world_extents =
+                {
+                    std::abs(extents.x * mat._11) +
+                    std::abs(extents.y * mat._21) +
+                    std::abs(extents.z * mat._31),
+
+                    std::abs(extents.x * mat._12) +
+                    std::abs(extents.y * mat._22) +
+                    std::abs(extents.z * mat._32),
+
+                    std::abs(extents.x * mat._13) +
+                    std::abs(extents.y * mat._23) +
+                    std::abs(extents.z * mat._33)
+                };
+                //ワールド空間のAABBを計算
+                b_box.world_min =
+                {
+                    world_center.x - world_extents.x,
+                    world_center.y - world_extents.y,
+                    world_center.z - world_extents.z
+                };
+                b_box.world_max =
+                {
+                    world_center.x + world_extents.x,
+                    world_center.y + world_extents.y,
+                    world_center.z + world_extents.z
+                };
+            }
+            comp_mng->Add(entity, b_box);
+            //ComponentDynamic dyn{};
+            //comp_mng->Add(entity, dyn);
         }
     }
     return true;

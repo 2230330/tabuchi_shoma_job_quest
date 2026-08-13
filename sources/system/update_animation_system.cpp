@@ -10,10 +10,12 @@ UpdateAnimationSystem::UpdateAnimationSystem(ComponentManager& comp_mng)
 void UpdateAnimationSystem::Update(float elapsed_time)
 {
     comp_mng_.ParallelForEach<
+        ComponentAnimation,
         ComponentGltf,
         ComponentPosition
     >(
         [&](uint32_t entity_id,
+            ComponentAnimation,
             ComponentGltf& gltf,
             ComponentPosition& position)
         {

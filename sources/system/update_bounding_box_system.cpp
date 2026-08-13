@@ -16,12 +16,12 @@ void UpdateBoundingBoxSystem::Update(float elapsed_time)
         ComponentBoundingBox,
         ComponentLocalToWorld
     >(
-        [](uint32_t entity_id,
+        [&](uint32_t entity_id,
             ComponentDynamic& dyn,
             ComponentBoundingBox& b_box,
             ComponentLocalToWorld& l2w )
         {
-
+            
 
             DirectX::XMFLOAT3 center =
             {
@@ -51,22 +51,40 @@ void UpdateBoundingBoxSystem::Update(float elapsed_time)
             DirectX::XMStoreFloat3(&world_center, world_center_v);
 
             const DirectX::XMFLOAT4X4& mat = l2w.value;
-            DirectX::XMFLOAT3 world_extents;
-            world_extents.x =
-                std::abs(mat._11) * extents.x +
-                std::abs(mat._21) * extents.y +
-                std::abs(mat._31) * extents.z;
 
-            world_extents.y =
-                std::abs(mat._12) * extents.x +
-                std::abs(mat._22) * extents.y +
-                std::abs(mat._32) * extents.z;
+            // 行ベクトル規約なので、各行の長さが実効スケール
+            const float matrix_scale_x = std::sqrt(
+                mat._11 * mat._11 +
+                mat._12 * mat._12 +
+                mat._13 * mat._13
+            );
 
-            world_extents.z =
-                std::abs(mat._13) * extents.x +
-                std::abs(mat._23) * extents.y +
-                std::abs(mat._33) * extents.z;
+            const float matrix_scale_y = std::sqrt(
+                mat._21 * mat._21 +
+                mat._22 * mat._22 +
+                mat._23 * mat._23
+            );
 
+            const float matrix_scale_z = std::sqrt(
+                mat._31 * mat._31 +
+                mat._32 * mat._32 +
+                mat._33 * mat._33
+            );
+
+            DirectX::XMFLOAT3 world_extents =
+            {
+                std::abs(extents.x * mat._11) +
+                std::abs(extents.y * mat._21) +
+                std::abs(extents.z * mat._31),
+
+                std::abs(extents.x * mat._12) +
+                std::abs(extents.y * mat._22) +
+                std::abs(extents.z * mat._32),
+
+                std::abs(extents.x * mat._13) +
+                std::abs(extents.y * mat._23) +
+                std::abs(extents.z * mat._33)
+            };
             //ワールド空間のAABBを計算
             b_box.world_min =
             {
@@ -80,6 +98,8 @@ void UpdateBoundingBoxSystem::Update(float elapsed_time)
                 world_center.y + world_extents.y,
                 world_center.z + world_extents.z
             };
+
+            
         }
         ,1024
     );

@@ -317,6 +317,9 @@
     <ClInclude Include="headers\system\update_animation_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\component\component_animation.h">
+      <Filter>headers\component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">

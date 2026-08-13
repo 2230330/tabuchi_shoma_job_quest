@@ -32,6 +32,7 @@
 #include "component_dynamic.h"
 #include "component_fog.h"
 #include "component_golden_spiral.h"
+#include "component_animation.h"
 
 #include "../job_system.h"
 
@@ -275,6 +276,7 @@ public:
         Remove<ComponentDynamic>(entity_id);
         Remove<ComponentFog>(entity_id);
         Remove<ComponentGoldenSpiral>(entity_id);
+        Remove<ComponentAnimation>(entity_id);
     }
 
     void ClearAll()
@@ -302,6 +304,7 @@ public:
         dynamics_.Clear();
         fogs_.Clear();
         golden_spiral_.Clear();
+        animations_.Clear();
     }
 
 private:
@@ -328,6 +331,7 @@ private:
     ComponentStorage<ComponentDynamic> dynamics_;
     ComponentStorage<ComponentFog> fogs_;
     ComponentStorage<ComponentGoldenSpiral>golden_spiral_;
+    ComponentStorage<ComponentAnimation>animations_;
 };
 
 
@@ -372,5 +376,6 @@ DEFINE_COMPONENT_STORAGE(ComponentBoundingBox, bounding_boxes_)
 DEFINE_COMPONENT_STORAGE(ComponentDynamic, dynamics_)
 DEFINE_COMPONENT_STORAGE(ComponentFog, fogs_)
 DEFINE_COMPONENT_STORAGE(ComponentGoldenSpiral, golden_spiral_)
+DEFINE_COMPONENT_STORAGE(ComponentAnimation, animations_)
 
 #undef DEFINE_COMPONENT_STORAGE

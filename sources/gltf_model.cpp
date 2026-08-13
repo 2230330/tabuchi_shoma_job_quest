@@ -195,45 +195,39 @@ void GltfModel::CumulateTransforms(std::vector<Node>& nodes)
 {
 	using namespace DirectX;
 
-	std::stack<XMFLOAT4X4> parent_global_transforms;
-
-	std::function<void(int)> traverse{ [&](int node_index)->void
-	{
-		Node& node = nodes.at(node_index);
-
-		XMMATRIX S = XMMatrixScaling(node.scale.x, node.scale.y, node.scale.z);
-		XMMATRIX R = XMMatrixRotationQuaternion(
-			XMVectorSet(node.rotation.x, node.rotation.y, node.rotation.z, node.rotation.w));
-		XMMATRIX T = XMMatrixTranslation(
-			node.translation.x, node.translation.y, node.translation.z);
-
-		XMStoreFloat4x4(
-			&node.global_transform,
-			S * R * T * XMLoadFloat4x4(&parent_global_transforms.top()));
-
-		for (int child_index : node.children)
-		{
-			parent_global_transforms.push(node.global_transform);
-			traverse(child_index);
-			parent_global_transforms.pop();
-		}
-	} };
-	
-
 	const int scene_index = default_scene_ >= 0 ? default_scene_ : 0;
+
+	static const XMFLOAT4X4 identity =
+	{
+		1.f,0.f,0.f,0.f,
+		0.f,1.f,0.f,0.f,
+		0.f,0.f,1.f,0.f,
+		0.f,0.f,0.f,1.f
+	};
 
 	for (int node_index : scenes.at(scene_index).nodes)
 	{
-		parent_global_transforms.push({
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, 1
-			});
+		TraverseCumulate(nodes, node_index, identity);
+	}
+}
 
-		traverse(node_index);
+void GltfModel::TraverseCumulate(std::vector<Node>& nodes, int node_index, const DirectX::XMFLOAT4X4& parent_global)
+{
+	using namespace DirectX;
 
-		parent_global_transforms.pop();
+	Node& node = nodes[node_index];
+
+	XMMATRIX S = XMMatrixScaling(node.scale.x, node.scale.y, node.scale.z);
+	XMMATRIX R = XMMatrixRotationQuaternion(XMVectorSet(node.rotation.x, node.rotation.y, node.rotation.z, node.rotation.w));
+	XMMATRIX T = XMMatrixTranslation(node.translation.x, node.translation.y, node.translation.z);
+
+	XMMATRIX parent = XMLoadFloat4x4(&parent_global);
+
+	XMStoreFloat4x4(&node.global_transform, S * R * T * parent);
+
+	for (int child_index : node.children)
+	{
+		TraverseCumulate(nodes, child_index, node.global_transform);
 	}
 }
 
@@ -1245,7 +1239,7 @@ void GltfModel::FetchAnimations(const tinygltf::Model& gltf_model)
 			Animation::Channel& channel{ animation.channels.emplace_back() };
 			channel.sampler = gltf_channel.sampler;
 			channel.target_node = gltf_channel.target_node;
-			channel.target_path = gltf_channel.target_path;
+			channel.target_path = ToAnimationTargetPath(gltf_channel.target_path);
 
 			const AnimationSampler& gltf_sampler{ gltf_animation.samplers.at(gltf_channel.sampler) };
 			const Accessor& gltf_accessor{ gltf_model.accessors.at(gltf_sampler.output) };
@@ -1300,7 +1294,93 @@ void GltfModel::FetchAnimations(const tinygltf::Model& gltf_model)
 			animation.duration = std::max<float>(animation.duration, timelines.second.back());
 		}
 	}
+
+	BuildRuntimeAnimationChannels();
 }
+
+AnimationTargetPath GltfModel::ToAnimationTargetPath(const std::string& path)
+{
+	if (path == "scale")return AnimationTargetPath::Scale;
+	else if (path == "rotation")return AnimationTargetPath::Rotation;
+	else if (path == "translation")return AnimationTargetPath::Translation;
+	else if (path == "weights")return AnimationTargetPath::Weights;
+	return AnimationTargetPath::Unknown;
+}
+
+void GltfModel::BuildRuntimeAnimationChannels()
+{
+	for (Animation& animation : animations_)
+	{
+		animation.runtime_channels.clear();
+
+		for (const Animation::Channel& channel : animation.channels)
+		{
+			const Animation::Sampler& sampler = animation.samplers[channel.sampler];
+
+			Animation::RuntimeAnimationChannel runtime{};
+			runtime.target_node = channel.target_node;
+			runtime.target_path = channel.target_path;
+			runtime.timeline = &animation.timelines.at(sampler.input);
+
+			switch (channel.target_path)
+			{
+			case AnimationTargetPath::Scale:
+				runtime.scales = &animation.scales.at(sampler.output);
+				break;
+
+			case AnimationTargetPath::Rotation:
+				runtime.rotations = &animation.rotations.at(sampler.output);
+				break;
+
+			case AnimationTargetPath::Translation:
+				runtime.translations = &animation.translations.at(sampler.output);
+				break;
+
+			default:
+				break;
+			}
+
+			animation.runtime_channels.emplace_back(runtime);
+		}
+	}
+}
+
+size_t GltfModel::FindKeyframeIndex(
+	const std::vector<float>& timeline,
+	float time,
+	float& interpolation_factor)
+{
+	const size_t count = timeline.size();
+
+	if (count < 2)
+	{
+		interpolation_factor = 0.0f;
+		return 0;
+	}
+
+	if (time >= timeline[count - 1])
+	{
+		interpolation_factor = 1.0f;
+		return count - 2;
+	}
+
+	if (time <= timeline[0])
+	{
+		interpolation_factor = 0.0f;
+		return 0;
+	}
+
+	auto it = std::lower_bound(timeline.begin(), timeline.end(), time);
+	size_t index = static_cast<size_t>(it - timeline.begin()) - 1;
+
+	const float t0 = timeline[index];
+	const float t1 = timeline[index + 1];
+
+	interpolation_factor = (time - t0) / (t1 - t0);
+
+	return index;
+}
+
 void GltfModel::Animate(size_t animation_index, float time, std::vector<Node>& animated_nodes)
 {
 	using namespace std;
@@ -1309,58 +1389,45 @@ void GltfModel::Animate(size_t animation_index, float time, std::vector<Node>& a
 	_ASSERT_EXPR(animations_.size() > animation_index, L"");
 	_ASSERT_EXPR(animated_nodes.size() == nodes_.size(), L"");
 
-	function<size_t(const vector<float>&, float, float&)> indexof{ [](const vector<float>& timelines, float time, float& interpolation_factor)->size_t {
-		const size_t keyframe_count{ timelines.size() };
-		if (time > timelines.at(keyframe_count - 1))
-		{
-			interpolation_factor = 1.0f;
-			return keyframe_count - 2;
-		}
-		else if (time < timelines.at(0))
-		{
-			interpolation_factor = 0.0f;
-			return 0;
-		}
-		size_t keyframe_index{ 0 };
-		for (size_t time_index = 1; time_index < keyframe_count; ++time_index)
-		{
-			if (time < timelines.at(time_index))
-			{
-				keyframe_index = max<size_t>(0LL, time_index - 1);
-				break;
-			}
-		}
-		interpolation_factor = (time - timelines.at(keyframe_index + 0)) / (timelines.at(keyframe_index + 1) - timelines.at(keyframe_index + 0));
-		return keyframe_index;
-	} };
-
 	if (animations_.size() > 0)
 	{
-		const Animation& animation{ animations_.at(animation_index) };
-		for (vector<Animation::Channel>::const_reference channel : animation.channels)
+		const Animation& animation = animations_[animation_index];
+		for (const Animation::RuntimeAnimationChannel& channel : animation.runtime_channels)
 		{
-			const Animation::Sampler& sampler{ animation.samplers.at(channel.sampler) };
-			const vector<float>& timeline{ animation.timelines.at(sampler.input) };
-			if (timeline.size() == 0)
+			if (!channel.timeline || channel.timeline->size() < 2)
 			{
 				continue;
 			}
+
 			float interpolation_factor{};
-			size_t keyframe_index{ indexof(timeline, time, interpolation_factor) };
-			if (channel.target_path == "scale")
+			//size_t keyframe_index{ indexof(timeline, time, interpolation_factor) };
+			size_t keyframe_index = FindKeyframeIndex(*channel.timeline, time, interpolation_factor);
+
+			Node& target_node = animated_nodes[channel.target_node];
+
+			switch (channel.target_path)
 			{
-				const vector<XMFLOAT3>& scales{ animation.scales.at(sampler.output) };
-				XMStoreFloat3(&animated_nodes.at(channel.target_node).scale, XMVectorLerp(XMLoadFloat3(&scales.at(keyframe_index + 0)), XMLoadFloat3(&scales.at(keyframe_index + 1)), interpolation_factor));
-			}
-			else if (channel.target_path == "rotation")
-			{
-				const vector<XMFLOAT4>& rotations{ animation.rotations.at(sampler.output) };
-				XMStoreFloat4(&animated_nodes.at(channel.target_node).rotation, XMQuaternionNormalize(XMQuaternionSlerp(XMLoadFloat4(&rotations.at(keyframe_index + 0)), XMLoadFloat4(&rotations.at(keyframe_index + 1)), interpolation_factor)));
-			}
-			else if (channel.target_path == "translation")
-			{
-				const vector<XMFLOAT3>& translations{ animation.translations.at(sampler.output) };
-				XMStoreFloat3(&animated_nodes.at(channel.target_node).translation, XMVectorLerp(XMLoadFloat3(&translations.at(keyframe_index + 0)), XMLoadFloat3(&translations.at(keyframe_index + 1)), interpolation_factor));
+			case AnimationTargetPath::Scale:
+				{
+					const vector<XMFLOAT3>& scales{ *channel.scales };
+					XMStoreFloat3(&animated_nodes.at(channel.target_node).scale, XMVectorLerp(XMLoadFloat3(&scales.at(keyframe_index + 0)), XMLoadFloat3(&scales.at(keyframe_index + 1)), interpolation_factor));
+				}
+				break;
+			case AnimationTargetPath::Rotation:
+				{
+					const vector<XMFLOAT4>& rotations{ *channel.rotations };
+					XMStoreFloat4(&animated_nodes.at(channel.target_node).rotation, XMQuaternionNormalize(XMQuaternionSlerp(XMLoadFloat4(&rotations.at(keyframe_index + 0)), XMLoadFloat4(&rotations.at(keyframe_index + 1)), interpolation_factor)));
+				}
+				break;
+			case AnimationTargetPath::Translation:
+				{
+					const vector<XMFLOAT3>& translations{ *channel.translations };
+					XMStoreFloat3(&animated_nodes.at(channel.target_node).translation, XMVectorLerp(XMLoadFloat3(&translations.at(keyframe_index + 0)), XMLoadFloat3(&translations.at(keyframe_index + 1)), interpolation_factor));
+				}
+				break;
+
+			default:
+				break;
 			}
 		}
 		CumulateTransforms(animated_nodes);

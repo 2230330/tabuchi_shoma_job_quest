@@ -130,5 +130,136 @@ namespace FrustumHelper
         return true;
     }
 
+    //AABBの8頂点を直接VPで変換します
+    inline bool IsAABBVisibleFromClipSpace(
+        const ComponentBoundingBox& bbox,
+        const DirectX::XMFLOAT4X4& view_projection)
+    {
+        using namespace DirectX;
+
+        const XMFLOAT3 corners[8] =
+        {
+            { bbox.world_min.x, bbox.world_min.y, bbox.world_min.z },
+            { bbox.world_max.x, bbox.world_min.y, bbox.world_min.z },
+            { bbox.world_min.x, bbox.world_max.y, bbox.world_min.z },
+            { bbox.world_max.x, bbox.world_max.y, bbox.world_min.z },
+
+            { bbox.world_min.x, bbox.world_min.y, bbox.world_max.z },
+            { bbox.world_max.x, bbox.world_min.y, bbox.world_max.z },
+            { bbox.world_min.x, bbox.world_max.y, bbox.world_max.z },
+            { bbox.world_max.x, bbox.world_max.y, bbox.world_max.z }
+        };
+
+        const XMMATRIX vp = XMLoadFloat4x4(&view_projection);
+
+        XMFLOAT4 clip_corners[8];
+
+        for (size_t i = 0; i < 8; ++i)
+        {
+            const XMVECTOR world_position = XMVectorSet(
+                corners[i].x,
+                corners[i].y,
+                corners[i].z,
+                1.0f
+            );
+
+            XMStoreFloat4(
+                &clip_corners[i],
+                XMVector4Transform(world_position, vp)
+            );
+        }
+
+        // 全頂点が左側にある
+        bool all_outside = true;
+
+        for (const auto& p : clip_corners)
+        {
+            if (p.x >= -p.w)
+            {
+                all_outside = false;
+                break;
+            }
+        }
+
+        if (all_outside)
+            return false;
+
+        // 全頂点が右側にある
+        all_outside = true;
+
+        for (const auto& p : clip_corners)
+        {
+            if (p.x <= p.w)
+            {
+                all_outside = false;
+                break;
+            }
+        }
+
+        if (all_outside)
+            return false;
+
+        // 全頂点が下側にある
+        all_outside = true;
+
+        for (const auto& p : clip_corners)
+        {
+            if (p.y >= -p.w)
+            {
+                all_outside = false;
+                break;
+            }
+        }
+
+        if (all_outside)
+            return false;
+
+        // 全頂点が上側にある
+        all_outside = true;
+
+        for (const auto& p : clip_corners)
+        {
+            if (p.y <= p.w)
+            {
+                all_outside = false;
+                break;
+            }
+        }
+
+        if (all_outside)
+            return false;
+
+        // Direct3D Near: z >= 0
+        all_outside = true;
+
+        for (const auto& p : clip_corners)
+        {
+            if (p.z >= 0.0f)
+            {
+                all_outside = false;
+                break;
+            }
+        }
+
+        if (all_outside)
+            return false;
+
+        // Direct3D Far: z <= w
+        all_outside = true;
+
+        for (const auto& p : clip_corners)
+        {
+            if (p.z <= p.w)
+            {
+                all_outside = false;
+                break;
+            }
+        }
+
+        if (all_outside)
+            return false;
+
+        return true;
+    }
 
 }
