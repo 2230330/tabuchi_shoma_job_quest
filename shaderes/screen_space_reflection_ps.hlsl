@@ -226,7 +226,7 @@ float4 main(VS_OUT pin) : SV_TARGET
         if (has_prev)
         {
             {
-                if (prev_delta < 0.0f && (d >= 0.0f && d <50 ))
+                if (prev_delta < 0.0f && (d >= 0.0f && d <50/*ある程度オブジェクトの後ろなら、スルー*/ ))
                 {
                     hit = true;
                 
