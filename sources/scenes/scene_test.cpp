@@ -70,13 +70,14 @@ bool SceneTest::InitializeCore()
         //主にオブジェクトの位置情報などをコンポーネントとしてデータ化しています。
         comp_edit->Load("progress.json");
 
-        const int size = 0;
+        const int size = 1;
         for (int i = 0; i < size; i++)
         {
             uint32_t entity = world->GetEntityManager()->Add();
             ComponentPosition pos;
             pos.value = {
-                static_cast<float>(random_helper::Random(size))-static_cast<float>(size/2),
+                //static_cast<float>(random_helper::Random(size))-static_cast<float>(size/2),
+                -155.f,
                 0.f,
                 static_cast<float>(random_helper::Random(size))-static_cast<float>(size/2)
             };
@@ -206,8 +207,8 @@ bool SceneTest::InitializeCore()
                 };
             }
             comp_mng->Add(entity, b_box);
-            //ComponentDynamic dyn{};
-            //comp_mng->Add(entity, dyn);
+            ComponentDynamic dyn{};
+            comp_mng->Add(entity, dyn);
         }
     }
     return true;

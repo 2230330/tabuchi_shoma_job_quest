@@ -83,7 +83,7 @@ void InstancingRenderSystem::Render()
             //    ));
             //    float dot = DirectX::XMVectorGetX(DirectX::XMVector3Dot(dir, camera_to_obj));
             float distance = DirectX::XMVectorGetX(DirectX::XMVector3Length(DirectX::XMVectorSubtract(obj_pos, camera_pos)));
-            if (distance >= main_camera->camera_clip_distance.y)
+            if (distance >= (main_camera->camera_clip_distance.y+main_camera->camera_clip_distance.y*0.5f))
                 return;
             //    //後ろにあるなら描画しない
             //    if (dot < 0.f)

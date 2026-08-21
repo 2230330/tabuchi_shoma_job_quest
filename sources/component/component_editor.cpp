@@ -296,7 +296,7 @@ void ComponentEditor::DrawImgui()
                 comp_mng_.Has<ComponentSsr>(entity.entity) ||
                 comp_mng_.Has<ComponentFog>(entity.entity) ||
                 comp_mng_.Has<ComponentGoldenSpiral>(entity.entity)||
-                //comp_mng_.Has<ComponentGltf>(entity.entity)||
+                comp_mng_.Has<ComponentGltf>(entity.entity)||
                 comp_mng_.Has<ComponentDeferredRender>(entity.entity);
 
             if(has_editor_component)

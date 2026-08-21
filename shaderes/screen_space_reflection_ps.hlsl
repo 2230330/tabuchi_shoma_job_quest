@@ -109,7 +109,7 @@ bool OutOfBounds(float2 uv)
 //    return clamp((int) mip, 0, max_mip);
 //}
 
-static const int MAX_STEPS = 16;
+static const int MAX_STEPS = 32;
 
 float4 main(VS_OUT pin) : SV_TARGET
 {
@@ -225,15 +225,17 @@ float4 main(VS_OUT pin) : SV_TARGET
 
         if (has_prev)
         {
-            if (prev_delta < 0.0f && d >= 0.0f)
             {
-                hit = true;
+                if (prev_delta < 0.0f && (d >= 0.0f && d <50 ))
+                {
+                    hit = true;
+                
+                    //直前の有効サンプルを t_min にする
+                    t_min = prev_t;
+                    t_max = t;
 
-                //直前の有効サンプルを t_min にする
-                t_min = prev_t;
-                t_max = t;
-
-                break;
+                    break;
+                }
             }
         }
 
