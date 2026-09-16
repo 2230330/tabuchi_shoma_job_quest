@@ -4,6 +4,14 @@
 #include<d3d11.h>
 #include<wrl.h>
 
+//2026/09/06
+//DirectX12の追加
+#include<d3d12.h>
+#include<dxgi1_6.h>
+
+#pragma comment(lib ,"d3d12.lib")
+#pragma comment(lib ,"dxgi.lib")
+
 #include<memory>
 
 //前方宣言
@@ -89,6 +97,17 @@ private:
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  render_target_view_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  depth_stencil_view_=nullptr;
     D3D11_VIEWPORT                                  viewport_{};
+
+    //2026/09/06
+    //DirectX12の追加、実際の業界の環境に近づけます。
+    Microsoft::WRL::ComPtr<ID3D12Device> dx12_device_ = nullptr;
+    Microsoft::WRL::ComPtr<IDXGIFactory6> idxgi_factory_ = nullptr;
+    Microsoft::WRL::ComPtr<IDXGISwapChain4> dx12_swap_chain_ = nullptr;
+    //コマンドリストとコマンドアロケーター
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd_allocater_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmd_list_ = nullptr;
+    //コマンドキュー
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue>cmd_queue_ = nullptr;
 
     float screen_width_  = 0;
     float screen_height_ = 0;

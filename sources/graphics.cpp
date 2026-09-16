@@ -1,5 +1,8 @@
 #include"../headers/graphics.h"
 
+#include<vector>
+#include<iostream>
+
 #include"../headers/render_state.h"
 #include"../headers/misc.h"
 
@@ -34,6 +37,9 @@ void Graphics::Initialize(HWND hwnd)
 #endif
         D3D_FEATURE_LEVEL feature_levels[] =
         {
+            D3D_FEATURE_LEVEL_12_1,
+            D3D_FEATURE_LEVEL_12_0,
+            D3D_FEATURE_LEVEL_11_1,
             D3D_FEATURE_LEVEL_11_0,
             //D3D_FEATURE_LEVEL_10_1,
             //D3D_FEATURE_LEVEL_10_0,
@@ -65,11 +71,98 @@ void Graphics::Initialize(HWND hwnd)
         D3D_FEATURE_LEVEL feature_level{};
 
         //デバイス＆スワップチェーンの生成
-        hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, create_device_flags,
-            feature_levels, ARRAYSIZE(feature_levels), D3D11_SDK_VERSION, &swap_chain_desc,
-            swap_chain_.GetAddressOf(), device_.GetAddressOf(), NULL, immediate_context_.GetAddressOf());
+        for (auto lv : feature_levels)
+        {
+
+            hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, create_device_flags,
+                feature_levels, ARRAYSIZE(feature_levels), D3D11_SDK_VERSION, &swap_chain_desc,
+                swap_chain_.GetAddressOf(), device_.GetAddressOf(), NULL, immediate_context_.GetAddressOf());
+            if (hr == S_OK)
+            {
+                feature_level = lv;
+                break;
+            }
+        }
         _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
+        //複数のグラフィックスボードの場合
+        // 特定のブラフィックスボードをアダプターするためのコード
+        hr = CreateDXGIFactory1(IID_PPV_ARGS(&this->idxgi_factory_));
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        //アダプターの列挙
+        std::vector<IDXGIAdapter*>adapters;
+
+        //ここに特定の名前を持つアダプターオブジェクトが入
+        IDXGIAdapter* temp_adapter = nullptr;
+        for (int i = 0; idxgi_factory_->EnumAdapters(i, &temp_adapter) != DXGI_ERROR_NOT_FOUND; ++i)
+        {
+            adapters.emplace_back(temp_adapter);
+        }
+        
+        //アダプターを識別するための情報をループで取得
+        for (auto adpt : adapters)
+        {
+            DXGI_ADAPTER_DESC adesc{};
+            hr=adpt->GetDesc(&adesc);//アダプターの説明オブジェクト取得
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+
+            std::wstring std_desc = adesc.Description;
+
+            //探したいアダプターの名前を確認
+            if (std_desc.find(L"NVIDIA") != std::string::npos)
+            {
+                temp_adapter = adpt;
+                break;
+            }
+        }
+
+        //DX12デバイスの作成
+        for (auto dx12_lv : feature_levels)
+        {
+            hr = D3D12CreateDevice(temp_adapter, dx12_lv, IID_PPV_ARGS(&dx12_device_));
+            if (hr == S_OK)
+            {
+                break;
+            }
+
+        }
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    }
+
+    //DX12
+    //コマンドリストの制作とコマンドアロケーター
+    const auto command_list_type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    {
+        hr = dx12_device_->CreateCommandAllocator(command_list_type, IID_PPV_ARGS(&cmd_allocater_));
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        hr = dx12_device_->CreateCommandList(0, command_list_type,
+            cmd_allocater_.Get(), nullptr, IID_PPV_ARGS(&cmd_list_));
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+    }
+
+    //DX12
+    //コマンドキューの作成
+    {
+        D3D12_COMMAND_QUEUE_DESC queue_desc{};
+
+        //タイムアウトなし
+        queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        //アダプターを一つしか使わないときは0で良い
+        queue_desc.NodeMask = 0;
+        //プライオリティは特に指定なし
+        queue_desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+        //コマンドリストと合わせる
+        queue_desc.Type = command_list_type;
+
+        //キュー生成
+        hr = dx12_device_->CreateCommandQueue(&queue_desc, IID_PPV_ARGS(&cmd_queue_));
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        //次回、スワップチェインの作成
 
     }
 
