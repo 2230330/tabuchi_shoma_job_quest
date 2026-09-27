@@ -38,7 +38,7 @@ dcl_temps 2
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 24 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_emissive_ps.hlsl"
+#line 24 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_emissive_ps.hlsl"
 nop 
 
 #line 25
@@ -62,7 +62,7 @@ nop
 #line 32
 nop 
 
-#line 98 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"
+#line 98 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gbuffer.hlsli"
 sample_indexable(texture2d)(float,float,float,float) r0.xyz, v1.xyxx, t1.xyzw, s0
 mov r0.xyz, r0.xyzx  // r0.x <- emissive_color.x; r0.y <- emissive_color.y; r0.z <- emissive_color.z
 
@@ -75,7 +75,7 @@ nop
 #line 118
 mov r0.xyz, r0.xyzx  // r0.x <- <DecodeGBuffer return value>.emissive_color.x; r0.y <- <DecodeGBuffer return value>.emissive_color.y; r0.z <- <DecodeGBuffer return value>.emissive_color.z
 
-#line 32 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_emissive_ps.hlsl"
+#line 32 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_emissive_ps.hlsl"
 mov r0.xyz, r0.xyzx  // r0.x <- data.emissive_color.x; r0.y <- data.emissive_color.y; r0.z <- data.emissive_color.z
 
 #line 34

@@ -106,7 +106,7 @@ dcl_temps 4
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 32 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\light_space_cloud_occlusion_ps.hlsl"
+#line 32 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\light_space_cloud_occlusion_ps.hlsl"
 mov r0.xy, v1.xyxx  // r0.x <- uv.x; r0.y <- uv.y
 
 #line 35

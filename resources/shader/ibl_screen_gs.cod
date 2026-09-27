@@ -39,7 +39,7 @@ dcl_maxout 18
 //   v[2][0].x <- input[2].pos.x; v[2][0].y <- input[2].pos.y; v[2][0].z <- input[2].pos.z; v[2][0].w <- input[2].pos.w; 
 //   v[2][1].x <- input[2].uv.x; v[2][1].y <- input[2].uv.y
 //
-#line 21 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\ibl_screen_gs.hlsl"
+#line 21 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\ibl_screen_gs.hlsl"
 mov r0.x, l(0)  // r0.x <- f
 mov r0.y, r0.x  // r0.y <- f
 loop 

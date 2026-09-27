@@ -141,10 +141,10 @@ dcl_temps 10
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 8 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 8 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
 mov r0.x, l(3.141593)  // r0.x <- PI
 
-#line 28 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\fog_ps.hlsl"
+#line 28 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\fog_ps.hlsl"
 mov r0.y, l(0.100000)  // r0.y <- time_offset
 
 #line 106

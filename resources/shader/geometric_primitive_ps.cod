@@ -31,7 +31,7 @@ dcl_temps 2
 //   v2.x <- pin.normal.x; v2.y <- pin.normal.y; v2.z <- pin.normal.z; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 6 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\geometric_primitive_ps.hlsl"
+#line 6 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\geometric_primitive_ps.hlsl"
 mov r0.xyz, l(0,0.707107,-0.707107,0)  // r0.x <- light_direction.x; r0.y <- light_direction.y; r0.z <- light_direction.z
 
 #line 7

@@ -32,7 +32,7 @@ dcl_indexableTemp x1[4], 4
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w; 
 //   x0 <- position; x1 <- texcoords
 //
-#line 6 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\fullscreen_quad_vs.hlsl"
+#line 6 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\fullscreen_quad_vs.hlsl"
 itof r0.xy, l(-1, 1, 0, 0)
 itof r0.zw, l(0, 0, 1, 1)
 itof r1.xyzw, l(-1, -1, 1, -1)

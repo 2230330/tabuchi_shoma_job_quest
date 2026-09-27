@@ -31,7 +31,7 @@ dcl_indexableTemp x0[3], 4
 //   o0.x <- <main return value>.posH.x; o0.y <- <main return value>.posH.y; o0.z <- <main return value>.posH.z; o0.w <- <main return value>.posH.w; 
 //   x0 <- pos
 //
-#line 15 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\ibl_screen_vs.hlsl"
+#line 15 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\ibl_screen_vs.hlsl"
 mov x0[0].xy, l(-1.000000,-1.000000,0,0)
 mov x0[1].xy, l(-1.000000,3.000000,0,0)
 mov x0[2].xy, l(3.000000,-1.000000,0,0)

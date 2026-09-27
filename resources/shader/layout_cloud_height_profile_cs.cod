@@ -31,7 +31,7 @@ dcl_thread_group 8, 8, 8
 // Initial variable locations:
 //   vThreadID.x <- dtid.x; vThreadID.y <- dtid.y
 //
-#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\layout_cloud_height_profile_cs.hlsl"
+#line 10 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\compute_shaders\layout_cloud_height_profile_cs.hlsl"
 mov r0.x, l(64)
 uge r0.x, vThreadID.x, r0.x
 mov r0.y, l(64)

@@ -68,7 +68,7 @@ dcl_temps 7
 //   v5.x <- pin.color.x; v5.y <- pin.color.y; v5.z <- pin.color.z; v5.w <- pin.color.w; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 12 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\skinned_mesh_ps.hlsl"
+#line 12 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\skinned_mesh_ps.hlsl"
 sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v4.xyxx, t0.xyzw, s4  // r0.x <- color.x; r0.y <- color.y; r0.z <- color.z; r0.w <- color.w
 
 #line 13

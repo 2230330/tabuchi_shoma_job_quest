@@ -50,7 +50,7 @@ dcl_temps 4
 //   v1.x <- input.uv.x; v1.y <- input.uv.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 14 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\latlong_to_cubemap_ps.hlsl"
+#line 14 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\latlong_to_cubemap_ps.hlsl"
 mov r0.x, l(3.141593)  // r0.x <- PI
 
 #line 54

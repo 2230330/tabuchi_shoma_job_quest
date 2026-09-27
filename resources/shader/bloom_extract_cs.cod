@@ -56,7 +56,7 @@ dcl_thread_group 8, 8, 1
 // Initial variable locations:
 //   vThreadID.x <- dispatch_thread_id.x; vThreadID.y <- dispatch_thread_id.y; vThreadID.z <- dispatch_thread_id.z
 //
-#line 20 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\bloom_extract_cs.hlsl"
+#line 20 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\compute_shaders\bloom_extract_cs.hlsl"
 mov r0.xyzw, vThreadID.xyyy  // r0.x <- pixel.x; r0.w <- pixel.y
 
 #line 22

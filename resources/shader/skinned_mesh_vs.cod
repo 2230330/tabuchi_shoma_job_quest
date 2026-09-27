@@ -95,7 +95,7 @@ dcl_temps 9
 //   o1.x <- <main return value>.world_position.x; o1.y <- <main return value>.world_position.y; o1.z <- <main return value>.world_position.z; o1.w <- <main return value>.world_position.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 6 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\skinned_mesh_vs.hlsl"
+#line 6 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\skinned_mesh_vs.hlsl"
 itof r0.x, l(0)  // r0.x <- vin.normal.w
 
 #line 7

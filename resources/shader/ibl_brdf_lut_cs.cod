@@ -31,7 +31,7 @@ dcl_thread_group 8, 8, 1
 // Initial variable locations:
 //   vThreadID.x <- id.x; vThreadID.y <- id.y; vThreadID.z <- id.z
 //
-#line 116 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\ibl_brdf_lut_cs.hlsl"
+#line 116 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\compute_shaders\ibl_brdf_lut_cs.hlsl"
 resinfo_indexable(texture2d)(float,float,float,float)_uint r0.xy, l(0), u0.xyzw
 mov r0.x, r0.x  // r0.x <- width
 mov r0.y, r0.y  // r0.y <- height

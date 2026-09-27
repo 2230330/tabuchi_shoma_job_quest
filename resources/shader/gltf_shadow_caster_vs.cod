@@ -94,7 +94,7 @@ dcl_temps 9
 //   o6.x <- <main return value>.previous_clip_position.x; o6.y <- <main return value>.previous_clip_position.y; o6.z <- <main return value>.previous_clip_position.z; o6.w <- <main return value>.previous_clip_position.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_shadow_caster_vs.hlsl"
+#line 10 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gltf_shadow_caster_vs.hlsl"
 ilt r0.x, l(-1), cb0[8].z
 if_nz r0.x
 

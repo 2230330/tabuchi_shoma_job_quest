@@ -85,10 +85,10 @@ dcl_temps 11
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 5 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 5 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
 mov r0.x, l(2.200000)  // r0.x <- GammaFactor
 
-#line 31 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 31 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_indirect_ps.hlsl"
 nop 
 
 #line 32
@@ -127,7 +127,7 @@ mov r4.z, cb7[25].w
 mov r5.xyzw, cb7[26].xyzw
 mov r6.xy, cb1[1].xyxx
 
-#line 97 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"
+#line 97 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gbuffer.hlsli"
 sample_indexable(texture2d)(float,float,float,float) r7.xyzw, v1.xyxx, t0.xyzw, s0  // r7.x <- base_color.x; r7.y <- base_color.y; r7.z <- base_color.z; r7.w <- base_color.w
 
 #line 99
@@ -204,7 +204,7 @@ mov r8.xyz, r8.xyzx  // r8.x <- <DecodeGBuffer return value>.w_normal.x; r8.y <-
 mov r6.z, r6.z  // r6.z <- <DecodeGBuffer return value>.shading_model
 mov r0.yzw, r0.yyzw  // r0.y <- <DecodeGBuffer return value>.w_position.x; r0.z <- <DecodeGBuffer return value>.w_position.y; r0.w <- <DecodeGBuffer return value>.w_position.z
 
-#line 39 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 39 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_indirect_ps.hlsl"
 mov r7.xyz, r7.xyzx  // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z
 mov r8.xyz, r8.xyzx  // r8.x <- data.w_normal.x; r8.y <- data.w_normal.y; r8.z <- data.w_normal.z
 mov r0.yzw, r0.yyzw  // r0.y <- data.w_position.x; r0.z <- data.w_position.y; r0.w <- data.w_position.z
@@ -255,7 +255,7 @@ if_nz r6.z
   nop 
   nop 
 
-#line 299 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 299 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
   mov r6.xyz, r3.xyzx  // r6.x <- N.x; r6.y <- N.y; r6.z <- N.z
 
 #line 300
@@ -307,7 +307,7 @@ if_nz r6.z
   mul r4.xyz, r4.xyzx, r6.xyzx
   mul r4.xyz, r7.xyzx, r4.xyzx  // r4.x <- <DiffuseIBL return value>.x; r4.y <- <DiffuseIBL return value>.y; r4.z <- <DiffuseIBL return value>.z
 
-#line 57 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 57 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_indirect_ps.hlsl"
   add r4.xyz, r1.xyzx, r4.xyzx  // r4.x <- total_diffuse.x; r4.y <- total_diffuse.y; r4.z <- total_diffuse.z
 
 #line 59
@@ -320,7 +320,7 @@ if_nz r6.z
   nop 
   nop 
 
-#line 323 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 323 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
   mov r3.xyz, r3.xyzx  // r3.x <- N.x; r3.y <- N.y; r3.z <- N.z
 
 #line 324
@@ -381,7 +381,7 @@ if_nz r6.z
   add r3.xyz, r3.yyyy, r3.xzwx
   mul r0.yzw, r0.yyzw, r3.xxyz  // r0.y <- <SpecularIBL return value>.x; r0.z <- <SpecularIBL return value>.y; r0.w <- <SpecularIBL return value>.z
 
-#line 59 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_indirect_ps.hlsl"
+#line 59 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_indirect_ps.hlsl"
   add r0.yzw, r0.yyzw, r2.xxyz  // r0.y <- total_specular.x; r0.z <- total_specular.y; r0.w <- total_specular.z
 
 #line 66

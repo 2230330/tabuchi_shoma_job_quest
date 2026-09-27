@@ -53,7 +53,7 @@ dcl_temps 9
 //   v1.x <- i.uv.x; v1.y <- i.uv.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 25 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\ibl_prefilter_ps.hlsl"
+#line 25 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\ibl_prefilter_ps.hlsl"
 mov r0.x, l(3.141593)  // r0.x <- PI
 
 #line 130

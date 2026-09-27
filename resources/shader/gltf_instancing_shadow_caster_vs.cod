@@ -122,10 +122,10 @@ dcl_temps 19
 //   o6.x <- <main return value>.previous_clip_position.x; o6.y <- <main return value>.previous_clip_position.y; o6.z <- <main return value>.previous_clip_position.z; o6.w <- <main return value>.previous_clip_position.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 58 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model.hlsli"
+#line 58 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gltf_model.hlsli"
 mov r0.x, l(512)  // r0.x <- PRIMITIVE_MAX_JOINTS
 
-#line 10 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
+#line 10 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
 mov r1.xyz, v0.xyzx  // r1.x <- local_position.x; r1.y <- local_position.y; r1.z <- local_position.z
 
 #line 11
@@ -142,7 +142,7 @@ if_nz r0.y
   mov r3.xyz, v5.yzwy
   mov r0.z, v14.x
 
-#line 110 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model.hlsli"
+#line 110 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gltf_model.hlsli"
   nop 
   mov r0.z, r0.z
   mov r2.x, r2.x
@@ -301,7 +301,7 @@ if_nz r0.y
   add r5.xyzw, r6.xyzw, r8.xyzw  // r5.x <- <BuildSkinMatrix return value>._m02; r5.y <- <BuildSkinMatrix return value>._m12; r5.z <- <BuildSkinMatrix return value>._m22; r5.w <- <BuildSkinMatrix return value>._m32
   add r0.xyzw, r0.xyzw, r3.xyzw  // r0.x <- <BuildSkinMatrix return value>._m03; r0.y <- <BuildSkinMatrix return value>._m13; r0.z <- <BuildSkinMatrix return value>._m23; r0.w <- <BuildSkinMatrix return value>._m33
 
-#line 16 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
+#line 16 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
   mov r2.xyzw, r2.xyzw  // r2.x <- skin_matrix._m00; r2.y <- skin_matrix._m10; r2.z <- skin_matrix._m20; r2.w <- skin_matrix._m30
   mov r4.xyzw, r4.xyzw  // r4.x <- skin_matrix._m01; r4.y <- skin_matrix._m11; r4.z <- skin_matrix._m21; r4.w <- skin_matrix._m31
   mov r5.xyzw, r5.xyzw  // r5.x <- skin_matrix._m02; r5.y <- skin_matrix._m12; r5.z <- skin_matrix._m22; r5.w <- skin_matrix._m32
@@ -324,7 +324,7 @@ mov r2.xyzw, v7.xyzw
 mov r3.xyzw, v8.xyzw
 mov r4.xyzw, v9.xyzw
 
-#line 75 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_model.hlsli"
+#line 75 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gltf_model.hlsli"
 mov r0.xyzw, r0.xyzw  // r0.x <- instance_world._m00; r0.y <- instance_world._m01; r0.z <- instance_world._m02; r0.w <- instance_world._m03
 
 #line 76
@@ -354,7 +354,7 @@ mov r4.y, r2.w  // r4.y <- <BuildInstanceWorldMatrix return value>._m13
 mov r4.z, r3.w  // r4.z <- <BuildInstanceWorldMatrix return value>._m23
 mov r4.w, r4.w  // r4.w <- <BuildInstanceWorldMatrix return value>._m33
 
-#line 20 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
+#line 20 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gltf_instancing_shadow_caster_vs.hlsl"
 mov r5.xyzw, r5.xyzw  // r5.x <- instance_world_matrix._m00; r5.y <- instance_world_matrix._m10; r5.z <- instance_world_matrix._m20; r5.w <- instance_world_matrix._m30
 mov r6.xyzw, r6.xyzw  // r6.x <- instance_world_matrix._m01; r6.y <- instance_world_matrix._m11; r6.z <- instance_world_matrix._m21; r6.w <- instance_world_matrix._m31
 mov r7.xyzw, r7.xyzw  // r7.x <- instance_world_matrix._m02; r7.y <- instance_world_matrix._m12; r7.z <- instance_world_matrix._m22; r7.w <- instance_world_matrix._m32

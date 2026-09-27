@@ -78,7 +78,7 @@ dcl_temps 3
 //   o1.x <- <main return value>.color.x; o1.y <- <main return value>.color.y; o1.z <- <main return value>.color.z; o1.w <- <main return value>.color.w; 
 //   o0.x <- <main return value>.position.x; o0.y <- <main return value>.position.y; o0.z <- <main return value>.position.z; o0.w <- <main return value>.position.w
 //
-#line 9 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\sprite_batch_vs.hlsl"
+#line 9 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\sprite_batch_vs.hlsl"
 mov r0.xyz, v0.xyzx  // r0.x <- pos.x; r0.y <- pos.y; r0.z <- pos.z
 mov r0.w, l(1.000000)  // r0.w <- pos.w
 

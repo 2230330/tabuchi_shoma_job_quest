@@ -119,13 +119,13 @@ dcl_temps 16
 //   v1.x <- pin.texcoord.x; v1.y <- pin.texcoord.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 6 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"
+#line 6 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gbuffer.hlsli"
 mov r0.x, l(1)  // r0.x <- shading_model_pbr
 
-#line 8 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 8 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
 mov r0.y, l(3.141593)  // r0.y <- PI
 
-#line 30 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 30 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
 nop 
 
 #line 31
@@ -164,7 +164,7 @@ mov r4.z, cb7[25].w
 mov r5.xyzw, cb7[26].xyzw
 mov r6.xy, cb1[1].xyxx
 
-#line 97 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\gbuffer.hlsli"
+#line 97 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\gbuffer.hlsli"
 sample_indexable(texture2d)(float,float,float,float) r7.xyzw, v1.xyxx, t0.xyzw, s0  // r7.x <- base_color.x; r7.y <- base_color.y; r7.z <- base_color.z; r7.w <- base_color.w
 
 #line 99
@@ -240,7 +240,7 @@ mov r10.y, r10.y  // r10.y <- <DecodeGBuffer return value>.metalness
 mov r9.x, r9.x  // r9.x <- <DecodeGBuffer return value>.occlusion_factor
 mov r9.y, r9.y  // r9.y <- <DecodeGBuffer return value>.occlusion_strength
 
-#line 38 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 38 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
 mov r7.xyzw, r7.xyzw  // r7.x <- data.base_color.x; r7.y <- data.base_color.y; r7.z <- data.base_color.z; r7.w <- data.shading_model
 mov r8.xyzw, r8.xyzw  // r8.x <- data.w_position.x; r8.y <- data.w_normal.x; r8.z <- data.w_normal.y; r8.w <- data.w_normal.z
 mov r10.xyzw, r10.xyzw  // r10.x <- data.roughness; r10.y <- data.metalness; r10.z <- data.w_position.y; r10.w <- data.w_position.z
@@ -253,11 +253,11 @@ itof r2.xyz, l(0, 0, 0, 0)  // r2.x <- specular.x; r2.y <- specular.y; r2.z <- s
 #line 45
 nop 
 
-#line 71 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 71 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering.hlsli"
 add r0.z, cb4[3].w, l(0.500000)
 ftoi r0.z, r0.z  // r0.z <- <get_light_kinds return value>
 
-#line 45 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 45 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
 switch r0.z
 
 #line 47
@@ -266,7 +266,7 @@ switch r0.z
 #line 48
   nop 
 
-#line 77 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 77 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering.hlsli"
   mov r3.xyz, cb4[0].xyzx  // r3.x <- data.direction.x; r3.y <- data.direction.y; r3.z <- data.direction.z
 
 #line 78
@@ -276,7 +276,7 @@ switch r0.z
   mov r4.xyzw, r4.xyzw  // r4.x <- <convert_directional_lights return value>.color.x; r4.y <- <convert_directional_lights return value>.color.y; r4.z <- <convert_directional_lights return value>.color.z; r4.w <- <convert_directional_lights return value>.color.w
   mov r3.xyz, r3.xyzx  // r3.x <- <convert_directional_lights return value>.direction.x; r3.y <- <convert_directional_lights return value>.direction.y; r3.z <- <convert_directional_lights return value>.direction.z
 
-#line 48 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 48 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
   mov r3.xyz, r3.xyzx  // r3.x <- directional_light.direction.x; r3.y <- directional_light.direction.y; r3.z <- directional_light.direction.z
   mov r4.xyzw, r4.xyzw  // r4.x <- directional_light.color.x; r4.y <- directional_light.color.y; r4.z <- directional_light.color.z; r4.w <- directional_light.color.w
 
@@ -604,7 +604,7 @@ switch r0.z
   mov r0.z, r0.z
   mov r5.xyz, r5.xyzx
 
-#line 23 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+#line 23 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_models.hlsli"
   itof r11.xyzw, l(0, 0, 0, 0)  // r11.x <- result.diffuse.x; r11.y <- result.diffuse.y; r11.z <- result.diffuse.z; r11.w <- result.specular.x
   itof r12.yz, l(0, 0, 0, 0)  // r12.y <- result.specular.y; r12.z <- result.specular.z
 
@@ -659,7 +659,7 @@ switch r0.z
     mov r4.xyz, r4.xyzx
     mov r10.x, r10.x
 
-#line 212 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 212 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
     mov r6.xyz, r6.xyzx  // r6.x <- N.x; r6.y <- N.y; r6.z <- N.z
 
 #line 213
@@ -822,7 +822,7 @@ switch r0.z
 #line 226
     mul r3.xyz, r3.yzwy, r5.xyzx  // r3.x <- out_specular.x; r3.y <- out_specular.y; r3.z <- out_specular.z
 
-#line 38 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+#line 38 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_models.hlsli"
     mov r4.xyz, r4.xyzx  // r4.x <- result.diffuse.x; r4.y <- result.diffuse.y; r4.z <- result.diffuse.z
     mov r3.xyz, r3.xyzx  // r3.x <- result.specular.x; r3.y <- result.specular.y; r3.z <- result.specular.z
 
@@ -860,7 +860,7 @@ switch r0.z
   mov r11.xyz, r11.xyzx  // r11.x <- <integrate_bxdf return value>.diffuse.x; r11.y <- <integrate_bxdf return value>.diffuse.y; r11.z <- <integrate_bxdf return value>.diffuse.z
   mov r12.xyz, r12.xyzx  // r12.x <- <integrate_bxdf return value>.specular.x; r12.y <- <integrate_bxdf return value>.specular.y; r12.z <- <integrate_bxdf return value>.specular.z
 
-#line 88 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 88 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
   mov r11.xyz, r11.xyzx  // r11.x <- result.diffuse.x; r11.y <- result.diffuse.y; r11.z <- result.diffuse.z
   mov r12.xyz, r12.xyzx  // r12.x <- result.specular.x; r12.y <- result.specular.y; r12.z <- result.specular.z
 
@@ -879,7 +879,7 @@ switch r0.z
 #line 94
   nop 
 
-#line 85 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 85 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering.hlsli"
   mov r3.xyz, cb4[0].xyzx  // r3.x <- data.position.x; r3.y <- data.position.y; r3.z <- data.position.z
 
 #line 86
@@ -894,7 +894,7 @@ switch r0.z
   mov r5.x, r4.w  // r5.x <- <convert_point_lights return value>.color.w
   mov r5.y, r5.y  // r5.y <- <convert_point_lights return value>.range
 
-#line 94 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 94 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
   mov r3.xyz, r3.xyzx  // r3.x <- point_light.position.x; r3.y <- point_light.position.y; r3.z <- point_light.position.z
   mov r4.xyz, r4.xyzx  // r4.x <- point_light.color.x; r4.y <- point_light.color.y; r4.z <- point_light.color.z
   mov r5.xy, r5.xyxx  // r5.x <- point_light.color.w; r5.y <- point_light.range
@@ -954,7 +954,7 @@ switch r0.z
       mov r0.z, r0.z
       mov r5.xyz, r5.xyzx
 
-#line 23 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+#line 23 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_models.hlsli"
       itof r11.xyzw, l(0, 0, 0, 0)  // r11.x <- result.diffuse.x; r11.y <- result.diffuse.y; r11.z <- result.diffuse.z; r11.w <- result.specular.x
       itof r12.yz, l(0, 0, 0, 0)  // r12.y <- result.specular.y; r12.z <- result.specular.z
 
@@ -1009,7 +1009,7 @@ switch r0.z
         mov r4.xyz, r4.xyzx
         mov r10.x, r10.x
 
-#line 212 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 212 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
         mov r13.xyz, r13.xyzx  // r13.x <- N.x; r13.y <- N.y; r13.z <- N.z
 
 #line 213
@@ -1172,7 +1172,7 @@ switch r0.z
 #line 226
         mul r3.xyz, r3.yzwy, r5.xyzx  // r3.x <- out_specular.x; r3.y <- out_specular.y; r3.z <- out_specular.z
 
-#line 38 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+#line 38 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_models.hlsli"
         mov r4.xyz, r4.xyzx  // r4.x <- result.diffuse.x; r4.y <- result.diffuse.y; r4.z <- result.diffuse.z
         mov r3.xyz, r3.xyzx  // r3.x <- result.specular.x; r3.y <- result.specular.y; r3.z <- result.specular.z
 
@@ -1210,7 +1210,7 @@ switch r0.z
       mov r11.xyz, r11.xyzx  // r11.x <- <integrate_bxdf return value>.diffuse.x; r11.y <- <integrate_bxdf return value>.diffuse.y; r11.z <- <integrate_bxdf return value>.diffuse.z
       mov r12.xyz, r12.xyzx  // r12.x <- <integrate_bxdf return value>.specular.x; r12.y <- <integrate_bxdf return value>.specular.y; r12.z <- <integrate_bxdf return value>.specular.z
 
-#line 112 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 112 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
       mov r11.xyz, r11.xyzx  // r11.x <- result.diffuse.x; r11.y <- result.diffuse.y; r11.z <- result.diffuse.z
       mov r12.xyz, r12.xyzx  // r12.x <- result.specular.x; r12.y <- result.specular.y; r12.z <- result.specular.z
 
@@ -1235,7 +1235,7 @@ switch r0.z
 #line 119
   nop 
 
-#line 94 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 94 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering.hlsli"
   mov r3.xyz, cb4[0].xyzx  // r3.x <- data.position.x; r3.y <- data.position.y; r3.z <- data.position.z
 
 #line 95
@@ -1264,7 +1264,7 @@ switch r0.z
   mov r4.xyz, r4.xyzx  // r4.x <- <convert_spot_lights return value>.direction.x; r4.y <- <convert_spot_lights return value>.direction.y; r4.z <- <convert_spot_lights return value>.direction.z
   mov r5.xyz, r5.xyzx  // r5.x <- <convert_spot_lights return value>.color.x; r5.y <- <convert_spot_lights return value>.color.y; r5.z <- <convert_spot_lights return value>.color.z
 
-#line 119 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 119 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
   mov r3.xyz, r3.xyzx  // r3.x <- spot_light.position.x; r3.y <- spot_light.position.y; r3.z <- spot_light.position.z
   mov r4.xyz, r4.xyzx  // r4.x <- spot_light.direction.x; r4.y <- spot_light.direction.y; r4.z <- spot_light.direction.z
   mov r5.xyz, r5.xyzx  // r5.x <- spot_light.color.x; r5.y <- spot_light.color.y; r5.z <- spot_light.color.z
@@ -1353,7 +1353,7 @@ switch r0.z
       mov r0.z, r0.z
       mov r5.xyz, r5.xyzx
 
-#line 23 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+#line 23 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_models.hlsli"
       itof r6.xyzw, l(0, 0, 0, 0)  // r6.x <- result.diffuse.x; r6.y <- result.diffuse.y; r6.z <- result.diffuse.z; r6.w <- result.specular.x
       itof r12.yz, l(0, 0, 0, 0)  // r12.y <- result.specular.y; r12.z <- result.specular.z
 
@@ -1408,7 +1408,7 @@ switch r0.z
         mov r4.xyz, r4.xyzx
         mov r10.x, r10.x
 
-#line 212 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_functions.hlsli"
+#line 212 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_functions.hlsli"
         mov r8.xyz, r8.xyzx  // r8.x <- N.x; r8.y <- N.y; r8.z <- N.z
 
 #line 213
@@ -1571,7 +1571,7 @@ switch r0.z
 #line 226
         mul r3.xyz, r3.yzwy, r5.xyzx  // r3.x <- out_specular.x; r3.y <- out_specular.y; r3.z <- out_specular.z
 
-#line 38 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\shading_models.hlsli"
+#line 38 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\shading_models.hlsli"
         mov r4.xyz, r4.xyzx  // r4.x <- result.diffuse.x; r4.y <- result.diffuse.y; r4.z <- result.diffuse.z
         mov r3.xyz, r3.xyzx  // r3.x <- result.specular.x; r3.y <- result.specular.y; r3.z <- result.specular.z
 
@@ -1609,7 +1609,7 @@ switch r0.z
       mov r6.xyz, r6.xyzx  // r6.x <- <integrate_bxdf return value>.diffuse.x; r6.y <- <integrate_bxdf return value>.diffuse.y; r6.z <- <integrate_bxdf return value>.diffuse.z
       mov r12.xyz, r12.xyzx  // r12.x <- <integrate_bxdf return value>.specular.x; r12.y <- <integrate_bxdf return value>.specular.y; r12.z <- <integrate_bxdf return value>.specular.z
 
-#line 163 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 163 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
       mov r6.xyz, r6.xyzx  // r6.x <- result.diffuse.x; r6.y <- result.diffuse.y; r6.z <- result.diffuse.z
       mov r12.xyz, r12.xyzx  // r12.x <- result.specular.x; r12.y <- result.specular.y; r12.z <- result.specular.z
 
@@ -1638,10 +1638,10 @@ switch r0.z
 #line 180
     nop 
 
-#line 105 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering.hlsli"
+#line 105 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering.hlsli"
     mul r0.xyz, cb4[0].wwww, cb4[0].xyzx  // r0.x <- <convert_ambient_lights return value>.x; r0.y <- <convert_ambient_lights return value>.y; r0.z <- <convert_ambient_lights return value>.z
 
-#line 180 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\deferred_rendering_lighting_ps.hlsl"
+#line 180 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\deferred_rendering_lighting_ps.hlsl"
     mov r0.xyz, r0.xyzx  // r0.x <- ambient_color.x; r0.y <- ambient_color.y; r0.z <- ambient_color.z
 
 #line 181

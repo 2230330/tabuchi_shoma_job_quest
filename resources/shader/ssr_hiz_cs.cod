@@ -33,7 +33,7 @@ dcl_thread_group 8, 8, 1
 // Initial variable locations:
 //   vThreadID.x <- id.x; vThreadID.y <- id.y; vThreadID.z <- id.z
 //
-#line 9 "C:\Users\2230330\Desktop\JobQuest\Yuzuki2\shaderes\compute_shaders\ssr_hiz_cs.hlsl"
+#line 9 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\compute_shaders\ssr_hiz_cs.hlsl"
 mov r0.xy, l(2,2,0,0)
 imul null, r0.xy, r0.xyxx, vThreadID.xyxx  // r0.x <- texel.x; r0.y <- texel.y
 
