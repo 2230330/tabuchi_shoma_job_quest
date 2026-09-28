@@ -13,6 +13,7 @@
 #pragma comment(lib ,"dxgi.lib")
 
 #include<memory>
+#include<vector>
 
 //前方宣言
 class RenderState;
@@ -57,7 +58,7 @@ public:
     void Present(UINT syncInterval);
 
     //ウィンドウハンドル取得
-    HWND GetWindowHandle() { return this->hwnd_; }
+    HWND GetWindowHandle() { return this->hwnd_11_; }
     //デバイス取得
     ID3D11Device* GetDevice() { return this->device_.Get(); }
     //デバイスコンテキスト取得
@@ -89,14 +90,21 @@ public:
     float GetWheel()const { return this->wheel_; }
 
 private:
+	void InitializeDirectX11();
+	void InitializeDirectX12();
+
     //メンバ変数
-    HWND                                            hwnd_ = nullptr;
+    HWND                                            hwnd_11_ = nullptr;
     Microsoft::WRL::ComPtr<ID3D11Device>            device_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext>     immediate_context_=nullptr;
     Microsoft::WRL::ComPtr<IDXGISwapChain>          swap_chain_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  render_target_view_=nullptr;
     Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  depth_stencil_view_=nullptr;
     D3D11_VIEWPORT                                  viewport_{};
+
+    //2026_09_28
+    //DirectX12の追加、hwndの個別化
+	HWND hwnd_12_ = nullptr;
 
     //2026/09/06
     //DirectX12の追加、実際の業界の環境に近づけます。
@@ -108,6 +116,18 @@ private:
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmd_list_ = nullptr;
     //コマンドキュー
     Microsoft::WRL::ComPtr<ID3D12CommandQueue>cmd_queue_ = nullptr;
+    //2026/09/28
+    //アダプターの独立とswapchainの独立
+    Microsoft::WRL::ComPtr<IDXGIAdapter1>dxgi_adapter_ = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>rtv_heap_ = nullptr;
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>>dx12_back_buffers_;
+    UINT rtv_descriptor_size_ = 0;
+    UINT back_buffer_index_ = 0;
+	//2026/09/28
+	//フェンスの追加
+    Microsoft::WRL::ComPtr<ID3D12Fence>dx12_fence_ = nullptr;
+	UINT64 dx12_fence_value_ = 0;
+	HANDLE dx12_fence_event_ = nullptr;
 
     float screen_width_  = 0;
     float screen_height_ = 0;
