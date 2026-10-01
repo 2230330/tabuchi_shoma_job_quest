@@ -320,6 +320,15 @@
     <ClInclude Include="headers\component\component_animation.h">
       <Filter>headers\component</Filter>
     </ClInclude>
+    <ClInclude Include="headers\system\render_back_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\i_render_dx12_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\system\render_pass.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -466,6 +475,9 @@
     <ClCompile Include="sources\system\update_animation_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
+    <ClCompile Include="sources\system\render_back_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaderes\bloom.hlsli">
@@ -550,6 +562,9 @@
       <Filter>Shaders\Header</Filter>
     </None>
     <None Include="shaderes\fog.hlsli">
+      <Filter>Shaders\Header</Filter>
+    </None>
+    <None Include="shaderes\render_back.hlsli">
       <Filter>Shaders\Header</Filter>
     </None>
   </ItemGroup>
@@ -732,6 +747,12 @@
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\golden_spiral_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\render_back_vs.hlsl">
+      <Filter>Shaders\VertexShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\render_back_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
   </ItemGroup>

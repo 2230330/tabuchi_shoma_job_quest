@@ -339,3 +339,32 @@ D3D11_TEXTURE2D_DESC ResourceManager::Texture2dDesc(ID3D11ShaderResourceView* sh
 
     return texture2d_desc;
 }
+
+Microsoft::WRL::ComPtr<ID3DBlob> 
+ResourceManager::LoadShaderBytecode(const std::wstring& filename)
+{
+	// --- キャッシュ確認 ---
+	auto it = shader_bytecoodes_.find(filename);
+    if (it != shader_bytecoodes_.end())
+    {
+        return it->second;
+    }
+
+	Microsoft::WRL::ComPtr<ID3DBlob> blob;
+
+	const HRESULT hr = D3DReadFileToBlob(filename.c_str(), blob.GetAddressOf());
+
+    if (FAILED(hr))
+    {
+        std::wstring message =
+            L"Failed to load shader bytecode: " + filename +
+            L" Error: " + HRTrace(hr);
+
+        OutputDebugStringW(message.c_str());
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        return nullptr;
+    }
+
+	shader_bytecoodes_.emplace(filename, blob);
+    return blob;
+}

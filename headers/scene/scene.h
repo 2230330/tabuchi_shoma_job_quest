@@ -30,6 +30,8 @@ public:
     void Update(float elapsed_time);
     //描画処理
     void Render(float elapsed_time);
+	//描画処理DX12
+    void RenderDX12(float elapsed_time);
     //GUI描画処理
     void DrawGui();
 
@@ -45,6 +47,7 @@ protected:
 	virtual bool UninitializeCore() { return true; }
 	virtual void UpdateCore(float elapsed_time){}
 	virtual void RenderCore(float elapsed_time){}
+	virtual void RenderCoreDX12(float elapsed_time){}
 	virtual void DrawImguiCore(){}
 
 	//ビューポートサイズに何も入っていない場合、graphicsのデフォルトを入れます

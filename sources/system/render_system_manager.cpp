@@ -19,6 +19,7 @@
 #include"../../headers/system/render_golden_ratio_system.h"
 #include"../../headers/system/ibl_manager.h"
 #include"../../headers/system/camera_set_constants.h"
+#include"../../headers/system/render_back_system.h"
 #include"../../headers/post_process/post_process_manager.h"
 #include"../../headers/component/component_manager.h"
 
@@ -44,6 +45,7 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     deferred_render_system_ = std::make_unique<RenderDeferredSystem>(comp_mng_, RenderPass_Lighting);
     ssr_render_system_ = std::make_unique<RenderScreenSpaceReflectionSystem>(comp_mng_, RenderPass_Lighting);
     golden_ratio_render_system_ = std::make_unique<RenderGoldenRatioSystem>(comp_mng_,RenderPass_UI);
+	back_render_system_ = std::make_unique<RenderBackSystem>();
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
@@ -281,6 +283,15 @@ void RenderSystemManager::RenderAll()
     //黄金分割構図を描画
     ctx->OMSetBlendState(render_state_->GetBlendState(BlendState::additive), nullptr, 0xFFFFFFFF);
     golden_ratio_render_system_->Render();
+}
+
+//DX12用の描画関数
+void RenderSystemManager::RenderAllDX12()
+{
+    //コマンドリストの取得
+	ID3D12GraphicsCommandList* cmd_list = Graphics::Instance().GetCommandList();
+
+	back_render_system_->RenderDX12(cmd_list);
 }
 
 void RenderSystemManager::SetLightManager(LightManager* light_manager)

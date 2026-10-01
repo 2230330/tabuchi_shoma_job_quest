@@ -280,6 +280,11 @@ void SceneTest::RenderCore(float elapsed_time)
 
 }
 
+void SceneTest::RenderCoreDX12(float elapsed_time)
+{
+	render_sys_mng->RenderAllDX12();
+}
+
 void SceneTest::DrawImguiCore()
 {
     float screen_width = Graphics::Instance().GetScreenWidth();

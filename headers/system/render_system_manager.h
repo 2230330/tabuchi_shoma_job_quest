@@ -25,6 +25,7 @@ class IBLManager;
 class CameraSetConstants;
 class PostProcessManager;
 class RenderGoldenRatioSystem;
+class RenderBackSystem;
 
 //描画システムを管理するクラス
 //描画システムは、背景、オブジェクト、UIなどの描画を担当する複数のシステムで構成されます。
@@ -45,6 +46,9 @@ public:
     //その内マルチタスクにしたいなぁ
     void RenderAll();
 
+	//DX12用の描画関数
+	void RenderAllDX12();
+
     void SetLightManager(LightManager* light_manager);
 private:
     //レンダリングシステム群
@@ -58,6 +62,7 @@ private:
     std::unique_ptr<RenderScreenSpaceReflectionSystem>ssr_render_system_=nullptr;
     std::unique_ptr<RenderFogSystem>fog_render_system_ = nullptr;
     std::unique_ptr<RenderGoldenRatioSystem>golden_ratio_render_system_ = nullptr;
+	std::unique_ptr<RenderBackSystem>back_render_system_ = nullptr;
     ComponentManager& comp_mng_;
 
     //フルスクリーンクワッド(背景用)

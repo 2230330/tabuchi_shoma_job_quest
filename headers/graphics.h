@@ -15,6 +15,13 @@
 #include<memory>
 #include<vector>
 
+enum class PipelineKind
+{
+    Background,
+    Opaque,
+    Transparent
+};
+
 //前方宣言
 class RenderState;
 
@@ -57,10 +64,31 @@ public:
     //画面表示
     void Present(UINT syncInterval);
 
+	//DirectX12の追加
+	void BeginFrameDX12();
+	void ViewClearDX12(float r, float g, float b, float a);
+    void PresentDX12(UINT sync_interval);
+
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> CreatePipelineState(
+        ID3D12RootSignature* root_signature,
+        D3D12_SHADER_BYTECODE vertex_shader,
+        D3D12_SHADER_BYTECODE pixel_shader,
+        PipelineKind kind);
+
+    //2026/09/29
+	ID3D12GraphicsCommandList* GetCommandList() { return this->cmd_list_.Get(); }
+
     //ウィンドウハンドル取得
     HWND GetWindowHandle() { return this->hwnd_11_; }
     //デバイス取得
     ID3D11Device* GetDevice() { return this->device_.Get(); }
+
+    //2026/10/01
+	//DirectX12の追加
+    ID3D12Device* GetDX12Device() {
+        return this->dx12_device_.Get();
+    }
+
     //デバイスコンテキスト取得
     ID3D11DeviceContext* GetDeviceContext() { return this->immediate_context_.Get(); }
     //スクリーン幅取得

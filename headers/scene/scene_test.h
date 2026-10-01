@@ -27,6 +27,8 @@ private:
     void UpdateCore(float elapsed_time)override;
     //描画処理
     void RenderCore(float elapsed_time)override;
+	//描画処理DX12
+	void RenderCoreDX12(float elapsed_time)override;
     //GUI描画処理
     void DrawImguiCore()override;
 

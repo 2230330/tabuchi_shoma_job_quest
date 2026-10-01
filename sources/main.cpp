@@ -1,7 +1,8 @@
 #include<time.h>
 #define _CRTDBG_MAP_ALLOC
 #include<crtdbg.h>
-
+#include<d3d12.h>
+#include<wrl.h>
 #include"../headers/framework.h"
 
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -16,6 +17,11 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev_instance, _I
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
     //ÉÅÉÇÉäÉäÅ[ÉNåüçı
     //_CrtSetBreakAlloc(321173);
+	Microsoft::WRL::ComPtr<ID3D12Debug> debug_controller;
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_controller))))
+	{
+		debug_controller->EnableDebugLayer();
+	}
 
 #endif
 

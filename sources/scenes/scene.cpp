@@ -69,6 +69,11 @@ void Scene::Render(float elapsed_time)
 	RenderCore(elapsed_time);
 }
 
+void Scene::RenderDX12(float elapsed_time)
+{
+	RenderCoreDX12(elapsed_time);
+}
+
 void Scene::DrawGui()
 {
 	static bool prev_z = false;

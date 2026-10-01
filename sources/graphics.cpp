@@ -112,6 +112,243 @@ void Graphics::Present(UINT sync_interval)
     _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 }
 
+void Graphics::BeginFrameDX12()
+{
+    HRESULT hr{ S_OK };
+
+    // 前フレームのGPU処理が完了するまで待つ
+    if (dx12_fence_value_ > 0 &&
+        dx12_fence_->GetCompletedValue() < dx12_fence_value_)
+    {
+        hr = dx12_fence_->SetEventOnCompletion(
+            dx12_fence_value_, dx12_fence_event_);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        WaitForSingleObject(dx12_fence_event_, INFINITE);
+    }
+
+    // コマンド記録を開始
+    hr = cmd_allocater_->Reset();
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    hr = cmd_list_->Reset(cmd_allocater_.Get(), nullptr);
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    // 現在のバックバッファを取得
+    back_buffer_index_ = dx12_swap_chain_->GetCurrentBackBufferIndex();
+
+    // バックバッファを描画可能な状態へ遷移
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource =
+        dx12_back_buffers_[back_buffer_index_].Get();
+    barrier.Transition.Subresource =
+        D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore =
+        D3D12_RESOURCE_STATE_PRESENT;
+    barrier.Transition.StateAfter =
+        D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+    cmd_list_->ResourceBarrier(1, &barrier);
+
+    // 現在のバックバッファに対応するRTVを設定
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle =
+        rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    rtv_handle.ptr +=
+        static_cast<SIZE_T>(back_buffer_index_) * rtv_descriptor_size_;
+
+    cmd_list_->OMSetRenderTargets(1, &rtv_handle, FALSE, nullptr);
+
+    // DX12のビューポートとシザー矩形を設定
+    D3D12_VIEWPORT viewport{};
+    viewport.TopLeftX = 0.0f;
+    viewport.TopLeftY = 0.0f;
+    viewport.Width = screen_width_;
+    viewport.Height = screen_height_;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    cmd_list_->RSSetViewports(1, &viewport);
+
+    D3D12_RECT scissor_rect{
+        0,
+        0,
+        static_cast<LONG>(screen_width_),
+        static_cast<LONG>(screen_height_)
+    };
+    cmd_list_->RSSetScissorRects(1, &scissor_rect);
+}
+
+void Graphics::ViewClearDX12(float r, float g, float b, float a)
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle =
+        rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    rtv_handle.ptr +=
+        static_cast<SIZE_T>(back_buffer_index_) * rtv_descriptor_size_;
+
+    const float clear_color[] = { r, g, b, a };
+    cmd_list_->ClearRenderTargetView(
+        rtv_handle, clear_color, 0, nullptr);
+}
+
+void Graphics::PresentDX12(UINT sync_interval)
+{
+    HRESULT hr{ S_OK };
+
+    // バックバッファを表示可能な状態へ戻す
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource =
+        dx12_back_buffers_[back_buffer_index_].Get();
+    barrier.Transition.Subresource =
+        D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore =
+        D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrier.Transition.StateAfter =
+        D3D12_RESOURCE_STATE_PRESENT;
+
+    cmd_list_->ResourceBarrier(1, &barrier);
+
+    // コマンド記録を終了してGPUへ送る
+    hr = cmd_list_->Close();
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    ID3D12CommandList* command_lists[] = { cmd_list_.Get() };
+    cmd_queue_->ExecuteCommandLists(1, command_lists);
+
+    // 画面へ表示
+    hr = dx12_swap_chain_->Present(sync_interval, 0);
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    // GPUの完了位置を記録する
+    ++dx12_fence_value_;
+    hr = cmd_queue_->Signal(dx12_fence_.Get(), dx12_fence_value_);
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+}
+
+Microsoft::WRL::ComPtr<ID3D12PipelineState> Graphics::CreatePipelineState(
+    ID3D12RootSignature* root_signature,
+    D3D12_SHADER_BYTECODE vertex_shader,
+    D3D12_SHADER_BYTECODE pixel_shader,
+    PipelineKind kind)
+{
+    _ASSERT_EXPR(dx12_device_ != nullptr, L"DX12 device is not initialized");
+    _ASSERT_EXPR(root_signature != nullptr, L"Root signature is null");
+    _ASSERT_EXPR(
+        vertex_shader.pShaderBytecode != nullptr &&
+        vertex_shader.BytecodeLength > 0,
+        L"Vertex shader bytecode is empty");
+    _ASSERT_EXPR(
+        pixel_shader.pShaderBytecode != nullptr &&
+        pixel_shader.BytecodeLength > 0,
+        L"Pixel shader bytecode is empty");
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
+    desc.pRootSignature = root_signature;
+    desc.VS = vertex_shader;
+    desc.PS = pixel_shader;
+
+    // ラスタライザー設定
+    desc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+    desc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    desc.RasterizerState.DepthClipEnable = TRUE;
+    desc.RasterizerState.MultisampleEnable = FALSE;
+    desc.RasterizerState.AntialiasedLineEnable = FALSE;
+    desc.RasterizerState.ForcedSampleCount = 0;
+    desc.RasterizerState.ConservativeRaster =
+        D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+    // 深度・ステンシル設定
+    desc.DepthStencilState.DepthEnable = FALSE;
+    desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    desc.DepthStencilState.StencilEnable = FALSE;
+    desc.DepthStencilState.StencilReadMask =
+        D3D12_DEFAULT_STENCIL_READ_MASK;
+    desc.DepthStencilState.StencilWriteMask =
+        D3D12_DEFAULT_STENCIL_WRITE_MASK;
+
+	// ステンシル設定（表面）
+	desc.DepthStencilState.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	desc.DepthStencilState.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	desc.DepthStencilState.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	desc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	// ステンシル設定（裏面）
+	desc.DepthStencilState.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	desc.DepthStencilState.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	desc.DepthStencilState.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	desc.DepthStencilState.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+
+    // ブレンド設定（初期値はブレンドなし）
+    auto& blend = desc.BlendState.RenderTarget[0];
+    blend.BlendEnable = FALSE;
+    blend.LogicOpEnable = FALSE;
+    blend.SrcBlend = D3D12_BLEND_ONE;
+    blend.DestBlend = D3D12_BLEND_ZERO;
+    blend.BlendOp = D3D12_BLEND_OP_ADD;
+    blend.SrcBlendAlpha = D3D12_BLEND_ONE;
+    blend.DestBlendAlpha = D3D12_BLEND_ZERO;
+    blend.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    blend.LogicOp = D3D12_LOGIC_OP_NOOP;
+    blend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+    switch (kind)
+    {
+    case PipelineKind::Background:
+        // 背景は深度テストなし、カリングなし
+        desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+        break;
+
+    case PipelineKind::Opaque:
+        // 不透明描画は深度テスト・深度書き込みあり
+        desc.DepthStencilState.DepthEnable = TRUE;
+        desc.DepthStencilState.DepthWriteMask =
+            D3D12_DEPTH_WRITE_MASK_ALL;
+        break;
+
+    case PipelineKind::Transparent:
+        // 透明描画は深度テストあり、深度書き込みなし
+        desc.DepthStencilState.DepthEnable = TRUE;
+        desc.DepthStencilState.DepthWriteMask =
+            D3D12_DEPTH_WRITE_MASK_ZERO;
+
+        blend.BlendEnable = TRUE;
+        blend.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+        blend.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+        blend.SrcBlendAlpha = D3D12_BLEND_ONE;
+        blend.DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+        break;
+
+    default:
+        _ASSERT_EXPR(false, L"Unknown PipelineKind");
+        return nullptr;
+    }
+
+    // レンダーターゲットとサンプル設定
+    desc.SampleMask = UINT_MAX;
+    desc.PrimitiveTopologyType =
+        D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    desc.NumRenderTargets = 1;
+    desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+
+    if (desc.DepthStencilState.DepthEnable)
+    {
+        desc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    }
+
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> pipeline_state;
+
+    HRESULT hr = dx12_device_->CreateGraphicsPipelineState(
+        &desc,
+        IID_PPV_ARGS(pipeline_state.GetAddressOf()));
+
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    return pipeline_state;
+}
+
 RenderState* Graphics::GetRenderState()
 {
     return this->render_state_.get();

@@ -15,6 +15,8 @@ extern ImWchar glyphRangesJapanese[];
 #endif
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+#define DX12 1
+
 Framework::Framework(HWND hwnd):hwnd_(hwnd)
 {
 
@@ -51,6 +53,16 @@ void Framework::Update(float elapsed_time)
 
 void Framework::Render(float elapsed_time)
 {
+#ifdef DX12//2026_09_28 DirectX11の場合と12の場合を分ける
+    Graphics::Instance().BeginFrameDX12();
+    Graphics::Instance().ViewClearDX12(0, 0, 0, 1);
+
+	//ここにシーン描画処理を入れる
+	scene_->RenderDX12(elapsed_time);
+
+    Graphics::Instance().PresentDX12(0);
+#else
+
     Graphics::Instance().SetRenderTargets();
     Graphics::Instance().ViewClear(0, 0, 0, 0);
     Graphics::Instance().ClearShaderResourceViews();
@@ -70,6 +82,7 @@ void Framework::Render(float elapsed_time)
     UINT sync_interval{ 0 };
     Graphics::Instance().Present(sync_interval);
 
+#endif
 }
 
 bool Framework::Uninitialize()

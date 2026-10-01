@@ -3,6 +3,7 @@
 #include<iostream>
 #include<unordered_map>
 #include<d3d11.h>
+#include<d3d12.h>
 #include<wrl.h>
 #include<memory>
 
@@ -34,6 +35,7 @@ public:
         vertex_shaders_.clear();
         pixel_shaders_.clear();
         compute_shaders_.clear();
+        shader_bytecoodes_.clear();
     }
 
     // GLTFモデルの読み込み（ロード済みなら共有）
@@ -62,6 +64,9 @@ public:
     std::wstring MakeHashKey(const void* data, size_t size);
     D3D11_TEXTURE2D_DESC Texture2dDesc(ID3D11ShaderResourceView* shader_resource_view);
 
+	//2026/9/30
+	//DX12のシェーダーをキャッシュするためのもの
+	Microsoft::WRL::ComPtr<ID3DBlob> LoadShaderBytecode(const std::wstring& filename);
 
 private:
     std::unordered_map<std::string, std::shared_ptr<GltfModel>> gltf_models_;
@@ -69,4 +74,9 @@ private:
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11VertexShader>> vertex_shaders_;
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11PixelShader>> pixel_shaders_;
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ComputeShader>> compute_shaders_;
+
+    //2026/9/30
+	//DX12のシェーダーをキャッシュするためのもの
+    std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3DBlob>>shader_bytecoodes_;
+    
 };
