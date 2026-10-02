@@ -20,6 +20,7 @@
 #include"../../headers/system/ibl_manager.h"
 #include"../../headers/system/camera_set_constants.h"
 #include"../../headers/system/render_back_system.h"
+#include"../../headers/system/render_sky_dx12_system.h"
 #include"../../headers/post_process/post_process_manager.h"
 #include"../../headers/component/component_manager.h"
 
@@ -46,6 +47,7 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     ssr_render_system_ = std::make_unique<RenderScreenSpaceReflectionSystem>(comp_mng_, RenderPass_Lighting);
     golden_ratio_render_system_ = std::make_unique<RenderGoldenRatioSystem>(comp_mng_,RenderPass_UI);
 	back_render_system_ = std::make_unique<RenderBackSystem>();
+	sky_dx12_render_system_ = std::make_unique<RenderSkyDX12System>();
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
@@ -291,7 +293,8 @@ void RenderSystemManager::RenderAllDX12()
     //コマンドリストの取得
 	ID3D12GraphicsCommandList* cmd_list = Graphics::Instance().GetCommandList();
 
-	back_render_system_->RenderDX12(cmd_list);
+	sky_dx12_render_system_->RenderDX12(cmd_list);
+
 }
 
 void RenderSystemManager::SetLightManager(LightManager* light_manager)

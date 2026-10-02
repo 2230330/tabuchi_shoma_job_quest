@@ -7,8 +7,8 @@
 //
 // Name                 Index   Mask Register SysValue  Format   Used
 // -------------------- ----- ------ -------- -------- ------- ------
-// SV_POSITION              0   xyzw        0      POS   float       
-// TEXCOORD                 0   xy          1     NONE   float    y  
+// SV_POSITION              0   xyzw        0      POS   float   xy  
+// TEXCOORD                 0   xy          1     NONE   float       
 //
 //
 // Output signature:
@@ -19,30 +19,129 @@
 //
 ps_5_0
 dcl_globalFlags refactoringAllowed | skipOptimization
-dcl_input_ps linear v1.y
+dcl_input_ps_siv linear noperspective v0.xy, position
 dcl_output o0.xyzw
-dcl_temps 3
+dcl_temps 6
 //
 // Initial variable locations:
 //   v0.x <- input.position.x; v0.y <- input.position.y; v0.z <- input.position.z; v0.w <- input.position.w; 
 //   v1.x <- input.uv.x; v1.y <- input.uv.y; 
 //   o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 //
-#line 5 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\render_back_ps.hlsl"
-max r0.x, v1.y, l(0.000000)
-min r0.x, r0.x, l(1.000000)  // r0.x <- t
+#line 13 "C:\Users\田渕　暁真\Desktop\job_quest\project\shaderes\render_back_ps.hlsl"
+mov r0.xy, l(1280.000000,720.000000,0,0)  // r0.x <- screenSize.x; r0.y <- screenSize.y
+
+#line 14
+div r0.zw, v0.xxxy, r0.xxxy
+mul r0.zw, r0.zzzw, l(0.000000, 0.000000, 2.000000, 2.000000)
+mov r1.xy, l(-1.000000,-1.000000,-0.000000,-0.000000)
+add r1.yz, r0.zzwz, r1.xxyx  // r1.y <- screenPoint.x; r1.z <- screenPoint.y
+
+#line 17
+div r0.x, r0.x, r0.y
+mul r1.x, r0.x, r1.y  // r1.x <- screenPoint.x
+
+#line 20
+mov r0.xyz, l(0,0,0,0)  // r0.x <- rayOrigin.x; r0.y <- rayOrigin.y; r0.z <- rayOrigin.z
+
+#line 21
+mov r1.w, l(1.000000)
+dp3 r0.w, r1.xzwx, r1.xzwx
+rsq r0.w, r0.w
+mul r1.xyz, r0.wwww, r1.xzwx  // r1.x <- rayDirection.x; r1.y <- rayDirection.y; r1.z <- rayDirection.z
+
+#line 24
+mov r0.w, l(0)  // r0.w <- t
+
+#line 25
+mov r1.w, l(96)  // r1.w <- maxSteps
+
+#line 26
+mov r2.x, l(0.001000)  // r2.x <- hitEpsilon
+
+#line 27
+mov r2.y, l(100.000000)  // r2.y <- maxDistance
+
+#line 29
+mov r2.z, l(0)  // r2.z <- hit
+
+#line 31
+mov r2.w, l(0)  // r2.w <- i
+mov r3.y, r0.w  // r3.y <- t
+mov r3.x, r2.z  // r3.x <- hit
+mov r3.z, r2.w  // r3.z <- i
+loop 
+  ilt r3.w, r3.z, r1.w
+  breakc_z r3.w
+
+#line 33
+  mul r4.xyz, r1.xyzx, r3.yyyy
+  add r4.xyz, r0.xyzx, r4.xyzx  // r4.x <- p.x; r4.y <- p.y; r4.z <- p.z
+
+#line 34
+  nop 
+  mov r4.xyz, r4.xyzx
+  mov r5.xyz, l(0,0,3.000000,0)
+  mov r3.w, l(1.000000)
 
 #line 6
-mov r0.yzw, l(0,0.050000,0.150000,0.350000)  // r0.y <- topColor.x; r0.z <- topColor.y; r0.w <- topColor.z
+  mov r5.xyz, -r5.xyzx
+  add r4.xyz, r4.xyzx, r5.xyzx
+  dp3 r4.x, r4.xyzx, r4.xyzx
+  sqrt r4.x, r4.x
+  mov r3.w, -r3.w
+  add r3.w, r3.w, r4.x  // r3.w <- <sphereSdf return value>
 
-#line 7
-mov r1.xyz, l(0.750000,0.450000,0.250000,0)  // r1.x <- bottomColor.x; r1.y <- bottomColor.y; r1.z <- bottomColor.z
+#line 34
+  mov r3.w, r3.w  // r3.w <- distanceToSphere
 
-#line 9
-mov r2.xyz, -r0.yzwy
-add r1.xyz, r1.xyzx, r2.xyzx
-mul r1.xyz, r0.xxxx, r1.xyzx
-add o0.xyz, r0.yzwy, r1.xyzx
-mov o0.w, l(1.000000)
+#line 37
+  lt r4.x, r3.w, r2.x
+  if_nz r4.x
+
+#line 39
+    mov r3.x, l(-1)
+
+#line 40
+    break 
+
+#line 41
+  else 
+    mov r4.y, r3.x
+  endif 
+
+#line 43
+  add r4.x, r3.w, r3.y  // r4.x <- t
+
+#line 45
+  lt r3.w, r2.y, r4.x
+  if_nz r3.w
+
+#line 47
+    mov r3.x, r4.y  // r3.x <- hit
+    break 
+
+#line 48
+  endif 
+
+#line 31
+  iadd r3.z, r3.z, l(1)
+
+#line 49
+  mov r3.xy, r4.yxyy  // r3.y <- t; r3.x <- hit
+endloop   // r4.x <- t
+
+#line 51
+if_nz r3.x
+
+#line 53
+  mov o0.xyzw, l(0.200000,0.600000,1.000000,1.000000)
+  ret 
+
+#line 54
+endif 
+
+#line 56
+mov o0.xyzw, l(0.050000,0.050000,0.080000,1.000000)  // o0.x <- <main return value>.x; o0.y <- <main return value>.y; o0.z <- <main return value>.z; o0.w <- <main return value>.w
 ret 
-// Approximately 10 instruction slots used
+// Approximately 59 instruction slots used

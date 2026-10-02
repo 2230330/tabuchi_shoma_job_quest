@@ -275,6 +275,7 @@
     <ClInclude Include="headers\system\render_golden_ratio_system.h" />
     <ClInclude Include="headers\system\render_pass.h" />
     <ClInclude Include="headers\system\render_screen_space_reflection_system.h" />
+    <ClInclude Include="headers\system\render_sky_dx12_system.h" />
     <ClInclude Include="headers\system\update_animation_system.h" />
     <ClInclude Include="headers\system\update_bounding_box_system.h" />
     <ClInclude Include="headers\system\update_camera_system.h" />
@@ -327,6 +328,7 @@
     <ClCompile Include="sources\system\render_fog_system.cpp" />
     <ClCompile Include="sources\system\render_golden_ratio_system.cpp" />
     <ClCompile Include="sources\system\render_screen_space_reflection_system.cpp" />
+    <ClCompile Include="sources\system\render_sky_dx12_system.cpp" />
     <ClCompile Include="sources\system\update_animation_system.cpp" />
     <ClCompile Include="sources\system\update_bounding_box_system.cpp" />
     <ClCompile Include="sources\system\update_camera_system.cpp" />

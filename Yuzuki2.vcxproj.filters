@@ -329,6 +329,9 @@
     <ClInclude Include="headers\system\render_pass.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\system\render_sky_dx12_system.h">
+      <Filter>headers\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -476,6 +479,9 @@
       <Filter>sources\system</Filter>
     </ClCompile>
     <ClCompile Include="sources\system\render_back_system.cpp">
+      <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\render_sky_dx12_system.cpp">
       <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>

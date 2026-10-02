@@ -26,6 +26,7 @@ class CameraSetConstants;
 class PostProcessManager;
 class RenderGoldenRatioSystem;
 class RenderBackSystem;
+class RenderSkyDX12System;
 
 //描画システムを管理するクラス
 //描画システムは、背景、オブジェクト、UIなどの描画を担当する複数のシステムで構成されます。
@@ -63,6 +64,7 @@ private:
     std::unique_ptr<RenderFogSystem>fog_render_system_ = nullptr;
     std::unique_ptr<RenderGoldenRatioSystem>golden_ratio_render_system_ = nullptr;
 	std::unique_ptr<RenderBackSystem>back_render_system_ = nullptr;
+	std::unique_ptr<RenderSkyDX12System>sky_dx12_render_system_ = nullptr;
     ComponentManager& comp_mng_;
 
     //フルスクリーンクワッド(背景用)
