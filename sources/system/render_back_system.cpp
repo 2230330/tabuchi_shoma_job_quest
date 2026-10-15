@@ -3,6 +3,7 @@
 #include"../../headers/graphics.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/misc.h"
+#include"../../headers/root_signature_manager.h"
 
 RenderBackSystem::RenderBackSystem()
 	:IRenderDX12System(RenderPass_Background)
@@ -43,9 +44,6 @@ RenderBackSystem::RenderBackSystem()
 	_ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
 
 	//シェーダー、パイプラインの設定
-	ID3DBlob* vertex_shader_blob = nullptr;
-	ID3D10Blob* pixel_shader_blob = nullptr;
-
 	auto vs_blob = ResourceManager::Instance().LoadShaderBytecode(L"resources/shader/render_back_vs.dxil");
 	auto ps_blob = ResourceManager::Instance().LoadShaderBytecode(L"resources/shader/render_back_ps.dxil");
 
@@ -59,7 +57,7 @@ RenderBackSystem::RenderBackSystem()
 	};
 
 	pipeline_state_ = Graphics::Instance().CreatePipelineState(
-		root_signature_.Get(),
+		RootSignatureManager::Instance().GetRootSignature3D().Get(),
 		vs_bytecode,
 		ps_bytecode,
 		PipelineKind::Background

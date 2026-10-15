@@ -332,6 +332,9 @@
     <ClInclude Include="headers\system\render_sky_dx12_system.h">
       <Filter>headers\system</Filter>
     </ClInclude>
+    <ClInclude Include="headers\root_signature_manager.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -483,6 +486,9 @@
     </ClCompile>
     <ClCompile Include="sources\system\render_sky_dx12_system.cpp">
       <Filter>sources\system</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\root_signature_manager.cpp">
+      <Filter>sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

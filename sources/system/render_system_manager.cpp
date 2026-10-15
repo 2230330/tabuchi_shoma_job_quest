@@ -23,6 +23,7 @@
 #include"../../headers/system/render_sky_dx12_system.h"
 #include"../../headers/post_process/post_process_manager.h"
 #include"../../headers/component/component_manager.h"
+#include"../../headers/root_signature_manager.h"
 
 //描画システムを管理するクラス
 //描画システムは、背景、オブジェクト、UIなどの描画を担当する複数のシステムで構成されます。
@@ -109,6 +110,8 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     post_process_manager_ = std::make_unique<PostProcessManager>(Graphics::Instance().GetDevice(),
         static_cast<uint32_t>(Graphics::Instance().GetScreenWidth()),
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()));
+
+    RootSignatureManager::Instance();
 
 }
 
@@ -293,7 +296,17 @@ void RenderSystemManager::RenderAllDX12()
     //コマンドリストの取得
 	ID3D12GraphicsCommandList* cmd_list = Graphics::Instance().GetCommandList();
 
-	sky_dx12_render_system_->RenderDX12(cmd_list);
+    //ルートシグネチャのセット
+    cmd_list->SetGraphicsRootSignature(RootSignatureManager::Instance().GetRootSignature3D().Get());
+
+	//ライト情報の更新
+	deferred_render_system_->SetLightManager(light_manager_);
+
+	//カメラ情報の更新
+	camera_set_constants_->SetBufferDX12(cmd_list, light_manager_->GetDirectionLight().direction);
+
+    
+    sky_dx12_render_system_->RenderDX12(cmd_list);
 
 }
 

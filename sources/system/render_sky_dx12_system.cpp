@@ -2,6 +2,8 @@
 
 #include"../../headers/graphics.h"
 #include"../../headers/misc.h"
+#include"../../headers/resource_manager.h"
+#include"../../headers/root_signature_manager.h"
 
 RenderSkyDX12System::RenderSkyDX12System()
 	:IRenderDX12System(RenderPass_Background)
@@ -9,15 +11,20 @@ RenderSkyDX12System::RenderSkyDX12System()
 
 	// ルートシグネチャの作成
 	{
-		D3D12_ROOT_PARAMETER cbv_parameter{};
-		cbv_parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-		cbv_parameter.Descriptor.ShaderRegister = 11; // シェーダー側の登録番号
-		cbv_parameter.Descriptor.RegisterSpace = 0;
-		cbv_parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		D3D12_ROOT_PARAMETER cbv_parameter[2]{};
+		cbv_parameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		cbv_parameter[0].Descriptor.ShaderRegister = 11; // シェーダー側の登録番号
+		cbv_parameter[0].Descriptor.RegisterSpace = 0;
+		cbv_parameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		cbv_parameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		cbv_parameter[1].Descriptor.ShaderRegister = 7; // シェーダー側の登録番号
+		cbv_parameter[1].Descriptor.RegisterSpace = 0;
+		cbv_parameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 		D3D12_ROOT_SIGNATURE_DESC root_signature_desc{};
-		root_signature_desc.NumParameters = 1;
-		root_signature_desc.pParameters = &cbv_parameter;
+		root_signature_desc.NumParameters = _countof(cbv_parameter);
+		root_signature_desc.pParameters = cbv_parameter;
 		root_signature_desc.NumStaticSamplers = 0;
 		root_signature_desc.pStaticSamplers = nullptr;
 		root_signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
@@ -82,6 +89,32 @@ RenderSkyDX12System::RenderSkyDX12System()
 			static_cast<SkyAtmosphereConstants*>(mapped_data);
 
 		*mapped_atmosphere_constants_ = SkyAtmosphereConstants{};
+		
+	}
+
+	//シェーダーの設定、バイトコード化
+	{
+		auto vs_blob = ResourceManager::Instance().LoadShaderBytecode(L"resources/shader/render_back_vs.dxil");
+		auto ps_blob = ResourceManager::Instance().LoadShaderBytecode(L"resources/shader/render_back_ps.dxil");
+
+		D3D12_SHADER_BYTECODE vs_bytecode{
+			vs_blob->GetBufferPointer(),
+			vs_blob->GetBufferSize()
+		};
+		D3D12_SHADER_BYTECODE ps_bytecode{
+			ps_blob->GetBufferPointer(),
+			ps_blob->GetBufferSize()
+		};
+
+		//パイプラインステートオブジェクトの生成
+		{
+			pipeline_state_ = Graphics::Instance().CreatePipelineState(
+				RootSignatureManager::Instance().GetRootSignature3D().Get(),
+				vs_bytecode,
+				ps_bytecode,
+				PipelineKind::Background
+			);
+		}
 	}
 }
 
@@ -98,6 +131,17 @@ RenderSkyDX12System::~RenderSkyDX12System()
 
 void RenderSkyDX12System::RenderDX12(ID3D12GraphicsCommandList* cmd_list)
 {
-	cmd_list->SetGraphicsRootSignature(root_signature_.Get());
-	cmd_list->SetGraphicsRootConstantBufferView(0, atmosphere_upload_buffer_->GetGPUVirtualAddress());
+	//ルートシグネチャの設定
+	//cmd_list->SetGraphicsRootSignature(root_signature_.Get());
+	//定数バッファビューの設定
+	cmd_list->SetGraphicsRootConstantBufferView(RootSignatureSlot::kDx12SkyAtmosphere, atmosphere_upload_buffer_->GetGPUVirtualAddress());
+
+	//パイプラインステートの設定
+	cmd_list->SetPipelineState(pipeline_state_.Get());
+
+	//トポロジーの設定
+	cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//描画、背景のみなので簡易的に
+	cmd_list->DrawInstanced(3, 1, 0, 0); //フルスクリーン三角形を描画
 }
