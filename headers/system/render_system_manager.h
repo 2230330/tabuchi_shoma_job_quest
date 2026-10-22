@@ -1,6 +1,7 @@
 #pragma once
 
 #include<d3d11.h>
+#include<d3d12.h>
 #include<wrl.h>
 #include<memory>
 #include<vector>
@@ -27,6 +28,7 @@ class PostProcessManager;
 class RenderGoldenRatioSystem;
 class RenderBackSystem;
 class RenderSkyDX12System;
+class RenderCloudDX12System;
 
 //描画システムを管理するクラス
 //描画システムは、背景、オブジェクト、UIなどの描画を担当する複数のシステムで構成されます。
@@ -65,6 +67,7 @@ private:
     std::unique_ptr<RenderGoldenRatioSystem>golden_ratio_render_system_ = nullptr;
 	std::unique_ptr<RenderBackSystem>back_render_system_ = nullptr;
 	std::unique_ptr<RenderSkyDX12System>sky_dx12_render_system_ = nullptr;
+	std::unique_ptr<RenderCloudDX12System>cloud_render_dx12_system_ = nullptr;
     ComponentManager& comp_mng_;
 
     //フルスクリーンクワッド(背景用)
@@ -106,4 +109,11 @@ private:
 
     //ポストエフェクトを管理しているマネージャ  
     std::unique_ptr<PostProcessManager> post_process_manager_=nullptr;
+
+    //DX12
+    //大気散乱描画用のテクスチャリソース
+    Microsoft::WRL::ComPtr<ID3D12Resource> dx12_sky_texture_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dx12_sky_rtv_heap_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dx12_sky_srv_heap_ = nullptr;
+    
 };

@@ -349,6 +349,22 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> Graphics::CreatePipelineState(
     return pipeline_state;
 }
 
+void Graphics::SetBackBufferRenderTargetDX12()
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle =
+        rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    rtv_handle.ptr +=
+        static_cast<SIZE_T>(back_buffer_index_) * rtv_descriptor_size_;
+
+	cmd_list_->OMSetRenderTargets(1, &rtv_handle, FALSE, nullptr);
+}
+
+ID3D12CommandQueue* Graphics::GetDX12CommandQueue()
+{
+    return this->cmd_queue_.Get();
+}
+
 RenderState* Graphics::GetRenderState()
 {
     return this->render_state_.get();

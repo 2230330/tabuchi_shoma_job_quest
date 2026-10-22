@@ -1,6 +1,9 @@
 #include"../../headers/system/render_system_manager.h"
 
+#include<dxgi1_6.h>
+
 #include"../../headers/graphics.h"
+#include"../../headers/misc.h"
 #include"../../headers/render_state.h"
 #include"../../headers/resource_manager.h"
 #include"../../headers/light_manager.h"
@@ -21,6 +24,7 @@
 #include"../../headers/system/camera_set_constants.h"
 #include"../../headers/system/render_back_system.h"
 #include"../../headers/system/render_sky_dx12_system.h"
+#include"../../headers/system/render_cloud_dx12_system.h"
 #include"../../headers/post_process/post_process_manager.h"
 #include"../../headers/component/component_manager.h"
 #include"../../headers/root_signature_manager.h"
@@ -49,6 +53,7 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
     golden_ratio_render_system_ = std::make_unique<RenderGoldenRatioSystem>(comp_mng_,RenderPass_UI);
 	back_render_system_ = std::make_unique<RenderBackSystem>();
 	sky_dx12_render_system_ = std::make_unique<RenderSkyDX12System>();
+    cloud_render_dx12_system_ = std::make_unique<RenderCloudDX12System>();
 
     bit_block_transfer_ = std::make_unique<FullscreenQuad>(Graphics::Instance().GetDevice());
     sky_framebuffer_ = std::make_unique<FrameBuffer>(
@@ -112,6 +117,116 @@ RenderSystemManager::RenderSystemManager(ComponentManager& comp_mng)
         static_cast<uint32_t>(Graphics::Instance().GetScreenHeight()));
 
     RootSignatureManager::Instance();
+
+
+
+	//DX12用の大気散乱描画用のテクスチャリソース
+    ID3D12Device* device = Graphics::Instance().GetDX12Device();
+
+	const UINT width = static_cast<UINT>(Graphics::Instance().GetScreenWidth() );
+	const UINT height = static_cast<UINT>(Graphics::Instance().GetScreenHeight() );
+
+    //画面サイズの2dテクスチャ
+	D3D12_RESOURCE_DESC texture_desc{};
+	texture_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texture_desc.Width = width;
+	texture_desc.Height = height;
+	texture_desc.DepthOrArraySize = 1;
+    texture_desc.MipLevels = 1;
+	texture_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texture_desc.SampleDesc.Count = 1;
+    texture_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    texture_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    //GPU状に置くテクスチャリソース
+    D3D12_HEAP_PROPERTIES herp_properties{};
+    herp_properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    HRESULT hr = device->CreateCommittedResource(
+        &herp_properties,
+        D3D12_HEAP_FLAG_NONE,
+        &texture_desc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr,
+        IID_PPV_ARGS(dx12_sky_texture_.GetAddressOf())
+    );
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    //子のテクスチャを指すRTVディスクリプタを作る
+    D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc{};
+    rtv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtv_heap_desc.NumDescriptors = 1;
+    rtv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+    hr = device->CreateDescriptorHeap(
+        &rtv_heap_desc,
+        IID_PPV_ARGS(dx12_sky_rtv_heap_.GetAddressOf()));
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle =
+        dx12_sky_rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    device->CreateRenderTargetView(
+        dx12_sky_texture_.Get(),
+        nullptr,
+        rtv_handle);
+
+    //テクスチャを指すSRVとSRVディスクリプタを作成する
+	D3D12_DESCRIPTOR_HEAP_DESC srv_heap_desc{};
+    srv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srv_heap_desc.NumDescriptors = 9;
+    //GPU側から参照できるヒープとして
+    srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    hr = device->CreateDescriptorHeap(
+        &srv_heap_desc,
+        IID_PPV_ARGS(dx12_sky_srv_heap_.GetAddressOf()));
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    const UINT descriptor_size =
+        device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+    srv_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srv_desc.Texture2D.MipLevels = 1;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle =
+        dx12_sky_srv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    //まず、t0~t8を仮SRVで埋める
+    for (int i = 0;i < 9;i++)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = cpu_handle;
+        handle.ptr += static_cast<size_t>(i) * descriptor_size;
+
+        //リソースがNULLのSRVを作成
+        device->CreateShaderResourceView(nullptr, &srv_desc, handle);
+    }
+
+    //HLSLのregister(t4)にsky_textureを置く
+    D3D12_CPU_DESCRIPTOR_HANDLE sky_handle = cpu_handle;
+    sky_handle.ptr += static_cast<size_t>(4) * descriptor_size;
+
+    device->CreateShaderResourceView(
+        dx12_sky_texture_.Get(),
+        &srv_desc,
+        sky_handle
+    );
+
+ //   D3D12_CPU_DESCRIPTOR_HANDLE srv_handle =
+ //       dx12_sky_srv_heap_->GetCPUDescriptorHandleForHeapStart();
+	////このハンドルにsky_texture_を指すSRVを作成する
+ //   D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+ //   srv_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+ //   srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+ //   //SRVを通してテクスチャの各色成分をどう読みだすかを指定する設定
+ //   srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+ //   srv_desc.Texture2D.MipLevels = 1;
+ //   device->CreateShaderResourceView(
+ //       dx12_sky_texture_.Get(),
+ //       &srv_desc,
+ //       srv_handle);
 
 }
 
@@ -305,8 +420,53 @@ void RenderSystemManager::RenderAllDX12()
 	//カメラ情報の更新
 	camera_set_constants_->SetBufferDX12(cmd_list, light_manager_->GetDirectionLight().direction);
 
-    
+    //テクスチャリソースをsky_texture_にする
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = dx12_sky_texture_.Get();
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+	cmd_list->ResourceBarrier(1, &barrier);
+
+	//これからのDrawの書き込み先をsky_texture_にする
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = dx12_sky_rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+	cmd_list->OMSetRenderTargets(1, &rtv_handle, FALSE, nullptr);
+
     sky_dx12_render_system_->RenderDX12(cmd_list);
+
+	//sky_texture_を元の状態に戻す
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = dx12_sky_texture_.Get();
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+    cmd_list->ResourceBarrier(1, &barrier);
+
+    Graphics::Instance().SetBackBufferRenderTargetDX12();
+
+    //空の画像情報を雲シェーダーで読み込むため、
+    //雲の描画前にテーブルを設定する
+    ID3D12DescriptorHeap* heaps[] = {
+        dx12_sky_srv_heap_.Get()
+    };
+    cmd_list->SetDescriptorHeaps(_countof(heaps), heaps);
+
+    D3D12_GPU_DESCRIPTOR_HANDLE srv_table =
+        dx12_sky_srv_heap_->GetGPUDescriptorHandleForHeapStart();
+    cmd_list->SetGraphicsRootDescriptorTable(
+        RootSignatureSlot::kDx12TextureTable,
+        srv_table
+    );
+
+
+    //雲描画システムに空のSRVを登録
+    cloud_render_dx12_system_->GetSkyTexture(dx12_sky_texture_.Get());
+
+    cloud_render_dx12_system_->RenderDX12(cmd_list);
+    
 
 }
 

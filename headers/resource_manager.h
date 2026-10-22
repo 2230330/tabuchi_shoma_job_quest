@@ -36,6 +36,7 @@ public:
         pixel_shaders_.clear();
         compute_shaders_.clear();
         shader_bytecoodes_.clear();
+        dx12_textures_.clear();
     }
 
     // GLTFモデルの読み込み（ロード済みなら共有）
@@ -68,6 +69,10 @@ public:
 	//DX12のシェーダーをキャッシュするためのもの
 	Microsoft::WRL::ComPtr<ID3DBlob> LoadShaderBytecode(const std::wstring& filename);
 
+    //2026/10/21
+    //DX12の画像データを読み込み
+    Microsoft::WRL::ComPtr<ID3D12Resource>LoadTextureDX12(ID3D12Device*device,ID3D12CommandQueue*queue,const std::wstring& filename);
+
 private:
     std::unordered_map<std::string, std::shared_ptr<GltfModel>> gltf_models_;
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> textures_;
@@ -78,5 +83,8 @@ private:
     //2026/9/30
 	//DX12のシェーダーをキャッシュするためのもの
     std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3DBlob>>shader_bytecoodes_;
-    
+
+    //2026/10/21
+    //DX12の画像データ保存
+    std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D12Resource>>dx12_textures_;
 };

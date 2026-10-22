@@ -11,20 +11,20 @@ RenderSkyDX12System::RenderSkyDX12System()
 
 	// ルートシグネチャの作成
 	{
-		D3D12_ROOT_PARAMETER cbv_parameter[2]{};
-		cbv_parameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-		cbv_parameter[0].Descriptor.ShaderRegister = 11; // シェーダー側の登録番号
-		cbv_parameter[0].Descriptor.RegisterSpace = 0;
-		cbv_parameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		D3D12_ROOT_PARAMETER cbv_param[2]{};
+		cbv_param[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		cbv_param[0].Descriptor.ShaderRegister = 11; // シェーダー側の登録番号
+		cbv_param[0].Descriptor.RegisterSpace = 0;
+		cbv_param[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-		cbv_parameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-		cbv_parameter[1].Descriptor.ShaderRegister = 7; // シェーダー側の登録番号
-		cbv_parameter[1].Descriptor.RegisterSpace = 0;
-		cbv_parameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		cbv_param[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		cbv_param[1].Descriptor.ShaderRegister = 7; // シェーダー側の登録番号
+		cbv_param[1].Descriptor.RegisterSpace = 0;
+		cbv_param[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 		D3D12_ROOT_SIGNATURE_DESC root_signature_desc{};
-		root_signature_desc.NumParameters = _countof(cbv_parameter);
-		root_signature_desc.pParameters = cbv_parameter;
+		root_signature_desc.NumParameters = _countof(cbv_param);
+		root_signature_desc.pParameters = cbv_param;
 		root_signature_desc.NumStaticSamplers = 0;
 		root_signature_desc.pStaticSamplers = nullptr;
 		root_signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
@@ -134,7 +134,7 @@ void RenderSkyDX12System::RenderDX12(ID3D12GraphicsCommandList* cmd_list)
 	//ルートシグネチャの設定
 	//cmd_list->SetGraphicsRootSignature(root_signature_.Get());
 	//定数バッファビューの設定
-	cmd_list->SetGraphicsRootConstantBufferView(RootSignatureSlot::kDx12SkyAtmosphere, atmosphere_upload_buffer_->GetGPUVirtualAddress());
+	cmd_list->SetGraphicsRootConstantBufferView(RootSignatureSlot::kDx12PassConstants, atmosphere_upload_buffer_->GetGPUVirtualAddress());
 
 	//パイプラインステートの設定
 	cmd_list->SetPipelineState(pipeline_state_.Get());
@@ -145,3 +145,4 @@ void RenderSkyDX12System::RenderDX12(ID3D12GraphicsCommandList* cmd_list)
 	//描画、背景のみなので簡易的に
 	cmd_list->DrawInstanced(3, 1, 0, 0); //フルスクリーン三角形を描画
 }
+

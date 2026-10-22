@@ -368,3 +368,258 @@ ResourceManager::LoadShaderBytecode(const std::wstring& filename)
 	shader_bytecoodes_.emplace(filename, blob);
     return blob;
 }
+
+Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::LoadTextureDX12(ID3D12Device*device,ID3D12CommandQueue*queue,const std::wstring& filename)
+{
+    //キャッシュ確認
+    auto it = dx12_textures_.find(filename);
+    if (it != dx12_textures_.end())
+    {
+        return it->second;
+    }
+
+    if (device == nullptr )
+    {
+        _ASSERT_EXPR(false, L"DX12 device is nullptr");
+        return nullptr;
+    }
+    if (queue == nullptr)
+    {
+        _ASSERT_EXPR(false, L"DX12 queue is nullptr");
+        return nullptr;
+    }
+
+    //DirectXTexでCPU画像を読み込む
+    DirectX::ScratchImage image;
+    DirectX::TexMetadata metadata{};
+    HRESULT hr{ S_OK };
+
+    std::filesystem::path dds_filename(filename);
+    dds_filename.replace_extension("dds");
+
+    //========================================================
+    //  DDS かつ Texture3D かどうかを事前に見極める
+    //========================================================
+    if (std::filesystem::exists(dds_filename))
+    {
+        //後で実装
+        return nullptr;
+    }
+
+    //DirectXTex  でCPU画像を読み込む
+    hr = DirectX::LoadFromWICFile(
+        filename.c_str(),
+        DirectX::WIC_FLAGS_NONE,
+        &metadata,
+        image
+    );
+    _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+    //2dテクスチャの場合
+    if (metadata.dimension == DirectX::TEX_DIMENSION_TEXTURE2D)
+    {
+        const DirectX::Image* source_image = image.GetImage(0, 0, 0);
+
+        if (source_image == nullptr)
+        {
+            _ASSERT_EXPR(false, L"CPU image data is null");
+            return nullptr;
+        }
+
+        //画像の幅、高さ、形式からDX12テクスチャを作る
+        D3D12_RESOURCE_DESC texture_desc{};
+        texture_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        texture_desc.Width = metadata.width;
+        texture_desc.Height = static_cast<UINT>(metadata.height);
+        texture_desc.DepthOrArraySize = 1;
+        texture_desc.Format = metadata.format;
+        texture_desc.SampleDesc.Count = 1;
+        texture_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+        D3D12_HEAP_PROPERTIES default_heap{};
+        default_heap.Type = D3D12_HEAP_TYPE_DEFAULT;
+        default_heap.CreationNodeMask = 1;
+        default_heap.VisibleNodeMask = 1;
+
+        Microsoft::WRL::ComPtr<ID3D12Resource>texture;
+        hr = device->CreateCommittedResource(
+            &default_heap,
+            D3D12_HEAP_FLAG_NONE,
+            &texture_desc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(texture.GetAddressOf())
+        );
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        if(FAILED(hr))
+        {
+            return nullptr;
+        }
+
+        //DX12が要求するコピー先の行ピッチとバッファサイズを取得
+        D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint{};
+        UINT num_rows = 0;
+        uint64_t row_size = 0;
+        uint64_t upload_size = 0;
+
+        device->GetCopyableFootprints(
+            &texture_desc,
+            0, 1, 0,
+            &footprint,
+            &num_rows,
+            &row_size,
+            &upload_size
+        );
+
+        //GPUが読む用の一時アップロードバッファ
+        D3D12_HEAP_PROPERTIES upload_heap{};
+        upload_heap.Type = D3D12_HEAP_TYPE_UPLOAD;
+        upload_heap.CreationNodeMask = 1;
+        upload_heap.VisibleNodeMask = 1;
+
+        D3D12_RESOURCE_DESC upload_desc{};
+        upload_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        upload_desc.Width = upload_size;
+        upload_desc.Height = 1;
+        upload_desc.DepthOrArraySize = 1;
+        upload_desc.MipLevels = 1;
+        upload_desc.SampleDesc.Count = 1;
+        upload_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+        Microsoft::WRL::ComPtr<ID3D12Resource>upload_buffer;
+        hr = device->CreateCommittedResource(
+            &upload_heap,
+            D3D12_HEAP_FLAG_NONE,
+            &upload_desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(upload_buffer.GetAddressOf())
+        );
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        if (FAILED(hr))
+        {
+            return nullptr;
+        }
+
+
+        //CPU画像をアップロードバッファへコピーする
+        void* mapped_data = nullptr;
+        D3D12_RANGE no_read_range{ 0,0 };
+
+        hr = upload_buffer->Map(0, &no_read_range, &mapped_data);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        auto* destination_bytes =
+            static_cast<std::uint8_t*>(mapped_data);
+        const auto* source_bytes = source_image->pixels;
+
+        //?
+        for (UINT row = 0;row < num_rows;++row)
+        {
+            std::memcpy(
+                destination_bytes
+                + footprint.Offset
+                + static_cast<UINT64>(row) * footprint.Footprint.RowPitch,
+                source_bytes
+                + static_cast<size_t>(row) * source_image->rowPitch,
+                static_cast<size_t>(row_size)
+            );
+        }
+
+        D3D12_RANGE written_range{
+            0,static_cast<size_t>(upload_size)
+        };
+        upload_buffer->Unmap(0, &written_range);
+
+        //フレーム描画用とは別の、一時アップロード用リストを作る
+        Microsoft::WRL::ComPtr<ID3D12CommandAllocator>allocator;
+        hr = device->CreateCommandAllocator(
+            D3D12_COMMAND_LIST_TYPE_DIRECT,
+            IID_PPV_ARGS(allocator.GetAddressOf())
+        );
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>command_list;
+        hr = device->CreateCommandList(
+            0,
+            D3D12_COMMAND_LIST_TYPE_DIRECT,
+            allocator.Get(),
+            nullptr,
+            IID_PPV_ARGS(command_list.GetAddressOf())
+        );
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        //アップロードバッファからテクスチャへコピー
+        D3D12_TEXTURE_COPY_LOCATION destination{};
+        destination.pResource = texture.Get();
+        destination.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        destination.SubresourceIndex = 0;
+
+        D3D12_TEXTURE_COPY_LOCATION source{};
+        source.pResource = upload_buffer.Get();
+        source.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        source.PlacedFootprint = footprint;
+
+        command_list->CopyTextureRegion(
+            &destination,
+            0, 0, 0,
+            &source,
+            nullptr
+        );
+
+        //コピー先を、ピクセルシェーダーが読める状態へ遷移
+        D3D12_RESOURCE_BARRIER barrier{};
+        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        barrier.Transition.pResource = texture.Get();
+        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+        command_list->ResourceBarrier(1, &barrier);
+        hr = command_list->Close();
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        //コピー命令をGPUへ送信
+        ID3D12CommandList* command_lists[] = { command_list.Get() };
+        queue->ExecuteCommandLists(1, command_lists);
+
+        //子の読み込み処理専用のフェンスでコピー完了を待つ
+        Microsoft::WRL::ComPtr<ID3D12Fence>fence;
+        hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence.GetAddressOf()));
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        HANDLE fence_event =
+            CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+        _ASSERT_EXPR(fence_event != nullptr, L"CreateEvent failed");
+        if (fence_event == nullptr)
+        {
+            return nullptr;
+        }
+
+        hr = queue->Signal(fence.Get(), 1);
+        _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+
+        if (SUCCEEDED(hr))
+        {
+            hr = fence->SetEventOnCompletion(1, fence_event);
+            _ASSERT_EXPR(SUCCEEDED(hr), HRTrace(hr));
+        }
+
+        if (SUCCEEDED(hr))
+        {
+            WaitForSingleObject(fence_event, INFINITE);
+        }
+
+        CloseHandle(fence_event);
+
+        if (FAILED(hr))
+        {
+            return nullptr;
+        }
+
+        // GPUで使える状態になったリソースをキャッシュする
+        dx12_textures_.emplace(filename, texture);
+        return texture;
+    }
+}

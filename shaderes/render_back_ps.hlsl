@@ -109,7 +109,7 @@ float3 PrecomputeMultiScattering(float3 position /*地球半径加算済み*/, f
     float h = length(sample_pos) - earth_height; //自身の位置-地球半径
     //100メートル地下ならば、計算する必要はない
     if (h < -100.f)
-        h = 0;
+        return float3(0.f, 0.f, 0.f);
     
     //散乱係数
     float3 sigma_s = SigmaRayleigh(h) + SigmaMie(h);
@@ -233,7 +233,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     pos /= pos.w;
 
     float3 position = float3(0.f, height + earth_height, 0.f);
-    float3 light_dir = normalize(float3(0, 1, 0)); // 例として上方向を向く
+    float3 light_dir = normalize(float3(0, 3, 4)); // 例として上方向を向く
     float3 sun_pos = light_dir * sun_distance; //太陽の位置()
     float3 sun_dir = normalize(sun_pos.xyz - pos.xyz); //頂点ー＞太陽
     //カメラから天球の各頂点への方向
@@ -248,7 +248,7 @@ float4 main(VS_OUT pin) : SV_TARGET
     view_dir,
     sun_dir);
     
-    sky_color += single_scattering + (multi_scattering); //環境光的に少し足す
+    sky_color += single_scattering + multi_scattering; //環境光的に少し足す
     
     //夜の簡易実装
     float cos_theta = clamp(dot(view_dir, light_dir), -1.0f, 1.0f); //視線と太陽の角度

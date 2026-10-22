@@ -78,7 +78,7 @@ void RenderBackSystem::RenderDX12(ID3D12GraphicsCommandList* cmd_list)
 	//描画対象の設定、描画コマンドの発行などを行う
 	
 	//ルートシグネチャの設定
-	cmd_list->SetGraphicsRootSignature(root_signature_.Get());
+	//cmd_list->SetGraphicsRootSignature(root_signature_.Get());
 
 	//パイプラインステートの設定
 	cmd_list->SetPipelineState(pipeline_state_.Get());

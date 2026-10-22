@@ -89,6 +89,14 @@ public:
         return this->dx12_device_.Get();
     }
 
+    //2026/10/17
+    //DX12のバックバッファに戻す
+    void SetBackBufferRenderTargetDX12();
+
+    //2026/10/21
+    //DX12のコマンドキューの取得
+    ID3D12CommandQueue* GetDX12CommandQueue();
+
     //デバイスコンテキスト取得
     ID3D11DeviceContext* GetDeviceContext() { return this->immediate_context_.Get(); }
     //スクリーン幅取得

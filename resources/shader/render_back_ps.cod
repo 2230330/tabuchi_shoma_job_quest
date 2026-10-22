@@ -109,7 +109,7 @@ add r3.y, cb1[1].x, cb1[2].x  // r3.y <- position.y
 mov r3.xz, l(0,0,0,0)  // r3.x <- position.x; r3.z <- position.z
 
 #line 236
-mov r4.xyz, l(0,1.000000,0,0)  // r4.x <- light_dir.x; r4.y <- light_dir.y; r4.z <- light_dir.z
+mov r4.xyz, l(0,0.600000,0.800000,0)  // r4.x <- light_dir.x; r4.y <- light_dir.y; r4.z <- light_dir.z
 
 #line 237
 mul r5.xyz, r4.xyzx, cb1[1].yyyy  // r5.x <- sun_pos.x; r5.y <- sun_pos.y; r5.z <- sun_pos.z
@@ -148,324 +148,326 @@ lt r2.w, r1.w, l(-100.000000)
 if_nz r2.w
 
 #line 112
-  itof r1.w, l(0)
-endif 
+  mov r7.xyz, l(0,0,0,0)
+endif   // r7.x <- <PrecomputeMultiScattering return value>.x; r7.y <- <PrecomputeMultiScattering return value>.y; r7.z <- <PrecomputeMultiScattering return value>.z
 
 #line 115
-nop 
-mov r1.w, r1.w
+if_z r2.w
+  nop 
+  mov r1.w, r1.w
 
 #line 43
-mov r2.w, -r1.w
-div r2.w, r2.w, cb1[0].x
-mul r2.w, r2.w, l(1.442695)
-exp r2.w, r2.w
-mul r7.xyz, r2.wwww, l(0.000006, 0.000014, 0.000033, 0.000000)  // r7.x <- <SigmaRayleigh return value>.x; r7.y <- <SigmaRayleigh return value>.y; r7.z <- <SigmaRayleigh return value>.z
+  mov r2.w, -r1.w
+  div r2.w, r2.w, cb1[0].x
+  mul r2.w, r2.w, l(1.442695)
+  exp r2.w, r2.w
+  mul r8.xyz, r2.wwww, l(0.000006, 0.000014, 0.000033, 0.000000)  // r8.x <- <SigmaRayleigh return value>.x; r8.y <- <SigmaRayleigh return value>.y; r8.z <- <SigmaRayleigh return value>.z
 
 #line 115
-nop 
-mov r1.w, r1.w
+  nop 
+  mov r1.w, r1.w
 
 #line 48
-mov r2.w, -r1.w
-div r2.w, r2.w, cb1[0].y
-mul r2.w, r2.w, l(1.442695)
-exp r2.w, r2.w
-mul r8.xyz, r2.wwww, l(0.000004, 0.000003, 0.000001, 0.000000)  // r8.x <- <SigmaMie return value>.x; r8.y <- <SigmaMie return value>.y; r8.z <- <SigmaMie return value>.z
+  mov r2.w, -r1.w
+  div r2.w, r2.w, cb1[0].y
+  mul r2.w, r2.w, l(1.442695)
+  exp r2.w, r2.w
+  mul r9.xyz, r2.wwww, l(0.000004, 0.000003, 0.000001, 0.000000)  // r9.x <- <SigmaMie return value>.x; r9.y <- <SigmaMie return value>.y; r9.z <- <SigmaMie return value>.z
 
 #line 115
-add r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- sigma_s.x; r7.y <- sigma_s.y; r7.z <- sigma_s.z
+  add r8.xyz, r8.xyzx, r9.xyzx  // r8.x <- sigma_s.x; r8.y <- sigma_s.y; r8.z <- sigma_s.z
 
 #line 116
-nop 
-mov r1.w, r1.w
+  nop 
+  mov r1.w, r1.w
 
 #line 53
-mov r8.xyz, l(0.000001,0.000002,0.000000,0)  // r8.x <- coeff.x; r8.y <- coeff.y; r8.z <- coeff.z
+  mov r9.xyz, l(0.000001,0.000002,0.000000,0)  // r9.x <- coeff.x; r9.y <- coeff.y; r9.z <- coeff.z
 
 #line 54
-mov r2.w, -cb1[0].w
-add r1.w, r1.w, r2.w
-mov r2.w, -r1.w
-max r1.w, r1.w, r2.w
-div r1.w, r1.w, cb1[0].z
-mov r1.w, -r1.w
-add r1.w, r1.w, l(1.000000)
-max r1.w, r1.w, l(0.000000)  // r1.w <- ozoneFactor
+  mov r2.w, -cb1[0].w
+  add r1.w, r1.w, r2.w
+  mov r2.w, -r1.w
+  max r1.w, r1.w, r2.w
+  div r1.w, r1.w, cb1[0].z
+  mov r1.w, -r1.w
+  add r1.w, r1.w, l(1.000000)
+  max r1.w, r1.w, l(0.000000)  // r1.w <- ozoneFactor
 
 #line 55
-mul r8.xyz, r1.wwww, r8.xyzx  // r8.x <- <SigmaOzone return value>.x; r8.y <- <SigmaOzone return value>.y; r8.z <- <SigmaOzone return value>.z
+  mul r9.xyz, r1.wwww, r9.xyzx  // r9.x <- <SigmaOzone return value>.x; r9.y <- <SigmaOzone return value>.y; r9.z <- <SigmaOzone return value>.z
 
 #line 116
-add r8.xyz, r7.xyzx, r8.xyzx  // r8.x <- sigma_t.x; r8.y <- sigma_t.y; r8.z <- sigma_t.z
+  add r9.xyz, r8.xyzx, r9.xyzx  // r9.x <- sigma_t.x; r9.y <- sigma_t.y; r9.z <- sigma_t.z
 
 #line 119
-itof r9.xyz, l(0, 1, 0, 0)
-dp3 r1.w, r5.xyzx, r9.xyzx
-max r1.w, r1.w, l(0.000000)
-min r1.w, r1.w, l(1.000000)  // r1.w <- sun_elevation
+  itof r10.xyz, l(0, 1, 0, 0)
+  dp3 r1.w, r5.xyzx, r10.xyzx
+  max r1.w, r1.w, l(0.000000)
+  min r1.w, r1.w, l(1.000000)  // r1.w <- sun_elevation
 
 #line 120
-mov r2.w, -r1.w
-max r3.w, r1.w, r2.w
-mov r4.w, -r3.w
-add r4.w, r4.w, l(1.000000)
-sqrt r4.w, r4.w
-mul r5.w, r3.w, l(-0.018729)
-add r5.w, r5.w, l(0.074261)
-mul r5.w, r3.w, r5.w
-add r5.w, r5.w, l(-0.212114)
-mul r3.w, r3.w, r5.w
-add r3.w, r3.w, l(1.570729)
-mul r3.w, r4.w, r3.w
-mul r4.w, r3.w, l(-2.000000)
-add r4.w, r4.w, l(3.141593)
-lt r2.w, r1.w, r2.w
-and r2.w, r2.w, r4.w
-add r2.w, r2.w, r3.w
-mul r2.w, r2.w, l(57.295780)  // r2.w <- sun_theta
+  mov r2.w, -r1.w
+  max r3.w, r1.w, r2.w
+  mov r4.w, -r3.w
+  add r4.w, r4.w, l(1.000000)
+  sqrt r4.w, r4.w
+  mul r5.w, r3.w, l(-0.018729)
+  add r5.w, r5.w, l(0.074261)
+  mul r5.w, r3.w, r5.w
+  add r5.w, r5.w, l(-0.212114)
+  mul r3.w, r3.w, r5.w
+  add r3.w, r3.w, l(1.570729)
+  mul r3.w, r4.w, r3.w
+  mul r4.w, r3.w, l(-2.000000)
+  add r4.w, r4.w, l(3.141593)
+  lt r2.w, r1.w, r2.w
+  and r2.w, r2.w, r4.w
+  add r2.w, r2.w, r3.w
+  mul r2.w, r2.w, l(57.295780)  // r2.w <- sun_theta
 
 #line 122
-mov r2.w, -r2.w
-add r2.w, r2.w, l(96.079948)
-log r2.w, r2.w
-mul r2.w, r2.w, l(-1.636400)
-exp r2.w, r2.w
-mul r2.w, r2.w, l(0.505720)
-add r1.w, r1.w, r2.w
-div r1.w, l(1.000000), r1.w  // r1.w <- air_mass
+  mov r2.w, -r2.w
+  add r2.w, r2.w, l(96.079948)
+  log r2.w, r2.w
+  mul r2.w, r2.w, l(-1.636400)
+  exp r2.w, r2.w
+  mul r2.w, r2.w, l(0.505720)
+  add r1.w, r1.w, r2.w
+  div r1.w, l(1.000000), r1.w  // r1.w <- air_mass
 
 #line 124
-nop 
-mov r1.w, r1.w
+  nop 
+  mov r1.w, r1.w
 
 #line 96
-mul r9.xyz, r0.yzwy, r1.wwww
-mul r9.xyz, r9.xyzx, l(3000000000.000000, 3000000000.000000, 3000000000.000000, 0.000000)  // r9.x <- tau.x; r9.y <- tau.y; r9.z <- tau.z
+  mul r10.xyz, r0.yzwy, r1.wwww
+  mul r10.xyz, r10.xyzx, l(3000000000.000000, 3000000000.000000, 3000000000.000000, 0.000000)  // r10.x <- tau.x; r10.y <- tau.y; r10.z <- tau.z
 
 #line 99
-mov r9.xyz, -r9.xyzx
-mul r9.xyz, r9.xyzx, l(1.442695, 1.442695, 1.442695, 0.000000)
-exp r9.xyz, r9.xyzx  // r9.x <- Ei.x; r9.y <- Ei.y; r9.z <- Ei.z
+  mov r10.xyz, -r10.xyzx
+  mul r10.xyz, r10.xyzx, l(1.442695, 1.442695, 1.442695, 0.000000)
+  exp r10.xyz, r10.xyzx  // r10.x <- Ei.x; r10.y <- Ei.y; r10.z <- Ei.z
 
 #line 101
-mov r9.xyz, r9.xyzx  // r9.x <- <ComputeSunIrradiance return value>.x; r9.y <- <ComputeSunIrradiance return value>.y; r9.z <- <ComputeSunIrradiance return value>.z
+  mov r10.xyz, r10.xyzx  // r10.x <- <ComputeSunIrradiance return value>.x; r10.y <- <ComputeSunIrradiance return value>.y; r10.z <- <ComputeSunIrradiance return value>.z
 
 #line 124
-mov r9.xyz, r9.xyzx  // r9.x <- Ei.x; r9.y <- Ei.y; r9.z <- Ei.z
+  mov r10.xyz, r10.xyzx  // r10.x <- Ei.x; r10.y <- Ei.y; r10.z <- Ei.z
 
 #line 127
-itof r10.xyz, l(0, 1, 0, 0)
-dp3 r2.w, r2.xyzx, r10.xyzx
-mov r2.w, -r2.w
-add r2.w, r2.w, l(1.000000)
-max r2.w, r2.w, l(0.000000)
-min r2.w, r2.w, l(1.000000)  // r2.w <- horizon_factor
+  itof r11.xyz, l(0, 1, 0, 0)
+  dp3 r2.w, r2.xyzx, r11.xyzx
+  mov r2.w, -r2.w
+  add r2.w, r2.w, l(1.000000)
+  max r2.w, r2.w, l(0.000000)
+  min r2.w, r2.w, l(1.000000)  // r2.w <- horizon_factor
 
 #line 128
-mul r2.w, r2.w, l(0.500000)
-mul r3.w, r1.w, l(0.050000)
-add r3.w, r3.w, l(0.010000)
-mul r2.w, r2.w, r3.w  // r2.w <- mie_boost
+  mul r2.w, r2.w, l(0.500000)
+  mul r3.w, r1.w, l(0.050000)
+  add r3.w, r3.w, l(0.010000)
+  mul r2.w, r2.w, r3.w  // r2.w <- mie_boost
 
 #line 130
-dp3 r3.w, r2.xyzx, r5.xyzx
-mov r4.w, -r3.w
-add r4.w, r4.w, l(-0.400000)
-mul r4.w, r4.w, l(1.000000)
-add r3.w, r3.w, r4.w  // r3.w <- cos_theta
+  dp3 r3.w, r2.xyzx, r5.xyzx
+  mov r4.w, -r3.w
+  add r4.w, r4.w, l(-0.400000)
+  mul r4.w, r4.w, l(1.000000)
+  add r3.w, r3.w, r4.w  // r3.w <- cos_theta
 
 #line 131
-mov r4.w, l(-1.000000)
-add r1.w, r1.w, r4.w
-div r1.w, r1.w, l(20.000000)
-max r1.w, r1.w, l(0.000000)
-min r1.w, r1.w, l(1.000000)  // r1.w <- sunset_factor
+  mov r4.w, l(-1.000000)
+  add r1.w, r1.w, r4.w
+  div r1.w, r1.w, l(20.000000)
+  max r1.w, r1.w, l(0.000000)
+  min r1.w, r1.w, l(1.000000)  // r1.w <- sunset_factor
 
 #line 132
-nop 
-mov r3.w, r3.w
+  nop 
+  mov r3.w, r3.w
 
 #line 60
-mul r4.w, r3.w, r3.w
-add r4.w, r4.w, l(1.000000)
-mul r4.w, r4.w, l(3.000000)
-div r4.w, r4.w, l(50.265484)  // r4.w <- <RayleighPhase return value>
+  mul r4.w, r3.w, r3.w
+  add r4.w, r4.w, l(1.000000)
+  mul r4.w, r4.w, l(3.000000)
+  div r4.w, r4.w, l(50.265484)  // r4.w <- <RayleighPhase return value>
 
 #line 132
-mov r5.w, l(-10.000000)
-add r5.w, r5.w, l(2.000000)
-mul r1.w, r1.w, r5.w
-add r1.w, r1.w, l(10.000000)
-mul r1.w, r1.w, r4.w
-nop 
-mov r3.w, r3.w
-mov r4.w, l(0.500000)
+  mov r5.w, l(-10.000000)
+  add r5.w, r5.w, l(2.000000)
+  mul r1.w, r1.w, r5.w
+  add r1.w, r1.w, l(10.000000)
+  mul r1.w, r1.w, r4.w
+  nop 
+  mov r3.w, r3.w
+  mov r4.w, l(0.500000)
 
 #line 69
-mul r5.w, r4.w, r4.w  // r5.w <- g2
+  mul r5.w, r4.w, r4.w  // r5.w <- g2
 
 #line 70
-mov r6.w, -r5.w
-add r6.w, r6.w, l(1.000000)
-add r5.w, r5.w, l(1.000000)
-mul r4.w, r4.w, l(2.000000)
-mul r3.w, r3.w, r4.w
-mov r3.w, -r3.w
-add r3.w, r3.w, r5.w
-log r3.w, r3.w
-mul r3.w, r3.w, l(1.500000)
-exp r3.w, r3.w
-mul r3.w, r3.w, l(4.000000)
-mul r3.w, r0.x, r3.w
-div r3.w, r6.w, r3.w  // r3.w <- <MiePhase return value>
+  mov r6.w, -r5.w
+  add r6.w, r6.w, l(1.000000)
+  add r5.w, r5.w, l(1.000000)
+  mul r4.w, r4.w, l(2.000000)
+  mul r3.w, r3.w, r4.w
+  mov r3.w, -r3.w
+  add r3.w, r3.w, r5.w
+  log r3.w, r3.w
+  mul r3.w, r3.w, l(1.500000)
+  exp r3.w, r3.w
+  mul r3.w, r3.w, l(4.000000)
+  mul r3.w, r0.x, r3.w
+  div r3.w, r6.w, r3.w  // r3.w <- <MiePhase return value>
 
 #line 132
-mul r2.w, r2.w, r3.w
-add r1.w, r1.w, r2.w
-div r1.w, r1.w, l(12.566371)  // r1.w <- phase
+  mul r2.w, r2.w, r3.w
+  add r1.w, r1.w, r2.w
+  div r1.w, r1.w, l(12.566371)  // r1.w <- phase
 
 #line 136
-nop 
-mov r6.xyz, r6.xyzx
-mul r10.xyz, r5.xyzx, cb1[1].zzzz
-add r10.xyz, r6.xyzx, r10.xyzx
+  nop 
+  mov r6.xyz, r6.xyzx
+  mul r11.xyz, r5.xyzx, cb1[1].zzzz
+  add r11.xyz, r6.xyzx, r11.xyzx
 
 #line 76
-mov r11.xyz, -r6.xyzx
-add r11.xyz, r10.xyzx, r11.xyzx
-dp3 r2.w, r11.xyzx, r11.xyzx
-sqrt r2.w, r2.w
-max r2.w, r2.w, l(50000.000000)  // r2.w <- distance
+  mov r12.xyz, -r6.xyzx
+  add r12.xyz, r11.xyzx, r12.xyzx
+  dp3 r2.w, r12.xyzx, r12.xyzx
+  sqrt r2.w, r2.w
+  max r2.w, r2.w, l(50000.000000)  // r2.w <- distance
 
 #line 78
-add r6.xyz, r6.xyzx, r10.xyzx
-mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- midPos.x; r6.y <- midPos.y; r6.z <- midPos.z
+  add r6.xyz, r6.xyzx, r11.xyzx
+  mul r6.xyz, r6.xyzx, l(0.500000, 0.500000, 0.500000, 0.000000)  // r6.x <- midPos.x; r6.y <- midPos.y; r6.z <- midPos.z
 
 #line 79
-dp3 r3.w, r6.xyzx, r6.xyzx
-sqrt r3.w, r3.w
-mov r4.w, -cb1[1].x
-add r3.w, r3.w, r4.w
-max r3.w, r3.w, l(0.000000)  // r3.w <- h
+  dp3 r3.w, r6.xyzx, r6.xyzx
+  sqrt r3.w, r3.w
+  mov r4.w, -cb1[1].x
+  add r3.w, r3.w, r4.w
+  max r3.w, r3.w, l(0.000000)  // r3.w <- h
 
 #line 80
-nop 
-mov r3.w, r3.w
+  nop 
+  mov r3.w, r3.w
 
 #line 43
-mov r4.w, -r3.w
-div r4.w, r4.w, cb1[0].x
-mul r4.w, r4.w, l(1.442695)
-exp r4.w, r4.w
-mul r6.xyz, r4.wwww, l(0.000006, 0.000014, 0.000033, 0.000000)  // r6.x <- <SigmaRayleigh return value>.x; r6.y <- <SigmaRayleigh return value>.y; r6.z <- <SigmaRayleigh return value>.z
+  mov r4.w, -r3.w
+  div r4.w, r4.w, cb1[0].x
+  mul r4.w, r4.w, l(1.442695)
+  exp r4.w, r4.w
+  mul r6.xyz, r4.wwww, l(0.000006, 0.000014, 0.000033, 0.000000)  // r6.x <- <SigmaRayleigh return value>.x; r6.y <- <SigmaRayleigh return value>.y; r6.z <- <SigmaRayleigh return value>.z
 
 #line 80
-nop 
-mov r3.w, r3.w
+  nop 
+  mov r3.w, r3.w
 
 #line 48
-mov r4.w, -r3.w
-div r4.w, r4.w, cb1[0].y
-mul r4.w, r4.w, l(1.442695)
-exp r4.w, r4.w
-mul r10.xyz, r4.wwww, l(0.000004, 0.000003, 0.000001, 0.000000)  // r10.x <- <SigmaMie return value>.x; r10.y <- <SigmaMie return value>.y; r10.z <- <SigmaMie return value>.z
+  mov r4.w, -r3.w
+  div r4.w, r4.w, cb1[0].y
+  mul r4.w, r4.w, l(1.442695)
+  exp r4.w, r4.w
+  mul r11.xyz, r4.wwww, l(0.000004, 0.000003, 0.000001, 0.000000)  // r11.x <- <SigmaMie return value>.x; r11.y <- <SigmaMie return value>.y; r11.z <- <SigmaMie return value>.z
 
 #line 80
-add r6.xyz, r6.xyzx, r10.xyzx
-nop 
-mov r3.w, r3.w
+  add r6.xyz, r6.xyzx, r11.xyzx
+  nop 
+  mov r3.w, r3.w
 
 #line 53
-mov r10.xyz, l(0.000001,0.000002,0.000000,0)  // r10.x <- coeff.x; r10.y <- coeff.y; r10.z <- coeff.z
+  mov r11.xyz, l(0.000001,0.000002,0.000000,0)  // r11.x <- coeff.x; r11.y <- coeff.y; r11.z <- coeff.z
 
 #line 54
-mov r4.w, -cb1[0].w
-add r3.w, r3.w, r4.w
-mov r4.w, -r3.w
-max r3.w, r3.w, r4.w
-div r3.w, r3.w, cb1[0].z
-mov r3.w, -r3.w
-add r3.w, r3.w, l(1.000000)
-max r3.w, r3.w, l(0.000000)  // r3.w <- ozoneFactor
+  mov r4.w, -cb1[0].w
+  add r3.w, r3.w, r4.w
+  mov r4.w, -r3.w
+  max r3.w, r3.w, r4.w
+  div r3.w, r3.w, cb1[0].z
+  mov r3.w, -r3.w
+  add r3.w, r3.w, l(1.000000)
+  max r3.w, r3.w, l(0.000000)  // r3.w <- ozoneFactor
 
 #line 55
-mul r10.xyz, r3.wwww, r10.xyzx  // r10.x <- <SigmaOzone return value>.x; r10.y <- <SigmaOzone return value>.y; r10.z <- <SigmaOzone return value>.z
+  mul r11.xyz, r3.wwww, r11.xyzx  // r11.x <- <SigmaOzone return value>.x; r11.y <- <SigmaOzone return value>.y; r11.z <- <SigmaOzone return value>.z
 
 #line 80
-add r6.xyz, r6.xyzx, r10.xyzx  // r6.x <- sigma_t.x; r6.y <- sigma_t.y; r6.z <- sigma_t.z
+  add r6.xyz, r6.xyzx, r11.xyzx  // r6.x <- sigma_t.x; r6.y <- sigma_t.y; r6.z <- sigma_t.z
 
 #line 81
-mov r6.xyz, -r6.xyzx
-mul r6.xyz, r2.wwww, r6.xyzx
-mul r6.xyz, r6.xyzx, l(1.442695, 1.442695, 1.442695, 0.000000)
-exp r6.xyz, r6.xyzx  // r6.x <- <TransmittanceApprox return value>.x; r6.y <- <TransmittanceApprox return value>.y; r6.z <- <TransmittanceApprox return value>.z
+  mov r6.xyz, -r6.xyzx
+  mul r6.xyz, r2.wwww, r6.xyzx
+  mul r6.xyz, r6.xyzx, l(1.442695, 1.442695, 1.442695, 0.000000)
+  exp r6.xyz, r6.xyzx  // r6.x <- <TransmittanceApprox return value>.x; r6.y <- <TransmittanceApprox return value>.y; r6.z <- <TransmittanceApprox return value>.z
 
 #line 136
-mov r6.xyz, r6.xyzx  // r6.x <- T1.x; r6.y <- T1.y; r6.z <- T1.z
+  mov r6.xyz, r6.xyzx  // r6.x <- T1.x; r6.y <- T1.y; r6.z <- T1.z
 
 #line 138
-nop 
+  nop 
 
 #line 80
-nop 
-nop 
-nop 
+  nop 
+  nop 
+  nop 
 
 #line 142
-mov r2.w, cb1[1].z  // r2.w <- approx_sun_distance
+  mov r2.w, cb1[1].z  // r2.w <- approx_sun_distance
 
 #line 143
-add r3.w, r8.y, r8.x
-add r3.w, r8.z, r3.w
-div r3.w, r3.w, l(3.000000)  // r3.w <- sigma_t_avg
+  add r3.w, r9.y, r9.x
+  add r3.w, r9.z, r3.w
+  div r3.w, r3.w, l(3.000000)  // r3.w <- sigma_t_avg
 
 #line 144
-mul r3.w, r2.w, r3.w
-min r3.w, r3.w, l(2.000000)  // r3.w <- tau_sun
+  mul r3.w, r2.w, r3.w
+  min r3.w, r3.w, l(2.000000)  // r3.w <- tau_sun
 
 #line 148
-mul r2.w, r2.w, l(0.500000)  // r2.w <- step_scale
+  mul r2.w, r2.w, l(0.500000)  // r2.w <- step_scale
 
 #line 149
-mul r6.xyz, r7.xyzx, r6.xyzx
-mul r6.xyz, r1.wwww, r6.xyzx
-mul r6.xyz, r9.xyzx, r6.xyzx
-mul r6.xyz, r2.wwww, r6.xyzx  // r6.x <- L2.x; r6.y <- L2.y; r6.z <- L2.z
+  mul r6.xyz, r8.xyzx, r6.xyzx
+  mul r6.xyz, r1.wwww, r6.xyzx
+  mul r6.xyz, r10.xyzx, r6.xyzx
+  mul r6.xyz, r2.wwww, r6.xyzx  // r6.x <- L2.x; r6.y <- L2.y; r6.z <- L2.z
 
 #line 153
-max r8.xyz, r8.xyzx, l(0.000001, 0.000001, 0.000001, 0.000000)
-div r7.xyz, r7.xyzx, r8.xyzx  // r7.x <- omega.x; r7.y <- omega.y; r7.z <- omega.z
+  max r9.xyz, r9.xyzx, l(0.000001, 0.000001, 0.000001, 0.000000)
+  div r8.xyz, r8.xyzx, r9.xyzx  // r8.x <- omega.x; r8.y <- omega.y; r8.z <- omega.z
 
 #line 154
-add r1.w, r7.y, r7.x
-add r1.w, r7.z, r1.w
-div r1.w, r1.w, l(3.000000)  // r1.w <- omega_avg
+  add r1.w, r8.y, r8.x
+  add r1.w, r8.z, r1.w
+  div r1.w, r1.w, l(3.000000)  // r1.w <- omega_avg
 
 #line 155
-mov r2.w, -r3.w
-mul r2.w, r2.w, l(1.442695)
-exp r2.w, r2.w
-mov r2.w, -r2.w
-add r2.w, r2.w, l(1.000000)
-mul r1.w, r1.w, r2.w
-max r1.w, r1.w, l(0.000000)
-min r1.w, r1.w, l(1.000000)  // r1.w <- f_ms
+  mov r2.w, -r3.w
+  mul r2.w, r2.w, l(1.442695)
+  exp r2.w, r2.w
+  mov r2.w, -r2.w
+  add r2.w, r2.w, l(1.000000)
+  mul r1.w, r1.w, r2.w
+  max r1.w, r1.w, l(0.000000)
+  min r1.w, r1.w, l(1.000000)  // r1.w <- f_ms
 
 #line 157
-mov r1.w, -r1.w
-add r1.w, r1.w, l(1.000000)
-max r1.w, r1.w, l(0.001000)
-div r1.w, l(1.000000), r1.w  // r1.w <- F_ms
+  mov r1.w, -r1.w
+  add r1.w, r1.w, l(1.000000)
+  max r1.w, r1.w, l(0.001000)
+  div r1.w, l(1.000000), r1.w  // r1.w <- F_ms
 
 #line 160
-mul r6.xyz, r1.wwww, r6.xyzx  // r6.x <- psi_ms.x; r6.y <- psi_ms.y; r6.z <- psi_ms.z
+  mul r7.xyz, r1.wwww, r6.xyzx  // r7.x <- psi_ms.x; r7.y <- psi_ms.y; r7.z <- psi_ms.z
 
 #line 161
-mov r6.xyz, r6.xyzx  // r6.x <- <PrecomputeMultiScattering return value>.x; r6.y <- <PrecomputeMultiScattering return value>.y; r6.z <- <PrecomputeMultiScattering return value>.z
+  mov r7.xyz, r7.xyzx  // r7.x <- <PrecomputeMultiScattering return value>.x; r7.y <- <PrecomputeMultiScattering return value>.y; r7.z <- <PrecomputeMultiScattering return value>.z
+endif 
 
 #line 243
-mov r6.xyz, r6.xyzx  // r6.x <- multi_scattering.x; r6.y <- multi_scattering.y; r6.z <- multi_scattering.z
+mov r7.xyz, r7.xyzx  // r7.x <- multi_scattering.x; r7.y <- multi_scattering.y; r7.z <- multi_scattering.z
 
 #line 246
 nop 
@@ -479,8 +481,8 @@ max r1.w, r1.w, l(-0.400000)
 min r1.w, r1.w, l(1.000000)  // r1.w <- cos_theta
 
 #line 170
-itof r7.xyz, l(0, 1, 0, 0)
-dp3 r2.w, r5.xyzx, r7.xyzx
+itof r6.xyz, l(0, 1, 0, 0)
+dp3 r2.w, r5.xyzx, r6.xyzx
 max r2.w, r2.w, l(0.000000)
 min r2.w, r2.w, l(1.000000)  // r2.w <- sun_elevation
 
@@ -490,11 +492,11 @@ max r4.w, r2.w, r3.w
 mov r5.w, -r4.w
 add r5.w, r5.w, l(1.000000)
 sqrt r5.w, r5.w
-mul r6.w, r4.w, l(-0.018729)
-add r6.w, r6.w, l(0.074261)
-mul r6.w, r4.w, r6.w
-add r6.w, r6.w, l(-0.212114)
-mul r4.w, r4.w, r6.w
+mul r6.x, r4.w, l(-0.018729)
+add r6.x, r6.x, l(0.074261)
+mul r6.x, r4.w, r6.x
+add r6.x, r6.x, l(-0.212114)
+mul r4.w, r4.w, r6.x
 add r4.w, r4.w, l(1.570729)
 mul r4.w, r5.w, r4.w
 mul r5.w, r4.w, l(-2.000000)
@@ -558,8 +560,8 @@ add r3.w, r3.w, l(20.000000)
 mul r3.w, r3.w, r4.w  // r3.w <- phase_rayliegh
 
 #line 184
-itof r7.xyz, l(0, 1, 0, 0)
-dp3 r4.w, r2.xyzx, r7.xyzx
+itof r6.xyz, l(0, 1, 0, 0)
+dp3 r4.w, r2.xyzx, r6.xyzx
 mov r4.w, -r4.w
 add r4.w, r4.w, l(1.000000)
 max r4.w, r4.w, l(0.000000)
@@ -576,22 +578,22 @@ mov r1.w, r1.w
 mov r5.w, l(0.800000)
 
 #line 69
-mul r6.w, r5.w, r5.w  // r6.w <- g2
+mul r6.x, r5.w, r5.w  // r6.x <- g2
 
 #line 70
-mov r7.x, -r6.w
-add r7.x, r7.x, l(1.000000)
-add r6.w, r6.w, l(1.000000)
+mov r6.y, -r6.x
+add r6.y, r6.y, l(1.000000)
+add r6.x, r6.x, l(1.000000)
 mul r5.w, r5.w, l(2.000000)
 mul r1.w, r1.w, r5.w
 mov r1.w, -r1.w
-add r1.w, r1.w, r6.w
+add r1.w, r1.w, r6.x
 log r1.w, r1.w
 mul r1.w, r1.w, l(1.500000)
 exp r1.w, r1.w
 mul r1.w, r1.w, l(4.000000)
 mul r0.x, r0.x, r1.w
-div r0.x, r7.x, r0.x  // r0.x <- <MiePhase return value>
+div r0.x, r6.y, r0.x  // r0.x <- <MiePhase return value>
 
 #line 186
 mul r0.x, r2.w, r0.x  // r0.x <- phase_mie
@@ -624,11 +626,11 @@ itof r2.w, r1.w
 div r2.w, cb1[1].z, r2.w  // r2.w <- step_size
 
 #line 194
-mov r7.xyz, l(0,0,0,0)  // r7.x <- result.x; r7.y <- result.y; r7.z <- result.z
+mov r6.xyz, l(0,0,0,0)  // r6.x <- result.x; r6.y <- result.y; r6.z <- result.z
 
 #line 195
 mov r4.w, l(0)  // r4.w <- i
-mov r8.xyz, r7.xyzx  // r8.x <- result.x; r8.y <- result.y; r8.z <- result.z
+mov r8.xyz, r6.xyzx  // r8.x <- result.x; r8.y <- result.y; r8.z <- result.z
 mov r5.w, r4.w  // r5.w <- i
 loop 
   ilt r6.w, r5.w, r1.w
@@ -875,7 +877,7 @@ mov r8.xyz, r8.xyzx  // r8.x <- <ComputeSkyColor return value>.x; r8.y <- <Compu
 mov r8.xyz, r8.xyzx  // r8.x <- single_scattering.x; r8.y <- single_scattering.y; r8.z <- single_scattering.z
 
 #line 251
-add r0.xyz, r6.xyzx, r8.xyzx
+add r0.xyz, r7.xyzx, r8.xyzx
 add r0.xyz, r0.xyzx, r1.xyzx  // r0.x <- sky_color.x; r0.y <- sky_color.y; r0.z <- sky_color.z
 
 #line 255
@@ -896,4 +898,4 @@ add r0.xyz, r0.xyzx, r1.xyzx
 mov o0.xyz, r0.xyzx
 mov o0.w, l(1.000000)
 ret 
-// Approximately 525 instruction slots used
+// Approximately 527 instruction slots used

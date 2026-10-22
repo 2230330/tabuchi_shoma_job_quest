@@ -8,7 +8,12 @@
 enum RootSignatureSlot :unsigned int
 {
 	kDx12Camera = 0,
-	kDx12SkyAtmosphere,
+	kDx12PassConstants,
+	//kDx12Frame,
+	//kDx12Lighting,
+	kDx12TextureTable,
+
+	kDx12RootParameterCount
 };
 
 //ルートシグネチャの数を減らすため、マネージャで管理し、

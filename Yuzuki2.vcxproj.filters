@@ -335,6 +335,9 @@
     <ClInclude Include="headers\root_signature_manager.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="headers\system\render_cloud_dx12_system.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\framework.cpp">
@@ -489,6 +492,9 @@
     </ClCompile>
     <ClCompile Include="sources\root_signature_manager.cpp">
       <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\system\render_cloud_dx12_system.cpp">
+      <Filter>sources\system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -765,6 +771,9 @@
       <Filter>Shaders\VertexShader</Filter>
     </FxCompile>
     <FxCompile Include="shaderes\render_back_ps.hlsl">
+      <Filter>Shaders\PixelShader</Filter>
+    </FxCompile>
+    <FxCompile Include="shaderes\volumetric_cloud_dx12_ps.hlsl">
       <Filter>Shaders\PixelShader</Filter>
     </FxCompile>
   </ItemGroup>
